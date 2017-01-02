@@ -2,6 +2,8 @@
 
 Very Nearly a Big Lisp Environment
 
+tl,dr: look at the [[wiki]].
+
 ## Introduction
 
 Long ago when the world was young, I worked on Xerox Dandelion and Daybreak machines which ran Interlisp-D, and Acorn Cambridge Workstation and Archimedes machines which ran Cambridge Lisp (derived from Portable Standard Lisp). At the same time, Lisp Machines Inc, Symbolics, Thinking Machines, Texas Instruments and probably various other companies I've either forgotten or didn't know about built other varieties of dedicated Lisp machines which ran Lisp right down to the metal, with no operating system under them. Those machines were not only far superior to any other contemporary machines; they were also far superior to any machines we've built since. But they were expensive, and UNIX machines with the same raw compute power became very much cheaper; and so they died.
