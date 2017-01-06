@@ -27,7 +27,13 @@
 bool conspageinitihasbeencalled = false;
 
 /**
- * The (global) pointer to the (global) freelist. Not sure whether this ultimately belongs in this file.
+ * the number of cons pages which have thus far been initialised.
+ */
+int initialisedconspages = 0;
+
+/**
+ * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
+ * belongs in this file.
  */
 struct cons_pointer freelist = NIL;
 
@@ -35,11 +41,6 @@ struct cons_pointer freelist = NIL;
  * An array of pointers to cons pages.
  */
 struct cons_page* conspages[NCONSPAGES];
-
-/**
- * the number of cons pages which have thus far been initialised.
- */
-int initialisedconspages = 0;
 
 
 /**
@@ -55,21 +56,21 @@ void makeconspage() {
       if ( initialisedconspages == 0 && i < 2) {
         if ( i == 0) {
           /* initialise cell as NIL */
-          strncpy( result->cell[i].tag, NILTAG, 4);
-          result->cell[i].count = (2 ^ 32) - 1; // should be max value of unsigned 32 bit integer
+          strncpy( result->cell[i].tag, NILTAG, TAGLENGTH);
+          result->cell[i].count = MAXREFERENCE;
           result->cell[i].payload.free.car = NIL;
           result->cell[i].payload.free.cdr = NIL;
         } else if ( i == 1) {
           /* initialise cell as T */
-          strncpy( result->cell[i].tag, TRUETAG, 4);
-          result->cell[i].count = (2 ^ 32) - 1; // should be max value of unsigned 32 bit integer
+          strncpy( result->cell[i].tag, TRUETAG, TAGLENGTH);
+          result->cell[i].count = MAXREFERENCE;
           result->cell[i].payload.free.car = (struct cons_pointer){ 0, 1};
           result->cell[i].payload.free.cdr = (struct cons_pointer){ 0, 1};
         }
       }
 
       /* otherwise, standard initialisation */
-      strncpy( result->cell[i].tag, FREETAG, 4);
+      strncpy( result->cell[i].tag, FREETAG, TAGLENGTH);
       result->cell[i].payload.free.car = NIL;
       result->cell[i].payload.free.cdr = freelist;
       freelist.page = initialisedconspages;
@@ -82,6 +83,20 @@ void makeconspage() {
 
   conspages[initialisedconspages] = result;
   initialisedconspages++;
+}
+
+
+/**
+ * dump the allocated pages to this output stream.
+ */
+void dumppages( FILE* output) {
+  for ( int i = 0; i < initialisedconspages; i++) {
+    fprintf( output, "\nDUMPING PAGE %d\n", i);
+
+    for ( int j = 0; j < CONSPAGESIZE; j++) {
+      dump_object( output, (struct cons_pointer){i, j});
+    }
+  }
 }
 
 
@@ -129,10 +144,17 @@ struct cons_pointer allocatecell( char* tag) {
 
     freelist = cell.payload.free.cdr;
 
+    fprintf( stderr, "Before: %c\n", cell.tag[0]);
     strncpy( cell.tag, tag, 4);
+    fprintf( stderr, "After: %c\n", cell.tag[0]);
+    
     cell.count = 1;
     cell.payload.cons.car = NIL;
     cell.payload.cons.cdr = NIL;
+
+    fprintf( stderr, "Allocated cell of type '%s' at %d, %d \n",
+	     tag, result.page, result.offset);
+    dump_object( stderr, result);
   }
 
   return result;

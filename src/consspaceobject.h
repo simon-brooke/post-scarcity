@@ -8,8 +8,8 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-
 #include <stdint.h>
+#include <stdio.h>
 
 #ifndef __consspaceobject_h
 #define __consspaceobject_h
@@ -39,10 +39,32 @@
 #define NIL (struct cons_pointer){ 0, 0}
 
 /**
+ * the maximum possible value of a reference count
+ */
+#define MAXREFERENCE ((2 ^ 32) - 1)
+
+/**
  * a macro to convert a tag into a number
  */
 #define tag2uint(tag) ((uint32_t)*tag)
 
+#define pointer2cell(pointer) ((conspages[pointer.page]->cell[pointer.offset]))
+
+
+/**
+ * true if conspointer points to the special cell NIL, else false 
+ */
+#define nilp(conspoint) (strncmp(pointer2cell(conspoint).tag, NILTAG, TAGLENGTH)==0)
+
+/**
+ * true if conspointer points to a cons cell, else false 
+ */
+#define consp(conspoint) (strncmp(pointer2cell(conspoint).tag, CONSTAG, TAGLENGTH)==0)
+
+/**
+ * true if conspointer points to a string cell, else false 
+ */
+#define stringp(conspoint) (strncmp(pointer2cell(conspoint).tag, STRINGTAG, TAGLENGTH)==0)
 
 /**
  * An indirect pointer to a cons cell
@@ -76,7 +98,7 @@ struct free_payload {
  * optional bignum object.
  */
 struct integer_payload {
-  long int integer;
+  long int value;
 };
 
 
@@ -85,7 +107,7 @@ struct integer_payload {
  * precision, but I'm not sure of the detail.
  */
 struct real_payload {
-  long double real;
+  long double value;
 };
 
 /**
@@ -122,5 +144,22 @@ struct cons_space_object {
   } payload;
 };
 
+
+/**
+ * increment the reference count of the object at this cons pointer
+ */
+void incref( struct cons_pointer pointer);
+
+
+/**
+ * decrement the reference count of the object at this cons pointer
+ */
+void decref( struct cons_pointer pointer);
+
+
+/**
+ * dump the object at this cons_pointer to this output stream.
+ */
+void dump_object( FILE* output, struct cons_pointer pointer);
 
 #endif
