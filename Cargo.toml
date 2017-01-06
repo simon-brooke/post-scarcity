@@ -1,7 +1,0 @@
-[package]
-
-name = "post_scarcity"
-version = "0.1.0"
-authors = ["Simon Brooke <simon@journeyman.cc>"]
-
-[dependencies]
