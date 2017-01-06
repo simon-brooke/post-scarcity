@@ -38,6 +38,11 @@
  */
 #define NIL (struct cons_pointer){ 0, 0}
 
+/**
+ * a macro to convert a tag into a number
+ */
+#define tag2uint(tag) ((uint32_t)*tag)
+
 
 /**
  * An indirect pointer to a cons cell
@@ -96,7 +101,7 @@ struct string_payload {
  * an object in cons space.
  */
 struct cons_space_object {
-  char tag[TAGLENGTH];         /* the tag (type) of this cons cell */
+  char tag[TAGLENGTH];         /* the tag (type) of this cell */
   uint32_t count;              /* the count of the number of references to this cell */
   struct cons_pointer access;  /* cons pointer to the access control list of this cell */
   union {
@@ -104,10 +109,15 @@ struct cons_space_object {
     struct cons_payload cons;
     /* if tag == FREETAG */
     struct free_payload free;
+    /* if tag == INTEGERTAG */
     struct integer_payload integer;
+    /* if tag == NILTAG; we'll treat the special cell NIL as just a cons */
     struct cons_payload nil;
+    /* if tag == REALTAG */
     struct real_payload real;
+    /* if tag == STRINGTAG */
     struct string_payload string;
+    /* if tag == TRUETAG; we'll treat the special cell T as just a cons */
     struct cons_payload t;
   } payload;
 };

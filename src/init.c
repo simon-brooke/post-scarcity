@@ -13,10 +13,13 @@
 
 #include "version.h"
 #include "conspage.h"
+#include "consspaceobject.h"
 
 int main (int argc, char *argv[]) {
   printf( "Post scarcity software environment version %s\n", VERSION);
   conspagesinit();
 
+  // printf( "Tag2uint(\"FREE\") = %d\n", tag2uint("FREE"));
+  
   return(0);
 }
