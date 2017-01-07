@@ -8,6 +8,7 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -52,6 +53,7 @@
 
 /**
  * true if conspointer points to the special cell NIL, else false 
+ * (there should only be one of these so it's slightly redundant).
  */
 #define nilp(conspoint) (check_tag(conspoint,NILTAG))
 
@@ -64,6 +66,35 @@
  * true if conspointer points to a string cell, else false 
  */
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
+
+/**
+ * true if conspointer points to an integer cell, else false 
+ */
+#define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
+
+/**
+ * true if conspointer points to a real number cell, else false 
+ */
+#define realp(conspoint) (check_tag(conspoint,REALTAG))
+
+/**
+ * true if conspointer points to some sort of a number cell, 
+ * else false
+ */
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,REALTAG))
+
+/**
+ * true if conspointer points to a true cell, else false 
+ * (there should only be one of these so it's slightly redundant).
+ * Also note that anything that is not NIL is truthy.
+ */
+#define tp(conspoint) (checktag(conspoint,TRUETAG))
+
+/**
+ * true if conspoint points to something that is truthy, i.e.
+ * anything but NIL.
+ */
+#define truep(conspoint) (!checktag(conspoint,NILTAG))
 
 /**
  * An indirect pointer to a cons cell

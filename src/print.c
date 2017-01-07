@@ -60,6 +60,9 @@ void print_list( FILE* output, struct cons_pointer pointer) {
 void print( FILE* output, struct cons_pointer pointer) {
   struct cons_space_object cell = pointer2cell( pointer);
 
+  /* Because tags have values as well as bytes, this if ... else if
+   * statement can ultimately be replaced by a switch, which will
+   * be neater. */
   if ( check_tag( pointer, CONSTAG)) {
     print_list( output, pointer);
   } else if ( check_tag( pointer, INTEGERTAG)) {
