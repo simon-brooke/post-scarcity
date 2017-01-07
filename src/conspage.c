@@ -152,13 +152,7 @@ struct cons_pointer allocate_cell( char* tag) {
     if ( strncmp( &cell->tag.bytes[0], FREETAG, TAGLENGTH) == 0) {
       freelist = cell->payload.free.cdr;
 
-      fprintf( stderr, "Before: %c%c%c%c (%d)\n",
-	       cell->tag.bytes[0], cell->tag.bytes[1], cell->tag.bytes[2],
-	       cell->tag.bytes[3], cell->tag.value);
       strncpy( &cell->tag.bytes[0], tag, 4);
-      fprintf( stderr, "After: %c%c%c%c (%d)\n",
-	       cell->tag.bytes[0], cell->tag.bytes[1], cell->tag.bytes[2],
-	       cell->tag.bytes[3], cell->tag.value);
     
       cell->count = 0;
       cell->payload.cons.car = NIL;

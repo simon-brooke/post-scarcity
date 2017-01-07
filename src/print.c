@@ -39,7 +39,11 @@ void print( FILE* output, struct cons_pointer pointer) {
     for (struct cons_pointer p = pointer; stringp( p);
 	 p = pointer2cell( p).payload.string.cdr) {
       // TODO: That's potentially a UTF character, needs more handling.
-      fprintf( output, "%c", (char)pointer2cell( p).payload.string.character);
+      char c = (char)pointer2cell( p).payload.string.character;
+
+      if ( c != '\0') {
+	fprintf( output, "%c", c);
+      }
     }
     fputc( '"', output);
   } else if ( check_tag( pointer, TRUETAG)) {

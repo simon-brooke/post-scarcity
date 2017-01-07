@@ -18,17 +18,15 @@
 #include "read.h"
 
 int main (int argc, char *argv[]) {
-  printf( "Post scarcity software environment version %s\n", VERSION);
+  // printf( "Post scarcity software environment version %s\n", VERSION);
   initialise_cons_pages();
 
-  printf( "Ready\n>> ");
-
   struct cons_pointer input = read( stdin);
-  inc_ref( input);
-  printf( "\n:: ");
+  //inc_ref( input);
+  //printf( "\n:: ");
   print( stdout, input);
 
-  dump_pages(stdout);
+  // dump_pages(stdout);
   // printf( "Tag2uint(\"FREE\") = %d\n", tag2uint("FREE"));
   
   return(0);
