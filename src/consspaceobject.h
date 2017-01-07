@@ -53,17 +53,17 @@
 /**
  * true if conspointer points to the special cell NIL, else false 
  */
-#define nilp(conspoint) (check_tag(conspoint,NILTAG)==0)
+#define nilp(conspoint) (check_tag(conspoint,NILTAG))
 
 /**
  * true if conspointer points to a cons cell, else false 
  */
-#define consp(conspoint) (check_tag(conspoint,CONSTAG)==0)
+#define consp(conspoint) (check_tag(conspoint,CONSTAG))
 
 /**
  * true if conspointer points to a string cell, else false 
  */
-#define stringp(conspoint) (check_tag(conspoint,STRINGTAG)==0)
+#define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
 
 /**
  * An indirect pointer to a cons cell

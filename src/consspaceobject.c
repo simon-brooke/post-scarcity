@@ -121,11 +121,12 @@ struct cons_pointer make_string( char c, struct cons_pointer tail) {
   
   if ( check_tag( tail, STRINGTAG) || check_tag( tail, NILTAG)) {
     pointer = allocate_cell( STRINGTAG);
-    struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
+    struct cons_space_object* cell = &pointer2cell(pointer);
 
     inc_ref(tail);
     cell->payload.string.character = (uint32_t) c;
-    cell->payload.string.cdr = tail;
+    cell->payload.string.cdr.page = tail.page;
+    cell->payload.string.cdr.offset = tail.offset;
   } else {
     fprintf( stderr, "Warning: only NIL and STRING can be appended to STRING\n");
   }

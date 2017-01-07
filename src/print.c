@@ -17,17 +17,51 @@
 #include "integer.h"
 #include "print.h"
 
+void print_string_contents( FILE* output, struct cons_pointer pointer) {
+  if ( check_tag( pointer, STRINGTAG)) {
+    struct cons_space_object* cell = &pointer2cell(pointer);
+    char c = cell->payload.string.character;
+
+    if ( c != '\0') {
+      fputc( c, output);
+    }
+    print_string_contents( output, cell->payload.string.cdr);
+  }
+}
+
+
+void print_string( FILE* output, struct cons_pointer pointer) {
+  fputc( '"', output);
+  print_string_contents( output, pointer);
+  fputc( '"', output);
+}
+
+
+void print_list_contents( FILE* output, struct cons_pointer pointer) {
+  if ( check_tag( pointer, CONSTAG)) {
+    struct cons_space_object* cell = &pointer2cell(pointer);
+
+    print( output, cell->payload.cons.car);
+
+    if ( !nilp( cell->payload.cons.cdr)) {
+      fputc( ' ', output);
+    }
+    print_list_contents( output, cell->payload.cons.cdr);
+  }
+}
+
+
+void print_list( FILE* output, struct cons_pointer pointer) {
+  fputc( '(', output);
+  print_list_contents( output, pointer);
+  fputc( ')', output);
+}
+
 void print( FILE* output, struct cons_pointer pointer) {
   struct cons_space_object cell = pointer2cell( pointer);
 
   if ( check_tag( pointer, CONSTAG)) {
-    fputc( '(', output);
-    for (struct cons_pointer p = pointer; consp( p);
-	 p = pointer2cell( p).payload.cons.cdr) {
-      print( output, p);
-      fputc( ' ', output);
-    }
-    fputc( ')', output);
+    print_list( output, pointer);
   } else if ( check_tag( pointer, INTEGERTAG)) {
     fprintf( output, "%ld", cell.payload.integer.value);
   } else if ( check_tag( pointer, NILTAG)) {
@@ -35,17 +69,7 @@ void print( FILE* output, struct cons_pointer pointer) {
   } else if ( check_tag( pointer, REALTAG)) {
     fprintf( output, "%Lf", cell.payload.real.value);
   } else if ( check_tag( pointer, STRINGTAG)) {
-    fputc( '"', output);
-    for (struct cons_pointer p = pointer; stringp( p);
-	 p = pointer2cell( p).payload.string.cdr) {
-      // TODO: That's potentially a UTF character, needs more handling.
-      char c = (char)pointer2cell( p).payload.string.character;
-
-      if ( c != '\0') {
-	fprintf( output, "%c", c);
-      }
-    }
-    fputc( '"', output);
+    print_string( output, pointer);
   } else if ( check_tag( pointer, TRUETAG)) {
     fprintf( output, "T");
   }

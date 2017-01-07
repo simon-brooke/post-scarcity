@@ -1,9 +1,9 @@
 #!/bin/bash
 
-expected=\"Fred\"
+expected='"Fred"'
 actual=`echo ${expected} | target/psse 2> /dev/null`
 
-if [ "${expected}" = "{$actual}" ]
+if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
     exit 0
