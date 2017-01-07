@@ -41,7 +41,7 @@
 /**
  * the maximum possible value of a reference count
  */
-#define MAXREFERENCE ((2 ^ 32) - 1)
+#define MAXREFERENCE 4294967295
 
 /**
  * a macro to convert a tag into a number
@@ -50,21 +50,20 @@
 
 #define pointer2cell(pointer) ((conspages[pointer.page]->cell[pointer.offset]))
 
-
 /**
  * true if conspointer points to the special cell NIL, else false 
  */
-#define nilp(conspoint) (strncmp(pointer2cell(conspoint).tag, NILTAG, TAGLENGTH)==0)
+#define nilp(conspoint) (check_tag(conspoint,NILTAG)==0)
 
 /**
  * true if conspointer points to a cons cell, else false 
  */
-#define consp(conspoint) (strncmp(pointer2cell(conspoint).tag, CONSTAG, TAGLENGTH)==0)
+#define consp(conspoint) (check_tag(conspoint,CONSTAG)==0)
 
 /**
  * true if conspointer points to a string cell, else false 
  */
-#define stringp(conspoint) (strncmp(pointer2cell(conspoint).tag, STRINGTAG, TAGLENGTH)==0)
+#define stringp(conspoint) (check_tag(conspoint,STRINGTAG)==0)
 
 /**
  * An indirect pointer to a cons cell
@@ -123,7 +122,10 @@ struct string_payload {
  * an object in cons space.
  */
 struct cons_space_object {
-  char tag[TAGLENGTH];         /* the tag (type) of this cell */
+  union {
+    char bytes[TAGLENGTH];     /* the tag (type) of this cell, considered as bytes */
+    uint32_t value;            /* the tag considered as a number */
+  } tag;
   uint32_t count;              /* the count of the number of references to this cell */
   struct cons_pointer access;  /* cons pointer to the access control list of this cell */
   union {
@@ -146,20 +148,36 @@ struct cons_space_object {
 
 
 /**
+ * Check that the tag on the cell at this pointer is this tag
+ */
+int check_tag( struct cons_pointer pointer, char* tag);
+
+
+/**
  * increment the reference count of the object at this cons pointer
  */
-void incref( struct cons_pointer pointer);
+void inc_ref( struct cons_pointer pointer);
 
 
 /**
  * decrement the reference count of the object at this cons pointer
  */
-void decref( struct cons_pointer pointer);
+void dec_ref( struct cons_pointer pointer);
 
 
 /**
  * dump the object at this cons_pointer to this output stream.
  */
 void dump_object( FILE* output, struct cons_pointer pointer);
+
+struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr);
+
+/**
+ * Construct a string from this character (which later will be UTF) and
+ * this tail. A string is implemented as a flat list of cells each of which
+ * has one character and a pointer to the next; in the last cell the 
+ * pointer to next is NIL.
+ */
+struct cons_pointer make_string( char c, struct cons_pointer tail);
 
 #endif

@@ -24,7 +24,7 @@
 /**
  * read a number from this input stream, given this initial character.
  */
-struct cons_pointer readnumber( FILE* input, char initial) {
+struct cons_pointer read_number( FILE* input, char initial) {
   int accumulator = 0;
   char c;
   
@@ -36,17 +36,35 @@ struct cons_pointer readnumber( FILE* input, char initial) {
   /* push back the character read which was not a digit */
   fputc( c, input);
 
-  return makeinteger( accumulator);
+  return make_integer( accumulator);
 }
 
 
-struct cons_pointer readlist( FILE* input) {
-  return NIL;
+struct cons_pointer read_list( FILE* input) {
+  struct cons_pointer car = read( input);
+  struct cons_pointer cdr = NIL;
+
+  char c = fgetc( input);
+
+  if ( c != ')' ) {
+    cdr = read_list( input);
+  }
+
+  return make_cons( car, cdr);
 }
 
 
-struct cons_pointer readstring( FILE* input) {
-  return NIL;
+struct cons_pointer read_string( FILE* input) {
+  struct cons_pointer cdr = NIL;
+  struct cons_pointer result= NIL;
+  
+  char c = fgetc( input);
+
+  if ( c != '"' ) {
+    result = make_string( c, read_string( input));
+  }
+
+  return result;
 }
 
 
@@ -56,16 +74,14 @@ struct cons_pointer readstring( FILE* input) {
 struct cons_pointer read( FILE* input) {
   struct cons_pointer result = NIL;
 
-  char c = fgetc( input);
+  char c;
 
-  while ( isblank( c)) {
-    c = fgetc( input);
-  }
+  for (c = fgetc( input); isblank( c); c = fgetc( input));
   
   switch( c) {
-  case '(' : result = readlist(input);
+  case '(' : result = read_list(input);
     break;
-  case '"': result = readstring(input);
+  case '"': result = read_string(input);
     break;
   case '0':
   case '1':
@@ -78,7 +94,7 @@ struct cons_pointer read( FILE* input) {
   case '8':
   case '9':
     // case '.':
-    result = readnumber( input, c);
+    result = read_number( input, c);
     break;
   default:
     fprintf( stderr, "Unrecognised start of input character %c\n", c);

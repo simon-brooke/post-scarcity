@@ -19,16 +19,16 @@
 
 int main (int argc, char *argv[]) {
   printf( "Post scarcity software environment version %s\n", VERSION);
-  conspagesinit();
+  initialise_cons_pages();
 
-  printf( "Ready\n>>");
+  printf( "Ready\n>> ");
 
   struct cons_pointer input = read( stdin);
-  incref( input);
-  printf( "\n");
+  inc_ref( input);
+  printf( "\n:: ");
   print( stdout, input);
 
-  dumppages(stdout);
+  dump_pages(stdout);
   // printf( "Tag2uint(\"FREE\") = %d\n", tag2uint("FREE"));
   
   return(0);

@@ -20,7 +20,7 @@
 void print( FILE* output, struct cons_pointer pointer) {
   struct cons_space_object cell = pointer2cell( pointer);
 
-  if ( strncmp( cell.tag, CONSTAG, TAGLENGTH) == 0) {
+  if ( check_tag( pointer, CONSTAG)) {
     fputc( '(', output);
     for (struct cons_pointer p = pointer; consp( p);
 	 p = pointer2cell( p).payload.cons.cdr) {
@@ -28,20 +28,21 @@ void print( FILE* output, struct cons_pointer pointer) {
       fputc( ' ', output);
     }
     fputc( ')', output);
-  } else if ( strncmp( cell.tag, INTEGERTAG, TAGLENGTH) == 0) {
+  } else if ( check_tag( pointer, INTEGERTAG)) {
     fprintf( output, " %ld", cell.payload.integer.value);
-  } else if ( strncmp( cell.tag, NILTAG, TAGLENGTH) == 0) {
+  } else if ( check_tag( pointer, NILTAG)) {
     fprintf( output, "NIL");
-  } else if ( strncmp( cell.tag, REALTAG, TAGLENGTH) == 0) {
+  } else if ( check_tag( pointer, REALTAG)) {
     fprintf( output, "%Lf", cell.payload.real.value);
-  } else if ( strncmp( cell.tag, STRINGTAG, TAGLENGTH) == 0) {
+  } else if ( check_tag( pointer, STRINGTAG)) {
     fputc( '"', output);
     for (struct cons_pointer p = pointer; stringp( p);
 	 p = pointer2cell( p).payload.string.cdr) {
-      fprintf( output, '%c', (char)pointer2cell( p).payload.string.character);
+      // TODO: That's potentially a UTF character, needs more handling.
+      fprintf( output, "%c", (char)pointer2cell( p).payload.string.character);
     }
     fputc( '"', output);
-  } else if ( strncmp( cell.tag, TRUETAG, TAGLENGTH) == 0) {
+  } else if ( check_tag( pointer, TRUETAG)) {
     fprintf( output, "T");
   }
 }

@@ -14,10 +14,10 @@
 /**
  * Allocate an integer cell representing this value and return a cons pointer to it.
  */
-struct cons_pointer makeinteger( int value) {
-  struct cons_pointer result = allocatecell( INTEGERTAG);
-  struct cons_space_object cell = conspages[result.page]->cell[result.offset];
-  cell.payload.integer.value = value;
+struct cons_pointer make_integer( int value) {
+  struct cons_pointer result = allocate_cell( INTEGERTAG);
+  struct cons_space_object* cell = &conspages[result.page]->cell[result.offset];
+  cell->payload.integer.value = value;
 
   return result;
 }
