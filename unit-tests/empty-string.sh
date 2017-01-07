@@ -8,6 +8,6 @@ then
     echo "OK"
     exit 0
 else
-    echo "Expected '$expected', got '$actual'"
+    echo "Fail: expected '$expected', got '$actual'"
     exit 1
 fi

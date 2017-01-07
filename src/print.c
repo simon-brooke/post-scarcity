@@ -29,7 +29,7 @@ void print( FILE* output, struct cons_pointer pointer) {
     }
     fputc( ')', output);
   } else if ( check_tag( pointer, INTEGERTAG)) {
-    fprintf( output, " %ld", cell.payload.integer.value);
+    fprintf( output, "%ld", cell.payload.integer.value);
   } else if ( check_tag( pointer, NILTAG)) {
     fprintf( output, "NIL");
   } else if ( check_tag( pointer, REALTAG)) {

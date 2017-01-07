@@ -1,13 +1,13 @@
 #!/bin/bash
 
-expected=\"Fred\"
+expected="354"
 actual=`echo ${expected} | target/psse 2> /dev/null`
 
-if [ "${expected}" = "{$actual}" ]
+if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
     exit 0
 else
-    echo "Fail: expected '$expected', got '$actual'"
+    echo "Expected '${expected}', got '${actual}'"
     exit 1
 fi

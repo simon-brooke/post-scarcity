@@ -13,7 +13,7 @@ fail=0
 
 for file in unit-tests/*
 do
-    echo ${file}
+    echo -n "${file} => "
     bash ${file}
 
     if [ $? -eq 0 ]
