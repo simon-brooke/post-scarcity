@@ -64,6 +64,11 @@
 #define consp(conspoint) (check_tag(conspoint,CONSTAG))
 
 /**
+ * true if conspointer points to a function cell, else false 
+ */
+#define functionp(conspoint) (check_tag(conspoint,FUNCTIONTAG))
+
+/**
  * true if conspointer points to a string cell, else false 
  */
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
@@ -112,6 +117,11 @@ struct cons_pointer {
 struct cons_payload {
   struct cons_pointer car;
   struct cons_pointer cdr;
+};
+
+struct function_payload {
+  struct cons_pointer source;
+  struct cons_pointer (*executable)(struct cons_pointer, struct cons_pointer);
 };
 
 /**
@@ -165,6 +175,8 @@ struct cons_space_object {
     struct cons_payload cons;
     /* if tag == FREETAG */
     struct free_payload free;
+    /* if tag == FUNCTIONTAG */
+    struct function_payload function;
     /* if tag == INTEGERTAG */
     struct integer_payload integer;
     /* if tag == NILTAG; we'll treat the special cell NIL as just a cons */
