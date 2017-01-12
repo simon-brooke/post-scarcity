@@ -25,6 +25,7 @@
  */
 #define CONSTAG  "CONS"
 #define FREETAG  "FREE"
+#define FUNCTIONTAG "FUNC"
 #define INTEGERTAG  "INTR"
 #define NILTAG  "NIL "
 #define READTAG  "READ"
