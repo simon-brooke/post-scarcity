@@ -19,24 +19,18 @@
  */
 
 #include "consspaceobject.h"
+#include "conspage.h"
 
 #ifndef __stack_h
 #define __stack_h
 
-/* number of local variables stored in a stack frame */
-#define locals_in_frame 8
-
-struct stack_frame* make_stack_frame(struct stack_frame* previous);
+struct stack_frame* make_stack_frame( struct stack_frame* previous,
+				      struct cons_pointer args,
+				      struct cons_pointer env);
 void free_stack_frame( struct stack_frame* frame);
-struct cons_pointer fetch_local( struct stack_frame* frame, unsigned int n);
+struct cons_pointer fetch_arg( struct stack_frame* frame, unsigned int n);
 
-struct stack_frame {
-  struct stack_frame* previous;         /* the previous frame */
-  struct cons_pointer local[locals_in_frame];
-                                        /* first 8 local variable bindings */
-  struct cons_pointer more;             /* list of any further local 
-					 * variable bindings */
-  struct cons_pointer function;         /* the function to be called */
-};
+/* struct stack_frame is defined in consspaceobject.h to break circularity
+ * TODO: refactor. */
 
 #endif

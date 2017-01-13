@@ -119,7 +119,7 @@ struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr)
  * has one character and a pointer to the next; in the last cell the 
  * pointer to next is NIL.
  */
-struct cons_pointer make_string( char c, struct cons_pointer tail) {
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
   struct cons_pointer pointer = NIL;
   
   if ( check_tag( tail, STRINGTAG) || check_tag( tail, NILTAG)) {
@@ -127,7 +127,7 @@ struct cons_pointer make_string( char c, struct cons_pointer tail) {
     struct cons_space_object* cell = &pointer2cell(pointer);
 
     inc_ref(tail);
-    cell->payload.string.character = (wint_t) c;
+    cell->payload.string.character = c;
     cell->payload.string.cdr.page = tail.page;
     cell->payload.string.cdr.offset = tail.offset;
   } else {
@@ -135,4 +135,17 @@ struct cons_pointer make_string( char c, struct cons_pointer tail) {
   }
   
   return pointer;
+}
+
+/**
+ * Return a lisp string representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_string( char* string) {
+  struct cons_pointer result = NIL;
+
+  for ( int i = strlen( string); i > 0; i--) {
+    result = make_string( (wint_t)string[ i - 1], result);
+  }
+
+  return result;
 }

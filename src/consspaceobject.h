@@ -26,22 +26,67 @@
 /**
  * tag values, all of which must be 4 bytes. Must not collide with vector space tag values
  */
+/**
+ * An ordinary cons cell
+ */
 #define CONSTAG     "CONS"
+/**
+ * An unallocated cell on the free list - should never be encountered by a Lisp
+ * function
+ */
 #define FREETAG     "FREE"
+/**
+ * An ordinary Lisp function - one whose arguments are pre-evaluated and passed as
+ * a stack frame.
+ */
 #define FUNCTIONTAG "FUNC"
+/**
+ * An integer number.
+ */
 #define INTEGERTAG  "INTR"
+/**
+ * The special cons cell at address {0,0} whose car and cdr both point to itself.
+ */
 #define NILTAG      "NIL "
+/**
+ * An open read stream.
+ */
 #define READTAG     "READ"
+/**
+ * A real number.
+ */
 #define REALTAG     "REAL"
+/**
+ * A special form - one whose arguments are not pre-evaluated but passed as a
+ * s-expression.
+ */
+#define SPECIALTAG  "SPFM"
+/**
+ * A string of characters, organised as a linked list.
+ */
 #define STRINGTAG   "STRG"
+/**
+ * The special cons cell at address {0,1} which is canonically different from NIL
+ */
 #define TRUETAG     "TRUE"
+/**
+ * A pointer to an object in vector space.
+ */
 #define VECTORPOINTTAG  "VECP"
+/**
+ * An open write stream.
+ */
 #define WRITETAG    "WRIT"
 
 /**
  * a cons pointer which points to the special NIL cell
  */
 #define NIL (struct cons_pointer){ 0, 0}
+
+/**
+ * a cons pointer which points to the special T cell
+ */
+#define TRUE (struct cons_pointer){ 0, 1}
 
 /**
  * the maximum possible value of a reference count
@@ -72,6 +117,11 @@
 #define functionp(conspoint) (check_tag(conspoint,FUNCTIONTAG))
 
 /**
+ * true if conspointer points to a special form cell, else false 
+ */
+#define specialp(conspoint) (check_tag(conspoint,SPECIALTAG))
+
+/**
  * true if conspointer points to a string cell, else false 
  */
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
@@ -80,6 +130,11 @@
  * true if conspointer points to an integer cell, else false 
  */
 #define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
+
+/**
+ * true if conspointer points to a read stream cell, else false 
+ */
+#define readp(conspoint) (check_tag(conspoint,READTAG))
 
 /**
  * true if conspointer points to a real number cell, else false 
@@ -91,6 +146,12 @@
  * else false
  */
 #define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,REALTAG))
+
+/**
+ * true if conspointer points to a write stream cell, else false 
+ */
+#define writep(conspoint) (check_tag(conspoint,WRITETAG))
+
 
 /**
  * true if conspointer points to a true cell, else false 
@@ -113,6 +174,21 @@ struct cons_pointer {
   uint32_t offset;             /* the index of the cell within the page */
 };
 
+/* number of arguments stored in a stack frame */
+#define args_in_frame 8
+
+/**
+ * A stack frame. Yes, I know it isn't a cons-space object, but it's defined
+ * here to avoid circularity. TODO: refactor.
+ */
+struct stack_frame {
+  struct stack_frame* previous;         /* the previous frame */
+  struct cons_pointer arg[args_in_frame];
+                                        /* first 8 arument bindings */
+  struct cons_pointer more;             /* list of any further argument 
+					 * bindings */
+  struct cons_pointer function;         /* the function to be called */
+};
 
 /**
  * payload of a cons cell.
@@ -122,9 +198,18 @@ struct cons_payload {
   struct cons_pointer cdr;
 };
 
+/**
+ * Payload of a function cell. 
+ * source points to the source from which the function was compiled, or NIL 
+ * if it is a primitive.
+ * executable points to a function which takes a pointer to a stack frame
+ * (representing its stack frame) and a cons pointer (representing its 
+ * environment) as arguments and returns a cons pointer (representing its
+ * result).
+ */ 
 struct function_payload {
   struct cons_pointer source;
-  struct cons_pointer (*executable)(struct cons_pointer, struct cons_pointer);
+  struct cons_pointer (*executable)(struct stack_frame*, struct cons_pointer);
 };
 
 /**
@@ -145,7 +230,6 @@ struct integer_payload {
   long int value;
 };
 
-
 /**
  * payload for a real number cell. Internals of this liable to change to give 128 bits
  * precision, but I'm not sure of the detail.
@@ -155,13 +239,54 @@ struct real_payload {
 };
 
 /**
- * payload of a string cell. At least at first, only one UTF character will be stored in each cell.
+ * Payload of a special form cell. 
+ * source points to the source from which the function was compiled, or NIL 
+ * if it is a primitive.
+ * executable points to a function which takes a cons pointer (representing
+ * its argument list) and a cons pointer (representing its environment) and a
+ * stack frame (representing the previous stack frame) as arguments and returns
+ * a cons pointer (representing its result).
+ *
+ * NOTE that this means that special forms do not appear on the lisp stack,
+ * which may be confusing. TODO: think about this.
+ */ 
+struct special_payload {
+  struct cons_pointer source;
+  struct cons_pointer (*executable)(struct cons_pointer s_expr,
+				      struct cons_pointer env,
+				      struct stack_frame* frame);
+};
+
+/**
+ * payload of a read or write stream cell.
+ */
+struct stream_payload {
+  FILE * stream;
+};
+
+/**
+ * payload of a string cell. At least at first, only one UTF character will
+ * be stored in each cell.
  */
 struct string_payload {
-  wint_t character;          /* the actual character stored in this cell */
+  wint_t character;            /* the actual character stored in this cell */
   uint32_t padding;            /* unused padding to word-align the cdr */
   struct cons_pointer cdr;
 };
+
+struct vectorp_payload {
+  union {
+    char bytes[TAGLENGTH];     /* the tag (type) of the vector-space 
+				* object this cell points to, considered 
+				* as bytes. NOTE that the vector space
+				* object should itself have the identical tag. */
+    uint32_t value;            /* the tag considered as a number */
+  } tag;
+  uint64_t address;            /* the address of the actual vector space
+				* object (TODO: will change when I actually
+				* implement vector space) */
+};
+
 
 /**
  * an object in cons space.
@@ -184,12 +309,18 @@ struct cons_space_object {
     struct integer_payload integer;
     /* if tag == NILTAG; we'll treat the special cell NIL as just a cons */
     struct cons_payload nil;
+/* if tag == READTAG || tag == WRITETAG */
+struct stream_payload stream;
     /* if tag == REALTAG */
     struct real_payload real;
+    /* if tag == SPECIALTAG */
+    struct special_payload special;
     /* if tag == STRINGTAG */
     struct string_payload string;
     /* if tag == TRUETAG; we'll treat the special cell T as just a cons */
     struct cons_payload t;
+    /* if tag == VECTORPTAG */
+    struct vectorp_payload vectorp;
   } payload;
 };
 
@@ -225,6 +356,11 @@ struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr)
  * has one character and a pointer to the next; in the last cell the 
  * pointer to next is NIL.
  */
-struct cons_pointer make_string( char c, struct cons_pointer tail);
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail);
+
+/**
+ * Return a lisp string representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_string( char* string);
 
 #endif

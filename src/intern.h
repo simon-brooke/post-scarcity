@@ -27,9 +27,8 @@ extern struct cons_pointer oblist;
  * return the value associated with this key in this store. In the current 
  * implementation a store is just an assoc list, but in future it might be a
  * namespace, a regularity or a homogeneity.
- * TODO: This function ultimately belongs in lispops.
  */
-struct cons_pointer assoc( struct cons_pointer key, struct cons_pointer store);
+struct cons_pointer c_assoc( struct cons_pointer key, struct cons_pointer store);
 
 /**
  * Return true if this key is present as a key in this enviroment, defaulting to

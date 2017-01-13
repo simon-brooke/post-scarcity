@@ -144,10 +144,6 @@ struct cons_pointer read( FILE* input) {
   return read_continuation( input, '\0');
 }
 
-
-struct cons_pointer lisp_read( struct cons_pointer args, struct cons_pointer env) {
-  return( read( stdin));
-}
     
 
 

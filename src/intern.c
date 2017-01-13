@@ -22,7 +22,58 @@
 #include "equal.h"
 #include "conspage.h"
 #include "consspaceobject.h"
-#include "equal.h"
+
+/**
+ * Implementation of interned? in C. The final implementation if interned? will
+ * deal with stores which can be association lists or hashtables or hybrids of
+ * the two, but that will almost certainly be implemented in lisp.
+ *
+ * If this key is lexically identical to a key in this store, return the key
+ * from the store (so that later when we want to retrieve a value, an eq test
+ * will work); otherwise return NIL.
+ */
+struct cons_pointer internedp( struct cons_pointer key, struct cons_pointer store) {
+  struct cons_pointer result = NIL;
+
+  for ( struct cons_pointer next = store;
+	nilp( result) && consp( next);
+	next = pointer2cell( next).payload.cons.cdr) {
+    struct cons_space_object entry =
+      pointer2cell( pointer2cell( next).payload.cons.car);
+
+    if ( equal( key, entry.payload.cons.car)) {
+      result = entry.payload.cons.car;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Implementation of assoc in C. Like interned?, the final implementation will
+ * deal with stores which can be association lists or hashtables or hybrids of
+ * the two, but that will almost certainly be implemented in lisp.
+ *
+ * If this key is lexically identical to a key in this store, return the value
+ * of that key from the store; otherwise return NIL.
+ */
+struct cons_pointer c_assoc( struct cons_pointer key, struct cons_pointer store) {
+  struct cons_pointer result = NIL;
+
+  for ( struct cons_pointer next = store;
+	consp( next);
+	next = pointer2cell( next).payload.cons.cdr) {
+    struct cons_space_object entry =
+      pointer2cell( pointer2cell( next).payload.cons.car);
+
+    if ( equal( key, entry.payload.cons.car)) {
+      result = entry.payload.cons.cdr;
+      break;
+    }
+  }
+
+  return result;
+}
 
 /**
  * The object list. What is added to this during system setup is 'global', that is, 
@@ -34,92 +85,6 @@
  * that will work.
  */
 struct cons_pointer oblist = NIL;
-
-/**
- * return the value associated with this key in this store. In the current 
- * implementation a store is just an assoc list, but in future it might be a
- * namespace, a regularity or a homogeneity.
- * TODO: This function ultimately belongs in lispops.
- */
-struct cons_pointer assoc( struct cons_pointer key, struct cons_pointer store) {
-  struct cons_pointer result = NIL;
-  
-  if ( consp( store)) {
-    struct cons_space_object* cell_store = &pointer2cell( store);
-
-    if ( consp( cell_store->payload.cons.car)) {
-      struct cons_space_object* binding =
-	&pointer2cell( cell_store->payload.cons.car);
-
-      if ( eq( key, binding->payload.cons.car)) {
-	result = binding->payload.cons.cdr;
-      }
-    }
-    /* top-level objects on an assoc list ought to be conses (i.e. each
-     * successive car should be a cons), but there's no need to throw a
-     * wobbly if it isn't. */
-
-    if ( nilp( result)) {
-      result = assoc( key, cell_store->payload.cons.cdr);
-    }
-  }
-
-  return result;
-}
-
-
-/** 
- * Internal workings of internedp, q.v. Not intended to be called from anywhere
- * else. Note that this is VERY similar to assoc, but returns the car (key) of
- * the binding rather than the cdr (value).
- */
-struct cons_pointer __internedp( struct cons_pointer key,
-				 struct cons_pointer store) {
-  struct cons_pointer result = NIL;
-
-  if ( consp( store)) {
-    struct cons_space_object* cell_store = &pointer2cell( store);
-
-    if ( consp( cell_store->payload.cons.car)) {
-      struct cons_space_object* binding =
-	&pointer2cell( cell_store->payload.cons.car);
-
-      if ( equal( key, binding->payload.cons.car)) {
-	result = binding->payload.cons.car;
-      }
-    }
-    /* top-level objects on an assoc list ought to be conses (i.e. each
-     * successive car should be a cons), but there's no need to throw a
-     * wobbly if it isn't. */
-
-    if ( nilp( result)) {
-      result = assoc( key, cell_store->payload.cons.cdr);
-    }
-  }
-
-  return result;  
-}
-
-
-/**
- * Return the canonical version of this key if ut is present as a key in this 
- * enviroment, defaulting to the oblist if no environment is passed. Key is
- * expected to be a string.
- */
-struct cons_pointer internedp( struct cons_pointer key,
-			       struct cons_pointer environment) {
-  struct cons_pointer result = NIL;
-
-  if ( stringp( key)) {
-    if ( nilp( environment)) {
-      result = __internedp( key, oblist);
-    } else {
-      result = __internedp( key, environment);
-    }
-  }
-  
-  return result;
-}
 
 
 /**
