@@ -26,17 +26,17 @@
 /**
  * tag values, all of which must be 4 bytes. Must not collide with vector space tag values
  */
-#define CONSTAG  "CONS"
-#define FREETAG  "FREE"
+#define CONSTAG     "CONS"
+#define FREETAG     "FREE"
 #define FUNCTIONTAG "FUNC"
 #define INTEGERTAG  "INTR"
-#define NILTAG  "NIL "
-#define READTAG  "READ"
-#define REALTAG  "REAL"
-#define STRINGTAG  "STRG"
-#define TRUETAG  "TRUE"
+#define NILTAG      "NIL "
+#define READTAG     "READ"
+#define REALTAG     "REAL"
+#define STRINGTAG   "STRG"
+#define TRUETAG     "TRUE"
 #define VECTORPOINTTAG  "VECP"
-#define WRITETAG  "WRIT"
+#define WRITETAG    "WRIT"
 
 /**
  * a cons pointer which points to the special NIL cell
