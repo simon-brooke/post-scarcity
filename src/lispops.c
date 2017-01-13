@@ -43,7 +43,8 @@ struct cons_pointer i_eval_args( struct cons_pointer args, struct cons_pointer t
   struct cons_pointer result = NIL;
   
   if ( ! nilp( args)) {
-    result = make_cons( lisp_eval( lisp_car( args)), i_eval_args( lisp_cdr( args), tail));
+    result = make_cons( lisp_eval( lisp_car( args, env), env),
+			i_eval_args( lisp_cdr( args, env), tail, env));
   }
 
   return result;
@@ -59,7 +60,7 @@ struct cons_pointer lisp_apply( struct cons_pointer args, struct cons_pointer en
   struct cons_pointer result = args;
   
   if ( consp( args)) {
-    lisp_eval( make_cons( lisp_car( args), i_eval_args( lisp_cdr( args), NIL)));
+    lisp_eval( make_cons( lisp_car( args, env), i_eval_args( lisp_cdr( args, env), NIL, env)), env);
   }
 
   return result;
@@ -74,8 +75,8 @@ struct cons_pointer lisp_eval( struct cons_pointer args, struct cons_pointer env
   if ( consp( args)) {
     /* the hard bit. Sort out what function is required and pass the
      * args to it. */
-    struct cons_pointer fn_pointer lisp_car( args);
-    args = lisp_cdr( args);
+    struct cons_pointer fn_pointer = lisp_car( args, env);
+    args = lisp_cdr( args, env);
 
     if ( functionp( fn_pointer)) {
       struct cons_space_object function = pointer2cell( fn_pointer);
@@ -90,8 +91,8 @@ struct cons_pointer lisp_eval( struct cons_pointer args, struct cons_pointer env
        * also if the object is a consp it could be interpretable
        * source code but in the long run I don't want an interpreter,
        * and if I can get away without so much the better. */
-      result = lisp_throw( args, env)
-        }
+      result = lisp_throw( args, env);
+    }
   }
 
   return result;
@@ -110,7 +111,7 @@ struct cons_pointer lisp_cons( struct cons_pointer args, struct cons_pointer env
     struct cons_pointer d = pointer2cell( cell.payload.cons.cdr).payload.cons.car;
     result = make_cons( a, d);
   } else {
-    lisp_throw( args);
+    lisp_throw( args, env);
   }
 
   return result;
@@ -126,7 +127,7 @@ struct cons_pointer lisp_car( struct cons_pointer args, struct cons_pointer env)
     struct cons_space_object cell = pointer2cell( args);
     result =  pointer2cell( cell.payload.cons.car).payload.cons.car;
   } else {
-    lisp_throw( args);
+    lisp_throw( args, env);
   }
 
   return result;
@@ -143,7 +144,7 @@ struct cons_pointer lisp_cdr( struct cons_pointer args, struct cons_pointer env)
     struct cons_space_object cell = pointer2cell( args);
     result =  pointer2cell( cell.payload.cons.cdr).payload.cons.car;
   } else {
-    lisp_throw( args);
+    lisp_throw( args, env);
   }
 
   return result;

@@ -11,6 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+/* wide characters */
+#include <wchar.h>
+#include <wctype.h>
 
 #ifndef __consspaceobject_h
 #define __consspaceobject_h
@@ -155,7 +158,7 @@ struct real_payload {
  * payload of a string cell. At least at first, only one UTF character will be stored in each cell.
  */
 struct string_payload {
-  uint32_t character;          /* the actual character stored in this cell */
+  wint_t character;          /* the actual character stored in this cell */
   uint32_t padding;            /* unused padding to word-align the cdr */
   struct cons_pointer cdr;
 };

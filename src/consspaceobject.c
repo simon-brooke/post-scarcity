@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+/* wide characters */
+#include <wchar.h>
+#include <wctype.h>
 
 #include "conspage.h"
 #include "consspaceobject.h"
@@ -87,7 +90,7 @@ void dump_object( FILE* output, struct cons_pointer pointer) {
   } else if ( check_tag(pointer, REALTAG)) {
     fprintf( output, "\t\tReal cell: value %Lf\n", cell.payload.real.value);
   } else if ( check_tag( pointer, STRINGTAG)) {
-    fprintf( output, "\t\tString cell: character '%c' next at page %d offset %d\n",
+    fwprintf( output, L"\t\tString cell: character '%C' next at page %d offset %d\n",
 	     cell.payload.string.character, cell.payload.string.cdr.page,
 	     cell.payload.string.cdr.offset);
   };
@@ -124,7 +127,7 @@ struct cons_pointer make_string( char c, struct cons_pointer tail) {
     struct cons_space_object* cell = &pointer2cell(pointer);
 
     inc_ref(tail);
-    cell->payload.string.character = (uint32_t) c;
+    cell->payload.string.character = (wint_t) c;
     cell->payload.string.cdr.page = tail.page;
     cell->payload.string.cdr.offset = tail.offset;
   } else {

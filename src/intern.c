@@ -22,6 +22,7 @@
 #include "equal.h"
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "equal.h"
 
 /**
  * The object list. What is added to this during system setup is 'global', that is, 
@@ -67,21 +68,56 @@ struct cons_pointer assoc( struct cons_pointer key, struct cons_pointer store) {
 }
 
 
-/**
- * Return true if this key is present as a key in this enviroment, defaulting to
- * the oblist if no environment is passed.
+/** 
+ * Internal workings of internedp, q.v. Not intended to be called from anywhere
+ * else. Note that this is VERY similar to assoc, but returns the car (key) of
+ * the binding rather than the cdr (value).
  */
-bool internedp( struct cons_pointer key, struct cons_pointer environment) {
-  bool result = false;
-  
-  if ( nilp( environment)) {
-    if ( !nilp( oblist)) {
-      result = internedp( key, oblist);
+struct cons_pointer __internedp( struct cons_pointer key,
+				 struct cons_pointer store) {
+  struct cons_pointer result = NIL;
+
+  if ( consp( store)) {
+    struct cons_space_object* cell_store = &pointer2cell( store);
+
+    if ( consp( cell_store->payload.cons.car)) {
+      struct cons_space_object* binding =
+	&pointer2cell( cell_store->payload.cons.car);
+
+      if ( equal( key, binding->payload.cons.car)) {
+	result = binding->payload.cons.car;
+      }
     }
-  } else {
-    result = !nilp( assoc( key, environment));
+    /* top-level objects on an assoc list ought to be conses (i.e. each
+     * successive car should be a cons), but there's no need to throw a
+     * wobbly if it isn't. */
+
+    if ( nilp( result)) {
+      result = assoc( key, cell_store->payload.cons.cdr);
+    }
   }
-      
+
+  return result;  
+}
+
+
+/**
+ * Return the canonical version of this key if ut is present as a key in this 
+ * enviroment, defaulting to the oblist if no environment is passed. Key is
+ * expected to be a string.
+ */
+struct cons_pointer internedp( struct cons_pointer key,
+			       struct cons_pointer environment) {
+  struct cons_pointer result = NIL;
+
+  if ( stringp( key)) {
+    if ( nilp( environment)) {
+      result = __internedp( key, oblist);
+    } else {
+      result = __internedp( key, environment);
+    }
+  }
+  
   return result;
 }
 
@@ -104,4 +140,23 @@ struct cons_pointer bind( struct cons_pointer key, struct cons_pointer value,
 struct cons_pointer deep_bind( struct cons_pointer key, struct cons_pointer value) {
   oblist = bind( key, value, oblist);
   return oblist;
+}
+
+
+/**
+ * Ensure that a canonical copy of this key is bound in this environment, and
+ * return that canonical copy. If there is currently no such binding, create one
+ * with the value NIL.
+ */
+struct cons_pointer intern( struct cons_pointer key,
+			    struct cons_pointer environment) {
+  struct cons_pointer result = environment;
+  struct cons_pointer canonical = internedp( key, environment);
+
+  if ( nilp( canonical)) {
+    /* not currently bound */
+    result = bind( key, NIL, environment);
+  }
+
+  return result;
 }

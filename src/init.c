@@ -1,8 +1,8 @@
 /**
  * init.c
  *
- * Start up and initialise the environement - just enough to get working and (ultimately)
- * hand off to the executive.
+ * Start up and initialise the environement - just enough to get working 
+ * and (ultimately) hand off to the executive.
  *
  *
  * (c) 2017 Simon Brooke <simon@journeyman.cc>
@@ -16,6 +16,7 @@
 #include "consspaceobject.h"
 #include "print.h"
 #include "read.h"
+#include "lispops.h"
 
 int main (int argc, char *argv[]) {
   fprintf( stderr, "Post scarcity software environment version %s\n", VERSION);

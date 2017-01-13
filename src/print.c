@@ -11,6 +11,9 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+/* wide characters */
+#include <wchar.h>
+#include <wctype.h>
 
 #include "conspage.h"
 #include "consspaceobject.h"
@@ -20,10 +23,10 @@
 void print_string_contents( FILE* output, struct cons_pointer pointer) {
   if ( check_tag( pointer, STRINGTAG)) {
     struct cons_space_object* cell = &pointer2cell(pointer);
-    char c = cell->payload.string.character;
+    wint_t c = cell->payload.string.character;
 
     if ( c != '\0') {
-      fputc( c, output);
+      fputwc( c, output);
     }
     print_string_contents( output, cell->payload.string.cdr);
   }
