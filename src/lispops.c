@@ -117,6 +117,7 @@ struct cons_pointer lisp_eval( struct cons_pointer s_expr, struct cons_pointer e
       struct cons_space_object special = pointer2cell( fn_pointer);
       result = (*special.payload.special.executable)( args, env, previous);
     } else if ( functionp( fn_pointer)) {
+      /* actually, this is apply */
       struct cons_space_object function = pointer2cell( fn_pointer);
       struct stack_frame* frame = make_stack_frame( my_frame, args, env);
 
@@ -145,6 +146,18 @@ struct cons_pointer lisp_eval( struct cons_pointer s_expr, struct cons_pointer e
   free_stack_frame( my_frame);
   
   return result;
+}
+
+/**
+ * (quote a)
+ *
+ * Special form
+ * Returns its argument (strictly first argument - only one is expected but
+ * this isn't at this stage checked) unevaluated.
+ */
+struct cons_pointer lisp_quote( struct cons_pointer args, struct cons_pointer env,
+				struct stack_frame* frame) {
+  return c_car( args);
 }
 
 /**

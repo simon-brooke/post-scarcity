@@ -36,6 +36,11 @@ int main (int argc, char *argv[]) {
   fprintf( stderr, "Post scarcity software environment version %s\n", VERSION);
   initialise_cons_pages();
 
+  /* privileged variables (keywords) */
+  deep_bind( intern( c_string_to_lisp_string( "nil"), oblist), NIL);
+  deep_bind( intern( c_string_to_lisp_string( "t"), oblist), TRUE);
+
+  /* primitive function operations */
   bind_function( "assoc", &lisp_assoc);
   bind_function( "car", &lisp_car);
   bind_function( "cdr", &lisp_cdr);
@@ -45,8 +50,10 @@ int main (int argc, char *argv[]) {
   bind_function( "read", &lisp_read);
   bind_function( "print", &lisp_print);
 
+  /* primitive special forms */
   bind_special( "apply", &lisp_apply);
   bind_special( "eval", &lisp_eval);
+  bind_special( "quote", &lisp_quote);
 
   fprintf( stderr, "\n:: ");
   struct cons_pointer input = read( stdin);

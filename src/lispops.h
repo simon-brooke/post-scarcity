@@ -24,6 +24,8 @@ struct cons_pointer lisp_eval( struct cons_pointer args, struct cons_pointer env
 			       struct stack_frame* frame);
 struct cons_pointer lisp_apply( struct cons_pointer args, struct cons_pointer env,
 				struct stack_frame* frame);
+struct cons_pointer lisp_quote( struct cons_pointer args, struct cons_pointer env,
+				struct stack_frame* frame);
 
 /* functions */
 struct cons_pointer lisp_cons( struct stack_frame* frame, struct cons_pointer env);
