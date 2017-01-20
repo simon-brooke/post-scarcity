@@ -24,6 +24,17 @@
 #include "consspaceobject.h"
 
 /**
+ * The object list. What is added to this during system setup is 'global', that is, 
+ * visible to all sessions/threads. What is added during a session/thread is local to
+ * that session/thread (because shallow binding). There must be some way for a user to
+ * make the contents of their own environment persistent between threads but I don't
+ * know what it is yet. At some stage there must be a way to rebind deep values so
+ * they're visible to all users/threads, but again I don't yet have any idea how 
+ * that will work.
+ */
+struct cons_pointer oblist = NIL;
+
+/**
  * Implementation of interned? in C. The final implementation if interned? will
  * deal with stores which can be association lists or hashtables or hybrids of
  * the two, but that will almost certainly be implemented in lisp.
@@ -74,17 +85,6 @@ struct cons_pointer c_assoc( struct cons_pointer key, struct cons_pointer store)
 
   return result;
 }
-
-/**
- * The object list. What is added to this during system setup is 'global', that is, 
- * visible to all sessions/threads. What is added during a session/thread is local to
- * that session/thread (because shallow binding). There must be some way for a user to
- * make the contents of their own environment persistent between threads but I don't
- * know what it is yet. At some stage there must be a way to rebind deep values so
- * they're visible to all users/threads, but again I don't yet have any idea how 
- * that will work.
- */
-struct cons_pointer oblist = NIL;
 
 
 /**

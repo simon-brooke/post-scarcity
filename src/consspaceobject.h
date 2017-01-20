@@ -351,12 +351,28 @@ void dump_object( FILE* output, struct cons_pointer pointer);
 struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr);
 
 /**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_function( struct cons_pointer src,
+				     struct cons_pointer (*executable)
+				   (struct stack_frame*, struct cons_pointer));
+
+/**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
  * has one character and a pointer to the next; in the last cell the 
  * pointer to next is NIL.
  */
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail);
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_special( struct cons_pointer src,
+				  struct cons_pointer (*executable)
+				  (struct cons_pointer s_expr,
+				   struct cons_pointer env,
+				   struct stack_frame* frame));
 
 /**
  * Return a lisp string representation of this old skool ASCII string.

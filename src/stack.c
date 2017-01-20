@@ -59,7 +59,7 @@ struct stack_frame* make_stack_frame( struct stack_frame* previous,
       /* TODO: if we were running on real massively parallel hardware, each
        * arg except the first should be handed off to another processor to
        * be evaled in parallel */
-      result->arg[i] = lisp_eval( cell.payload.cons.car, env);
+      result->arg[i] = lisp_eval( cell.payload.cons.car, env, result);
       /* TODO: later, going to have to mess with reference counts */
       args = cell.payload.cons.cdr;
     } else {

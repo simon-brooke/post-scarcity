@@ -101,14 +101,33 @@ void dump_object( FILE* output, struct cons_pointer pointer) {
  * Construct a cons cell from this pair of pointers.
  */
 struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr) {
-  struct cons_pointer pointer = allocate_cell( CONSTAG);
+  struct cons_pointer pointer = NIL;
 
-  struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
+  if ( ! ( nilp( car) && nilp( cdr))) {
+   pointer = allocate_cell( CONSTAG);
 
-  inc_ref(car);
-  inc_ref(cdr);
-  cell->payload.cons.car = car;
-  cell->payload.cons.cdr = cdr;
+   struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
+
+   inc_ref(car);
+   inc_ref(cdr);
+   cell->payload.cons.car = car;
+   cell->payload.cons.cdr = cdr;
+  }
+
+  return pointer;
+}
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_function( struct cons_pointer src,
+				     struct cons_pointer (*executable)
+				   (struct stack_frame*, struct cons_pointer)) {
+  struct cons_pointer pointer = allocate_cell( FUNCTIONTAG);
+  struct cons_space_object* cell = &pointer2cell(pointer);
+
+  cell->payload.function.source = src;
+  cell->payload.function.executable = executable;
 
   return pointer;
 }
@@ -134,6 +153,23 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
     fprintf( stderr, "Warning: only NIL and STRING can be appended to STRING\n");
   }
   
+  return pointer;
+}
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_special( struct cons_pointer src,
+				  struct cons_pointer (*executable)
+				  (struct cons_pointer s_expr,
+				   struct cons_pointer env,
+				   struct stack_frame* frame)) {
+  struct cons_pointer pointer = allocate_cell( SPECIALTAG);
+  struct cons_space_object* cell = &pointer2cell(pointer);
+
+  cell->payload.special.source = src;
+  cell->payload.special.executable = executable;
+    
   return pointer;
 }
 
