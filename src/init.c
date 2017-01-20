@@ -21,14 +21,14 @@
 
 void bind_function( char* name, struct cons_pointer (*executable)
 		    (struct stack_frame*, struct cons_pointer)) {
-  deep_bind( intern( c_string_to_lisp_string( name), oblist ),
+  deep_bind( intern( c_string_to_lisp_symbol( name), oblist ),
 	     make_function( NIL, executable));
 }
 
 void bind_special( char* name, struct cons_pointer (*executable)
 		   (struct cons_pointer s_expr, struct cons_pointer env,
 		    struct stack_frame* frame)) {
-  deep_bind( intern( c_string_to_lisp_string( name), oblist ),
+  deep_bind( intern( c_string_to_lisp_symbol( name), oblist ),
 	     make_special( NIL, executable));
 }
 
@@ -57,8 +57,10 @@ int main (int argc, char *argv[]) {
 
   fprintf( stderr, "\n:: ");
   struct cons_pointer input = read( stdin);
-  fprintf( stderr, "\n{%d,%d}=> ", input.page, input.offset);
+  fprintf( stderr, "\nread {%d,%d}=> ", input.page, input.offset);
   print( stdout, input);
+  fprintf( stderr, "\neval {%d,%d}=> ", input.page, input.offset);
+  // print( stdout, lisp_eval( input, oblist, NULL));
 
   dump_pages(stderr);
   

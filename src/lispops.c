@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "consspaceobject.h"
 #include "conspage.h"
@@ -88,6 +89,52 @@ struct cons_pointer lisp_apply( struct cons_pointer args, struct cons_pointer en
   return result;
 }
 
+struct cons_pointer eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
+			       struct stack_frame* my_frame) {
+  struct cons_pointer result = NIL;
+  struct cons_pointer fn_pointer = lisp_eval( c_car( s_expr), env, my_frame);
+  struct cons_space_object fn_cell = pointer2cell( fn_pointer);
+  struct cons_pointer args = c_cdr( s_expr);
+
+  switch ( fn_cell.tag.value) {
+  case SPECIALTV :
+    {
+      struct cons_space_object special = pointer2cell( fn_pointer);
+      result = (*special.payload.special.executable)( args, env, my_frame);
+    }
+    break;
+
+  case FUNCTIONTV :
+    /* actually, this is apply */
+    {
+      struct cons_space_object function = pointer2cell( fn_pointer);
+      struct stack_frame* frame = make_stack_frame( my_frame, args, env);
+
+      /* the trick: pass the remaining arguments and environment to
+	 the executable code which is the payload of the function
+	 object. */
+      result = (*function.payload.function.executable)( frame, env);
+      free_stack_frame( frame);
+    }
+    break;
+
+  default :
+    {
+      char* buffer = malloc( 1024);
+      memset( buffer, '\0', 1024);
+      sprintf( buffer,
+	       "Unexpected cell with tag %d (%c%c%c%c) in function position",
+	       fn_cell.tag.value, fn_cell.tag.bytes[0], fn_cell.tag.bytes[1],
+	       fn_cell.tag.bytes[2], fn_cell.tag.bytes[3]);
+      struct cons_pointer message = c_string_to_lisp_string( buffer);
+      free( buffer);
+      result = lisp_throw( message, my_frame);
+    }
+  }
+
+  return result;
+}
+
 /**
  * (eval s_expr)
  *
@@ -104,43 +151,32 @@ struct cons_pointer lisp_apply( struct cons_pointer args, struct cons_pointer en
 struct cons_pointer lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 			       struct stack_frame* previous) {
   struct cons_pointer result = s_expr;
+  struct cons_space_object cell = pointer2cell( s_expr);
   struct stack_frame* my_frame =
     make_stack_frame( previous, make_cons( s_expr, NIL), env);
-  
-  if ( consp( s_expr)) {
-    /* the hard bit. Sort out what function is required and pass the
-     * args to it. */
-    struct cons_pointer fn_pointer = lisp_eval( c_car( s_expr), env, my_frame);
-    struct cons_pointer args = c_cdr( s_expr);
 
-    if ( specialp( fn_pointer)) {
-      struct cons_space_object special = pointer2cell( fn_pointer);
-      result = (*special.payload.special.executable)( args, env, previous);
-    } else if ( functionp( fn_pointer)) {
-      /* actually, this is apply */
-      struct cons_space_object function = pointer2cell( fn_pointer);
-      struct stack_frame* frame = make_stack_frame( my_frame, args, env);
+  switch ( cell.tag.value) {
+  case CONSTV :
+    result = eval_cons( s_expr, env, my_frame);
+    break;
 
-      /* the trick: pass the remaining arguments and environment to
-         the executable code which is the payload of the function
-         object. */
-      result = (*function.payload.function.executable)( frame, env);
-      free_stack_frame( frame);
-    } else if ( stringp( s_expr)) {
+  case SYMBOLTV :
+    {
       struct cons_pointer canonical = internedp( s_expr, env);
-      if ( !nilp( canonical)) {
-	result = c_assoc( canonical, env);
-      } else {
+      if ( nilp( canonical)) {
 	struct cons_pointer message =
-	  c_string_to_lisp_string( "Attempt to value of unbound name.");
+	  c_string_to_lisp_string( "Attempt to take value of unbound symbol.");
 	result = lisp_throw( message, my_frame);
+      } else {
+	result = c_assoc( canonical, env);
       }
-      /* the Clojure practice of having a map serve in the function
-       * place of an s-expression is a good one and I should adopt it;
-       * also if the object is a consp it could be interpretable
-       * source code but in the long run I don't want an interpreter,
-       * and if I can get away without so much the better. */
     }
+    break;
+    /* the Clojure practice of having a map serve in the function
+     * place of an s-expression is a good one and I should adopt it;
+     * also if the object is a consp it could be interpretable
+     * source code but in the long run I don't want an interpreter,
+     * and if I can get away without so much the better. */
   }
 
   free_stack_frame( my_frame);

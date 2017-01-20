@@ -103,16 +103,14 @@ void dump_object( FILE* output, struct cons_pointer pointer) {
 struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr) {
   struct cons_pointer pointer = NIL;
 
-  if ( ! ( nilp( car) && nilp( cdr))) {
-   pointer = allocate_cell( CONSTAG);
+  pointer = allocate_cell( CONSTAG);
 
-   struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
+  struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
 
-   inc_ref(car);
-   inc_ref(cdr);
-   cell->payload.cons.car = car;
-   cell->payload.cons.cdr = cdr;
-  }
+  inc_ref(car);
+  inc_ref(cdr);
+  cell->payload.cons.car = car;
+  cell->payload.cons.cdr = cdr;
 
   return pointer;
 }
@@ -138,11 +136,13 @@ struct cons_pointer make_function( struct cons_pointer src,
  * has one character and a pointer to the next; in the last cell the 
  * pointer to next is NIL.
  */
-struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
+struct cons_pointer make_string_like_thing( wint_t c,
+					    struct cons_pointer tail,
+					    char* tag) {
   struct cons_pointer pointer = NIL;
   
-  if ( check_tag( tail, STRINGTAG) || check_tag( tail, NILTAG)) {
-    pointer = allocate_cell( STRINGTAG);
+  if ( check_tag( tail, tag) || check_tag( tail, NILTAG)) {
+    pointer = allocate_cell( tag);
     struct cons_space_object* cell = &pointer2cell(pointer);
 
     inc_ref(tail);
@@ -150,10 +150,28 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
     cell->payload.string.cdr.page = tail.page;
     cell->payload.string.cdr.offset = tail.offset;
   } else {
-    fprintf( stderr, "Warning: only NIL and STRING can be appended to STRING\n");
+    fprintf( stderr, "Warning: only NIL and %s can be appended to %s\n",
+	     tag, tag);
   }
   
   return pointer;
+}
+
+/**
+ * Construct a string from this character and
+ * this tail. A string is implemented as a flat list of cells each of which
+ * has one character and a pointer to the next; in the last cell the 
+ * pointer to next is NIL.
+ */
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
+  return make_string_like_thing( c, tail, STRINGTAG);
+}
+
+/**
+ * Construct a symbol from this character and this tail. 
+ */
+struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail) {
+  return make_string_like_thing( c, tail, SYMBOLTAG);
 }
 
 /**
@@ -181,6 +199,19 @@ struct cons_pointer c_string_to_lisp_string( char* string) {
 
   for ( int i = strlen( string); i > 0; i--) {
     result = make_string( (wint_t)string[ i - 1], result);
+  }
+
+  return result;
+}
+
+/**
+ * Return a lisp symbol representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_symbol( char* symbol) {
+  struct cons_pointer result = NIL;
+
+  for ( int i = strlen( symbol); i > 0; i--) {
+    result = make_symbol( (wint_t)symbol[ i - 1], result);
   }
 
   return result;

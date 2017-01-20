@@ -27,52 +27,78 @@
  * tag values, all of which must be 4 bytes. Must not collide with vector space tag values
  */
 /**
- * An ordinary cons cell
+ * An ordinary cons cell: 1397641027
  */
 #define CONSTAG     "CONS"
+#define CONSTV      1397641027
+
 /**
  * An unallocated cell on the free list - should never be encountered by a Lisp
- * function
+ * function. 1162170950
  */
 #define FREETAG     "FREE"
+#define FREETV      1162170950
+
 /**
  * An ordinary Lisp function - one whose arguments are pre-evaluated and passed as
- * a stack frame.
+ * a stack frame. 1129207110
  */
 #define FUNCTIONTAG "FUNC"
+#define FUNCTIONTV  1129207110
 /**
- * An integer number.
+ * An integer number. 1381256777
  */
 #define INTEGERTAG  "INTR"
+#define INTEGERTV   1381256777
+
 /**
  * The special cons cell at address {0,0} whose car and cdr both point to itself.
+ * 541870414
  */
 #define NILTAG      "NIL "
+#define NILTV       541870414
+
 /**
  * An open read stream.
  */
 #define READTAG     "READ"
+
 /**
  * A real number.
  */
 #define REALTAG     "REAL"
+
 /**
  * A special form - one whose arguments are not pre-evaluated but passed as a
- * s-expression.
+ * s-expression. 1296453715
  */
 #define SPECIALTAG  "SPFM"
+#define SPECIALTV   1296453715
+
 /**
- * A string of characters, organised as a linked list.
+ * A string of characters, organised as a linked list. 1196577875
  */
 #define STRINGTAG   "STRG"
+#define STRINGTV    1196577875
+
 /**
- * The special cons cell at address {0,1} which is canonically different from NIL
+ * A symbol is just like a string except not self-evaluating. 1112365395 
+ */
+#define SYMBOLTAG   "SYMB"
+#define SYMBOLTV    1112365395
+
+/**
+ * The special cons cell at address {0,1} which is canonically different from NIL.
+ * 1163219540
  */
 #define TRUETAG     "TRUE"
+#define TRUETV      1163219540
+
 /**
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VECP"
+
 /**
  * An open write stream.
  */
@@ -127,6 +153,11 @@
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
 
 /**
+ * true if conspointer points to a string cell, else false 
+ */
+#define symbolp(conspoint) (check_tag(conspoint,SYMBOLTAG))
+
+/**
  * true if conspointer points to an integer cell, else false 
  */
 #define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
@@ -148,10 +179,9 @@
 #define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,REALTAG))
 
 /**
- * true if conspointer points to a write stream cell, else false 
+ * true if conspointer points to a write stream cell, else false.
  */
 #define writep(conspoint) (check_tag(conspoint,WRITETAG))
-
 
 /**
  * true if conspointer points to a true cell, else false 
@@ -266,7 +296,9 @@ struct stream_payload {
 
 /**
  * payload of a string cell. At least at first, only one UTF character will
- * be stored in each cell.
+ * be stored in each cell. The doctrine that 'a symbol is just a string'
+ * didn't work; however, the payload of a symbol cell is identical to the
+ * payload of a string cell.
  */
 struct string_payload {
   wint_t character;            /* the actual character stored in this cell */
@@ -309,13 +341,13 @@ struct cons_space_object {
     struct integer_payload integer;
     /* if tag == NILTAG; we'll treat the special cell NIL as just a cons */
     struct cons_payload nil;
-/* if tag == READTAG || tag == WRITETAG */
-struct stream_payload stream;
+    /* if tag == READTAG || tag == WRITETAG */
+    struct stream_payload stream;
     /* if tag == REALTAG */
     struct real_payload real;
     /* if tag == SPECIALTAG */
     struct special_payload special;
-    /* if tag == STRINGTAG */
+    /* if tag == STRINGTAG || tag == SYMBOLTAG */
     struct string_payload string;
     /* if tag == TRUETAG; we'll treat the special cell T as just a cons */
     struct cons_payload t;
@@ -358,14 +390,6 @@ struct cons_pointer make_function( struct cons_pointer src,
 				   (struct stack_frame*, struct cons_pointer));
 
 /**
- * Construct a string from this character (which later will be UTF) and
- * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the 
- * pointer to next is NIL.
- */
-struct cons_pointer make_string( wint_t c, struct cons_pointer tail);
-
-/**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,
@@ -375,8 +399,26 @@ struct cons_pointer make_special( struct cons_pointer src,
 				   struct stack_frame* frame));
 
 /**
+ * Construct a string from this character and this tail. A string is
+ * implemented as a flat list of cells each of which has one character and a 
+ * pointer to the next; in the last cell the pointer to next is NIL.
+ */
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail);
+
+/**
+ * Construct a symbol from this character and this tail. A symbol is identical
+ * to a string except for having a different tag.
+ */
+struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail);
+
+/**
  * Return a lisp string representation of this old skool ASCII string.
  */
 struct cons_pointer c_string_to_lisp_string( char* string);
+
+/**
+ * Return a lisp symbol representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_symbol( char* symbol);
 
 #endif

@@ -60,11 +60,14 @@ struct stack_frame* make_stack_frame( struct stack_frame* previous,
        * arg except the first should be handed off to another processor to
        * be evaled in parallel */
       result->arg[i] = lisp_eval( cell.payload.cons.car, env, result);
-      /* TODO: later, going to have to mess with reference counts */
+      inc_ref( result->arg[i]);
+
       args = cell.payload.cons.cdr;
     } else {
       /* TODO: this isn't right. These args should also each be evaled. */
       result->more = args;
+      inc_ref( result->more);
+      
       args = NIL;
     }
   }
@@ -76,8 +79,12 @@ struct stack_frame* make_stack_frame( struct stack_frame* previous,
  * Free this stack frame.
  */
 void free_stack_frame( struct stack_frame* frame) {
-  /* TODO: later, mess with reference counts on locals */
   /* TODO: later, push it back on the stack-frame freelist */
+  for ( int i = 0; i < args_in_frame; i++) {
+    dec_ref( frame->arg[ i]);
+  }
+  dec_ref( frame->more);
+  
   free( frame);
 }
 

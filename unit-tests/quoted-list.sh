@@ -1,7 +1,7 @@
 #!/bin/bash
 
-expected=nil
-actual=`echo '()' | target/psse 2> /dev/null`
+expected='(quote (123 (4 (5 nil)) Fred))'
+actual=`echo "'(123 (4 (5 ())) Fred)" | target/psse 2> /dev/null`
 
 if [ "${expected}" = "${actual}" ]
 then
