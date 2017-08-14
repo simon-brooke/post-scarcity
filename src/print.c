@@ -11,6 +11,9 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+/* wide characters */
+#include <wchar.h>
+#include <wctype.h>
 
 #include "conspage.h"
 #include "consspaceobject.h"
@@ -18,12 +21,12 @@
 #include "print.h"
 
 void print_string_contents( FILE* output, struct cons_pointer pointer) {
-  if ( check_tag( pointer, STRINGTAG)) {
+  if ( stringp( pointer) || symbolp( pointer)) {
     struct cons_space_object* cell = &pointer2cell(pointer);
-    char c = cell->payload.string.character;
+    wint_t c = cell->payload.string.character;
 
     if ( c != '\0') {
-      fputc( c, output);
+      fputwc( c, output);
     }
     print_string_contents( output, cell->payload.string.cdr);
   }
@@ -36,24 +39,34 @@ void print_string( FILE* output, struct cons_pointer pointer) {
   fputc( '"', output);
 }
 
+/**
+ * Print a single list cell (cons cell). TODO: does not handle dotted pairs.
+ */
+void print_list_contents( FILE* output, struct cons_pointer pointer,
+			  bool initial_space) {
+  struct cons_space_object* cell = &pointer2cell(pointer);
 
-void print_list_contents( FILE* output, struct cons_pointer pointer) {
-  if ( check_tag( pointer, CONSTAG)) {
-    struct cons_space_object* cell = &pointer2cell(pointer);
-
+  switch ( cell->tag.value) {
+  case CONSTV :
+    if (initial_space) {
+      fputc( ' ', output);
+    }      
     print( output, cell->payload.cons.car);
 
-    if ( !nilp( cell->payload.cons.cdr)) {
-      fputc( ' ', output);
-    }
-    print_list_contents( output, cell->payload.cons.cdr);
+    print_list_contents( output, cell->payload.cons.cdr, true);
+    break;
+  case NILTV:
+    break;
+  default:
+    fprintf( output, " . ");
+    print( output, pointer);
   }
 }
 
 
 void print_list( FILE* output, struct cons_pointer pointer) {
   fputc( '(', output);
-  print_list_contents( output, pointer);
+  print_list_contents( output, pointer, false);
   fputc( ')', output);
 }
 
@@ -63,17 +76,28 @@ void print( FILE* output, struct cons_pointer pointer) {
   /* Because tags have values as well as bytes, this if ... else if
    * statement can ultimately be replaced by a switch, which will
    * be neater. */
-  if ( check_tag( pointer, CONSTAG)) {
+  switch ( cell.tag.value) {
+  case CONSTV :
     print_list( output, pointer);
-  } else if ( check_tag( pointer, INTEGERTAG)) {
+    break;
+  case INTEGERTV :
     fprintf( output, "%ld", cell.payload.integer.value);
-  } else if ( check_tag( pointer, NILTAG)) {
-    fprintf( output, "NIL");
-  } else if ( check_tag( pointer, REALTAG)) {
-    fprintf( output, "%Lf", cell.payload.real.value);
-  } else if ( check_tag( pointer, STRINGTAG)) {
+    break;
+  case NILTV :
+    fprintf( output, "nil");
+    break;
+  case STRINGTV :
     print_string( output, pointer);
-  } else if ( check_tag( pointer, TRUETAG)) {
-    fprintf( output, "T");
+    break;
+  case SYMBOLTV :
+    print_string_contents( output, pointer);
+    break;
+  case TRUETV :
+    fprintf( output, "t");
+    break;
+  default :
+    fprintf( stderr, "Error: Unrecognised tag value %d (%c%c%c%c)\n",
+	     cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
+	     cell.tag.bytes[2], cell.tag.bytes[3]);
   }
 }

@@ -10,6 +10,8 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "consspaceobject.h"
+
 #ifndef __equal_h
 #define __equal_h
 
