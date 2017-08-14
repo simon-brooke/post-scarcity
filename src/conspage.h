@@ -3,7 +3,6 @@
 #ifndef __conspage_h
 #define __conspage_h
 
-
 /**
  * the number of cons cells on a cons page. The maximum value this can be (and consequently,
  * the size which, by version 1, it will default to) is the maximum value of an unsigned 32
@@ -24,9 +23,8 @@
  * my current view is that that's probably unneccessary.
  */
 struct cons_page {
-  struct cons_space_object cell[CONSPAGESIZE];
+    struct cons_space_object cell[CONSPAGESIZE];
 };
-
 
 /**
  * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
@@ -37,8 +35,7 @@ extern struct cons_pointer freelist;
 /**
  * An array of pointers to cons pages.
  */
-extern struct cons_page* conspages[NCONSPAGES];
-
+extern struct cons_page *conspages[NCONSPAGES];
 
 /**
  * Frees the cell at the specified pointer. Dangerous, primitive, low
@@ -48,7 +45,6 @@ extern struct cons_page* conspages[NCONSPAGES];
  */
 void free_cell(struct cons_pointer pointer);
 
-
 /**
  * Allocates a cell with the specified tag. Dangerous, primitive, low
  * level.
@@ -56,8 +52,7 @@ void free_cell(struct cons_pointer pointer);
  * @param tag the tag of the cell to allocate - must be a valid cons space tag.
  * @return the cons pointer which refers to the cell allocated.
  */
-struct cons_pointer allocate_cell( char* tag);
-
+struct cons_pointer allocate_cell(char *tag);
 
 /**
  * initialise the cons page system; to be called exactly once during startup.
@@ -67,6 +62,6 @@ void initialise_cons_pages();
 /**
  * dump the allocated pages to this output stream.
  */
-void dump_pages( FILE* output);
+void dump_pages(FILE * output);
 
 #endif

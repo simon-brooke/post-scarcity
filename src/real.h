@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   real.h
  * Author: simon
  *
@@ -24,12 +24,9 @@ extern "C" {
  * @param value the value to wrap;
  * @return a real number cell wrapping this value.
  */
-struct cons_pointer make_real( double value);
-
+    struct cons_pointer make_real(double value);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* REAL_H */
-
+#endif                          /* REAL_H */

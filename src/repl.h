@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   repl.h
  * Author: simon
  *
@@ -25,13 +25,10 @@ extern "C" {
  * @param err_stream the stream to send errors to;
  * @param show_prompt true if prompts should be shown.
  */
-void repl( FILE* in_stream, FILE* out_stream, FILE* error_stream, 
-          bool show_prompt);
-
+    void repl(FILE * in_stream, FILE * out_stream,
+              FILE * error_stream, bool show_prompt);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* REPL_H */
-
+#endif                          /* REPL_H */

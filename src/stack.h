@@ -24,13 +24,15 @@
 #ifndef __stack_h
 #define __stack_h
 
-struct stack_frame* make_stack_frame( struct stack_frame* previous,
-				      struct cons_pointer args,
-				      struct cons_pointer env);
-void free_stack_frame( struct stack_frame* frame);
-struct cons_pointer fetch_arg( struct stack_frame* frame, unsigned int n);
+struct stack_frame *make_stack_frame(struct stack_frame *previous,
+                                     struct cons_pointer args,
+                                     struct cons_pointer env);
+void free_stack_frame(struct stack_frame *frame);
+struct cons_pointer fetch_arg(struct stack_frame *frame, unsigned int n);
 
-/* struct stack_frame is defined in consspaceobject.h to break circularity
- * TODO: refactor. */
+/*
+ * struct stack_frame is defined in consspaceobject.h to break circularity
+ * TODO: refactor. 
+ */
 
 #endif

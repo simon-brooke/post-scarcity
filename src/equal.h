@@ -19,12 +19,12 @@
  * Shallow, and thus cheap, equality: true if these two objects are 
  * the same object, else false.
  */
-bool eq( struct cons_pointer a, struct cons_pointer b);
+bool eq(struct cons_pointer a, struct cons_pointer b);
 
 /**
  * Deep, and thus expensive, equality: true if these two objects have
  * identical structure, else false.
  */
-bool equal( struct cons_pointer a, struct cons_pointer b);
+bool equal(struct cons_pointer a, struct cons_pointer b);
 
 #endif
