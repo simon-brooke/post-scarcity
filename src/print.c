@@ -34,9 +34,9 @@ void print_string_contents( FILE* output, struct cons_pointer pointer) {
 
 
 void print_string( FILE* output, struct cons_pointer pointer) {
-  fputc( '"', output);
+  fputwc( btowc('"'), output);
   print_string_contents( output, pointer);
-  fputc( '"', output);
+  fputwc( btowc('"'), output);
 }
 
 /**
@@ -49,7 +49,7 @@ void print_list_contents( FILE* output, struct cons_pointer pointer,
   switch ( cell->tag.value) {
   case CONSTV :
     if (initial_space) {
-      fputc( ' ', output);
+      fputwc( btowc(' '), output);
     }      
     print( output, cell->payload.cons.car);
 
@@ -58,16 +58,16 @@ void print_list_contents( FILE* output, struct cons_pointer pointer,
   case NILTV:
     break;
   default:
-    fprintf( output, " . ");
+    fwprintf( output, L" . ");
     print( output, pointer);
   }
 }
 
 
 void print_list( FILE* output, struct cons_pointer pointer) {
-  fputc( '(', output);
+  fputwc( btowc('('), output);
   print_list_contents( output, pointer, false);
-  fputc( ')', output);
+  fputwc( btowc(')'), output);
 }
 
 void print( FILE* output, struct cons_pointer pointer) {
@@ -77,27 +77,31 @@ void print( FILE* output, struct cons_pointer pointer) {
    * statement can ultimately be replaced by a switch, which will
    * be neater. */
   switch ( cell.tag.value) {
-  case CONSTV :
-    print_list( output, pointer);
-    break;
-  case INTEGERTV :
-    fprintf( output, "%ld", cell.payload.integer.value);
-    break;
-  case NILTV :
-    fprintf( output, "nil");
-    break;
-  case STRINGTV :
-    print_string( output, pointer);
-    break;
-  case SYMBOLTV :
-    print_string_contents( output, pointer);
-    break;
-  case TRUETV :
-    fprintf( output, "t");
-    break;
-  default :
-    fprintf( stderr, "Error: Unrecognised tag value %d (%c%c%c%c)\n",
-	     cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
-	     cell.tag.bytes[2], cell.tag.bytes[3]);
+    case CONSTV :
+      print_list( output, pointer);
+      break;
+    case INTEGERTV :
+      fwprintf( output, L"%ld", cell.payload.integer.value);
+      break;
+    case NILTV :
+      fwprintf( output, L"nil");
+      break;
+    case REALTV:
+        fwprintf(output, L"%lf", cell.payload.real.value);
+        break;
+    case STRINGTV :
+      print_string( output, pointer);
+      break;
+    case SYMBOLTV :
+      print_string_contents( output, pointer);
+      break;
+    case TRUETV :
+      fwprintf( output, L"t");
+      break;
+    default :
+      fwprintf( stderr, L"Error: Unrecognised tag value %d (%c%c%c%c)\n",
+               cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
+               cell.tag.bytes[2], cell.tag.bytes[3]);
+      break;
   }
 }

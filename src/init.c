@@ -9,15 +9,17 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <wchar.h>
 
 #include "version.h"
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "intern.h"
 #include "lispops.h"
-#include "print.h"
-#include "read.h"
+#include "repl.h"
 
 void bind_function( char* name, struct cons_pointer (*executable)
 		    (struct stack_frame*, struct cons_pointer)) {
@@ -33,36 +35,61 @@ void bind_special( char* name, struct cons_pointer (*executable)
 }
 
 int main (int argc, char *argv[]) {
-  fprintf( stderr, "Post scarcity software environment version %s\n", VERSION);
-  initialise_cons_pages();
+    /* attempt to set wide character acceptance on all streams */
+    fwide(stdin, 1);
+    fwide(stdout, 1);
+    fwide(stderr, 1);
+    int option;
+    bool dump_at_end = false;
+    bool show_prompt = false;
+    
+    while ((option = getopt (argc, argv, "pd")) != -1)
+    {
+      switch (option)
+      {
+        case 'd':
+          dump_at_end = true;
+          break;
+        case 'p':
+          show_prompt = true;
+          break;
+        default:
+          fprintf( stderr, "Unexpected option %c\n", option);
+          break;
+      }
+    }
 
-  /* privileged variables (keywords) */
-  deep_bind( intern( c_string_to_lisp_string( "nil"), oblist), NIL);
-  deep_bind( intern( c_string_to_lisp_string( "t"), oblist), TRUE);
+    if (show_prompt) {
+      fprintf( stdout, "Post scarcity software environment version %s\n\n", VERSION);
+    }
+    
+    initialise_cons_pages();
 
-  /* primitive function operations */
-  bind_function( "assoc", &lisp_assoc);
-  bind_function( "car", &lisp_car);
-  bind_function( "cdr", &lisp_cdr);
-  bind_function( "cons", &lisp_cons);
-  bind_function( "eq", &lisp_eq);
-  bind_function( "equal", &lisp_equal);
-  bind_function( "read", &lisp_read);
-  bind_function( "print", &lisp_print);
+    /* privileged variables (keywords) */
+    deep_bind( intern( c_string_to_lisp_string( "nil"), oblist), NIL);
+    deep_bind( intern( c_string_to_lisp_string( "t"), oblist), TRUE);
 
-  /* primitive special forms */
-  bind_special( "apply", &lisp_apply);
-  bind_special( "eval", &lisp_eval);
-  bind_special( "quote", &lisp_quote);
+    /* primitive function operations */
+    bind_function( "assoc", &lisp_assoc);
+    bind_function( "car", &lisp_car);
+    bind_function( "cdr", &lisp_cdr);
+    bind_function( "cons", &lisp_cons);
+    bind_function( "eq", &lisp_eq);
+    bind_function( "equal", &lisp_equal);
+    bind_function( "read", &lisp_read);
+    bind_function( "print", &lisp_print);
 
-  fprintf( stderr, "\n:: ");
-  struct cons_pointer input = read( stdin);
-  fprintf( stderr, "\nread {%d,%d}=> ", input.page, input.offset);
-  print( stdout, input);
-  fprintf( stderr, "\neval {%d,%d}=> ", input.page, input.offset);
-  // print( stdout, lisp_eval( input, oblist, NULL));
+    /* primitive special forms */
+    bind_special( "apply", &lisp_apply);
+    bind_special( "eval", &lisp_eval);
+    bind_special( "quote", &lisp_quote);
 
-  dump_pages(stderr);
-  
-  return(0);
+    repl(stdin, stdout, stderr, show_prompt);
+    // print( stdout, lisp_eval( input, oblist, NULL));
+
+    if ( dump_at_end) {
+        dump_pages(stderr);
+    }
+
+    return(0);
 }

@@ -11,10 +11,11 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 VERSION := "0.0.0"
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP 
+LDFLAGS := -lm
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LOADLIBES) $(LDLIBS)
+	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 .PHONY: clean
 clean:

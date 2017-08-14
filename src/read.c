@@ -8,6 +8,7 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 /* wide characters */
@@ -18,6 +19,7 @@
 #include "integer.h"
 #include "intern.h"
 #include "read.h"
+#include "real.h"
 
 /* for the time being things which may be read are:
    strings
@@ -87,8 +89,8 @@ struct cons_pointer read_number( FILE* input, wint_t initial) {
 
   fprintf( stderr, "read_number starting '%c' (%d)\n", initial, initial);
   
-  for (c = initial; iswdigit( c); c = fgetwc( input)) {
-    if ( c == '.') {
+  for (c = initial; iswdigit( c) || c == btowc('.'); c = fgetwc( input)) {
+    if ( c == btowc('.')) {
       seen_period = true;
     } else {
       accumulator = accumulator * 10 + ((int)c - (int)'0');
@@ -102,7 +104,13 @@ struct cons_pointer read_number( FILE* input, wint_t initial) {
   /* push back the character read which was not a digit */
   ungetwc( c, input);
 
-  return make_integer( accumulator);
+  if (seen_period) {
+    return make_real(accumulator / pow(10, places_of_decimals));
+  }
+  else
+  {
+    return make_integer( accumulator);
+  }
 }
 
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='(quote (123 (4 (5 nil)) Fred))'
-actual=`echo "'(123 (4 (5 ())) Fred)" | target/psse 2> /dev/null`
+actual=`echo "'(123 (4 (5 ())) Fred)" | target/psse 2> /dev/null | head -1`
 
 if [ "${expected}" = "${actual}" ]
 then

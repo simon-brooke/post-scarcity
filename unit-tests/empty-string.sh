@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected="\"\""
-actual=`echo '""' | target/psse 2> /dev/null`
+actual=`echo '""' | target/psse 2> /dev/null | head -1`
 
 if [ "$expected" = "$actual" ]
 then

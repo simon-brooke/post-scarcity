@@ -67,6 +67,7 @@
  * A real number.
  */
 #define REALTAG     "REAL"
+#define REALTV      1279346002
 
 /**
  * A special form - one whose arguments are not pre-evaluated but passed as a

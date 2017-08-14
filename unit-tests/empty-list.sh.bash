@@ -1,7 +1,13 @@
 #!/bin/bash
+# 
+# File:   empty-list.sh.bash
+# Author: simon
+#
+# Created on 14-Aug-2017, 15:06:40
+#
 
 expected=nil
-actual=`echo 'nil' | target/psse 2> /dev/null | head -1`
+actual=`echo '()' | target/psse 2> /dev/null | head -1`
 
 if [ "${expected}" = "${actual}" ]
 then

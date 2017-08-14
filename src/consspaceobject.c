@@ -66,34 +66,37 @@ void dec_ref( struct cons_pointer pointer) {
  */
 void dump_object( FILE* output, struct cons_pointer pointer) {
   struct cons_space_object cell = pointer2cell(pointer);
-  fprintf( output,
-	   "\tDumping object at page %d, offset %d with tag %c%c%c%c (%d), count %u\n",
-	   pointer.page,
-	   pointer.offset,
+  fwprintf( output,
+	   L"\tDumping %c%c%c%c (%d) at page %d, offset %d count %u\n",
 	   cell.tag.bytes[0],
 	   cell.tag.bytes[1],
 	   cell.tag.bytes[2],
 	   cell.tag.bytes[3],
 	   cell.tag.value,
+	   pointer.page,
+	   pointer.offset,
 	   cell.count);
 
   if ( check_tag(pointer, CONSTAG)) {
-    fprintf( output,
-	     "\tCons cell: car at page %d offset %d, cdr at page %d offset %d\n",
+    fwprintf( output,
+	     L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d\n",
 	     cell.payload.cons.car.page, cell.payload.cons.car.offset,
 	     cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset);
   } else if ( check_tag(pointer, INTEGERTAG)) {
-    fprintf( output, "\t\tInteger cell: value %ld\n", cell.payload.integer.value);
+    fwprintf( output, 
+             L"\t\tInteger cell: value %ld\n", 
+             cell.payload.integer.value);
   } else if ( check_tag( pointer, FREETAG)) {
-    fprintf( output, "\t\tFree cell: next at page %d offset %d\n",
+    fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
 	     cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset);
   } else if ( check_tag(pointer, REALTAG)) {
-    fprintf( output, "\t\tReal cell: value %Lf\n", cell.payload.real.value);
+    fwprintf( output, L"\t\tReal cell: value %Lf\n", cell.payload.real.value);
   } else if ( check_tag( pointer, STRINGTAG)) {
-    fwprintf( output, L"\t\tString cell: character '%C' next at page %d offset %d\n",
-	     cell.payload.string.character, cell.payload.string.cdr.page,
-	     cell.payload.string.cdr.offset);
-  };
+    fwprintf( output, 
+             L"String cell: character '%1c' (%1d) next at page %2d offset %3d\n",
+             cell.payload.string.character, cell.payload.string.cdr.page,
+             cell.payload.string.cdr.offset);
+  }
 }
 
 
@@ -150,7 +153,7 @@ struct cons_pointer make_string_like_thing( wint_t c,
     cell->payload.string.cdr.page = tail.page;
     cell->payload.string.cdr.offset = tail.offset;
   } else {
-    fprintf( stderr, "Warning: only NIL and %s can be appended to %s\n",
+    fwprintf( stderr, L"Warning: only NIL and %s can be appended to %s\n",
 	     tag, tag);
   }
   
