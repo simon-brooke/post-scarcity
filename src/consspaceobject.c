@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+/* wide characters */
+#include <wchar.h>
+#include <wctype.h>
 
 #include "conspage.h"
 #include "consspaceobject.h"
@@ -87,7 +90,7 @@ void dump_object( FILE* output, struct cons_pointer pointer) {
   } else if ( check_tag(pointer, REALTAG)) {
     fprintf( output, "\t\tReal cell: value %Lf\n", cell.payload.real.value);
   } else if ( check_tag( pointer, STRINGTAG)) {
-    fprintf( output, "\t\tString cell: character '%c' next at page %d offset %d\n",
+    fwprintf( output, L"\t\tString cell: character '%C' next at page %d offset %d\n",
 	     cell.payload.string.character, cell.payload.string.cdr.page,
 	     cell.payload.string.cdr.offset);
   };
@@ -98,7 +101,9 @@ void dump_object( FILE* output, struct cons_pointer pointer) {
  * Construct a cons cell from this pair of pointers.
  */
 struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr) {
-  struct cons_pointer pointer = allocate_cell( CONSTAG);
+  struct cons_pointer pointer = NIL;
+
+  pointer = allocate_cell( CONSTAG);
 
   struct cons_space_object* cell = &conspages[pointer.page]->cell[pointer.offset];
 
@@ -109,6 +114,21 @@ struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr)
 
   return pointer;
 }
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_function( struct cons_pointer src,
+				     struct cons_pointer (*executable)
+				   (struct stack_frame*, struct cons_pointer)) {
+  struct cons_pointer pointer = allocate_cell( FUNCTIONTAG);
+  struct cons_space_object* cell = &pointer2cell(pointer);
+
+  cell->payload.function.source = src;
+  cell->payload.function.executable = executable;
+
+  return pointer;
+}
   
 /**
  * Construct a string from this character (which later will be UTF) and
@@ -116,20 +136,83 @@ struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr)
  * has one character and a pointer to the next; in the last cell the 
  * pointer to next is NIL.
  */
-struct cons_pointer make_string( char c, struct cons_pointer tail) {
+struct cons_pointer make_string_like_thing( wint_t c,
+					    struct cons_pointer tail,
+					    char* tag) {
   struct cons_pointer pointer = NIL;
   
-  if ( check_tag( tail, STRINGTAG) || check_tag( tail, NILTAG)) {
-    pointer = allocate_cell( STRINGTAG);
+  if ( check_tag( tail, tag) || check_tag( tail, NILTAG)) {
+    pointer = allocate_cell( tag);
     struct cons_space_object* cell = &pointer2cell(pointer);
 
     inc_ref(tail);
-    cell->payload.string.character = (uint32_t) c;
+    cell->payload.string.character = c;
     cell->payload.string.cdr.page = tail.page;
     cell->payload.string.cdr.offset = tail.offset;
   } else {
-    fprintf( stderr, "Warning: only NIL and STRING can be appended to STRING\n");
+    fprintf( stderr, "Warning: only NIL and %s can be appended to %s\n",
+	     tag, tag);
   }
   
   return pointer;
+}
+
+/**
+ * Construct a string from this character and
+ * this tail. A string is implemented as a flat list of cells each of which
+ * has one character and a pointer to the next; in the last cell the 
+ * pointer to next is NIL.
+ */
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail) {
+  return make_string_like_thing( c, tail, STRINGTAG);
+}
+
+/**
+ * Construct a symbol from this character and this tail. 
+ */
+struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail) {
+  return make_string_like_thing( c, tail, SYMBOLTAG);
+}
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_special( struct cons_pointer src,
+				  struct cons_pointer (*executable)
+				  (struct cons_pointer s_expr,
+				   struct cons_pointer env,
+				   struct stack_frame* frame)) {
+  struct cons_pointer pointer = allocate_cell( SPECIALTAG);
+  struct cons_space_object* cell = &pointer2cell(pointer);
+
+  cell->payload.special.source = src;
+  cell->payload.special.executable = executable;
+    
+  return pointer;
+}
+
+/**
+ * Return a lisp string representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_string( char* string) {
+  struct cons_pointer result = NIL;
+
+  for ( int i = strlen( string); i > 0; i--) {
+    result = make_string( (wint_t)string[ i - 1], result);
+  }
+
+  return result;
+}
+
+/**
+ * Return a lisp symbol representation of this old skool ASCII string.
+ */
+struct cons_pointer c_string_to_lisp_symbol( char* symbol) {
+  struct cons_pointer result = NIL;
+
+  for ( int i = strlen( symbol); i > 0; i--) {
+    result = make_symbol( (wint_t)symbol[ i - 1], result);
+  }
+
+  return result;
 }

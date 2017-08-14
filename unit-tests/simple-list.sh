@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected="(1 2 3)"
-actual=`echo '(1 2 3 )' | target/psse 2> /dev/null`
+actual=`echo '(1 2 3)' | target/psse 2> /dev/null`
 
 if [ "${expected}" = "${actual}" ]
 then
