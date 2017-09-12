@@ -22,21 +22,22 @@
  * @param show_prompt true if prompts should be shown.
  */
 void
-repl(FILE * in_stream, FILE * out_stream, FILE * error_stream,
-     bool show_prompt)
-{
-    while (!feof(in_stream)) {
-        if (show_prompt) {
-            fwprintf(out_stream, L"\n:: ");
+repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
+      bool show_prompt ) {
+    while ( !feof( in_stream ) ) {
+        if ( show_prompt ) {
+            fwprintf( out_stream, L"\n:: " );
         }
-        struct cons_pointer input = read(in_stream);
-        fwprintf(error_stream, L"\nread {%d,%d}=> ", input.page, input.offset);
-        if (show_prompt) {
-            fwprintf(out_stream, L"\n-> ");
+        struct cons_pointer input = read( in_stream );
+        fwprintf( error_stream, L"\nread {%d,%d}=> ", input.page,
+                  input.offset );
+        if ( show_prompt ) {
+            fwprintf( out_stream, L"\n-> " );
         }
         // print( out_stream, lisp_eval(input, oblist, NULL));
-        print(out_stream, input);
-        fwprintf(out_stream, L"\n");
-        fwprintf(error_stream, L"\neval {%d,%d}=> ", input.page, input.offset);
+        print( out_stream, input );
+        fwprintf( out_stream, L"\n" );
+        fwprintf( error_stream, L"\neval {%d,%d}=> ", input.page,
+                  input.offset );
     }
 }

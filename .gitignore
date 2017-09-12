@@ -7,6 +7,4 @@ target/
 
 nbproject/
 
-*.c~
-
-*.h~
+*~

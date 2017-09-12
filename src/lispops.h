@@ -22,38 +22,38 @@
 /*
  * special forms 
  */
-struct cons_pointer lisp_eval(struct cons_pointer args,
-                              struct cons_pointer env,
-                              struct stack_frame *frame);
-struct cons_pointer lisp_apply(struct cons_pointer args,
+struct cons_pointer lisp_eval( struct cons_pointer args,
                                struct cons_pointer env,
-                               struct stack_frame *frame);
-struct cons_pointer lisp_quote(struct cons_pointer args,
-                               struct cons_pointer env,
-                               struct stack_frame *frame);
+                               struct stack_frame *frame );
+struct cons_pointer lisp_apply( struct cons_pointer args,
+                                struct cons_pointer env,
+                                struct stack_frame *frame );
+struct cons_pointer lisp_quote( struct cons_pointer args,
+                                struct cons_pointer env,
+                                struct stack_frame *frame );
 
 /*
  * functions 
  */
-struct cons_pointer lisp_cons(struct stack_frame *frame,
-                              struct cons_pointer env);
-struct cons_pointer lisp_car(struct stack_frame *frame,
-                             struct cons_pointer env);
-struct cons_pointer lisp_cdr(struct stack_frame *frame,
-                             struct cons_pointer env);
-struct cons_pointer lisp_assoc(struct stack_frame *frame,
-                               struct cons_pointer env);
-struct cons_pointer lisp_eq(struct stack_frame *frame,
-                            struct cons_pointer env);
-struct cons_pointer lisp_equal(struct stack_frame *frame,
-                               struct cons_pointer env);
-struct cons_pointer lisp_read(struct stack_frame *frame,
-                              struct cons_pointer env);
-struct cons_pointer lisp_print(struct stack_frame *frame,
-                               struct cons_pointer env);
+struct cons_pointer lisp_cons( struct stack_frame *frame,
+                               struct cons_pointer env );
+struct cons_pointer lisp_car( struct stack_frame *frame,
+                              struct cons_pointer env );
+struct cons_pointer lisp_cdr( struct stack_frame *frame,
+                              struct cons_pointer env );
+struct cons_pointer lisp_assoc( struct stack_frame *frame,
+                                struct cons_pointer env );
+struct cons_pointer lisp_eq( struct stack_frame *frame,
+                             struct cons_pointer env );
+struct cons_pointer lisp_equal( struct stack_frame *frame,
+                                struct cons_pointer env );
+struct cons_pointer lisp_read( struct stack_frame *frame,
+                               struct cons_pointer env );
+struct cons_pointer lisp_print( struct stack_frame *frame,
+                                struct cons_pointer env );
 
 /*
  * neither, at this stage, really 
  */
-struct cons_pointer lisp_throw(struct cons_pointer message,
-                               struct stack_frame *frame);
+struct cons_pointer lisp_throw( struct cons_pointer message,
+                                struct stack_frame *frame );

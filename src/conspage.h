@@ -43,7 +43,7 @@ extern struct cons_page *conspages[NCONSPAGES];
  *
  * @pointer the cell to free
  */
-void free_cell(struct cons_pointer pointer);
+void free_cell( struct cons_pointer pointer );
 
 /**
  * Allocates a cell with the specified tag. Dangerous, primitive, low
@@ -52,16 +52,16 @@ void free_cell(struct cons_pointer pointer);
  * @param tag the tag of the cell to allocate - must be a valid cons space tag.
  * @return the cons pointer which refers to the cell allocated.
  */
-struct cons_pointer allocate_cell(char *tag);
+struct cons_pointer allocate_cell( char *tag );
 
 /**
  * initialise the cons page system; to be called exactly once during startup.
  */
-void initialise_cons_pages();
+void initialise_cons_pages(  );
 
 /**
  * dump the allocated pages to this output stream.
  */
-void dump_pages(FILE * output);
+void dump_pages( FILE * output );
 
 #endif

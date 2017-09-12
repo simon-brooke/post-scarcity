@@ -246,8 +246,8 @@ struct cons_payload {
  */
 struct function_payload {
     struct cons_pointer source;
-    struct cons_pointer (*executable) (struct stack_frame *,
-                                       struct cons_pointer);
+    struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer );
 };
 
 /**
@@ -290,9 +290,9 @@ struct real_payload {
  */
 struct special_payload {
     struct cons_pointer source;
-    struct cons_pointer (*executable) (struct cons_pointer s_expr,
-                                       struct cons_pointer env,
-                                       struct stack_frame * frame);
+    struct cons_pointer ( *executable ) ( struct cons_pointer s_expr,
+                                          struct cons_pointer env,
+                                          struct stack_frame * frame );
 };
 
 /**
@@ -393,47 +393,31 @@ struct cons_space_object {
 /**
  * Check that the tag on the cell at this pointer is this tag
  */
-int check_tag(struct cons_pointer pointer, char *tag);
+int check_tag( struct cons_pointer pointer, char *tag );
 
 /**
  * increment the reference count of the object at this cons pointer
  */
-void inc_ref(struct cons_pointer pointer);
+void inc_ref( struct cons_pointer pointer );
 
 /**
  * decrement the reference count of the object at this cons pointer
  */
-void dec_ref(struct cons_pointer pointer);
+void dec_ref( struct cons_pointer pointer );
 
 /**
  * dump the object at this cons_pointer to this output stream.
  */
-void dump_object(FILE * output, struct cons_pointer pointer);
+void dump_object( FILE * output, struct cons_pointer pointer );
 
-struct cons_pointer make_cons(struct cons_pointer car,
-                              struct cons_pointer cdr);
-
-/**
- * Construct a cell which points to an executable Lisp special form.
- */
-struct cons_pointer make_function(struct cons_pointer src,
-                                  struct cons_pointer (*executable)
-
-
-
-
-
-
-
-
-                                   (struct stack_frame *,
-                                    struct cons_pointer));
+struct cons_pointer make_cons( struct cons_pointer car,
+                               struct cons_pointer cdr );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
  */
-struct cons_pointer make_special(struct cons_pointer src,
-                                 struct cons_pointer (*executable)
+struct cons_pointer make_function( struct cons_pointer src,
+                                   struct cons_pointer ( *executable )
 
 
 
@@ -442,31 +426,47 @@ struct cons_pointer make_special(struct cons_pointer src,
 
 
 
-                                  (struct cons_pointer s_expr,
-                                   struct cons_pointer env,
-                                   struct stack_frame * frame));
+                                    ( struct stack_frame *,
+                                      struct cons_pointer ) );
+
+/**
+ * Construct a cell which points to an executable Lisp special form.
+ */
+struct cons_pointer make_special( struct cons_pointer src,
+                                  struct cons_pointer ( *executable )
+
+
+
+
+
+
+
+
+                                   ( struct cons_pointer s_expr,
+                                     struct cons_pointer env,
+                                     struct stack_frame * frame ) );
 
 /**
  * Construct a string from this character and this tail. A string is
  * implemented as a flat list of cells each of which has one character and a 
  * pointer to the next; in the last cell the pointer to next is NIL.
  */
-struct cons_pointer make_string(wint_t c, struct cons_pointer tail);
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 
 /**
  * Construct a symbol from this character and this tail. A symbol is identical
  * to a string except for having a different tag.
  */
-struct cons_pointer make_symbol(wint_t c, struct cons_pointer tail);
+struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail );
 
 /**
  * Return a lisp string representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_string(char *string);
+struct cons_pointer c_string_to_lisp_string( char *string );
 
 /**
  * Return a lisp symbol representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_symbol(char *symbol);
+struct cons_pointer c_string_to_lisp_symbol( char *symbol );
 
 #endif
