@@ -151,6 +151,8 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         cell->payload.string.character = c;
         cell->payload.string.cdr.page = tail.page;
         cell->payload.string.cdr.offset = tail.offset;
+
+        dump_object( stderr, pointer);
     } else {
         fwprintf( stderr,
                   L"Warning: only NIL and %s can be appended to %s\n",
