@@ -49,12 +49,11 @@
 /**
  * Implementation of car in C. If arg is not a cons, does not error but returns nil.
  */
-struct cons_pointer c_car(struct cons_pointer arg)
-{
+struct cons_pointer c_car( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    if (consp(arg)) {
-        result = pointer2cell(arg).payload.cons.car;
+    if ( consp( arg ) ) {
+        result = pointer2cell( arg ).payload.cons.car;
     }
 
     return result;
@@ -63,12 +62,11 @@ struct cons_pointer c_car(struct cons_pointer arg)
 /**
  * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
  */
-struct cons_pointer c_cdr(struct cons_pointer arg)
-{
+struct cons_pointer c_cdr( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    if (consp(arg)) {
-        result = pointer2cell(arg).payload.cons.cdr;
+    if ( consp( arg ) ) {
+        result = pointer2cell( arg ).payload.cons.cdr;
     }
 
     return result;
@@ -81,33 +79,33 @@ struct cons_pointer c_cdr(struct cons_pointer arg)
  * and if so how it differs from eval.
  */
 struct cons_pointer
-lisp_apply(struct cons_pointer args, struct cons_pointer env,
-           struct stack_frame *frame)
-{
+lisp_apply( struct cons_pointer args, struct cons_pointer env,
+            struct stack_frame *frame ) {
     struct cons_pointer result = args;
 
-    if (consp(args)) {
-        lisp_eval(args, env, frame);
+    if ( consp( args ) ) {
+        lisp_eval( args, env, frame );
     }
 
     return result;
 }
 
 struct cons_pointer
-eval_cons(struct cons_pointer s_expr, struct cons_pointer env,
-          struct stack_frame *my_frame)
-{
+eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
+           struct stack_frame *my_frame ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer fn_pointer = lisp_eval(c_car(s_expr), env, my_frame);
-    struct cons_space_object fn_cell = pointer2cell(fn_pointer);
-    struct cons_pointer args = c_cdr(s_expr);
+    struct cons_pointer fn_pointer =
+        lisp_eval( c_car( s_expr ), env, my_frame );
+    struct cons_space_object fn_cell = pointer2cell( fn_pointer );
+    struct cons_pointer args = c_cdr( s_expr );
 
-    switch (fn_cell.tag.value) {
+    switch ( fn_cell.tag.value ) {
     case SPECIALTV:
         {
-            struct cons_space_object special = pointer2cell(fn_pointer);
+            struct cons_space_object special = pointer2cell( fn_pointer );
             result =
-                (*special.payload.special.executable) (args, env, my_frame);
+                ( *special.payload.special.executable ) ( args, env,
+                                                          my_frame );
         }
         break;
 
@@ -116,30 +114,31 @@ eval_cons(struct cons_pointer s_expr, struct cons_pointer env,
          * actually, this is apply 
          */
         {
-            struct cons_space_object function = pointer2cell(fn_pointer);
-            struct stack_frame *frame = make_stack_frame(my_frame, args, env);
+            struct cons_space_object function = pointer2cell( fn_pointer );
+            struct stack_frame *frame =
+                make_stack_frame( my_frame, args, env );
 
             /*
              * the trick: pass the remaining arguments and environment to the
              * executable code which is the payload of the function object. 
              */
-            result = (*function.payload.function.executable) (frame, env);
-            free_stack_frame(frame);
+            result = ( *function.payload.function.executable ) ( frame, env );
+            free_stack_frame( frame );
         }
         break;
 
     default:
         {
-            char *buffer = malloc(1024);
-            memset(buffer, '\0', 1024);
-            sprintf(buffer,
-                    "Unexpected cell with tag %d (%c%c%c%c) in function position",
-                    fn_cell.tag.value, fn_cell.tag.bytes[0],
-                    fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
-                    fn_cell.tag.bytes[3]);
-            struct cons_pointer message = c_string_to_lisp_string(buffer);
-            free(buffer);
-            result = lisp_throw(message, my_frame);
+            char *buffer = malloc( 1024 );
+            memset( buffer, '\0', 1024 );
+            sprintf( buffer,
+                     "Unexpected cell with tag %d (%c%c%c%c) in function position",
+                     fn_cell.tag.value, fn_cell.tag.bytes[0],
+                     fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
+                     fn_cell.tag.bytes[3] );
+            struct cons_pointer message = c_string_to_lisp_string( buffer );
+            free( buffer );
+            result = lisp_throw( message, my_frame );
         }
     }
 
@@ -160,29 +159,32 @@ eval_cons(struct cons_pointer s_expr, struct cons_pointer env,
  * If a special form, passes the cdr of s_expr to the special form as argument.
  */
 struct cons_pointer
-lisp_eval(struct cons_pointer s_expr, struct cons_pointer env,
-          struct stack_frame *previous)
-{
+lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
+           struct stack_frame *previous ) {
     struct cons_pointer result = s_expr;
-    struct cons_space_object cell = pointer2cell(s_expr);
-    struct stack_frame *my_frame =
-        make_stack_frame(previous, make_cons(s_expr, NIL), env);
+    struct cons_space_object cell = pointer2cell( s_expr );
 
-    switch (cell.tag.value) {
+    fprintf( stderr, "In eval; about to make stack frame" );
+
+    struct stack_frame *frame = make_stack_frame( previous, s_expr, env );
+
+    fprintf( stderr, "In eval; stack frame made" );
+
+    switch ( cell.tag.value ) {
     case CONSTV:
-        result = eval_cons(s_expr, env, my_frame);
+        result = eval_cons( s_expr, env, frame );
         break;
 
     case SYMBOLTV:
         {
-            struct cons_pointer canonical = internedp(s_expr, env);
-            if (nilp(canonical)) {
+            struct cons_pointer canonical = internedp( s_expr, env );
+            if ( nilp( canonical ) ) {
                 struct cons_pointer message =
                     c_string_to_lisp_string
-                    ("Attempt to take value of unbound symbol.");
-                result = lisp_throw(message, my_frame);
+                    ( "Attempt to take value of unbound symbol." );
+                result = lisp_throw( message, frame );
             } else {
-                result = c_assoc(canonical, env);
+                result = c_assoc( canonical, env );
             }
         }
         break;
@@ -195,7 +197,7 @@ lisp_eval(struct cons_pointer s_expr, struct cons_pointer env,
          */
     }
 
-    free_stack_frame(my_frame);
+    free_stack_frame( frame );
 
     return result;
 }
@@ -208,10 +210,9 @@ lisp_eval(struct cons_pointer s_expr, struct cons_pointer env,
  * this isn't at this stage checked) unevaluated.
  */
 struct cons_pointer
-lisp_quote(struct cons_pointer args, struct cons_pointer env,
-           struct stack_frame *frame)
-{
-    return c_car(args);
+lisp_quote( struct cons_pointer args, struct cons_pointer env,
+            struct stack_frame *frame ) {
+    return c_car( args );
 }
 
 /**
@@ -223,19 +224,19 @@ lisp_quote(struct cons_pointer args, struct cons_pointer env,
  * otherwise returns a new cons cell.
  */
 struct cons_pointer
-lisp_cons(struct stack_frame *frame, struct cons_pointer env)
-{
+lisp_cons( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer car = frame->arg[0];
     struct cons_pointer cdr = frame->arg[1];
     struct cons_pointer result;
 
-    if (nilp(car) && nilp(cdr)) {
+    if ( nilp( car ) && nilp( cdr ) ) {
         return NIL;
-    } else if (stringp(car) && stringp(cdr) &&
-               nilp(pointer2cell(car).payload.string.cdr)) {
-        result = make_string(pointer2cell(car).payload.string.character, cdr);
+    } else if ( stringp( car ) && stringp( cdr ) &&
+                nilp( pointer2cell( car ).payload.string.cdr ) ) {
+        result =
+            make_string( pointer2cell( car ).payload.string.character, cdr );
     } else {
-        result = make_cons(car, cdr);
+        result = make_cons( car, cdr );
     }
 
     return result;
@@ -247,20 +248,20 @@ lisp_cons(struct stack_frame *frame, struct cons_pointer env)
  * strings, and TODO read streams and other things which can be considered as sequences.
  */
 struct cons_pointer
-lisp_car(struct stack_frame *frame, struct cons_pointer env)
-{
+lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
-    if (consp(frame->arg[0])) {
-        struct cons_space_object cell = pointer2cell(frame->arg[0]);
+    if ( consp( frame->arg[0] ) ) {
+        struct cons_space_object cell = pointer2cell( frame->arg[0] );
         result = cell.payload.cons.car;
-    } else if (stringp(frame->arg[0])) {
-        struct cons_space_object cell = pointer2cell(frame->arg[0]);
-        result = make_string(cell.payload.string.character, NIL);
+    } else if ( stringp( frame->arg[0] ) ) {
+        struct cons_space_object cell = pointer2cell( frame->arg[0] );
+        result = make_string( cell.payload.string.character, NIL );
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string("Attempt to take CAR/CDR of non sequence");
-        result = lisp_throw(message, frame);
+            c_string_to_lisp_string
+            ( "Attempt to take CAR/CDR of non sequence" );
+        result = lisp_throw( message, frame );
     }
 
     return result;
@@ -272,20 +273,20 @@ lisp_car(struct stack_frame *frame, struct cons_pointer env)
  * strings, and TODO read streams and other things which can be considered as sequences.
  */
 struct cons_pointer
-lisp_cdr(struct stack_frame *frame, struct cons_pointer env)
-{
+lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
-    if (consp(frame->arg[0])) {
-        struct cons_space_object cell = pointer2cell(frame->arg[0]);
+    if ( consp( frame->arg[0] ) ) {
+        struct cons_space_object cell = pointer2cell( frame->arg[0] );
         result = cell.payload.cons.car;
-    } else if (stringp(frame->arg[0])) {
-        struct cons_space_object cell = pointer2cell(frame->arg[0]);
+    } else if ( stringp( frame->arg[0] ) ) {
+        struct cons_space_object cell = pointer2cell( frame->arg[0] );
         result = cell.payload.string.cdr;
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string("Attempt to take CAR/CDR of non sequence");
-        result = lisp_throw(message, frame);
+            c_string_to_lisp_string
+            ( "Attempt to take CAR/CDR of non sequence" );
+        result = lisp_throw( message, frame );
     }
 
     return result;
@@ -296,18 +297,17 @@ lisp_cdr(struct stack_frame *frame, struct cons_pointer env)
  * Returns the value associated with key in store, or NIL if not found.
  */
 struct cons_pointer
-lisp_assoc(struct stack_frame *frame, struct cons_pointer env)
-{
-    return c_assoc(frame->arg[0], frame->arg[1]);
+lisp_assoc( struct stack_frame *frame, struct cons_pointer env ) {
+    return c_assoc( frame->arg[0], frame->arg[1] );
 }
 
 /**
  * (eq a b)
  * Returns T if a and b are pointers to the same object, else NIL
  */
-struct cons_pointer lisp_eq(struct stack_frame *frame, struct cons_pointer env)
-{
-    return eq(frame->arg[0], frame->arg[1]) ? TRUE : NIL;
+struct cons_pointer lisp_eq( struct stack_frame *frame,
+                             struct cons_pointer env ) {
+    return eq( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
 
 /**
@@ -315,9 +315,8 @@ struct cons_pointer lisp_eq(struct stack_frame *frame, struct cons_pointer env)
  * Returns T if a and b are pointers to structurally identical objects, else NIL
  */
 struct cons_pointer
-lisp_equal(struct stack_frame *frame, struct cons_pointer env)
-{
-    return equal(frame->arg[0], frame->arg[1]) ? TRUE : NIL;
+lisp_equal( struct stack_frame *frame, struct cons_pointer env ) {
+    return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
 
 /**
@@ -327,15 +326,14 @@ lisp_equal(struct stack_frame *frame, struct cons_pointer env)
  * is a read stream, then read from that stream, else stdin.
  */
 struct cons_pointer
-lisp_read(struct stack_frame *frame, struct cons_pointer env)
-{
+lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
     FILE *input = stdin;
 
-    if (readp(frame->arg[0])) {
-        input = pointer2cell(frame->arg[0]).payload.stream.stream;
+    if ( readp( frame->arg[0] ) ) {
+        input = pointer2cell( frame->arg[0] ).payload.stream.stream;
     }
 
-    return read(input);
+    return read( input );
 }
 
 /**
@@ -345,15 +343,14 @@ lisp_read(struct stack_frame *frame, struct cons_pointer env)
  * is a write stream, then print to that stream, else stdout.
  */
 struct cons_pointer
-lisp_print(struct stack_frame *frame, struct cons_pointer env)
-{
+lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
     FILE *output = stdout;
 
-    if (writep(frame->arg[1])) {
-        output = pointer2cell(frame->arg[1]).payload.stream.stream;
+    if ( writep( frame->arg[1] ) ) {
+        output = pointer2cell( frame->arg[1] ).payload.stream.stream;
     }
 
-    print(output, frame->arg[0]);
+    print( output, frame->arg[0] );
 
     return NIL;
 }
@@ -362,12 +359,11 @@ lisp_print(struct stack_frame *frame, struct cons_pointer env)
  * TODO: make this do something sensible somehow.
  */
 struct cons_pointer
-lisp_throw(struct cons_pointer message, struct stack_frame *frame)
-{
-    fprintf(stderr, "\nERROR: ");
-    print(stderr, message);
-    fprintf(stderr,
-            "\n\nAn exception was thrown and I've no idea what to do now\n");
+lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
+    fprintf( stderr, "\nERROR: " );
+    print( stderr, message );
+    fprintf( stderr,
+             "\n\nAn exception was thrown and I've no idea what to do now\n" );
 
-    exit(1);
+    exit( 1 );
 }

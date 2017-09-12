@@ -44,17 +44,16 @@ struct cons_pointer oblist = NIL;
  * will work); otherwise return NIL.
  */
 struct cons_pointer
-internedp(struct cons_pointer key, struct cons_pointer store)
-{
+internedp( struct cons_pointer key, struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    for (struct cons_pointer next = store;
-         nilp(result) && consp(next);
-         next = pointer2cell(next).payload.cons.cdr) {
+    for ( struct cons_pointer next = store;
+          nilp( result ) && consp( next );
+          next = pointer2cell( next ).payload.cons.cdr ) {
         struct cons_space_object entry =
-            pointer2cell(pointer2cell(next).payload.cons.car);
+            pointer2cell( pointer2cell( next ).payload.cons.car );
 
-        if (equal(key, entry.payload.cons.car)) {
+        if ( equal( key, entry.payload.cons.car ) ) {
             result = entry.payload.cons.car;
         }
     }
@@ -70,16 +69,16 @@ internedp(struct cons_pointer key, struct cons_pointer store)
  * If this key is lexically identical to a key in this store, return the value
  * of that key from the store; otherwise return NIL.
  */
-struct cons_pointer c_assoc(struct cons_pointer key, struct cons_pointer store)
-{
+struct cons_pointer c_assoc( struct cons_pointer key,
+                             struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    for (struct cons_pointer next = store;
-         consp(next); next = pointer2cell(next).payload.cons.cdr) {
+    for ( struct cons_pointer next = store;
+          consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
         struct cons_space_object entry =
-            pointer2cell(pointer2cell(next).payload.cons.car);
+            pointer2cell( pointer2cell( next ).payload.cons.car );
 
-        if (equal(key, entry.payload.cons.car)) {
+        if ( equal( key, entry.payload.cons.car ) ) {
             result = entry.payload.cons.cdr;
             break;
         }
@@ -93,10 +92,9 @@ struct cons_pointer c_assoc(struct cons_pointer key, struct cons_pointer store)
  * with this key/value pair added to the front.
  */
 struct cons_pointer
-bind(struct cons_pointer key, struct cons_pointer value,
-     struct cons_pointer store)
-{
-    return make_cons(make_cons(key, value), store);
+bind( struct cons_pointer key, struct cons_pointer value,
+      struct cons_pointer store ) {
+    return make_cons( make_cons( key, value ), store );
 }
 
 /**
@@ -105,9 +103,8 @@ bind(struct cons_pointer key, struct cons_pointer value,
  * there it may not be especially useful).
  */
 struct cons_pointer
-deep_bind(struct cons_pointer key, struct cons_pointer value)
-{
-    oblist = bind(key, value, oblist);
+deep_bind( struct cons_pointer key, struct cons_pointer value ) {
+    oblist = bind( key, value, oblist );
     return oblist;
 }
 
@@ -117,16 +114,15 @@ deep_bind(struct cons_pointer key, struct cons_pointer value)
  * with the value NIL.
  */
 struct cons_pointer
-intern(struct cons_pointer key, struct cons_pointer environment)
-{
+intern( struct cons_pointer key, struct cons_pointer environment ) {
     struct cons_pointer result = environment;
-    struct cons_pointer canonical = internedp(key, environment);
+    struct cons_pointer canonical = internedp( key, environment );
 
-    if (nilp(canonical)) {
+    if ( nilp( canonical ) ) {
         /*
          * not currently bound 
          */
-        result = bind(key, NIL, environment);
+        result = bind( key, NIL, environment );
     }
 
     return result;

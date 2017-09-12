@@ -29,14 +29,13 @@
  * Allocate a new stack frame with its previous pointer set to this value,
  * its arguments set up from these args, evaluated in this env.
  */
-struct stack_frame *make_stack_frame(struct stack_frame *previous,
-                                     struct cons_pointer args,
-                                     struct cons_pointer env)
-{
+struct stack_frame *make_stack_frame( struct stack_frame *previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env ) {
     /*
      * TODO: later, pop a frame off a free-list of stack frames 
      */
-    struct stack_frame *result = malloc(sizeof(struct stack_frame));
+    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
 
     result->previous = previous;
 
@@ -47,27 +46,27 @@ struct stack_frame *make_stack_frame(struct stack_frame *previous,
     result->more = NIL;
     result->function = NIL;
 
-    for (int i = 0; i < args_in_frame; i++) {
+    for ( int i = 0; i < args_in_frame; i++ ) {
         result->arg[i] = NIL;
     }
 
     int i = 0;                  /* still an index into args, so same name will 
                                  * do */
 
-    while (!nilp(args)) {       /* iterate down the arg list filling in the
+    while ( !nilp( args ) ) {   /* iterate down the arg list filling in the
                                  * arg slots in the frame. When there are no
                                  * more slots, if there are still args, stash
                                  * them on more */
-        struct cons_space_object cell = pointer2cell(args);
+        struct cons_space_object cell = pointer2cell( args );
 
-        if (i < args_in_frame) {
+        if ( i < args_in_frame ) {
             /*
              * TODO: if we were running on real massively parallel hardware,
              * each arg except the first should be handed off to another
              * processor to be evaled in parallel 
              */
-            result->arg[i] = lisp_eval(cell.payload.cons.car, env, result);
-            inc_ref(result->arg[i]);
+            result->arg[i] = lisp_eval( cell.payload.cons.car, env, result );
+            inc_ref( result->arg[i] );
 
             args = cell.payload.cons.cdr;
         } else {
@@ -75,7 +74,7 @@ struct stack_frame *make_stack_frame(struct stack_frame *previous,
              * TODO: this isn't right. These args should also each be evaled. 
              */
             result->more = args;
-            inc_ref(result->more);
+            inc_ref( result->more );
 
             args = NIL;
         }
@@ -87,36 +86,34 @@ struct stack_frame *make_stack_frame(struct stack_frame *previous,
 /**
  * Free this stack frame.
  */
-void free_stack_frame(struct stack_frame *frame)
-{
+void free_stack_frame( struct stack_frame *frame ) {
     /*
      * TODO: later, push it back on the stack-frame freelist 
      */
-    for (int i = 0; i < args_in_frame; i++) {
-        dec_ref(frame->arg[i]);
+    for ( int i = 0; i < args_in_frame; i++ ) {
+        dec_ref( frame->arg[i] );
     }
-    dec_ref(frame->more);
+    dec_ref( frame->more );
 
-    free(frame);
+    free( frame );
 }
 
 /**
  * Fetch a pointer to the value of the local variable at this index.
  */
-struct cons_pointer fetch_arg(struct stack_frame *frame, unsigned int index)
-{
+struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int index ) {
     struct cons_pointer result = NIL;
 
-    if (index < args_in_frame) {
+    if ( index < args_in_frame ) {
         result = frame->arg[index];
     } else {
         struct cons_pointer p = frame->more;
 
-        for (int i = args_in_frame; i < index; i++) {
-            p = pointer2cell(p).payload.cons.cdr;
+        for ( int i = args_in_frame; i < index; i++ ) {
+            p = pointer2cell( p ).payload.cons.cdr;
         }
 
-        result = pointer2cell(p).payload.cons.car;
+        result = pointer2cell( p ).payload.cons.car;
     }
 
     return result;

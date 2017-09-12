@@ -27,37 +27,38 @@ extern struct cons_pointer oblist;
  * implementation a store is just an assoc list, but in future it might be a
  * namespace, a regularity or a homogeneity.
  */
-struct cons_pointer c_assoc(struct cons_pointer key,
-                            struct cons_pointer store);
+struct cons_pointer c_assoc( struct cons_pointer key,
+                             struct cons_pointer store );
 
 /**
  * Return true if this key is present as a key in this enviroment, defaulting to
  * the oblist if no environment is passed.
  */
-struct cons_pointer internedp(struct cons_pointer key,
-                              struct cons_pointer environment);
+struct cons_pointer internedp( struct cons_pointer key,
+                               struct cons_pointer environment );
 
 /**
  * Return a new key/value store containing all the key/value pairs in this store
  * with this key/value pair added to the front.
  */
-struct cons_pointer bind(struct cons_pointer key,
-                         struct cons_pointer value, struct cons_pointer store);
+struct cons_pointer bind( struct cons_pointer key,
+                          struct cons_pointer value,
+                          struct cons_pointer store );
 
 /**
  * Binds this key to this value in the global oblist, but doesn't affect the 
  * current environment. May not be useful except in bootstrapping (and even 
  * there it may not be especially useful).
  */
-struct cons_pointer deep_bind(struct cons_pointer key,
-                              struct cons_pointer value);
+struct cons_pointer deep_bind( struct cons_pointer key,
+                               struct cons_pointer value );
 
 /**
  * Ensure that a canonical copy of this key is bound in this environment, and
  * return that canonical copy. If there is currently no such binding, create one
  * with the value NIL.
  */
-struct cons_pointer intern(struct cons_pointer key,
-                           struct cons_pointer environment);
+struct cons_pointer intern( struct cons_pointer key,
+                            struct cons_pointer environment );
 
 #endif

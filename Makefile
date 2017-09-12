@@ -8,14 +8,14 @@ DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-INDENT_FLAGS := -kr -nut -l79 -ts2
+INDENT_FLAGS := -kr -br -brf -brs -ce -cdw -npsl -nut -prs -l79 -ts2
 
 VERSION := "0.0.0"
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g
 LDFLAGS := -lm
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 format:
