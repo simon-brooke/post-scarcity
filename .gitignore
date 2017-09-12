@@ -6,3 +6,7 @@
 target/
 
 nbproject/
+
+*.c~
+
+*.h~
