@@ -28,14 +28,6 @@ void bind_function( char *name, struct cons_pointer ( *executable )
 }
 
 void bind_special( char *name, struct cons_pointer ( *executable )
-
-
-
-
-
-
-
-
                     ( struct cons_pointer s_expr, struct cons_pointer env,
                       struct stack_frame * frame ) ) {
     deep_bind( intern( c_string_to_lisp_symbol( name ), oblist ),
@@ -101,10 +93,9 @@ int main( int argc, char *argv[] ) {
     bind_special( "quote", &lisp_quote );
 
     repl( stdin, stdout, stderr, show_prompt );
-    // print( stdout, lisp_eval( input, oblist, NULL));
 
     if ( dump_at_end ) {
-        dump_pages( stderr );
+        dump_pages( stdout );
     }
 
     return ( 0 );

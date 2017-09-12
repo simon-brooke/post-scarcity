@@ -91,7 +91,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   cell.payload.real.value );
     } else if ( check_tag( pointer, STRINGTAG ) ) {
         fwprintf( output,
-                  L"String cell: character '%1c' (%1d) next at page %2d offset %3d\n",
+                  L"\t\tString cell: character '%1c' (%1d) next at page %2d offset %3d\n",
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset );
@@ -150,9 +150,9 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         inc_ref( tail );
         cell->payload.string.character = c;
         cell->payload.string.cdr.page = tail.page;
+	/* TODO: There's a problem here. Sometimes the offsets on
+         * strings are quite massively off. */
         cell->payload.string.cdr.offset = tail.offset;
-
-        dump_object( stderr, pointer);
     } else {
         fwprintf( stderr,
                   L"Warning: only NIL and %s can be appended to %s\n",
@@ -184,14 +184,6 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
  */
 struct cons_pointer
 make_special( struct cons_pointer src, struct cons_pointer ( *executable )
-
-
-
-
-
-
-
-
                ( struct cons_pointer s_expr,
                  struct cons_pointer env, struct stack_frame * frame ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );

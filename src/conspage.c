@@ -167,7 +167,7 @@ struct cons_pointer allocate_cell( char *tag ) {
             fprintf( stderr,
                      "Allocated cell of type '%s' at %d, %d \n", tag,
                      result.page, result.offset );
-            dump_object( stderr, result );
+            // dump_object( stderr, result );
         } else {
             fprintf( stderr, "WARNING: Allocating non-free cell!" );
         }
