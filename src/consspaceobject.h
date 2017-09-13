@@ -156,7 +156,7 @@
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
 
 /**
- * true if conspointer points to a string cell, else false 
+ * true if conspointer points to a symbol cell, else false 
  */
 #define symbolp(conspoint) (check_tag(conspoint,SYMBOLTAG))
 
@@ -418,14 +418,6 @@ struct cons_pointer make_cons( struct cons_pointer car,
  */
 struct cons_pointer make_function( struct cons_pointer src,
                                    struct cons_pointer ( *executable )
-
-
-
-
-
-
-
-
                                     ( struct stack_frame *,
                                       struct cons_pointer ) );
 
@@ -434,14 +426,6 @@ struct cons_pointer make_function( struct cons_pointer src,
  */
 struct cons_pointer make_special( struct cons_pointer src,
                                   struct cons_pointer ( *executable )
-
-
-
-
-
-
-
-
                                    ( struct cons_pointer s_expr,
                                      struct cons_pointer env,
                                      struct stack_frame * frame ) );

@@ -31,19 +31,13 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
         struct cons_pointer input = read( in_stream );
         fwprintf( error_stream, L"\nread {%d,%d}=> ", input.page,
                   input.offset );
-        if ( show_prompt ) {
-            fwprintf( out_stream, L"\n-> " );
-        }
+        print( error_stream, input);
 
-	/* OK, I think what's going wrong here is we're passing by 
-	 * value and I think we should be passing by reference.
-         * I'm not certain about that, and as it will be a really
-         * major change I'm going to think some more before making
-	 * in */
-        // print( out_stream, lisp_eval(input, oblist, NULL));
-        print( out_stream, input );
+        struct cons_pointer value = lisp_eval( input, oblist, NULL );
+        // print( out_stream, input );
         fwprintf( out_stream, L"\n" );
         fwprintf( error_stream, L"\neval {%d,%d}=> ", input.page,
                   input.offset );
+        print( out_stream,  value);
     }
 }

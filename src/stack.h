@@ -30,6 +30,18 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
 void free_stack_frame( struct stack_frame *frame );
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 
+/**
+ * A 'special' frame is exactly like a normal stack frame except that the 
+ * arguments are unevaluated.
+ * @param previous the previous stack frame;
+ * @param args a list of the arguments to be stored in this stack frame;
+ * @param env the execution environment;
+ * @return a new special frame.
+ */
+struct stack_frame *make_special_frame( struct stack_frame *previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env );
+
 /*
  * struct stack_frame is defined in consspaceobject.h to break circularity
  * TODO: refactor. 

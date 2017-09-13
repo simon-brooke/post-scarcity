@@ -19,19 +19,21 @@
 #include "consspaceobject.h"
 #include "intern.h"
 #include "lispops.h"
+#include "peano.h"
+#include "print.h"
 #include "repl.h"
 
 void bind_function( char *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *, struct cons_pointer ) ) {
-    deep_bind( intern( c_string_to_lisp_symbol( name ), oblist ),
-               make_function( NIL, executable ) );
+    deep_bind( c_string_to_lisp_symbol( name ), 
+               make_function( NIL, executable ));
 }
 
 void bind_special( char *name, struct cons_pointer ( *executable )
                     ( struct cons_pointer s_expr, struct cons_pointer env,
                       struct stack_frame * frame ) ) {
-    deep_bind( intern( c_string_to_lisp_symbol( name ), oblist ),
-               make_special( NIL, executable ) );
+    deep_bind( c_string_to_lisp_symbol( name ),
+               make_special( NIL, executable ));
 }
 
 int main( int argc, char *argv[] ) {
@@ -54,14 +56,14 @@ int main( int argc, char *argv[] ) {
             show_prompt = true;
             break;
         default:
-            fprintf( stderr, "Unexpected option %c\n", option );
+            fwprintf( stderr, L"Unexpected option %c\n", option );
             break;
         }
     }
 
     if ( show_prompt ) {
-        fprintf( stdout,
-                 "Post scarcity software environment version %s\n\n",
+        fwprintf( stdout,
+                 L"Post scarcity software environment version %s\n\n",
                  VERSION );
     }
 
@@ -70,8 +72,9 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords) 
      */
-    deep_bind( intern( c_string_to_lisp_string( "nil" ), oblist ), NIL );
-    deep_bind( intern( c_string_to_lisp_string( "t" ), oblist ), TRUE );
+    
+    deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
+    deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
 
     /*
      * primitive function operations 
@@ -84,6 +87,10 @@ int main( int argc, char *argv[] ) {
     bind_function( "equal", &lisp_equal );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
+    
+    bind_function( "add", &lisp_add);
+    bind_function( "multiply", &lisp_multiply);
+    bind_function( "subtract", &lisp_subtract);
 
     /*
      * primitive special forms 
@@ -91,7 +98,12 @@ int main( int argc, char *argv[] ) {
     bind_special( "apply", &lisp_apply );
     bind_special( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
-
+    
+    
+    /* bind the oblist last, at this stage. Something clever needs to be done 
+     * here and I'm not sure what it is. */
+    deep_bind( c_string_to_lisp_symbol( "oblist"), oblist);
+    
     repl( stdin, stdout, stderr, show_prompt );
 
     if ( dump_at_end ) {

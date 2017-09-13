@@ -19,6 +19,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "print.h"
 
 /**
  * Check that the tag on the cell at this pointer is this tag
@@ -73,28 +74,47 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
               cell.tag.bytes[3],
               cell.tag.value, pointer.page, pointer.offset, cell.count );
 
-    if ( check_tag( pointer, CONSTAG ) ) {
+    switch ( cell.tag.value) {
+    case CONSTV:
         fwprintf( output,
                   L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d\n",
                   cell.payload.cons.car.page,
                   cell.payload.cons.car.offset,
                   cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
-    } else if ( check_tag( pointer, INTEGERTAG ) ) {
+        break;
+    case INTEGERTV:
         fwprintf( output,
                   L"\t\tInteger cell: value %ld\n",
                   cell.payload.integer.value );
-    } else if ( check_tag( pointer, FREETAG ) ) {
+        break;
+    case FREETV:
         fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
                   cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
-    } else if ( check_tag( pointer, REALTAG ) ) {
+        break;
+    case REALTV:
         fwprintf( output, L"\t\tReal cell: value %Lf\n",
                   cell.payload.real.value );
-    } else if ( check_tag( pointer, STRINGTAG ) ) {
+        break;
+    case STRINGTV:
         fwprintf( output,
                   L"\t\tString cell: character '%1c' (%1d) next at page %2d offset %3d\n",
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset );
+        fwprintf( output, L"\t\t value:");
+        print(output, pointer);
+        fwprintf( output, L"\n");
+        break;
+    case SYMBOLTV:
+        fwprintf( output,
+                  L"\t\tSymbol cell: character '%1c' (%1d) next at page %2d offset %3d\n",
+                  cell.payload.string.character,
+                  cell.payload.string.cdr.page,
+                  cell.payload.string.cdr.offset );
+        fwprintf( output, L"\t\t value:");
+        print(output, pointer);
+        fwprintf( output, L"\n");
+        break;
     }
 }
 
@@ -150,7 +170,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         inc_ref( tail );
         cell->payload.string.character = c;
         cell->payload.string.cdr.page = tail.page;
-	/* TODO: There's a problem here. Sometimes the offsets on
+        /* TODO: There's a problem here. Sometimes the offsets on
          * strings are quite massively off. */
         cell->payload.string.cdr.offset = tail.offset;
     } else {

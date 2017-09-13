@@ -20,7 +20,7 @@
  * as a cons-space object. Cell may in principle be any kind of number,
  * but only integers and reals are so far implemented.
  */
-double numeric_value( struct cons_pointer pointer ) {
+long double numeric_value( struct cons_pointer pointer ) {
     double result = NAN;
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -41,7 +41,7 @@ struct cons_pointer make_integer( long int value ) {
     struct cons_space_object *cell = &pointer2cell( result );
     cell->payload.integer.value = value;
 
-    dump_object( stderr, result);
+    dump_object( stderr, result );
 
     return result;
 }

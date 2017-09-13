@@ -102,10 +102,10 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
     switch ( fn_cell.tag.value ) {
     case SPECIALTV:
         {
-            struct cons_space_object special = pointer2cell( fn_pointer );
+            struct stack_frame *frame =
+                make_special_frame( my_frame, args, env );
             result =
-                ( *special.payload.special.executable ) ( args, env,
-                                                          my_frame );
+                ( *fn_cell.payload.special.executable ) ( args, env, frame );
         }
         break;
 
@@ -122,7 +122,7 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
              * the trick: pass the remaining arguments and environment to the
              * executable code which is the payload of the function object. 
              */
-            result = ( *function.payload.function.executable ) ( frame, env );
+            result = ( *fn_cell.payload.function.executable ) ( frame, env );
             free_stack_frame( frame );
         }
         break;
@@ -164,15 +164,9 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
     struct cons_pointer result = s_expr;
     struct cons_space_object cell = pointer2cell( s_expr );
 
-    fprintf( stderr, "In eval; about to make stack frame" );
-
-    struct stack_frame *frame = make_stack_frame( previous, s_expr, env );
-
-    fprintf( stderr, "In eval; stack frame made" );
-
     switch ( cell.tag.value ) {
     case CONSTV:
-        result = eval_cons( s_expr, env, frame );
+        result = eval_cons( s_expr, env, previous);
         break;
 
     case SYMBOLTV:
@@ -182,7 +176,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
                 struct cons_pointer message =
                     c_string_to_lisp_string
                     ( "Attempt to take value of unbound symbol." );
-                result = lisp_throw( message, frame );
+                result = lisp_throw( message, previous );
             } else {
                 result = c_assoc( canonical, env );
             }
@@ -197,8 +191,6 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
          */
     }
 
-    free_stack_frame( frame );
-
     return result;
 }
 
@@ -212,7 +204,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 struct cons_pointer
 lisp_quote( struct cons_pointer args, struct cons_pointer env,
             struct stack_frame *frame ) {
-    return c_car( args );
+    return frame->arg[0];
 }
 
 /**
@@ -360,10 +352,10 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
  */
 struct cons_pointer
 lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
-    fprintf( stderr, "\nERROR: " );
+    fwprintf( stderr, L"\nERROR: " );
     print( stderr, message );
-    fprintf( stderr,
-             "\n\nAn exception was thrown and I've no idea what to do now\n" );
+    fwprintf( stderr,
+             L"\n\nAn exception was thrown and I've no idea what to do now\n" );
 
     exit( 1 );
 }

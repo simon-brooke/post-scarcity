@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected='(quote Fred)'
+expected='Fred'
 actual=`echo "'Fred" | target/psse 2> /dev/null | head -1`
 
 if [ "${expected}" = "${actual}" ]
