@@ -32,7 +32,7 @@
  * @return a pointer to an integer or real.
  */
 struct cons_pointer
-lisp_plus(struct stack_frame *frame, struct cons_pointer env) {
+lisp_add(struct stack_frame *frame, struct cons_pointer env) {
     struct cons_pointer result = NIL;
     long int i_accumulator = 0;
     long double d_accumulator = 0;
@@ -58,6 +58,52 @@ lisp_plus(struct stack_frame *frame, struct cons_pointer env) {
         if (! nilp(frame->more)) {
             lisp_throw(
                     c_string_to_lisp_string("Cannot yet add more than 8 numbers"), 
+                                            frame);
+        }
+
+        if ( is_int) {
+            result = make_integer( i_accumulator);
+        } else {
+            result = make_real( d_accumulator);
+        }
+    }
+    
+    return result;    
+}
+
+/**
+ * Multiply an indefinite number of numbers together
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+struct cons_pointer
+lisp_multiply(struct stack_frame *frame, struct cons_pointer env) {
+    struct cons_pointer result = NIL;
+    long int i_accumulator = 1;
+    long double d_accumulator = 1;
+    bool is_int = true;
+    
+    for (int i = 0; i < args_in_frame && !nilp(frame->arg[i]); i++) {
+        struct cons_space_object arg = pointer2cell(frame->arg[i]);
+        
+        switch (arg.tag.value) {
+        case INTEGERTV:
+            i_accumulator *= arg.payload.integer.value;
+            d_accumulator *= numeric_value( frame->arg[i]);
+            break;
+        case REALTV:
+            d_accumulator *= arg.payload.real.value;
+            is_int = false;
+        default:
+            lisp_throw(
+                    c_string_to_lisp_string("Cannot multiply: not a number"), 
+                                            frame);
+        }
+        
+        if (! nilp(frame->more)) {
+            lisp_throw(
+                    c_string_to_lisp_string("Cannot yet multiply more than 8 numbers"), 
                                             frame);
         }
 

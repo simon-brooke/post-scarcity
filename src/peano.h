@@ -23,8 +23,16 @@ extern "C" {
  * @return a pointer to an integer or real.
  */
 struct cons_pointer
-lisp_plus(struct stack_frame *frame, struct cons_pointer env);
+lisp_add(struct stack_frame *frame, struct cons_pointer env);
 
+/**
+ * Multiply an indefinite number of numbers together
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+struct cons_pointer
+lisp_multiply(struct stack_frame *frame, struct cons_pointer env);
 
 
 #ifdef __cplusplus
