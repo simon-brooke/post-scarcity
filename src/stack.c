@@ -51,18 +51,12 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
-    int i = 0;                  /* still an index into args, so same name will
-                                 * do */
-
-    while ( !nilp( args ) ) {   /* iterate down the arg list filling in the
-                                 * arg slots in the frame. When there are no
-                                 * more slots, if there are still args, stash
-                                 * them on more */
+    for (int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+      /* iterate down the arg list filling in the arg slots in the
+       * frame. When there are no more slots, if there are still args,
+       * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
-        if ( i < args_in_frame ) {
-            fwprintf(stderr, L"Making frame; arg %d: ", i);
-            print(stderr, cell.payload.cons.car);
             /*
              * TODO: if we were running on real massively parallel hardware,
              * each arg except the first should be handed off to another
@@ -72,17 +66,12 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
             inc_ref( result->arg[i] );
 
             args = cell.payload.cons.cdr;
-            i++;
-        } else {
+        }
             /*
              * TODO: this isn't right. These args should also each be evaled.
              */
             result->more = args;
             inc_ref( result->more );
-
-            args = NIL;
-        }
-    }
 
     return result;
 }
@@ -116,31 +105,19 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
-    int i = 0;                  /* still an index into args, so same name will
-                                 * do */
-
-    while ( !nilp( args ) ) {   /* iterate down the arg list filling in the
-                                 * arg slots in the frame. When there are no
-                                 * more slots, if there are still args, stash
-                                 * them on more */
+    for (int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+      /* iterate down the arg list filling in the arg slots in the
+       * frame. When there are no more slots, if there are still args,
+       * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
-        if ( i < args_in_frame ) {
-            result->arg[i] = cell.payload.cons.car;
-            inc_ref( result->arg[i] );
+        result->arg[i] = cell.payload.cons.car;
+        inc_ref( result->arg[i] );
 
-            args = cell.payload.cons.cdr;
-            i++;
-        } else {
-            /*
-             * TODO: this isn't right. These args should also each be evaled.
-             */
-            result->more = args;
-            inc_ref( result->more );
-
-            args = NIL;
-        }
+        args = cell.payload.cons.cdr;
     }
+    result->more = args;
+    inc_ref(args);
 
     return result;
 }

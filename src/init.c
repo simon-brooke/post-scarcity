@@ -90,6 +90,7 @@ int main( int argc, char *argv[] ) {
     
     bind_function( "add", &lisp_add);
     bind_function( "multiply", &lisp_multiply);
+    bind_function( "subtract", &lisp_subtract);
 
     /*
      * primitive special forms 

@@ -89,7 +89,7 @@ void print( FILE * output, struct cons_pointer pointer ) {
         fwprintf( output, L"nil" );
         break;
     case REALTV:
-        fwprintf( output, L"%lf", cell.payload.real.value );
+        fwprintf( output, L"%Lf", cell.payload.real.value );
         break;
     case STRINGTV:
         print_string( output, pointer );

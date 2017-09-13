@@ -117,3 +117,33 @@ lisp_multiply(struct stack_frame *frame, struct cons_pointer env) {
     return result;    
 }
 
+/**
+ * Subtract one number from another.
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+struct cons_pointer
+lisp_subtract(struct stack_frame *frame, struct cons_pointer env) {
+    struct cons_pointer result = NIL;
+    
+    struct cons_space_object arg0 = pointer2cell(frame->arg[0]);
+    struct cons_space_object arg1 = pointer2cell(frame->arg[1]);
+
+    if ( integerp(frame->arg[0]) && integerp(frame->arg[1])) {
+      result = make_integer(arg0.payload.integer.value - arg1.payload.integer.value);
+    } else if  ( realp(frame->arg[0]) && realp(frame->arg[1])) {
+      result = make_real(arg0.payload.real.value - arg1.payload.real.value);
+    } else if (integerp(frame->arg[0]) && realp(frame->arg[1])) {
+      result = make_real( numeric_value(frame->arg[0]) - arg1.payload.real.value);
+    } else if (realp(frame->arg[0]) && integerp(frame->arg[1])) {
+      result = make_real( arg0.payload.real.value - numeric_value(frame->arg[0]));
+    } // else we have an error!
+
+    // and if not nilp[frame->arg[2]) we also have an error.
+    
+    return result;
+}
+
+    
+    

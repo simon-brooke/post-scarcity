@@ -34,6 +34,14 @@ lisp_add(struct stack_frame *frame, struct cons_pointer env);
 struct cons_pointer
 lisp_multiply(struct stack_frame *frame, struct cons_pointer env);
 
+/**
+ * Subtract one number from another.
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+struct cons_pointer
+lisp_subtract(struct stack_frame *frame, struct cons_pointer env);
 
 #ifdef __cplusplus
 }
