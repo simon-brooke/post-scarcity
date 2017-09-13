@@ -102,9 +102,10 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
     switch ( fn_cell.tag.value ) {
     case SPECIALTV:
         {
-            struct cons_space_object special = pointer2cell( fn_pointer );
+            struct stack_frame *frame =
+                make_special_frame( my_frame, args, env );
             result =
-                ( *special.payload.special.executable ) ( args, env, my_frame );
+                ( *fn_cell.payload.special.executable ) ( args, env, frame );
         }
         break;
 
@@ -121,7 +122,7 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
              * the trick: pass the remaining arguments and environment to the
              * executable code which is the payload of the function object. 
              */
-            result = ( *function.payload.function.executable ) ( frame, env );
+            result = ( *fn_cell.payload.function.executable ) ( frame, env );
             free_stack_frame( frame );
         }
         break;
@@ -165,13 +166,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 
     switch ( cell.tag.value ) {
     case CONSTV:
-        fwprintf( stderr, L"In eval; about to make stack frame" );
-        struct stack_frame *frame = make_stack_frame( previous, s_expr, env );
-        fwprintf( stderr, L"In eval; stack frame made" );
-
-        result = eval_cons( s_expr, env, frame );
-
-        free_stack_frame( frame );
+        result = eval_cons( s_expr, env, previous);
         break;
 
     case SYMBOLTV:
@@ -181,7 +176,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
                 struct cons_pointer message =
                     c_string_to_lisp_string
                     ( "Attempt to take value of unbound symbol." );
-                result = lisp_throw( message, frame );
+                result = lisp_throw( message, previous );
             } else {
                 result = c_assoc( canonical, env );
             }

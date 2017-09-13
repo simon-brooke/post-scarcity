@@ -20,7 +20,7 @@
 #ifndef __intern_h
 #define __intern_h
 
-extern struct cons_pointer * oblist;
+extern struct cons_pointer oblist;
 
 /**
  * return the value associated with this key in this store. In the current 

@@ -147,8 +147,6 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
 
-    fwprintf( stderr, L"read_string starting '%C' (%d)\n", initial, initial );
-
     switch ( initial ) {
     case '\0':
         result = make_string( initial, NIL );
@@ -167,8 +165,6 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
 struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
-
-    fwprintf( stderr, L"read_symbol starting '%C' (%d)\n", initial, initial );
 
     switch ( initial ) {
     case '\0':
@@ -191,16 +187,16 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
         ungetwc( initial, input );
         break;
     default:
-        if ( iswblank( initial ) || !iswprint( initial ) ) {
-            result = make_symbol( '\0', NIL );
+        if ( iswalnum( initial ) ) {
+            result =
+                make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
+        } else {
+            result = NIL;
             /*
              * push back the character read
              */
             ungetwc( initial, input );
-        } else {
-            result =
-                make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
-        }
+        } 
         break;
     }
 

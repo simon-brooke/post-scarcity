@@ -19,19 +19,21 @@
 #include "consspaceobject.h"
 #include "intern.h"
 #include "lispops.h"
+#include "peano.h"
+#include "print.h"
 #include "repl.h"
 
 void bind_function( char *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *, struct cons_pointer ) ) {
-    deep_bind( intern( c_string_to_lisp_symbol( name ), oblist ),
-               make_function( NIL, executable ) );
+    deep_bind( c_string_to_lisp_symbol( name ), 
+               make_function( NIL, executable ));
 }
 
 void bind_special( char *name, struct cons_pointer ( *executable )
                     ( struct cons_pointer s_expr, struct cons_pointer env,
                       struct stack_frame * frame ) ) {
-    deep_bind( intern( c_string_to_lisp_symbol( name ), oblist ),
-               make_special( NIL, executable ) );
+    deep_bind( c_string_to_lisp_symbol( name ),
+               make_special( NIL, executable ));
 }
 
 int main( int argc, char *argv[] ) {
@@ -70,17 +72,13 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords) 
      */
-    /*
-    deep_bind( intern( c_string_to_lisp_string( "nil" ), oblist ), NIL );
-    deep_bind( intern( c_string_to_lisp_string( "t" ), oblist ), TRUE );
-     */
-    struct cons_pointer lisp_symbol = c_string_to_lisp_symbol( "oblist");
-    deep_bind( lisp_symbol, &oblist);
+    
+    deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
+    deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
 
     /*
      * primitive function operations 
      */
-    /*
     bind_function( "assoc", &lisp_assoc );
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
@@ -89,19 +87,20 @@ int main( int argc, char *argv[] ) {
     bind_function( "equal", &lisp_equal );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
-*/
+    
+    bind_function( "plus", &lisp_plus);
+
     /*
      * primitive special forms 
      */
-    /*
     bind_special( "apply", &lisp_apply );
     bind_special( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
-    */
-    if ( show_prompt) {
-        fwprintf( stderr, L"Oblist: ");
-        print(stderr, *oblist);
-    }
+    
+    
+    /* bind the oblist last, at this stage. Something clever needs to be done 
+     * here and I'm not sure what it is. */
+    deep_bind( c_string_to_lisp_symbol( "oblist"), oblist);
     
     repl( stdin, stdout, stderr, show_prompt );
 

@@ -4,13 +4,13 @@
  * The Lisp evaluation stack.
  *
  * Stack frames could be implemented in cons space; indeed, the stack
- * could simply be an assoc list consed onto the front of the environment. 
- * But such a stack would be costly to search. The design sketched here, 
- * with stack frames as special objects, SHOULD be substantially more 
+ * could simply be an assoc list consed onto the front of the environment.
+ * But such a stack would be costly to search. The design sketched here,
+ * with stack frames as special objects, SHOULD be substantially more
  * efficient, but does imply we need to generalise the idea of cons pages
  * with freelists to a more general 'equal sized object pages', so that
  * allocating/freeing stack frames can be more efficient.
- * 
+ *
  * Stack frames are not yet a first class object; they have no VECP pointer
  * in cons space.
  *
@@ -23,6 +23,7 @@
 #include "consspaceobject.h"
 #include "conspage.h"
 #include "lispops.h"
+#include "print.h"
 #include "stack.h"
 
 /**
@@ -33,7 +34,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
                                       struct cons_pointer env ) {
     /*
-     * TODO: later, pop a frame off a free-list of stack frames 
+     * TODO: later, pop a frame off a free-list of stack frames
      */
     struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
 
@@ -41,7 +42,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
 
     /*
      * clearing the frame with memset would probably be slightly quicker, but
-     * this is clear. 
+     * this is clear.
      */
     result->more = NIL;
     result->function = NIL;
@@ -50,7 +51,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
-    int i = 0;                  /* still an index into args, so same name will 
+    int i = 0;                  /* still an index into args, so same name will
                                  * do */
 
     while ( !nilp( args ) ) {   /* iterate down the arg list filling in the
@@ -60,18 +61,79 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         struct cons_space_object cell = pointer2cell( args );
 
         if ( i < args_in_frame ) {
+            fwprintf(stderr, L"Making frame; arg %d: ", i);
+            print(stderr, cell.payload.cons.car);
             /*
              * TODO: if we were running on real massively parallel hardware,
              * each arg except the first should be handed off to another
-             * processor to be evaled in parallel 
+             * processor to be evaled in parallel
              */
             result->arg[i] = lisp_eval( cell.payload.cons.car, env, result );
             inc_ref( result->arg[i] );
 
             args = cell.payload.cons.cdr;
+            i++;
         } else {
             /*
-             * TODO: this isn't right. These args should also each be evaled. 
+             * TODO: this isn't right. These args should also each be evaled.
+             */
+            result->more = args;
+            inc_ref( result->more );
+
+            args = NIL;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * A 'special' frame is exactly like a normal stack frame except that the
+ * arguments are unevaluated.
+ * @param previous the previous stack frame;
+ * @param args a list of the arguments to be stored in this stack frame;
+ * @param env the execution environment;
+ * @return a new special frame.
+ */
+struct stack_frame *make_special_frame( struct stack_frame *previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env ) {
+    /*
+     * TODO: later, pop a frame off a free-list of stack frames
+     */
+    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
+
+    result->previous = previous;
+
+    /*
+     * clearing the frame with memset would probably be slightly quicker, but
+     * this is clear.
+     */
+    result->more = NIL;
+    result->function = NIL;
+
+    for ( int i = 0; i < args_in_frame; i++ ) {
+        result->arg[i] = NIL;
+    }
+
+    int i = 0;                  /* still an index into args, so same name will
+                                 * do */
+
+    while ( !nilp( args ) ) {   /* iterate down the arg list filling in the
+                                 * arg slots in the frame. When there are no
+                                 * more slots, if there are still args, stash
+                                 * them on more */
+        struct cons_space_object cell = pointer2cell( args );
+
+        if ( i < args_in_frame ) {
+            result->arg[i] = cell.payload.cons.car;
+            inc_ref( result->arg[i] );
+
+            args = cell.payload.cons.cdr;
+            i++;
+        } else {
+            /*
+             * TODO: this isn't right. These args should also each be evaled.
              */
             result->more = args;
             inc_ref( result->more );
@@ -88,7 +150,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
  */
 void free_stack_frame( struct stack_frame *frame ) {
     /*
-     * TODO: later, push it back on the stack-frame freelist 
+     * TODO: later, push it back on the stack-frame freelist
      */
     for ( int i = 0; i < args_in_frame; i++ ) {
         dec_ref( frame->arg[i] );
