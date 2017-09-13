@@ -156,7 +156,7 @@
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
 
 /**
- * true if conspointer points to a string cell, else false 
+ * true if conspointer points to a symbol cell, else false 
  */
 #define symbolp(conspoint) (check_tag(conspoint,SYMBOLTAG))
 

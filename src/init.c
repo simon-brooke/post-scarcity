@@ -54,14 +54,14 @@ int main( int argc, char *argv[] ) {
             show_prompt = true;
             break;
         default:
-            fprintf( stderr, "Unexpected option %c\n", option );
+            fwprintf( stderr, L"Unexpected option %c\n", option );
             break;
         }
     }
 
     if ( show_prompt ) {
-        fprintf( stdout,
-                 "Post scarcity software environment version %s\n\n",
+        fwprintf( stdout,
+                 L"Post scarcity software environment version %s\n\n",
                  VERSION );
     }
 
@@ -70,12 +70,17 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords) 
      */
+    /*
     deep_bind( intern( c_string_to_lisp_string( "nil" ), oblist ), NIL );
     deep_bind( intern( c_string_to_lisp_string( "t" ), oblist ), TRUE );
+     */
+    struct cons_pointer lisp_symbol = c_string_to_lisp_symbol( "oblist");
+    deep_bind( lisp_symbol, &oblist);
 
     /*
      * primitive function operations 
      */
+    /*
     bind_function( "assoc", &lisp_assoc );
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
@@ -84,14 +89,20 @@ int main( int argc, char *argv[] ) {
     bind_function( "equal", &lisp_equal );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
-
+*/
     /*
      * primitive special forms 
      */
+    /*
     bind_special( "apply", &lisp_apply );
     bind_special( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
-
+    */
+    if ( show_prompt) {
+        fwprintf( stderr, L"Oblist: ");
+        print(stderr, *oblist);
+    }
+    
     repl( stdin, stdout, stderr, show_prompt );
 
     if ( dump_at_end ) {

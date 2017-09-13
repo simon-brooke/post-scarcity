@@ -41,7 +41,7 @@ struct cons_pointer make_integer( long int value ) {
     struct cons_space_object *cell = &pointer2cell( result );
     cell->payload.integer.value = value;
 
-    dump_object( stderr, result);
+    dump_object( stderr, result );
 
     return result;
 }

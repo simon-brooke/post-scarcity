@@ -100,6 +100,12 @@ void print( FILE * output, struct cons_pointer pointer ) {
     case TRUETV:
         fwprintf( output, L"t" );
         break;
+    case FUNCTIONTV:
+        fwprintf( output, L"(Function)");
+        break;
+    case SPECIALTV:
+        fwprintf( output, L"(Special form)");
+        break;
     default:
         fwprintf( stderr,
                   L"Error: Unrecognised tag value %d (%c%c%c%c)\n",

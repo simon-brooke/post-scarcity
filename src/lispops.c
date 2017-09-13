@@ -104,8 +104,7 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
         {
             struct cons_space_object special = pointer2cell( fn_pointer );
             result =
-                ( *special.payload.special.executable ) ( args, env,
-                                                          my_frame );
+                ( *special.payload.special.executable ) ( args, env, my_frame );
         }
         break;
 
@@ -164,15 +163,15 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
     struct cons_pointer result = s_expr;
     struct cons_space_object cell = pointer2cell( s_expr );
 
-    fprintf( stderr, "In eval; about to make stack frame" );
-
-    struct stack_frame *frame = make_stack_frame( previous, s_expr, env );
-
-    fprintf( stderr, "In eval; stack frame made" );
-
     switch ( cell.tag.value ) {
     case CONSTV:
+        fwprintf( stderr, L"In eval; about to make stack frame" );
+        struct stack_frame *frame = make_stack_frame( previous, s_expr, env );
+        fwprintf( stderr, L"In eval; stack frame made" );
+
         result = eval_cons( s_expr, env, frame );
+
+        free_stack_frame( frame );
         break;
 
     case SYMBOLTV:
@@ -197,8 +196,6 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
          */
     }
 
-    free_stack_frame( frame );
-
     return result;
 }
 
@@ -212,7 +209,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 struct cons_pointer
 lisp_quote( struct cons_pointer args, struct cons_pointer env,
             struct stack_frame *frame ) {
-    return c_car( args );
+    return frame->arg[0];
 }
 
 /**
@@ -360,10 +357,10 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
  */
 struct cons_pointer
 lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
-    fprintf( stderr, "\nERROR: " );
+    fwprintf( stderr, L"\nERROR: " );
     print( stderr, message );
-    fprintf( stderr,
-             "\n\nAn exception was thrown and I've no idea what to do now\n" );
+    fwprintf( stderr,
+             L"\n\nAn exception was thrown and I've no idea what to do now\n" );
 
     exit( 1 );
 }

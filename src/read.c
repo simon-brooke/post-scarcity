@@ -96,7 +96,8 @@ struct cons_pointer read_number( FILE * input, wint_t initial ) {
         } else {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
 
-            fprintf( stderr, "Added character %c, accumulator now %ld\n", c, accumulator);
+            fprintf( stderr, "Added character %c, accumulator now %ld\n", c,
+                     accumulator );
 
             if ( seen_period ) {
                 places_of_decimals++;

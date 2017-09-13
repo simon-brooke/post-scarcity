@@ -32,7 +32,7 @@
  * they're visible to all users/threads, but again I don't yet have any idea how 
  * that will work.
  */
-struct cons_pointer oblist = NIL;
+struct cons_pointer oblist = & NIL;
 
 /**
  * Implementation of interned? in C. The final implementation if interned? will
@@ -91,7 +91,7 @@ struct cons_pointer c_assoc( struct cons_pointer key,
  * Return a new key/value store containing all the key/value pairs in this store
  * with this key/value pair added to the front.
  */
-struct cons_pointer
+struct cons_pointer 
 bind( struct cons_pointer key, struct cons_pointer value,
       struct cons_pointer store ) {
     return make_cons( make_cons( key, value ), store );
@@ -104,7 +104,7 @@ bind( struct cons_pointer key, struct cons_pointer value,
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
-    oblist = bind( key, value, oblist );
+    oblist = &bind( key, value, *oblist );
     return oblist;
 }
 
