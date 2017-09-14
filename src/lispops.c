@@ -166,7 +166,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 
     switch ( cell.tag.value ) {
     case CONSTV:
-        result = eval_cons( s_expr, env, previous);
+        result = eval_cons( s_expr, env, previous );
         break;
 
     case SYMBOLTV:
@@ -355,7 +355,7 @@ lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
     fwprintf( stderr, L"\nERROR: " );
     print( stderr, message );
     fwprintf( stderr,
-             L"\n\nAn exception was thrown and I've no idea what to do now\n" );
+              L"\n\nAn exception was thrown and I've no idea what to do now\n" );
 
     exit( 1 );
 }

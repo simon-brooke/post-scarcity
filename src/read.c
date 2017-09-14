@@ -82,7 +82,7 @@ struct cons_pointer read_continuation( FILE * input, wint_t initial ) {
  * read a number from this input stream, given this initial character.
  */
 struct cons_pointer read_number( FILE * input, wint_t initial ) {
-  struct cons_pointer result = NIL;
+    struct cons_pointer result = NIL;
     long int accumulator = 0;
     int places_of_decimals = 0;
     bool seen_period = false;
@@ -98,7 +98,7 @@ struct cons_pointer read_number( FILE * input, wint_t initial ) {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
 
             fwprintf( stderr, L"Added character %c, accumulator now %ld\n", c,
-                     accumulator );
+                      accumulator );
 
             if ( seen_period ) {
                 places_of_decimals++;
@@ -112,11 +112,11 @@ struct cons_pointer read_number( FILE * input, wint_t initial ) {
     ungetwc( c, input );
 
     if ( seen_period ) {
-      long double rv =  (long double)
-	( accumulator / pow(10, places_of_decimals) );
+        long double rv = ( long double )
+            ( accumulator / pow( 10, places_of_decimals ) );
 
-      fwprintf( stderr, L"read_numer returning %Lf\n", rv);
-        result = make_real( rv);
+        fwprintf( stderr, L"read_numer returning %Lf\n", rv );
+        result = make_real( rv );
     } else {
         result = make_integer( accumulator );
     }
@@ -203,7 +203,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
              * push back the character read
              */
             ungetwc( initial, input );
-        } 
+        }
         break;
     }
 

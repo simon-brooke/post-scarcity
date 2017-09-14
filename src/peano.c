@@ -32,43 +32,41 @@
  * @return a pointer to an integer or real.
  */
 struct cons_pointer
-lisp_add(struct stack_frame *frame, struct cons_pointer env) {
+lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     long int i_accumulator = 0;
     long double d_accumulator = 0;
     bool is_int = true;
-    
-    for (int i = 0; i < args_in_frame && !nilp(frame->arg[i]); i++) {
-        struct cons_space_object arg = pointer2cell(frame->arg[i]);
-        
-        switch (arg.tag.value) {
+
+    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
+        struct cons_space_object arg = pointer2cell( frame->arg[i] );
+
+        switch ( arg.tag.value ) {
         case INTEGERTV:
             i_accumulator += arg.payload.integer.value;
-            d_accumulator += numeric_value( frame->arg[i]);
+            d_accumulator += numeric_value( frame->arg[i] );
             break;
         case REALTV:
             d_accumulator += arg.payload.real.value;
             is_int = false;
         default:
-            lisp_throw(
-                    c_string_to_lisp_string("Cannot add: not a number"), 
-                                            frame);
-        }
-        
-        if (! nilp(frame->more)) {
-            lisp_throw(
-                    c_string_to_lisp_string("Cannot yet add more than 8 numbers"), 
-                                            frame);
+            lisp_throw( c_string_to_lisp_string( "Cannot add: not a number" ),
+                        frame );
         }
 
-        if ( is_int) {
-            result = make_integer( i_accumulator);
+        if ( !nilp( frame->more ) ) {
+            lisp_throw( c_string_to_lisp_string
+                        ( "Cannot yet add more than 8 numbers" ), frame );
+        }
+
+        if ( is_int ) {
+            result = make_integer( i_accumulator );
         } else {
-            result = make_real( d_accumulator);
+            result = make_real( d_accumulator );
         }
     }
-    
-    return result;    
+
+    return result;
 }
 
 /**
@@ -78,43 +76,41 @@ lisp_add(struct stack_frame *frame, struct cons_pointer env) {
  * @return a pointer to an integer or real.
  */
 struct cons_pointer
-lisp_multiply(struct stack_frame *frame, struct cons_pointer env) {
+lisp_multiply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     long int i_accumulator = 1;
     long double d_accumulator = 1;
     bool is_int = true;
-    
-    for (int i = 0; i < args_in_frame && !nilp(frame->arg[i]); i++) {
-        struct cons_space_object arg = pointer2cell(frame->arg[i]);
-        
-        switch (arg.tag.value) {
+
+    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
+        struct cons_space_object arg = pointer2cell( frame->arg[i] );
+
+        switch ( arg.tag.value ) {
         case INTEGERTV:
             i_accumulator *= arg.payload.integer.value;
-            d_accumulator *= numeric_value( frame->arg[i]);
+            d_accumulator *= numeric_value( frame->arg[i] );
             break;
         case REALTV:
             d_accumulator *= arg.payload.real.value;
             is_int = false;
         default:
-            lisp_throw(
-                    c_string_to_lisp_string("Cannot multiply: not a number"), 
-                                            frame);
-        }
-        
-        if (! nilp(frame->more)) {
-            lisp_throw(
-                    c_string_to_lisp_string("Cannot yet multiply more than 8 numbers"), 
-                                            frame);
+            lisp_throw( c_string_to_lisp_string
+                        ( "Cannot multiply: not a number" ), frame );
         }
 
-        if ( is_int) {
-            result = make_integer( i_accumulator);
+        if ( !nilp( frame->more ) ) {
+            lisp_throw( c_string_to_lisp_string
+                        ( "Cannot yet multiply more than 8 numbers" ), frame );
+        }
+
+        if ( is_int ) {
+            result = make_integer( i_accumulator );
         } else {
-            result = make_real( d_accumulator);
+            result = make_real( d_accumulator );
         }
     }
-    
-    return result;    
+
+    return result;
 }
 
 /**
@@ -124,26 +120,30 @@ lisp_multiply(struct stack_frame *frame, struct cons_pointer env) {
  * @return a pointer to an integer or real.
  */
 struct cons_pointer
-lisp_subtract(struct stack_frame *frame, struct cons_pointer env) {
+lisp_subtract( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    
-    struct cons_space_object arg0 = pointer2cell(frame->arg[0]);
-    struct cons_space_object arg1 = pointer2cell(frame->arg[1]);
 
-    if ( integerp(frame->arg[0]) && integerp(frame->arg[1])) {
-      result = make_integer(arg0.payload.integer.value - arg1.payload.integer.value);
-    } else if  ( realp(frame->arg[0]) && realp(frame->arg[1])) {
-      result = make_real(arg0.payload.real.value - arg1.payload.real.value);
-    } else if (integerp(frame->arg[0]) && realp(frame->arg[1])) {
-      result = make_real( numeric_value(frame->arg[0]) - arg1.payload.real.value);
-    } else if (realp(frame->arg[0]) && integerp(frame->arg[1])) {
-      result = make_real( arg0.payload.real.value - numeric_value(frame->arg[0]));
-    } // else we have an error!
+    struct cons_space_object arg0 = pointer2cell( frame->arg[0] );
+    struct cons_space_object arg1 = pointer2cell( frame->arg[1] );
+
+    if ( integerp( frame->arg[0] ) && integerp( frame->arg[1] ) ) {
+        result =
+            make_integer( arg0.payload.integer.value -
+                          arg1.payload.integer.value );
+    } else if ( realp( frame->arg[0] ) && realp( frame->arg[1] ) ) {
+        result =
+            make_real( arg0.payload.real.value - arg1.payload.real.value );
+    } else if ( integerp( frame->arg[0] ) && realp( frame->arg[1] ) ) {
+        result =
+            make_real( numeric_value( frame->arg[0] ) -
+                       arg1.payload.real.value );
+    } else if ( realp( frame->arg[0] ) && integerp( frame->arg[1] ) ) {
+        result =
+            make_real( arg0.payload.real.value -
+                       numeric_value( frame->arg[0] ) );
+    }                           // else we have an error!
 
     // and if not nilp[frame->arg[2]) we also have an error.
-    
+
     return result;
 }
-
-    
-    

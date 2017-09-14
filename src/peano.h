@@ -22,8 +22,8 @@ extern "C" {
  * @param frame the stack frame.
  * @return a pointer to an integer or real.
  */
-struct cons_pointer
-lisp_add(struct stack_frame *frame, struct cons_pointer env);
+    struct cons_pointer
+     lisp_add( struct stack_frame *frame, struct cons_pointer env );
 
 /**
  * Multiply an indefinite number of numbers together
@@ -31,8 +31,8 @@ lisp_add(struct stack_frame *frame, struct cons_pointer env);
  * @param frame the stack frame.
  * @return a pointer to an integer or real.
  */
-struct cons_pointer
-lisp_multiply(struct stack_frame *frame, struct cons_pointer env);
+    struct cons_pointer
+     lisp_multiply( struct stack_frame *frame, struct cons_pointer env );
 
 /**
  * Subtract one number from another.
@@ -40,12 +40,10 @@ lisp_multiply(struct stack_frame *frame, struct cons_pointer env);
  * @param frame the stack frame.
  * @return a pointer to an integer or real.
  */
-struct cons_pointer
-lisp_subtract(struct stack_frame *frame, struct cons_pointer env);
+    struct cons_pointer
+     lisp_subtract( struct stack_frame *frame, struct cons_pointer env );
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* PEANO_H */
-
+#endif                          /* PEANO_H */

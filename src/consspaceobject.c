@@ -74,7 +74,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
               cell.tag.bytes[3],
               cell.tag.value, pointer.page, pointer.offset, cell.count );
 
-    switch ( cell.tag.value) {
+    switch ( cell.tag.value ) {
     case CONSTV:
         fwprintf( output,
                   L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d\n",
@@ -101,9 +101,9 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset );
-        fwprintf( output, L"\t\t value:");
-        print(output, pointer);
-        fwprintf( output, L"\n");
+        fwprintf( output, L"\t\t value:" );
+        print( output, pointer );
+        fwprintf( output, L"\n" );
         break;
     case SYMBOLTV:
         fwprintf( output,
@@ -111,9 +111,9 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset );
-        fwprintf( output, L"\t\t value:");
-        print(output, pointer);
-        fwprintf( output, L"\n");
+        fwprintf( output, L"\t\t value:" );
+        print( output, pointer );
+        fwprintf( output, L"\n" );
         break;
     }
 }

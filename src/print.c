@@ -101,10 +101,10 @@ void print( FILE * output, struct cons_pointer pointer ) {
         fwprintf( output, L"t" );
         break;
     case FUNCTIONTV:
-        fwprintf( output, L"(Function)");
+        fwprintf( output, L"(Function)" );
         break;
     case SPECIALTV:
-        fwprintf( output, L"(Special form)");
+        fwprintf( output, L"(Special form)" );
         break;
     default:
         fwprintf( stderr,

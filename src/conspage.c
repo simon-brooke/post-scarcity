@@ -169,7 +169,7 @@ struct cons_pointer allocate_cell( char *tag ) {
                      "Allocated cell of type '%s' at %d, %d \n", tag,
                      result.page, result.offset );
 #endif
-         } else {
+        } else {
             fprintf( stderr, "WARNING: Allocating non-free cell!" );
         }
     }
@@ -190,6 +190,6 @@ void initialise_cons_pages(  ) {
         conspageinitihasbeencalled = true;
     } else {
         fwprintf( stderr,
-                 L"WARNING: initialise_cons_pages() called a second or subsequent time\n" );
+                  L"WARNING: initialise_cons_pages() called a second or subsequent time\n" );
     }
 }

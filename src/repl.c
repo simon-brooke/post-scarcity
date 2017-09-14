@@ -31,13 +31,13 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
         struct cons_pointer input = read( in_stream );
         fwprintf( error_stream, L"\nread {%d,%d}=> ", input.page,
                   input.offset );
-        print( error_stream, input);
+        print( error_stream, input );
 
         struct cons_pointer value = lisp_eval( input, oblist, NULL );
         // print( out_stream, input );
         fwprintf( out_stream, L"\n" );
         fwprintf( error_stream, L"\neval {%d,%d}=> ", input.page,
                   input.offset );
-        print( out_stream,  value);
+        print( out_stream, value );
     }
 }

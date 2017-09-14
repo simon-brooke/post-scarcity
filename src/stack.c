@@ -51,27 +51,27 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
-    for (int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
-      /* iterate down the arg list filling in the arg slots in the
-       * frame. When there are no more slots, if there are still args,
-       * stash them on more */
+    for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+        /* iterate down the arg list filling in the arg slots in the
+         * frame. When there are no more slots, if there are still args,
+         * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
-            /*
-             * TODO: if we were running on real massively parallel hardware,
-             * each arg except the first should be handed off to another
-             * processor to be evaled in parallel
-             */
-            result->arg[i] = lisp_eval( cell.payload.cons.car, env, result );
-            inc_ref( result->arg[i] );
+        /*
+         * TODO: if we were running on real massively parallel hardware,
+         * each arg except the first should be handed off to another
+         * processor to be evaled in parallel
+         */
+        result->arg[i] = lisp_eval( cell.payload.cons.car, env, result );
+        inc_ref( result->arg[i] );
 
-            args = cell.payload.cons.cdr;
-        }
-            /*
-             * TODO: this isn't right. These args should also each be evaled.
-             */
-            result->more = args;
-            inc_ref( result->more );
+        args = cell.payload.cons.cdr;
+    }
+    /*
+     * TODO: this isn't right. These args should also each be evaled.
+     */
+    result->more = args;
+    inc_ref( result->more );
 
     return result;
 }
@@ -85,8 +85,8 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
  * @return a new special frame.
  */
 struct stack_frame *make_special_frame( struct stack_frame *previous,
-                                      struct cons_pointer args,
-                                      struct cons_pointer env ) {
+                                        struct cons_pointer args,
+                                        struct cons_pointer env ) {
     /*
      * TODO: later, pop a frame off a free-list of stack frames
      */
@@ -105,10 +105,10 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
-    for (int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
-      /* iterate down the arg list filling in the arg slots in the
-       * frame. When there are no more slots, if there are still args,
-       * stash them on more */
+    for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+        /* iterate down the arg list filling in the arg slots in the
+         * frame. When there are no more slots, if there are still args,
+         * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
         result->arg[i] = cell.payload.cons.car;
@@ -117,7 +117,7 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
         args = cell.payload.cons.cdr;
     }
     result->more = args;
-    inc_ref(args);
+    inc_ref( args );
 
     return result;
 }
