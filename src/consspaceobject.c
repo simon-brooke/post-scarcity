@@ -204,8 +204,8 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
  */
 struct cons_pointer
 make_special( struct cons_pointer src, struct cons_pointer ( *executable )
-               ( struct cons_pointer s_expr,
-                 struct cons_pointer env, struct stack_frame * frame ) ) {
+               ( struct struct stack_frame * frame,
+                 struct cons_pointer env  ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 

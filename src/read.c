@@ -66,7 +66,7 @@ struct cons_pointer read_continuation( FILE * input, wint_t initial ) {
         result = read_string( input, fgetwc( input ) );
         break;
     default:
-        if ( iswdigit( c ) ) {
+        if ( iswdigit( c ) || c == '.' ) {
             result = read_number( input, c );
         } else if ( iswprint( c ) ) {
             result = read_symbol( input, c );

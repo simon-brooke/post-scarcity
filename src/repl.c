@@ -33,7 +33,10 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
                   input.offset );
         print( error_stream, input );
 
-        struct cons_pointer value = lisp_eval( input, oblist, NULL );
+        struct stack_frame *frame = make_empty_frame( NIL, oblist );
+        frame->arg[0] = input;
+        struct cons_pointer value = lisp_eval( frame, oblist );
+        free_stack_frame( frame );
         // print( out_stream, input );
         fwprintf( out_stream, L"\n" );
         fwprintf( error_stream, L"\neval {%d,%d}=> ", input.page,

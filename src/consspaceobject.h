@@ -290,9 +290,8 @@ struct real_payload {
  */
 struct special_payload {
     struct cons_pointer source;
-    struct cons_pointer ( *executable ) ( struct cons_pointer s_expr,
-                                          struct cons_pointer env,
-                                          struct stack_frame * frame );
+    struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer );
 };
 
 /**

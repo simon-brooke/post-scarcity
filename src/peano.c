@@ -49,6 +49,7 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
         case REALTV:
             d_accumulator += current.payload.real.value;
             is_int = false;
+            break;
         default:
             lisp_throw( c_string_to_lisp_string( "Cannot add: not a number" ),
                         frame );
@@ -93,6 +94,7 @@ lisp_multiply( struct stack_frame *frame, struct cons_pointer env ) {
         case REALTV:
             d_accumulator *= arg.payload.real.value;
             is_int = false;
+            break;
         default:
             lisp_throw( c_string_to_lisp_string
                         ( "Cannot multiply: not a number" ), frame );

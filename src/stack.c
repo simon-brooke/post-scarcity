@@ -27,16 +27,17 @@
 #include "stack.h"
 
 /**
- * Allocate a new stack frame with its previous pointer set to this value,
- * its arguments set up from these args, evaluated in this env.
+ * Make an empty stack frame, and return it.
+ * @param previous the current top-of-stack;
+ * @param env the environment in which evaluation happens.
+ * @return the new frame.
  */
-struct stack_frame *make_stack_frame( struct stack_frame *previous,
-                                      struct cons_pointer args,
+struct stack_frame *make_empty_frame( struct stack_frame *previous,
                                       struct cons_pointer env ) {
+    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
     /*
      * TODO: later, pop a frame off a free-list of stack frames
      */
-    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
 
     result->previous = previous;
 
@@ -51,6 +52,23 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         result->arg[i] = NIL;
     }
 
+    return result;
+}
+
+
+/**
+ * Allocate a new stack frame with its previous pointer set to this value,
+ * its arguments set up from these args, evaluated in this env.
+ * @param previous the current top-of-stack;
+ * @args the arguments to load into this frame;
+ * @param env the environment in which evaluation happens.
+ * @return the new frame.
+ */
+struct stack_frame *make_stack_frame( struct stack_frame *previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env ) {
+    struct stack_frame *result = make_empty_frame( previous, env );
+
     for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
         /* iterate down the arg list filling in the arg slots in the
          * frame. When there are no more slots, if there are still args,
@@ -60,9 +78,13 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         /*
          * TODO: if we were running on real massively parallel hardware,
          * each arg except the first should be handed off to another
-         * processor to be evaled in parallel
+         * processor to be evaled in parallel; but see notes here:
+         * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
          */
-        result->arg[i] = lisp_eval( cell.payload.cons.car, env, result );
+        struct stack_frame *arg_frame = make_empty_frame( previous, env );
+        arg_frame->arg[0] = cell.payload.cons.car;
+        result->arg[i] = lisp_eval( arg_frame, env );
+        free_stack_frame( arg_frame );
         inc_ref( result->arg[i] );
 
         args = cell.payload.cons.cdr;
@@ -87,23 +109,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
 struct stack_frame *make_special_frame( struct stack_frame *previous,
                                         struct cons_pointer args,
                                         struct cons_pointer env ) {
-    /*
-     * TODO: later, pop a frame off a free-list of stack frames
-     */
-    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
-
-    result->previous = previous;
-
-    /*
-     * clearing the frame with memset would probably be slightly quicker, but
-     * this is clear.
-     */
-    result->more = NIL;
-    result->function = NIL;
-
-    for ( int i = 0; i < args_in_frame; i++ ) {
-        result->arg[i] = NIL;
-    }
+    struct stack_frame *result = make_empty_frame( previous, env );
 
     for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
         /* iterate down the arg list filling in the arg slots in the

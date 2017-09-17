@@ -72,40 +72,26 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
     return result;
 }
 
-/**
- * (apply fn args...)
- *
- * I'm now confused about whether at this stage I actually need an apply special form,
- * and if so how it differs from eval.
- */
-struct cons_pointer
-lisp_apply( struct cons_pointer args, struct cons_pointer env,
-            struct stack_frame *frame ) {
-    struct cons_pointer result = args;
 
-    if ( consp( args ) ) {
-        lisp_eval( args, env, frame );
-    }
-
-    return result;
-}
 
 struct cons_pointer
-eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
-           struct stack_frame *my_frame ) {
+eval_cons( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer fn_pointer =
-        lisp_eval( c_car( s_expr ), env, my_frame );
+
+    struct stack_frame *fn_frame = make_empty_frame( frame, env );
+    fn_frame->arg[0] = c_car( frame->arg[0] );
+    struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
+    free_stack_frame( fn_frame );
+
     struct cons_space_object fn_cell = pointer2cell( fn_pointer );
-    struct cons_pointer args = c_cdr( s_expr );
+    struct cons_pointer args = c_cdr( frame->arg[0] );
 
     switch ( fn_cell.tag.value ) {
     case SPECIALTV:
         {
-            struct stack_frame *frame =
-                make_special_frame( my_frame, args, env );
-            result =
-                ( *fn_cell.payload.special.executable ) ( args, env, frame );
+            struct stack_frame *next = make_special_frame( frame, args, env );
+            result = ( *fn_cell.payload.special.executable ) ( next, env );
+            free_stack_frame( next );
         }
         break;
 
@@ -114,16 +100,9 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
          * actually, this is apply 
          */
         {
-            struct cons_space_object function = pointer2cell( fn_pointer );
-            struct stack_frame *frame =
-                make_stack_frame( my_frame, args, env );
-
-            /*
-             * the trick: pass the remaining arguments and environment to the
-             * executable code which is the payload of the function object. 
-             */
-            result = ( *fn_cell.payload.function.executable ) ( frame, env );
-            free_stack_frame( frame );
+            struct stack_frame *next = make_stack_frame( frame, args, env );
+            result = ( *fn_cell.payload.special.executable ) ( next, env );
+            free_stack_frame( next );
         }
         break;
 
@@ -138,7 +117,7 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
                      fn_cell.tag.bytes[3] );
             struct cons_pointer message = c_string_to_lisp_string( buffer );
             free( buffer );
-            result = lisp_throw( message, my_frame );
+            result = lisp_throw( message, frame );
         }
     }
 
@@ -159,24 +138,23 @@ eval_cons( struct cons_pointer s_expr, struct cons_pointer env,
  * If a special form, passes the cdr of s_expr to the special form as argument.
  */
 struct cons_pointer
-lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
-           struct stack_frame *previous ) {
-    struct cons_pointer result = s_expr;
-    struct cons_space_object cell = pointer2cell( s_expr );
+lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = frame->arg[0];
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
     switch ( cell.tag.value ) {
     case CONSTV:
-        result = eval_cons( s_expr, env, previous );
+        result = eval_cons( frame, env );
         break;
 
     case SYMBOLTV:
         {
-            struct cons_pointer canonical = internedp( s_expr, env );
+            struct cons_pointer canonical = internedp( frame->arg[0], env );
             if ( nilp( canonical ) ) {
                 struct cons_pointer message =
                     c_string_to_lisp_string
                     ( "Attempt to take value of unbound symbol." );
-                result = lisp_throw( message, previous );
+                result = lisp_throw( message, frame );
             } else {
                 result = c_assoc( canonical, env );
             }
@@ -195,6 +173,34 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
 }
 
 /**
+ * (apply fn args)
+ */
+struct cons_pointer
+lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+
+    if ( nilp( frame->arg[1] ) || !nilp( frame->arg[2] ) ) {
+        result =
+            lisp_throw( c_string_to_lisp_string( "(apply <function> <args>" ),
+                        frame );
+    }
+
+    struct stack_frame *fn_frame = make_empty_frame( frame, env );
+    fn_frame->arg[0] = frame->arg[0];
+    struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
+    free_stack_frame( fn_frame );
+
+    struct stack_frame *next_frame =
+        make_special_frame( frame, make_cons( fn_pointer, frame->arg[1] ),
+                            env );
+    result = eval_cons( next_frame, env );
+    free_stack_frame( next_frame );
+
+    return result;
+}
+
+
+/**
  * (quote a)
  *
  * Special form
@@ -202,8 +208,7 @@ lisp_eval( struct cons_pointer s_expr, struct cons_pointer env,
  * this isn't at this stage checked) unevaluated.
  */
 struct cons_pointer
-lisp_quote( struct cons_pointer args, struct cons_pointer env,
-            struct stack_frame *frame ) {
+lisp_quote( struct stack_frame *frame, struct cons_pointer env ) {
     return frame->arg[0];
 }
 

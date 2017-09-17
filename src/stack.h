@@ -24,6 +24,15 @@
 #ifndef __stack_h
 #define __stack_h
 
+/**
+ * Make an empty stack frame, and return it.
+ * @param previous the current top-of-stack;
+ * @param env the environment in which evaluation happens.
+ * @return the new frame.
+ */
+struct stack_frame *make_empty_frame( struct stack_frame *previous,
+                                      struct cons_pointer env );
+
 struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
                                       struct cons_pointer env );
