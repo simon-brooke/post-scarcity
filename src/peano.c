@@ -39,15 +39,15 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
     bool is_int = true;
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
-        struct cons_space_object arg = pointer2cell( frame->arg[i] );
+        struct cons_space_object current = pointer2cell( frame->arg[i] );
 
-        switch ( arg.tag.value ) {
+        switch ( current.tag.value ) {
         case INTEGERTV:
-            i_accumulator += arg.payload.integer.value;
+            i_accumulator += current.payload.integer.value;
             d_accumulator += numeric_value( frame->arg[i] );
             break;
         case REALTV:
-            d_accumulator += arg.payload.real.value;
+            d_accumulator += current.payload.real.value;
             is_int = false;
         default:
             lisp_throw( c_string_to_lisp_string( "Cannot add: not a number" ),
