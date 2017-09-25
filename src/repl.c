@@ -13,6 +13,7 @@
 #include "lispops.h"
 #include "read.h"
 #include "print.h"
+#include "stack.h"
 
 /**
  * The read/eval/print loop
@@ -33,7 +34,7 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
                   input.offset );
         print( error_stream, input );
 
-        struct stack_frame *frame = make_empty_frame( NIL, oblist );
+        struct stack_frame *frame = make_empty_frame( NULL, oblist );
         frame->arg[0] = input;
         struct cons_pointer value = lisp_eval( frame, oblist );
         free_stack_frame( frame );
