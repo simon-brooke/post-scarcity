@@ -149,6 +149,7 @@ void free_cell( struct cons_pointer pointer ) {
 struct cons_pointer allocate_cell( char *tag ) {
     struct cons_pointer result = freelist;
 
+
     if ( result.page == NIL.page && result.offset == NIL.offset ) {
         make_cons_page(  );
         result = allocate_cell( tag );

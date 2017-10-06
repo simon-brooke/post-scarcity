@@ -425,9 +425,8 @@ struct cons_pointer make_function( struct cons_pointer src,
  */
 struct cons_pointer make_special( struct cons_pointer src,
                                   struct cons_pointer ( *executable )
-                                   ( struct cons_pointer s_expr,
-                                     struct cons_pointer env,
-                                     struct stack_frame * frame ) );
+                                   ( struct stack_frame *,
+                                     struct cons_pointer ) );
 
 /**
  * Construct a string from this character and this tail. A string is

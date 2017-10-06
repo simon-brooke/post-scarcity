@@ -257,7 +257,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
     } else {
         struct cons_pointer message =
             c_string_to_lisp_string
-            ( "Attempt to take CAR/CDR of non sequence" );
+            ( "Attempt to take CAR of non sequence" );
         result = lisp_throw( message, frame );
     }
 
@@ -275,14 +275,14 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
 
     if ( consp( frame->arg[0] ) ) {
         struct cons_space_object cell = pointer2cell( frame->arg[0] );
-        result = cell.payload.cons.car;
+        result = cell.payload.cons.cdr;
     } else if ( stringp( frame->arg[0] ) ) {
         struct cons_space_object cell = pointer2cell( frame->arg[0] );
         result = cell.payload.string.cdr;
     } else {
         struct cons_pointer message =
             c_string_to_lisp_string
-            ( "Attempt to take CAR/CDR of non sequence" );
+            ( "Attempt to take CDR of non sequence" );
         result = lisp_throw( message, frame );
     }
 
