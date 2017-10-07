@@ -28,4 +28,8 @@ test:
 clean:
 	$(RM) $(TARGET) $(OBJS) $(DEPS)
 
+repl:
+	$(TARGET) -p 2> psse.log
+
+
 -include $(DEPS)
