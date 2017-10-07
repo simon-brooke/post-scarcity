@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='(1 2 3 ("Fred") nil 77354)'
-actual=`echo "'(1 2 3 (\"Fred\") () 77354)" | target/psse 2> /dev/null | head -1`
+actual=`echo "'(1 2 3 (\"Fred\") () 77354)" | target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
