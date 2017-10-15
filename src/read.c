@@ -71,7 +71,7 @@ struct cons_pointer read_continuation( FILE * input, wint_t initial ) {
         } else if ( iswprint( c ) ) {
             result = read_symbol( input, c );
         } else {
-            fprintf( stderr, "Unrecognised start of input character %c\n", c );
+            fwprintf( stderr, L"Unrecognised start of input character %c\n", c );
         }
     }
 
@@ -88,7 +88,7 @@ struct cons_pointer read_number( FILE * input, wint_t initial ) {
     bool seen_period = false;
     wint_t c;
 
-    fprintf( stderr, "read_number starting '%c' (%d)\n", initial, initial );
+    fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );
 
     for ( c = initial; iswdigit( c ) || c == btowc( '.' );
           c = fgetwc( input ) ) {
@@ -137,7 +137,7 @@ struct cons_pointer read_list( FILE * input, wint_t initial ) {
         struct cons_pointer car = read_continuation( input, initial );
         result = make_cons( car, read_list( input, fgetwc( input ) ) );
     } else {
-        fprintf( stderr, "End of list detected\n" );
+        fwprintf( stderr, L"End of list detected\n" );
     }
 
     return result;

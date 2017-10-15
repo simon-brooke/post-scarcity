@@ -26,7 +26,7 @@ test:
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS)
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~
 
 repl:
 	$(TARGET) -p 2> psse.log

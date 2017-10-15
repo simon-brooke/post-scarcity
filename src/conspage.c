@@ -63,7 +63,7 @@ void make_cons_page(  ) {
                     cell->count = MAXREFERENCE;
                     cell->payload.free.car = NIL;
                     cell->payload.free.cdr = NIL;
-                    fprintf( stderr, "Allocated special cell NIL\n" );
+                    fwprintf( stderr, L"Allocated special cell NIL\n" );
                 } else if ( i == 1 ) {
                     /*
                      * initialise cell as T 
@@ -74,7 +74,7 @@ void make_cons_page(  ) {
                     0, 1};
                     cell->payload.free.cdr = ( struct cons_pointer ) {
                     0, 1};
-                    fprintf( stderr, "Allocated special cell T\n" );
+                    fwprintf( stderr, L"Allocated special cell T\n" );
                 }
             } else {
                 /*
