@@ -20,6 +20,7 @@
 #include "consspaceobject.h"
 #include "integer.h"
 #include "intern.h"
+#include "print.h"
 #include "read.h"
 #include "real.h"
 
@@ -194,7 +195,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
         ungetwc( initial, input );
         break;
     default:
-        if ( iswalnum( initial ) ) {
+        if ( iswprint( initial ) && ! iswblank( initial ) ) {
             result =
                 make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
         } else {
@@ -206,6 +207,10 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
         }
         break;
     }
+    
+    fputws(L"Read symbol '", stderr);
+    print(stderr, result);
+    fputws(L"'\n", stderr);
 
     return result;
 }

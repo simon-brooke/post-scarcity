@@ -89,8 +89,11 @@ int main( int argc, char *argv[] ) {
     bind_function( "type", &lisp_type );
 
     bind_function( "add", &lisp_add );
+    bind_function( "+", &lisp_add );
     bind_function( "multiply", &lisp_multiply );
+    bind_function( "*", &lisp_multiply );
     bind_function( "subtract", &lisp_subtract );
+    bind_function( "-", &lisp_subtract );
 
     /*
      * primitive special forms 
