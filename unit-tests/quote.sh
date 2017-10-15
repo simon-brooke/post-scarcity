@@ -1,7 +1,7 @@
 #!/bin/bash
 
-expected='(quote Fred)'
-actual=`echo "'Fred" | target/psse 2> /dev/null`
+expected='Fred'
+actual=`echo "'Fred" | target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

@@ -20,5 +20,5 @@ Although I describe it as a 'Lisp environment', for reasons explained in Post Sc
 
 Copyright © 2017 [Simon Brooke](mailto:simon@journeyman.cc)
 
-Distributed under the terms of the 
+Distributed under the terms of the
 [GNU General Public License v2](http://www.gnu.org/licenses/gpl-2.0.html)

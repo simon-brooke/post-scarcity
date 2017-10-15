@@ -2,7 +2,7 @@
 
 value='"Fred"'
 expected="String cell: character 'F'"
-echo ${value} | target/psse 2>&1 | grep "${expected}" > /dev/null
+echo ${value} | target/psse -d 2>&1 | grep "${expected}" > /dev/null
 
 if [ $? -eq 0 ]
 then

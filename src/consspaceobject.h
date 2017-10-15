@@ -11,7 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-/* wide characters */
+/*
+ * wide characters 
+ */
 #include <wchar.h>
 #include <wctype.h>
 
@@ -67,6 +69,7 @@
  * A real number.
  */
 #define REALTAG     "REAL"
+#define REALTV      1279346002
 
 /**
  * A special form - one whose arguments are not pre-evaluated but passed as a
@@ -153,7 +156,7 @@
 #define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
 
 /**
- * true if conspointer points to a string cell, else false 
+ * true if conspointer points to a symbol cell, else false 
  */
 #define symbolp(conspoint) (check_tag(conspoint,SYMBOLTAG))
 
@@ -200,11 +203,14 @@
  * An indirect pointer to a cons cell
  */
 struct cons_pointer {
-  uint32_t page;               /* the index of the page on which this cell resides */
-  uint32_t offset;             /* the index of the cell within the page */
+    uint32_t page;              /* the index of the page on which this cell
+                                 * resides */
+    uint32_t offset;            /* the index of the cell within the page */
 };
 
-/* number of arguments stored in a stack frame */
+/*
+ * number of arguments stored in a stack frame 
+ */
 #define args_in_frame 8
 
 /**
@@ -212,20 +218,21 @@ struct cons_pointer {
  * here to avoid circularity. TODO: refactor.
  */
 struct stack_frame {
-  struct stack_frame* previous;         /* the previous frame */
-  struct cons_pointer arg[args_in_frame];
-                                        /* first 8 arument bindings */
-  struct cons_pointer more;             /* list of any further argument 
-					 * bindings */
-  struct cons_pointer function;         /* the function to be called */
+    struct stack_frame *previous; /* the previous frame */
+    struct cons_pointer arg[args_in_frame];
+    /*
+     * first 8 arument bindings 
+     */
+    struct cons_pointer more;   /* list of any further argument bindings */
+    struct cons_pointer function; /* the function to be called */
 };
 
 /**
  * payload of a cons cell.
  */
 struct cons_payload {
-  struct cons_pointer car;
-  struct cons_pointer cdr;
+    struct cons_pointer car;
+    struct cons_pointer cdr;
 };
 
 /**
@@ -236,10 +243,11 @@ struct cons_payload {
  * (representing its stack frame) and a cons pointer (representing its 
  * environment) as arguments and returns a cons pointer (representing its
  * result).
- */ 
+ */
 struct function_payload {
-  struct cons_pointer source;
-  struct cons_pointer (*executable)(struct stack_frame*, struct cons_pointer);
+    struct cons_pointer source;
+    struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer );
 };
 
 /**
@@ -247,8 +255,8 @@ struct function_payload {
  * but it may not be so in future.
  */
 struct free_payload {
-  struct cons_pointer car;
-  struct cons_pointer cdr;
+    struct cons_pointer car;
+    struct cons_pointer cdr;
 };
 
 /**
@@ -257,7 +265,7 @@ struct free_payload {
  * optional bignum object.
  */
 struct integer_payload {
-  long int value;
+    long int value;
 };
 
 /**
@@ -265,7 +273,7 @@ struct integer_payload {
  * precision, but I'm not sure of the detail.
  */
 struct real_payload {
-  long double value;
+    long double value;
 };
 
 /**
@@ -279,19 +287,18 @@ struct real_payload {
  *
  * NOTE that this means that special forms do not appear on the lisp stack,
  * which may be confusing. TODO: think about this.
- */ 
+ */
 struct special_payload {
-  struct cons_pointer source;
-  struct cons_pointer (*executable)(struct cons_pointer s_expr,
-				      struct cons_pointer env,
-				      struct stack_frame* frame);
+    struct cons_pointer source;
+    struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer );
 };
 
 /**
  * payload of a read or write stream cell.
  */
 struct stream_payload {
-  FILE * stream;
+    FILE *stream;
 };
 
 /**
@@ -301,124 +308,147 @@ struct stream_payload {
  * payload of a string cell.
  */
 struct string_payload {
-  wint_t character;            /* the actual character stored in this cell */
-  uint32_t padding;            /* unused padding to word-align the cdr */
-  struct cons_pointer cdr;
+    wint_t character;           /* the actual character stored in this cell */
+    uint32_t padding;           /* unused padding to word-align the cdr */
+    struct cons_pointer cdr;
 };
 
 struct vectorp_payload {
-  union {
-    char bytes[TAGLENGTH];     /* the tag (type) of the vector-space 
-				* object this cell points to, considered 
-				* as bytes. NOTE that the vector space
-				* object should itself have the identical tag. */
-    uint32_t value;            /* the tag considered as a number */
-  } tag;
-  uint64_t address;            /* the address of the actual vector space
-				* object (TODO: will change when I actually
-				* implement vector space) */
+    union {
+        char bytes[TAGLENGTH];  /* the tag (type) of the
+                                 * vector-space object this cell
+                                 * points to, considered as bytes.
+                                 * NOTE that the vector space object 
+                                 * should itself have the identical
+                                 * tag. */
+        uint32_t value;         /* the tag considered as a number */
+    } tag;
+    uint64_t address;           /* the address of the actual vector space
+                                 * object (TODO: will change when I actually
+                                 * implement vector space) */
 };
-
 
 /**
  * an object in cons space.
  */
 struct cons_space_object {
-  union {
-    char bytes[TAGLENGTH];     /* the tag (type) of this cell, considered as bytes */
-    uint32_t value;            /* the tag considered as a number */
-  } tag;
-  uint32_t count;              /* the count of the number of references to this cell */
-  struct cons_pointer access;  /* cons pointer to the access control list of this cell */
-  union {
-    /* if tag == CONSTAG */
-    struct cons_payload cons;
-    /* if tag == FREETAG */
-    struct free_payload free;
-    /* if tag == FUNCTIONTAG */
-    struct function_payload function;
-    /* if tag == INTEGERTAG */
-    struct integer_payload integer;
-    /* if tag == NILTAG; we'll treat the special cell NIL as just a cons */
-    struct cons_payload nil;
-    /* if tag == READTAG || tag == WRITETAG */
-    struct stream_payload stream;
-    /* if tag == REALTAG */
-    struct real_payload real;
-    /* if tag == SPECIALTAG */
-    struct special_payload special;
-    /* if tag == STRINGTAG || tag == SYMBOLTAG */
-    struct string_payload string;
-    /* if tag == TRUETAG; we'll treat the special cell T as just a cons */
-    struct cons_payload t;
-    /* if tag == VECTORPTAG */
-    struct vectorp_payload vectorp;
-  } payload;
+    union {
+        char bytes[TAGLENGTH];  /* the tag (type) of this cell,
+                                 * considered as bytes */
+        uint32_t value;         /* the tag considered as a number */
+    } tag;
+    uint32_t count;             /* the count of the number of references to
+                                 * this cell */
+    struct cons_pointer access; /* cons pointer to the access control list of
+                                 * this cell */
+    union {
+        /*
+         * if tag == CONSTAG 
+         */
+        struct cons_payload cons;
+        /*
+         * if tag == FREETAG 
+         */
+        struct free_payload free;
+        /*
+         * if tag == FUNCTIONTAG 
+         */
+        struct function_payload function;
+        /*
+         * if tag == INTEGERTAG 
+         */
+        struct integer_payload integer;
+        /*
+         * if tag == NILTAG; we'll treat the special cell NIL as just a cons 
+         */
+        struct cons_payload nil;
+        /*
+         * if tag == READTAG || tag == WRITETAG 
+         */
+        struct stream_payload stream;
+        /*
+         * if tag == REALTAG 
+         */
+        struct real_payload real;
+        /*
+         * if tag == SPECIALTAG 
+         */
+        struct special_payload special;
+        /*
+         * if tag == STRINGTAG || tag == SYMBOLTAG 
+         */
+        struct string_payload string;
+        /*
+         * if tag == TRUETAG; we'll treat the special cell T as just a cons 
+         */
+        struct cons_payload t;
+        /*
+         * if tag == VECTORPTAG 
+         */
+        struct vectorp_payload vectorp;
+    } payload;
 };
-
 
 /**
  * Check that the tag on the cell at this pointer is this tag
  */
-int check_tag( struct cons_pointer pointer, char* tag);
-
+int check_tag( struct cons_pointer pointer, char *tag );
 
 /**
  * increment the reference count of the object at this cons pointer
  */
-void inc_ref( struct cons_pointer pointer);
-
+void inc_ref( struct cons_pointer pointer );
 
 /**
  * decrement the reference count of the object at this cons pointer
  */
-void dec_ref( struct cons_pointer pointer);
-
+void dec_ref( struct cons_pointer pointer );
 
 /**
  * dump the object at this cons_pointer to this output stream.
  */
-void dump_object( FILE* output, struct cons_pointer pointer);
+void dump_object( FILE * output, struct cons_pointer pointer );
 
-struct cons_pointer make_cons( struct cons_pointer car, struct cons_pointer cdr);
+struct cons_pointer make_cons( struct cons_pointer car,
+                               struct cons_pointer cdr );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_function( struct cons_pointer src,
-				     struct cons_pointer (*executable)
-				   (struct stack_frame*, struct cons_pointer));
+                                   struct cons_pointer ( *executable )
+                                    ( struct stack_frame *,
+                                      struct cons_pointer ) );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,
-				  struct cons_pointer (*executable)
-				  (struct cons_pointer s_expr,
-				   struct cons_pointer env,
-				   struct stack_frame* frame));
+                                  struct cons_pointer ( *executable )
+                                   ( struct stack_frame *,
+                                     struct cons_pointer ) );
 
 /**
  * Construct a string from this character and this tail. A string is
  * implemented as a flat list of cells each of which has one character and a 
  * pointer to the next; in the last cell the pointer to next is NIL.
  */
-struct cons_pointer make_string( wint_t c, struct cons_pointer tail);
+struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 
 /**
  * Construct a symbol from this character and this tail. A symbol is identical
  * to a string except for having a different tag.
  */
-struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail);
+struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail );
 
 /**
  * Return a lisp string representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_string( char* string);
+struct cons_pointer c_string_to_lisp_string( char *string );
 
 /**
  * Return a lisp symbol representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_symbol( char* symbol);
+struct cons_pointer c_string_to_lisp_symbol( char *symbol );
 
 #endif

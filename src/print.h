@@ -14,6 +14,6 @@
 #ifndef __print_h
 #define __print_h
 
-void print( FILE* output, struct cons_pointer pointer);
+void print( FILE * output, struct cons_pointer pointer );
 
 #endif

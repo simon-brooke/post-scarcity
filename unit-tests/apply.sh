@@ -1,7 +1,7 @@
 #!/bin/bash
 
-expected='(123 (4 (5 nil)) Fred)'
-actual=`echo "'(123 (4 (5 ())) Fred)" | target/psse 2> /dev/null | head -2 | tail -1`
+expected='1'
+actual=`echo "(apply 'add '(1))"| target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

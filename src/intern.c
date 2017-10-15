@@ -43,21 +43,22 @@ struct cons_pointer oblist = NIL;
  * from the store (so that later when we want to retrieve a value, an eq test
  * will work); otherwise return NIL.
  */
-struct cons_pointer internedp( struct cons_pointer key, struct cons_pointer store) {
-  struct cons_pointer result = NIL;
+struct cons_pointer
+internedp( struct cons_pointer key, struct cons_pointer store ) {
+    struct cons_pointer result = NIL;
 
-  for ( struct cons_pointer next = store;
-	nilp( result) && consp( next);
-	next = pointer2cell( next).payload.cons.cdr) {
-    struct cons_space_object entry =
-      pointer2cell( pointer2cell( next).payload.cons.car);
+    for ( struct cons_pointer next = store;
+          nilp( result ) && consp( next );
+          next = pointer2cell( next ).payload.cons.cdr ) {
+        struct cons_space_object entry =
+            pointer2cell( pointer2cell( next ).payload.cons.car );
 
-    if ( equal( key, entry.payload.cons.car)) {
-      result = entry.payload.cons.car;
+        if ( equal( key, entry.payload.cons.car ) ) {
+            result = entry.payload.cons.car;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 /**
@@ -68,60 +69,61 @@ struct cons_pointer internedp( struct cons_pointer key, struct cons_pointer stor
  * If this key is lexically identical to a key in this store, return the value
  * of that key from the store; otherwise return NIL.
  */
-struct cons_pointer c_assoc( struct cons_pointer key, struct cons_pointer store) {
-  struct cons_pointer result = NIL;
+struct cons_pointer c_assoc( struct cons_pointer key,
+                             struct cons_pointer store ) {
+    struct cons_pointer result = NIL;
 
-  for ( struct cons_pointer next = store;
-	consp( next);
-	next = pointer2cell( next).payload.cons.cdr) {
-    struct cons_space_object entry =
-      pointer2cell( pointer2cell( next).payload.cons.car);
+    for ( struct cons_pointer next = store;
+          consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
+        struct cons_space_object entry =
+            pointer2cell( pointer2cell( next ).payload.cons.car );
 
-    if ( equal( key, entry.payload.cons.car)) {
-      result = entry.payload.cons.cdr;
-      break;
+        if ( equal( key, entry.payload.cons.car ) ) {
+            result = entry.payload.cons.cdr;
+            break;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
-
 
 /**
  * Return a new key/value store containing all the key/value pairs in this store
  * with this key/value pair added to the front.
  */
-struct cons_pointer bind( struct cons_pointer key, struct cons_pointer value,
-			    struct cons_pointer store) {
-  return make_cons( make_cons( key, value), store);
+struct cons_pointer
+bind( struct cons_pointer key, struct cons_pointer value,
+      struct cons_pointer store ) {
+    return make_cons( make_cons( key, value ), store );
 }
-
 
 /**
  * Binds this key to this value in the global oblist, but doesn't affect the 
  * current environment. May not be useful except in bootstrapping (and even 
  * there it may not be especially useful).
  */
-struct cons_pointer deep_bind( struct cons_pointer key, struct cons_pointer value) {
-  oblist = bind( key, value, oblist);
-  return oblist;
+struct cons_pointer
+deep_bind( struct cons_pointer key, struct cons_pointer value ) {
+    oblist = bind( key, value, oblist );
+    return oblist;
 }
-
 
 /**
  * Ensure that a canonical copy of this key is bound in this environment, and
  * return that canonical copy. If there is currently no such binding, create one
  * with the value NIL.
  */
-struct cons_pointer intern( struct cons_pointer key,
-			    struct cons_pointer environment) {
-  struct cons_pointer result = environment;
-  struct cons_pointer canonical = internedp( key, environment);
+struct cons_pointer
+intern( struct cons_pointer key, struct cons_pointer environment ) {
+    struct cons_pointer result = environment;
+    struct cons_pointer canonical = internedp( key, environment );
 
-  if ( nilp( canonical)) {
-    /* not currently bound */
-    result = bind( key, NIL, environment);
-  }
+    if ( nilp( canonical ) ) {
+        /*
+         * not currently bound 
+         */
+        result = bind( key, NIL, environment );
+    }
 
-  return result;
+    return result;
 }

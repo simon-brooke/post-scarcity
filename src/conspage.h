@@ -3,30 +3,39 @@
 #ifndef __conspage_h
 #define __conspage_h
 
-
 /**
- * the number of cons cells on a cons page. The maximum value this can be (and consequently,
- * the size which, by version 1, it will default to) is the maximum value of an unsigned 32
- * bit integer, which is to say 4294967296. However, we'll start small.
+ * the number of cons cells on a cons page. The maximum value this can
+ * be (and consequently, the size which, by version 1, it will default
+ * to) is the maximum value of an unsigned 32 bit integer, which is to
+ * say 4294967296. However, we'll start small.
  */
 #define CONSPAGESIZE 8
 
 /**
- * the number of cons pages we will initially allow for. For convenience we'll set up an array
- * of cons pages this big; however, later we will want a mechanism for this to be able to grow
- * dynamically to the maximum we can currently allow, which is 4294967296.
+ * the number of cons pages we will initially allow for. For
+ * convenience we'll set up an array of cons pages this big; however,
+ * later we will want a mechanism for this to be able to grow
+ * dynamically to the maximum we can currently allow, which is
+ * 4294967296.
+ *
+ * Note that this means the total number of addressable cons cells is
+ * 1.8e19, each of 20 bytes; or 3e20 bytes in total; and there are 
+ * up to a maximum of 4e9 of heap space objects, each of potentially
+ * 4e9 bytes. So we're talking about a potential total of 8e100 bytes
+ * of addressable memory, which is only slightly more than the
+ * number of atoms in the universe.
  */
 #define NCONSPAGES 8
 
 /**
- * a cons page is essentially just an array of cons space objects. It might later have a local
- * free list (i.e. list of free cells on this page) and a pointer to the next cons page, but
- * my current view is that that's probably unneccessary.
+ * a cons page is essentially just an array of cons space objects. It
+ * might later have a local free list (i.e. list of free cells on this
+ * page) and a pointer to the next cons page, but my current view is
+ * that that's probably unneccessary.
  */
 struct cons_page {
-  struct cons_space_object cell[CONSPAGESIZE];
+    struct cons_space_object cell[CONSPAGESIZE];
 };
-
 
 /**
  * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
@@ -37,8 +46,7 @@ extern struct cons_pointer freelist;
 /**
  * An array of pointers to cons pages.
  */
-extern struct cons_page* conspages[NCONSPAGES];
-
+extern struct cons_page *conspages[NCONSPAGES];
 
 /**
  * Frees the cell at the specified pointer. Dangerous, primitive, low
@@ -46,8 +54,7 @@ extern struct cons_page* conspages[NCONSPAGES];
  *
  * @pointer the cell to free
  */
-void free_cell(struct cons_pointer pointer);
-
+void free_cell( struct cons_pointer pointer );
 
 /**
  * Allocates a cell with the specified tag. Dangerous, primitive, low
@@ -56,17 +63,16 @@ void free_cell(struct cons_pointer pointer);
  * @param tag the tag of the cell to allocate - must be a valid cons space tag.
  * @return the cons pointer which refers to the cell allocated.
  */
-struct cons_pointer allocate_cell( char* tag);
-
+struct cons_pointer allocate_cell( char *tag );
 
 /**
  * initialise the cons page system; to be called exactly once during startup.
  */
-void initialise_cons_pages();
+void initialise_cons_pages(  );
 
 /**
  * dump the allocated pages to this output stream.
  */
-void dump_pages( FILE* output);
+void dump_pages( FILE * output );
 
 #endif

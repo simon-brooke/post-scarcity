@@ -24,13 +24,44 @@
 #ifndef __stack_h
 #define __stack_h
 
-struct stack_frame* make_stack_frame( struct stack_frame* previous,
-				      struct cons_pointer args,
-				      struct cons_pointer env);
-void free_stack_frame( struct stack_frame* frame);
-struct cons_pointer fetch_arg( struct stack_frame* frame, unsigned int n);
+/**
+ * Make an empty stack frame, and return it.
+ * @param previous the current top-of-stack;
+ * @param env the environment in which evaluation happens.
+ * @return the new frame.
+ */
+struct stack_frame *make_empty_frame( struct stack_frame *previous,
+                                      struct cons_pointer env );
 
-/* struct stack_frame is defined in consspaceobject.h to break circularity
- * TODO: refactor. */
+struct stack_frame *make_stack_frame( struct stack_frame *previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env );
+void free_stack_frame( struct stack_frame *frame );
+
+/**
+ * Dump a stackframe to this stream for debugging
+ * @param output the stream
+ * @param frame the frame
+ */
+void dump_frame( FILE * output, struct stack_frame *frame );
+
+struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
+
+/**
+ * A 'special' frame is exactly like a normal stack frame except that the 
+ * arguments are unevaluated.
+ * @param previous the previous stack frame;
+ * @param args a list of the arguments to be stored in this stack frame;
+ * @param env the execution environment;
+ * @return a new special frame.
+ */
+struct stack_frame *make_special_frame( struct stack_frame *previous,
+                                        struct cons_pointer args,
+                                        struct cons_pointer env );
+
+/*
+ * struct stack_frame is defined in consspaceobject.h to break circularity
+ * TODO: refactor. 
+ */
 
 #endif
