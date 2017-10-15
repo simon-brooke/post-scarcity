@@ -175,6 +175,10 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
 
 /**
  * (apply fn args)
+ * 
+ * Special form. Apply the function which is the result of evaluating the
+ * first argoment to the list of arguments which is the result of evaluating
+ * the second argument
  */
 struct cons_pointer
 lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {

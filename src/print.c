@@ -41,7 +41,7 @@ void print_string( FILE * output, struct cons_pointer pointer ) {
 }
 
 /**
- * Print a single list cell (cons cell). TODO: does not handle dotted pairs.
+ * Print a single list cell (cons cell).
  */
 void
 print_list_contents( FILE * output, struct cons_pointer pointer,
