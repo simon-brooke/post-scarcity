@@ -84,8 +84,8 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         struct stack_frame *arg_frame = make_empty_frame( previous, env );
         arg_frame->arg[0] = cell.payload.cons.car;
         result->arg[i] = lisp_eval( arg_frame, env );
-        free_stack_frame( arg_frame );
         inc_ref( result->arg[i] );
+        free_stack_frame( arg_frame );
 
         args = cell.payload.cons.cdr;
     }

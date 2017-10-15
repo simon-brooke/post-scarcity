@@ -80,6 +80,7 @@ eval_cons( struct stack_frame *frame, struct cons_pointer env ) {
 
     struct stack_frame *fn_frame = make_empty_frame( frame, env );
     fn_frame->arg[0] = c_car( frame->arg[0] );
+    inc_ref( fn_frame->arg[0] );
     struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
     free_stack_frame( fn_frame );
 
@@ -187,6 +188,7 @@ lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
 
     struct stack_frame *fn_frame = make_empty_frame( frame, env );
     fn_frame->arg[0] = frame->arg[0];
+    inc_ref( fn_frame->arg[0] );
     struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
     free_stack_frame( fn_frame );
 
@@ -256,8 +258,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
         result = make_string( cell.payload.string.character, NIL );
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string
-            ( "Attempt to take CAR of non sequence" );
+            c_string_to_lisp_string( "Attempt to take CAR of non sequence" );
         result = lisp_throw( message, frame );
     }
 
@@ -281,8 +282,7 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
         result = cell.payload.string.cdr;
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string
-            ( "Attempt to take CDR of non sequence" );
+            c_string_to_lisp_string( "Attempt to take CDR of non sequence" );
         result = lisp_throw( message, frame );
     }
 
@@ -333,6 +333,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
     return read( input );
 }
 
+
 /**
  * (print expr)
  * (print expr write-stream)
@@ -351,6 +352,27 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
 
     return NIL;
 }
+
+
+/**
+ * Get the Lisp type of the single argument.
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return As a Lisp string, the tag of the object which is the argument.
+ */
+struct cons_pointer
+lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
+    char *buffer = malloc( TAGLENGTH + 1 );
+    memset( buffer, 0, TAGLENGTH + 1 );
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+    strncpy( buffer, cell.tag.bytes, TAGLENGTH );
+
+    struct cons_pointer result = c_string_to_lisp_string( buffer );
+    free( buffer );
+
+    return result;
+}
+
 
 /**
  * TODO: make this do something sensible somehow.

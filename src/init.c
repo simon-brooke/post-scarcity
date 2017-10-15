@@ -30,8 +30,7 @@ void bind_function( char *name, struct cons_pointer ( *executable )
 }
 
 void bind_special( char *name, struct cons_pointer ( *executable )
-                    ( struct cons_pointer s_expr, struct cons_pointer env,
-                      struct stack_frame * frame ) ) {
+                    ( struct stack_frame * frame, struct cons_pointer env ) ) {
     deep_bind( c_string_to_lisp_symbol( name ),
                make_special( NIL, executable ) );
 }
@@ -87,6 +86,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "equal", &lisp_equal );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
+    bind_function( "type", &lisp_type );
 
     bind_function( "add", &lisp_add );
     bind_function( "multiply", &lisp_multiply );

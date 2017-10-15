@@ -80,9 +80,8 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
                   cell.payload.cons.car.page,
                   cell.payload.cons.car.offset,
-                  cell.payload.cons.cdr.page, 
-                 cell.payload.cons.cdr.offset,
-                 cell.count);
+                  cell.payload.cons.cdr.page,
+                  cell.payload.cons.cdr.offset, cell.count );
         break;
     case INTEGERTV:
         fwprintf( output,
@@ -102,8 +101,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   L"\t\tString cell: character '%1c' (%1d) next at page %2d offset %3d, count %u\n",
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset,
-                  cell.count );
+                  cell.payload.string.cdr.offset, cell.count );
         fwprintf( output, L"\t\t value: " );
         print( output, pointer );
         fwprintf( output, L"\n" );
@@ -113,8 +111,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   L"\t\tSymbol cell: character '%1c' (%1d) next at page %2d offset %3d, count %u\n",
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset,
-                  cell.count );
+                  cell.payload.string.cdr.offset, cell.count );
         fwprintf( output, L"\t\t value:" );
         print( output, pointer );
         fwprintf( output, L"\n" );
@@ -208,8 +205,7 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
  */
 struct cons_pointer
 make_special( struct cons_pointer src, struct cons_pointer ( *executable )
-               ( struct stack_frame * frame,
-                 struct cons_pointer env  ) ) {
+               ( struct stack_frame * frame, struct cons_pointer env ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 

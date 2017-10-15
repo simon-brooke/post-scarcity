@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='1'
-actual=`echo "(apply 'add '(1))"| target/psse 2> /dev/null | head -1`
+actual=`echo "(apply add '(1))"| target/psse 2> /dev/null | head -1`
 
 if [ "${expected}" = "${actual}" ]
 then

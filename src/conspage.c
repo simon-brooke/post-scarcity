@@ -90,9 +90,9 @@ void make_cons_page(  ) {
 
         initialised_cons_pages++;
     } else {
-        fprintf( stderr,
-                 "FATAL: Failed to allocate memory for cons page %d\n",
-                 initialised_cons_pages );
+        fwprintf( stderr,
+                  L"FATAL: Failed to allocate memory for cons page %d\n",
+                  initialised_cons_pages );
         exit( 1 );
     }
 
@@ -103,7 +103,7 @@ void make_cons_page(  ) {
  */
 void dump_pages( FILE * output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
-        fprintf( output, "\nDUMPING PAGE %d\n", i );
+        fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {
@@ -123,19 +123,21 @@ void free_cell( struct cons_pointer pointer ) {
 
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
+            fwprintf( stderr, L"Freeing cell\n" );
+            dump_object( stderr, pointer );
             strncpy( &cell->tag.bytes[0], FREETAG, 4 );
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
             freelist = pointer;
         } else {
-            fprintf( stderr,
-                     "Attempt to free cell with %d dangling references at page %d, offset %d\n",
-                     cell->count, pointer.page, pointer.offset );
+            fwprintf( stderr,
+                      L"Attempt to free cell with %d dangling references at page %d, offset %d\n",
+                      cell->count, pointer.page, pointer.offset );
         }
     } else {
-        fprintf( stderr,
-                 "Attempt to free cell which is already FREE at page %d, offset %d\n",
-                 pointer.page, pointer.offset );
+        fwprintf( stderr,
+                  L"Attempt to free cell which is already FREE at page %d, offset %d\n",
+                  pointer.page, pointer.offset );
     }
 }
 
@@ -166,12 +168,12 @@ struct cons_pointer allocate_cell( char *tag ) {
             cell->payload.cons.cdr = NIL;
 
 #ifdef DEBUG
-            fprintf( stderr,
-                     "Allocated cell of type '%s' at %d, %d \n", tag,
-                     result.page, result.offset );
+            fwprintf( stderr,
+                      L"Allocated cell of type '%s' at %d, %d \n", tag,
+                      result.page, result.offset );
 #endif
         } else {
-            fprintf( stderr, "WARNING: Allocating non-free cell!" );
+            fwprintf( stderr, L"WARNING: Allocating non-free cell!" );
         }
     }
 
