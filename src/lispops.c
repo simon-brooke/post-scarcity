@@ -73,9 +73,15 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
 }
 
 
-
+/**
+ * Internal guts of apply.
+ * @param frame the stack frame, expected to have only one argument, a list
+ * comprising something that evaluates to a function and its arguments.
+ * @param env The evaluation environment.
+ * @return the result of evaluating the function with its arguments.
+ */
 struct cons_pointer
-eval_cons( struct stack_frame *frame, struct cons_pointer env ) {
+c_apply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
     struct stack_frame *fn_frame = make_empty_frame( frame, env );
@@ -143,9 +149,12 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = frame->arg[0];
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
+    fputws( L"Eval: ", stderr );
+    dump_frame( stderr, frame );
+
     switch ( cell.tag.value ) {
     case CONSTV:
-        result = eval_cons( frame, env );
+        result = c_apply( frame, env );
         break;
 
     case SYMBOLTV:
@@ -170,37 +179,35 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
          */
     }
 
+    fputws( L"Eval returning ", stderr );
+    print( stderr, result );
+    fputws( L"\n", stderr );
+
     return result;
 }
+
 
 /**
  * (apply fn args)
  * 
- * Special form. Apply the function which is the result of evaluating the
+ * function. Apply the function which is the result of evaluating the
  * first argoment to the list of arguments which is the result of evaluating
  * the second argument
  */
 struct cons_pointer
 lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
-    struct cons_pointer result = NIL;
+    fputws( L"Apply: ", stderr );
+    dump_frame( stderr, frame );
 
-    if ( nilp( frame->arg[1] ) || !nilp( frame->arg[2] ) ) {
-        result =
-            lisp_throw( c_string_to_lisp_string( "(apply <function> <args>" ),
-                        frame );
-    }
+    frame->arg[0] = make_cons( frame->arg[0], frame->arg[1] );
+    inc_ref( frame->arg[0] );
+    frame->arg[1] = NIL;
 
-    struct stack_frame *fn_frame = make_empty_frame( frame, env );
-    fn_frame->arg[0] = frame->arg[0];
-    inc_ref( fn_frame->arg[0] );
-    struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
-    free_stack_frame( fn_frame );
+    struct cons_pointer result = c_apply( frame, env );
 
-    struct stack_frame *next_frame =
-        make_special_frame( frame, make_cons( fn_pointer, frame->arg[1] ),
-                            env );
-    result = eval_cons( next_frame, env );
-    free_stack_frame( next_frame );
+    fputws( L"Apply returning ", stderr );
+    print( stderr, result );
+    fputws( L"\n", stderr );
 
     return result;
 }

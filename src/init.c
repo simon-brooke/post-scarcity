@@ -94,11 +94,11 @@ int main( int argc, char *argv[] ) {
     bind_function( "*", &lisp_multiply );
     bind_function( "subtract", &lisp_subtract );
     bind_function( "-", &lisp_subtract );
+    bind_function( "apply", &lisp_apply );
 
     /*
      * primitive special forms 
      */
-    bind_special( "apply", &lisp_apply );
     bind_special( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
 

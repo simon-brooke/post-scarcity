@@ -37,6 +37,14 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
                                       struct cons_pointer env );
 void free_stack_frame( struct stack_frame *frame );
+
+/**
+ * Dump a stackframe to this stream for debugging
+ * @param output the stream
+ * @param frame the frame
+ */
+void dump_frame( FILE * output, struct stack_frame *frame );
+
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 
 /**

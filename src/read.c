@@ -67,23 +67,25 @@ struct cons_pointer read_continuation( FILE * input, wint_t initial ) {
         result = read_string( input, fgetwc( input ) );
         break;
     default:
-         if ( c == '.' ) {
+        if ( c == '.' ) {
             wint_t next = fgetwc( input );
-            if ( iswdigit( next) ) {
+            if ( iswdigit( next ) ) {
                 ungetwc( next, input );
                 result = read_number( input, c );
             } else if ( iswblank( next ) ) {
-                result = read_continuation(input, fgetwc( input));
+                /* dotted pair. TODO: this isn't right, we
+                 * really need to backtrack up a level. */
+                result = read_continuation( input, fgetwc( input ) );
             } else {
                 read_symbol( input, c );
             }
-        }
-        else if ( iswdigit( c ) ) {
+        } else if ( iswdigit( c ) ) {
             result = read_number( input, c );
         } else if ( iswprint( c ) ) {
             result = read_symbol( input, c );
         } else {
-            fwprintf( stderr, L"Unrecognised start of input character %c\n", c );
+            fwprintf( stderr, L"Unrecognised start of input character %c\n",
+                      c );
         }
     }
 
@@ -206,7 +208,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
         ungetwc( initial, input );
         break;
     default:
-        if ( iswprint( initial ) && ! iswblank( initial ) ) {
+        if ( iswprint( initial ) && !iswblank( initial ) ) {
             result =
                 make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
         } else {
@@ -218,10 +220,10 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
         }
         break;
     }
-    
-    fputws(L"Read symbol '", stderr);
-    print(stderr, result);
-    fputws(L"'\n", stderr);
+
+    fputws( L"Read symbol '", stderr );
+    print( stderr, result );
+    fputws( L"'\n", stderr );
 
     return result;
 }

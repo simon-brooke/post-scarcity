@@ -83,6 +83,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
          */
         struct stack_frame *arg_frame = make_empty_frame( previous, env );
         arg_frame->arg[0] = cell.payload.cons.car;
+        inc_ref( arg_frame->arg[0] );
         result->arg[i] = lisp_eval( arg_frame, env );
         inc_ref( result->arg[i] );
         free_stack_frame( arg_frame );
@@ -142,6 +143,22 @@ void free_stack_frame( struct stack_frame *frame ) {
 
     free( frame );
 }
+
+
+/**
+ * Dump a stackframe to this stream for debugging
+ * @param output the stream
+ * @param frame the frame
+ */
+void dump_frame( FILE * output, struct stack_frame *frame ) {
+    fputws( L"Dumping stack frame\n", output );
+    for ( int arg = 0; arg < args_in_frame; arg++ ) {
+        fwprintf( output, L"Arg %d:", arg );
+        print( output, frame->arg[arg] );
+        fputws( L"\n", output );
+    }
+}
+
 
 /**
  * Fetch a pointer to the value of the local variable at this index.
