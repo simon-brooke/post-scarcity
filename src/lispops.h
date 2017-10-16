@@ -49,13 +49,27 @@ struct cons_pointer lisp_read( struct stack_frame *frame,
 struct cons_pointer lisp_print( struct stack_frame *frame,
                                 struct cons_pointer env );
 /**
- * Get the Lisp type of the single argument.
+ * Function: Get the Lisp type of the single argument.
  * @param frame My stack frame.
  * @param env My environment (ignored).
  * @return As a Lisp string, the tag of the object which is the argument.
  */
 struct cons_pointer
 lisp_type( struct stack_frame *frame, struct cons_pointer env );
+
+
+/**
+ * Function; evaluate the forms which are listed in my single argument 
+ * sequentially and return the value of the last. This function is called 'do'
+ * in some dialects of Lisp.
+ * 
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form on the sequence which is my single 
+ * argument.
+ */
+struct cons_pointer 
+lisp_progn( struct stack_frame *frame, struct cons_pointer env );
 
 /*
  * neither, at this stage, really 

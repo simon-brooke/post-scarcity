@@ -1,7 +1,7 @@
 #!/bin/bash
 
-expected='5'
-actual=`echo "(add 2 3)" | target/psse 2> /dev/null | head -2 | tail -1`
+expected='6'
+actual=`echo "(multiply 2 3)" | target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -11,8 +11,8 @@ else
     exit 1
 fi
 
-expected='5.500000'
-actual=`echo "(add 2.5 3)" | target/psse 2> /dev/null | head -2 | tail -1`
+expected='7.500000'
+actual=`echo "(multiply 2.5 3)" | target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -22,4 +22,3 @@ else
     echo "Fail: expected '${expected}', got '${actual}'"
     exit 1
 fi
-

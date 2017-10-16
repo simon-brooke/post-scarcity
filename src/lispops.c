@@ -366,7 +366,7 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
 
 
 /**
- * Get the Lisp type of the single argument.
+ * Function: Get the Lisp type of the single argument.
  * @param frame My stack frame.
  * @param env My environment (ignored).
  * @return As a Lisp string, the tag of the object which is the argument.
@@ -381,6 +381,35 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = c_string_to_lisp_string( buffer );
     free( buffer );
 
+    return result;
+}
+
+/**
+ * Function; evaluate the forms which are listed in my single argument 
+ * sequentially and return the value of the last. This function is called 'do'
+ * in some dialects of Lisp.
+ * 
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form on the sequence which is my single 
+ * argument.
+ */
+struct cons_pointer 
+lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer remaining = frame->arg[0];
+    struct cons_pointer result = NIL;
+    
+    while ( consp(remaining)) {
+        struct cons_space_object cell = pointer2cell( remaining );
+        struct stack_frame * next = make_empty_frame(frame, env);
+        next->arg[0] = cell.payload.cons.car;
+        inc_ref( next->arg[0] );
+        result = lisp_eval(next, env);        
+        free_stack_frame( next);
+        
+        remaining = cell.payload.cons.cdr;
+    }
+    
     return result;
 }
 

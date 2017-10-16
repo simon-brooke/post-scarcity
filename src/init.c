@@ -78,23 +78,24 @@ int main( int argc, char *argv[] ) {
     /*
      * primitive function operations 
      */
+    bind_function( "add", &lisp_add );
+    bind_function( "apply", &lisp_apply );
     bind_function( "assoc", &lisp_assoc );
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
     bind_function( "cons", &lisp_cons );
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
+    bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
+    bind_function( "progn", &lisp_progn );
+    bind_function( "subtract", &lisp_subtract );
     bind_function( "type", &lisp_type );
 
-    bind_function( "add", &lisp_add );
     bind_function( "+", &lisp_add );
-    bind_function( "multiply", &lisp_multiply );
     bind_function( "*", &lisp_multiply );
-    bind_function( "subtract", &lisp_subtract );
     bind_function( "-", &lisp_subtract );
-    bind_function( "apply", &lisp_apply );
 
     /*
      * primitive special forms 
