@@ -20,6 +20,18 @@
  */
 
 /*
+ * utilities
+ */
+
+/**
+ * Get the Lisp type of the single argument.
+ * @param pointer a pointer to the object whose type is requested.
+ * @return As a Lisp string, the tag of the object which is at that pointer.
+ */
+struct cons_pointer
+c_type( struct cons_pointer pointer);
+
+/*
  * special forms 
  */
 struct cons_pointer lisp_eval( struct stack_frame *frame,
@@ -70,6 +82,18 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env );
  */
 struct cons_pointer 
 lisp_progn( struct stack_frame *frame, struct cons_pointer env );
+
+/**
+ * Special form: conditional. Each arg is expected to be a list; if the first 
+ * item in such a list evaluates to non-NIL, the remaining items in that list 
+ * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * has a first element which evaluates to non NIL, then NIL is returned.
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form of the first successful clause.
+ */
+struct cons_pointer
+lisp_cond( struct stack_frame *frame, struct cons_pointer env );
 
 /*
  * neither, at this stage, really 

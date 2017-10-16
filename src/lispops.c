@@ -74,6 +74,30 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
 
 
 /**
+ * Useful building block; evaluate this single form in the context of this 
+ * parent stack frame and this environment.
+ * @param parent the parent stack frame. 
+ * @param form the form to be evaluated.
+ * @param env the evaluation environment.
+ * @return the result of evaluating the form.
+ */
+struct cons_pointer eval_form( struct stack_frame *parent, struct cons_pointer form, struct cons_pointer env) {
+    fputws(L"eval_form: ", stderr);
+    print( stderr, form);
+    fputws(L"\n", stderr);
+    
+    struct cons_pointer result = NIL;
+    struct stack_frame * next = make_empty_frame(parent, env);
+    next->arg[0] = form;
+    inc_ref( next->arg[0] );
+    result = lisp_eval(next, env);        
+    free_stack_frame( next);
+
+    return result;
+}
+
+
+/**
  * Internal guts of apply.
  * @param frame the stack frame, expected to have only one argument, a list
  * comprising something that evaluates to a function and its arguments.
@@ -130,6 +154,26 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
 
     return result;
 }
+
+
+/**
+ * Get the Lisp type of the single argument.
+ * @param pointer a pointer to the object whose type is requested.
+ * @return As a Lisp string, the tag of the object which is at that pointer.
+ */
+struct cons_pointer
+c_type( struct cons_pointer pointer) {
+    char *buffer = malloc( TAGLENGTH + 1 );
+    memset( buffer, 0, TAGLENGTH + 1 );
+    struct cons_space_object cell = pointer2cell( pointer );
+    strncpy( buffer, cell.tag.bytes, TAGLENGTH );
+
+    struct cons_pointer result = c_string_to_lisp_string( buffer );
+    free( buffer );
+
+    return result;
+}
+
 
 /**
  * (eval s_expr)
@@ -373,16 +417,9 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
  */
 struct cons_pointer
 lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
-    char *buffer = malloc( TAGLENGTH + 1 );
-    memset( buffer, 0, TAGLENGTH + 1 );
-    struct cons_space_object cell = pointer2cell( frame->arg[0] );
-    strncpy( buffer, cell.tag.bytes, TAGLENGTH );
-
-    struct cons_pointer result = c_string_to_lisp_string( buffer );
-    free( buffer );
-
-    return result;
+    return c_type( frame->arg[0] );
 }
+
 
 /**
  * Function; evaluate the forms which are listed in my single argument 
@@ -401,11 +438,7 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
     
     while ( consp(remaining)) {
         struct cons_space_object cell = pointer2cell( remaining );
-        struct stack_frame * next = make_empty_frame(frame, env);
-        next->arg[0] = cell.payload.cons.car;
-        inc_ref( next->arg[0] );
-        result = lisp_eval(next, env);        
-        free_stack_frame( next);
+        result = eval_form(frame, cell.payload.cons.car, env);
         
         remaining = cell.payload.cons.cdr;
     }
@@ -413,6 +446,48 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
     return result;
 }
 
+/**
+ * Special form: conditional. Each arg is expected to be a list; if the first 
+ * item in such a list evaluates to non-NIL, the remaining items in that list 
+ * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * has a first element which evaluates to non NIL, then NIL is returned.
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form of the first successful clause.
+ */
+struct cons_pointer
+lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    bool done = false;
+    
+    for (int i = 0; i < args_in_frame && !done; i++) {
+        struct cons_pointer clause_pointer = frame->arg[i];
+        fputws(L"Cond clause: ", stderr);
+        print( stderr, clause_pointer);
+        
+        if (consp(clause_pointer)) {
+            struct cons_space_object cell = pointer2cell( clause_pointer );
+
+            if (!nilp( eval_form(frame, cell.payload.cons.car, env))) {
+                struct stack_frame * next = make_empty_frame(frame, env);
+                next->arg[0] = cell.payload.cons.cdr;
+                inc_ref(next->arg[0]);
+                result = lisp_progn( next, env);
+                done = true;
+            }
+        } else if (nilp(clause_pointer)) {
+            done = true;
+        } else {
+            lisp_throw( 
+                    c_string_to_lisp_string( "Arguments to `cond` must be lists"), 
+                       frame);
+        }
+    }
+    /* TODO: if there are more than 8 caluses we need to continue into the
+     * remainder */
+    
+    return result;
+}
 
 /**
  * TODO: make this do something sensible somehow.

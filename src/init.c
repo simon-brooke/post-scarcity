@@ -100,6 +100,7 @@ int main( int argc, char *argv[] ) {
     /*
      * primitive special forms 
      */
+    bind_special( "cond", &lisp_cond );
     bind_special( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
 

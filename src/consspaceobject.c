@@ -98,7 +98,8 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         break;
     case STRINGTV:
         fwprintf( output,
-                  L"\t\tString cell: character '%1c' (%1d) next at page %2d offset %3d, count %u\n",
+                  L"\t\tString cell: character '%c' (%d) next at page %d offset %d, count %u\n",
+                  cell.payload.string.character,
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset, cell.count );
@@ -108,7 +109,8 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         break;
     case SYMBOLTV:
         fwprintf( output,
-                  L"\t\tSymbol cell: character '%1c' (%1d) next at page %2d offset %3d, count %u\n",
+                  L"\t\tSymbol cell: character '%c' (%d) next at page %d offset %d, count %u\n",
+                  cell.payload.string.character,
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset, cell.count );

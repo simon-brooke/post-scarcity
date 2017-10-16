@@ -19,9 +19,11 @@
 
 #include <stdbool.h>
 
-#include "equal.h"
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "equal.h"
+#include "lispops.h"
+#include "print.h"
 
 /**
  * The object list. What is added to this during system setup is 'global', that is, 
@@ -47,15 +49,29 @@ struct cons_pointer
 internedp( struct cons_pointer key, struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    for ( struct cons_pointer next = store;
-          nilp( result ) && consp( next );
-          next = pointer2cell( next ).payload.cons.cdr ) {
-        struct cons_space_object entry =
-            pointer2cell( pointer2cell( next ).payload.cons.car );
+    if (symbolp(key)) {
+        for ( struct cons_pointer next = store;
+              nilp( result ) && consp( next );
+              next = pointer2cell( next ).payload.cons.cdr ) {
+            struct cons_space_object entry =
+                pointer2cell( pointer2cell( next ).payload.cons.car );
 
-        if ( equal( key, entry.payload.cons.car ) ) {
-            result = entry.payload.cons.car;
+            fputws( L"Internedp: checking whether `", stderr);
+            print(stderr, key);
+            fputws( L"` equals `", stderr);
+            print( stderr, entry.payload.cons.car);
+            fputws( L"`\n", stderr);
+            
+            if ( equal( key, entry.payload.cons.car ) ) {
+                result = entry.payload.cons.car;
+            }
         }
+    } else {
+        fputws(L"`", stderr);
+        print( stderr, key );
+        fputws( L"` is a ", stderr);
+        print( stderr, c_type( key));
+        fputws( L", not a SYMB", stderr);
     }
 
     return result;
