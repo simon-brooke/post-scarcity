@@ -483,7 +483,7 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
                        frame);
         }
     }
-    /* TODO: if there are more than 8 caluses we need to continue into the
+    /* TODO: if there are more than 8 clauses we need to continue into the
      * remainder */
     
     return result;

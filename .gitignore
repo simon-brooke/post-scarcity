@@ -12,3 +12,7 @@ nbproject/
 src/\.#*
 
 *.log
+
+\.idea/
+
+post-scarcity\.iml
