@@ -42,9 +42,9 @@ bool same_type( struct cons_pointer a, struct cons_pointer b ) {
  * @param string the string to test
  * @return true if it's the end of a string.
  */
-bool end_of_string( struct cons_pointer string) {
-    return nilp( string) ||
-            pointer2cell(string).payload.string.character == '\0';
+bool end_of_string( struct cons_pointer string ) {
+    return nilp( string ) ||
+        pointer2cell( string ).payload.string.character == '\0';
 }
 
 /**
@@ -74,10 +74,10 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
             result =
                 cell_a->payload.string.character ==
                 cell_b->payload.string.character
-                && (equal( cell_a->payload.string.cdr,
-                          cell_b->payload.string.cdr ) 
-                    || ( end_of_string(cell_a->payload.string.cdr)
-                    && end_of_string(cell_b->payload.string.cdr)));
+                && ( equal( cell_a->payload.string.cdr,
+                            cell_b->payload.string.cdr )
+                     || ( end_of_string( cell_a->payload.string.cdr )
+                          && end_of_string( cell_b->payload.string.cdr ) ) );
             break;
         case INTEGERTV:
         case REALTV:

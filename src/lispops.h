@@ -28,8 +28,7 @@
  * @param pointer a pointer to the object whose type is requested.
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
-struct cons_pointer
-c_type( struct cons_pointer pointer);
+struct cons_pointer c_type( struct cons_pointer pointer );
 
 /*
  * special forms 
@@ -80,7 +79,7 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env );
  * @return the value of the last form on the sequence which is my single 
  * argument.
  */
-struct cons_pointer 
+struct cons_pointer
 lisp_progn( struct stack_frame *frame, struct cons_pointer env );
 
 /**

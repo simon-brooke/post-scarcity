@@ -81,17 +81,19 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
  * @param env the evaluation environment.
  * @return the result of evaluating the form.
  */
-struct cons_pointer eval_form( struct stack_frame *parent, struct cons_pointer form, struct cons_pointer env) {
-    fputws(L"eval_form: ", stderr);
-    print( stderr, form);
-    fputws(L"\n", stderr);
-    
+struct cons_pointer eval_form( struct stack_frame *parent,
+                               struct cons_pointer form,
+                               struct cons_pointer env ) {
+    fputws( L"eval_form: ", stderr );
+    print( stderr, form );
+    fputws( L"\n", stderr );
+
     struct cons_pointer result = NIL;
-    struct stack_frame * next = make_empty_frame(parent, env);
+    struct stack_frame *next = make_empty_frame( parent, env );
     next->arg[0] = form;
     inc_ref( next->arg[0] );
-    result = lisp_eval(next, env);        
-    free_stack_frame( next);
+    result = lisp_eval( next, env );
+    free_stack_frame( next );
 
     return result;
 }
@@ -161,8 +163,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
  * @param pointer a pointer to the object whose type is requested.
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
-struct cons_pointer
-c_type( struct cons_pointer pointer) {
+struct cons_pointer c_type( struct cons_pointer pointer ) {
     char *buffer = malloc( TAGLENGTH + 1 );
     memset( buffer, 0, TAGLENGTH + 1 );
     struct cons_space_object cell = pointer2cell( pointer );
@@ -199,16 +200,16 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
     switch ( cell.tag.value ) {
     case CONSTV:
         result = c_apply( frame, env );
-	/* I have a profound misunderstanding of how quote and eval should interact!  
-	 * if ( equal( c_car(frame->arg[0]), c_string_to_lisp_symbol("quote"))) 
-	 *   /\* car is QUOTE. TODO: It is ABSURDLY expensive to 'equal' each time! *\/ 
-	 *        { 
-	 * 	 /\* we need to eval it again *\/ 
-	 * 	 frame->arg[0] = result; 
-	 * 	 fputws( L"quote - re-evaling", stderr); 
-	 * 	 dump_frame( stderr, frame ); 
-	 * 	 result = c_apply(frame, env); 
-	 *        } */
+        /* I have a profound misunderstanding of how quote and eval should interact!  
+         * if ( equal( c_car(frame->arg[0]), c_string_to_lisp_symbol("quote"))) 
+         *   /\* car is QUOTE. TODO: It is ABSURDLY expensive to 'equal' each time! *\/ 
+         *        { 
+         *   /\* we need to eval it again *\/ 
+         *   frame->arg[0] = result; 
+         *   fputws( L"quote - re-evaling", stderr); 
+         *   dump_frame( stderr, frame ); 
+         *   result = c_apply(frame, env); 
+         *        } */
 
         break;
 
@@ -442,18 +443,18 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
  * @return the value of the last form on the sequence which is my single 
  * argument.
  */
-struct cons_pointer 
+struct cons_pointer
 lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer remaining = frame->arg[0];
     struct cons_pointer result = NIL;
-    
-    while ( consp(remaining)) {
+
+    while ( consp( remaining ) ) {
         struct cons_space_object cell = pointer2cell( remaining );
-        result = eval_form(frame, cell.payload.cons.car, env);
-        
+        result = eval_form( frame, cell.payload.cons.car, env );
+
         remaining = cell.payload.cons.cdr;
     }
-    
+
     return result;
 }
 
@@ -470,33 +471,32 @@ struct cons_pointer
 lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     bool done = false;
-    
-    for (int i = 0; i < args_in_frame && !done; i++) {
+
+    for ( int i = 0; i < args_in_frame && !done; i++ ) {
         struct cons_pointer clause_pointer = frame->arg[i];
-        fputws(L"Cond clause: ", stderr);
-        print( stderr, clause_pointer);
-        
-        if (consp(clause_pointer)) {
+        fputws( L"Cond clause: ", stderr );
+        print( stderr, clause_pointer );
+
+        if ( consp( clause_pointer ) ) {
             struct cons_space_object cell = pointer2cell( clause_pointer );
 
-            if (!nilp( eval_form(frame, cell.payload.cons.car, env))) {
-                struct stack_frame * next = make_empty_frame(frame, env);
+            if ( !nilp( eval_form( frame, cell.payload.cons.car, env ) ) ) {
+                struct stack_frame *next = make_empty_frame( frame, env );
                 next->arg[0] = cell.payload.cons.cdr;
-                inc_ref(next->arg[0]);
-                result = lisp_progn( next, env);
+                inc_ref( next->arg[0] );
+                result = lisp_progn( next, env );
                 done = true;
             }
-        } else if (nilp(clause_pointer)) {
+        } else if ( nilp( clause_pointer ) ) {
             done = true;
         } else {
-            lisp_throw( 
-                    c_string_to_lisp_string( "Arguments to `cond` must be lists"), 
-                       frame);
+            lisp_throw( c_string_to_lisp_string
+                        ( "Arguments to `cond` must be lists" ), frame );
         }
     }
     /* TODO: if there are more than 8 clauses we need to continue into the
      * remainder */
-    
+
     return result;
 }
 
