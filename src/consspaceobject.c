@@ -1,4 +1,4 @@
-/**
+/*
  *  consspaceobject.c
  *
  *  Structures common to all cons space objects.

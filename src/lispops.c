@@ -1,4 +1,4 @@
-/**
+/*
  * lispops.c
  *
  * List processing operations.
@@ -199,6 +199,17 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
     switch ( cell.tag.value ) {
     case CONSTV:
         result = c_apply( frame, env );
+	/* I have a profound misunderstanding of how quote and eval should interact!  
+	 * if ( equal( c_car(frame->arg[0]), c_string_to_lisp_symbol("quote"))) 
+	 *   /\* car is QUOTE. TODO: It is ABSURDLY expensive to 'equal' each time! *\/ 
+	 *        { 
+	 * 	 /\* we need to eval it again *\/ 
+	 * 	 frame->arg[0] = result; 
+	 * 	 fputws( L"quote - re-evaling", stderr); 
+	 * 	 dump_frame( stderr, frame ); 
+	 * 	 result = c_apply(frame, env); 
+	 *        } */
+
         break;
 
     case SYMBOLTV:

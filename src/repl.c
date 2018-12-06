@@ -1,8 +1,12 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * repl.c
+ *
+ * the read/eval/print loop
+ *
+ * (c) 2017 Simon Brooke <simon@journeyman.cc>
+ * Licensed under GPL version 2.0, or, at your option, any later version.
  */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <wchar.h>

@@ -1,4 +1,4 @@
-/**
+/*
  * equal.c
  *
  * Checks for shallow and deep equality
@@ -38,7 +38,7 @@ bool same_type( struct cons_pointer a, struct cons_pointer b ) {
 }
 
 /**
- * Some string will be null terminated and some will be NIL terminated... ooops!
+ * Some strings will be null terminated and some will be NIL terminated... ooops!
  * @param string the string to test
  * @return true if it's the end of a string.
  */
@@ -102,7 +102,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
         /*
          * there's only supposed ever to be one T and one NIL cell, so each
          * should be caught by eq; equality of vector-space objects is a whole 
-         * other ball game so we won't deal with it now (and indeedmay never). 
+         * other ball game so we won't deal with it now (and indeed may never). 
          * I'm not certain what equality means for read and write streams, so
          * I'll ignore them, too, for now.
          */

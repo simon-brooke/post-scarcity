@@ -1,4 +1,4 @@
-/**
+/*
  * conspage.c
  *
  * Setup and tear down cons pages, and (FOR NOW) do primitive 

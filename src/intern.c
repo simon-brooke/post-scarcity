@@ -1,4 +1,4 @@
-/**
+/*
  * intern.c
  *
  * For now this implements an oblist and shallow binding; local environments can
