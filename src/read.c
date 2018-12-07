@@ -1,4 +1,4 @@
-/**
+/*
  * read.c
  *
  * First pass at a reader, for bootstrapping.

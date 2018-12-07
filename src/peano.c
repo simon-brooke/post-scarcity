@@ -1,4 +1,4 @@
-/**
+/*
  * peano.c
  *
  * Basic peano arithmetic

@@ -1,7 +1,7 @@
-/**
+/*
  * init.c
  *
- * Start up and initialise the environement - just enough to get working 
+ * Start up and initialise the environement - just enough to get working
  * and (ultimately) hand off to the executive.
  *
  *
@@ -37,7 +37,7 @@ void bind_special( char *name, struct cons_pointer ( *executable )
 
 int main( int argc, char *argv[] ) {
     /*
-     * attempt to set wide character acceptance on all streams 
+     * attempt to set wide character acceptance on all streams
      */
     fwide( stdin, 1 );
     fwide( stdout, 1 );
@@ -69,41 +69,43 @@ int main( int argc, char *argv[] ) {
     initialise_cons_pages(  );
 
     /*
-     * privileged variables (keywords) 
+     * privileged variables (keywords)
      */
 
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
 
     /*
-     * primitive function operations 
+     * primitive function operations
      */
+    bind_function( "add", &lisp_add );
+    bind_function( "apply", &lisp_apply );
     bind_function( "assoc", &lisp_assoc );
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
     bind_function( "cons", &lisp_cons );
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
+    bind_function( "eval", &lisp_eval );
+    bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
+    bind_function( "progn", &lisp_progn );
+    bind_function( "subtract", &lisp_subtract );
     bind_function( "type", &lisp_type );
 
-    bind_function( "add", &lisp_add );
     bind_function( "+", &lisp_add );
-    bind_function( "multiply", &lisp_multiply );
     bind_function( "*", &lisp_multiply );
-    bind_function( "subtract", &lisp_subtract );
     bind_function( "-", &lisp_subtract );
-    bind_function( "apply", &lisp_apply );
 
     /*
-     * primitive special forms 
+     * primitive special forms
      */
-    bind_special( "eval", &lisp_eval );
+    bind_special( "cond", &lisp_cond );
     bind_special( "quote", &lisp_quote );
 
 
-    /* bind the oblist last, at this stage. Something clever needs to be done 
+    /* bind the oblist last, at this stage. Something clever needs to be done
      * here and I'm not sure what it is. */
     deep_bind( c_string_to_lisp_symbol( "oblist" ), oblist );
 

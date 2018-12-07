@@ -20,6 +20,17 @@
  */
 
 /*
+ * utilities
+ */
+
+/**
+ * Get the Lisp type of the single argument.
+ * @param pointer a pointer to the object whose type is requested.
+ * @return As a Lisp string, the tag of the object which is at that pointer.
+ */
+struct cons_pointer c_type( struct cons_pointer pointer );
+
+/*
  * special forms 
  */
 struct cons_pointer lisp_eval( struct stack_frame *frame,
@@ -49,13 +60,39 @@ struct cons_pointer lisp_read( struct stack_frame *frame,
 struct cons_pointer lisp_print( struct stack_frame *frame,
                                 struct cons_pointer env );
 /**
- * Get the Lisp type of the single argument.
+ * Function: Get the Lisp type of the single argument.
  * @param frame My stack frame.
  * @param env My environment (ignored).
  * @return As a Lisp string, the tag of the object which is the argument.
  */
 struct cons_pointer
 lisp_type( struct stack_frame *frame, struct cons_pointer env );
+
+
+/**
+ * Function; evaluate the forms which are listed in my single argument 
+ * sequentially and return the value of the last. This function is called 'do'
+ * in some dialects of Lisp.
+ * 
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form on the sequence which is my single 
+ * argument.
+ */
+struct cons_pointer
+lisp_progn( struct stack_frame *frame, struct cons_pointer env );
+
+/**
+ * Special form: conditional. Each arg is expected to be a list; if the first 
+ * item in such a list evaluates to non-NIL, the remaining items in that list 
+ * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * has a first element which evaluates to non NIL, then NIL is returned.
+ * @param frame My stack frame.
+ * @param env My environment (ignored).
+ * @return the value of the last form of the first successful clause.
+ */
+struct cons_pointer
+lisp_cond( struct stack_frame *frame, struct cons_pointer env );
 
 /*
  * neither, at this stage, really 
