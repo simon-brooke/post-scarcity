@@ -1,4 +1,4 @@
-/**
+/*
  * equal.c
  *
  * Checks for shallow and deep equality
@@ -38,13 +38,13 @@ bool same_type( struct cons_pointer a, struct cons_pointer b ) {
 }
 
 /**
- * Some string will be null terminated and some will be NIL terminated... ooops!
+ * Some strings will be null terminated and some will be NIL terminated... ooops!
  * @param string the string to test
  * @return true if it's the end of a string.
  */
-bool end_of_string( struct cons_pointer string) {
-    return nilp( string) ||
-            pointer2cell(string).payload.string.character == '\0';
+bool end_of_string( struct cons_pointer string ) {
+    return nilp( string ) ||
+        pointer2cell( string ).payload.string.character == '\0';
 }
 
 /**
@@ -74,10 +74,10 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
             result =
                 cell_a->payload.string.character ==
                 cell_b->payload.string.character
-                && (equal( cell_a->payload.string.cdr,
-                          cell_b->payload.string.cdr ) 
-                    || ( end_of_string(cell_a->payload.string.cdr)
-                    && end_of_string(cell_b->payload.string.cdr)));
+                && ( equal( cell_a->payload.string.cdr,
+                            cell_b->payload.string.cdr )
+                     || ( end_of_string( cell_a->payload.string.cdr )
+                          && end_of_string( cell_b->payload.string.cdr ) ) );
             break;
         case INTEGERTV:
         case REALTV:
@@ -102,7 +102,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
         /*
          * there's only supposed ever to be one T and one NIL cell, so each
          * should be caught by eq; equality of vector-space objects is a whole 
-         * other ball game so we won't deal with it now (and indeedmay never). 
+         * other ball game so we won't deal with it now (and indeed may never). 
          * I'm not certain what equality means for read and write streams, so
          * I'll ignore them, too, for now.
          */

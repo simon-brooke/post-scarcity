@@ -1,4 +1,4 @@
-/**
+/*
  * init.c
  *
  * Start up and initialise the environement - just enough to get working

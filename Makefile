@@ -3,8 +3,11 @@ TARGET ?= target/psse
 SRC_DIRS ?= ./src
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
+HDRS := $(shell find $(SRC_DIRS) -name *.h)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
+
+TESTS := $(shell find unit-tests -name *.sh)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
@@ -18,10 +21,13 @@ LDFLAGS := -lm
 $(TARGET): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
-format:
-	indent $(INDENT_FLAGS) $(SRCS) src/*.h
+doc: $(SRCS) Makefile
+	doxygen
 
-test:
+format: $(SRCS) $(HDRS) Makefile
+	indent $(INDENT_FLAGS) $(SRCS) $(HDRS)
+
+test: $(OBJS) $(TESTS) Makefile
 	bash ./unit-tests.sh
 
 .PHONY: clean

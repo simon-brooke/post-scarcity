@@ -16,3 +16,5 @@ src/\.#*
 \.idea/
 
 post-scarcity\.iml
+
+doc/
