@@ -69,7 +69,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer env ) {
     struct stack_frame *result = make_empty_frame( previous, env );
 
-    for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+    for ( int i = 0; i < args_in_frame && consp( args ); i++ ) {
         /* iterate down the arg list filling in the arg slots in the
          * frame. When there are no more slots, if there are still args,
          * stash them on more */
@@ -81,17 +81,19 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
          * processor to be evaled in parallel; but see notes here:
          * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
          */
-        struct stack_frame *arg_frame = make_empty_frame( previous, env );
+        struct stack_frame *arg_frame = make_empty_frame( result, env );
         arg_frame->arg[0] = cell.payload.cons.car;
         inc_ref( arg_frame->arg[0] );
+
         struct cons_pointer val = lisp_eval( arg_frame, env );
-        if ( pointer2cell( val ).tag.value == EXCEPTIONTV ) {
+        if ( exceptionp( val ) ) {
             result->arg[0] = val;
             break;
         } else {
             result->arg[i] = val;
         }
         inc_ref( val );
+
         free_stack_frame( arg_frame );
 
         args = cell.payload.cons.cdr;
@@ -147,7 +149,9 @@ void free_stack_frame( struct stack_frame *frame ) {
     for ( int i = 0; i < args_in_frame; i++ ) {
         dec_ref( frame->arg[i] );
     }
-    dec_ref( frame->more );
+    if ( !nilp( frame->more ) ) {
+        dec_ref( frame->more );
+    }
 
     free( frame );
 }
