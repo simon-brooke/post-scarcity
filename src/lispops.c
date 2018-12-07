@@ -36,8 +36,6 @@
 
 /*
  * also to create in this section:
- * struct cons_pointer lisp_cond( struct cons_pointer args, struct cons_pointer env,
- struct stack_frame* frame);
  * struct cons_pointer lisp_let( struct cons_pointer args, struct cons_pointer env,
  struct stack_frame* frame);
  * struct cons_pointer lisp_mapcar( struct cons_pointer args, struct cons_pointer env,
@@ -74,9 +72,9 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
 
 
 /**
- * Useful building block; evaluate this single form in the context of this 
+ * Useful building block; evaluate this single form in the context of this
  * parent stack frame and this environment.
- * @param parent the parent stack frame. 
+ * @param parent the parent stack frame.
  * @param form the form to be evaluated.
  * @param env the evaluation environment.
  * @return the result of evaluating the form.
@@ -130,7 +128,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
 
     case FUNCTIONTV:
         /*
-         * actually, this is apply 
+         * actually, this is apply
          */
         {
             struct stack_frame *next = make_stack_frame( frame, args, env );
@@ -179,11 +177,11 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
 /**
  * (eval s_expr)
  *
- * Special form.
+ * function.
  * If s_expr is a number, NIL, or T, returns s_expr.
  * If s_expr is an unprotected string, returns the value that s_expr is bound
  * to in the evaluation environment (env).
- * If s_expr is a list, expects the car to be something that evaluates to a 
+ * If s_expr is a list, expects the car to be something that evaluates to a
  * function or special form.
  * If a function, evaluates all the other top level elements in s_expr and
  * passes them in a stack frame as arguments to the function.
@@ -200,17 +198,6 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
     switch ( cell.tag.value ) {
     case CONSTV:
         result = c_apply( frame, env );
-        /* I have a profound misunderstanding of how quote and eval should interact!  
-         * if ( equal( c_car(frame->arg[0]), c_string_to_lisp_symbol("quote"))) 
-         *   /\* car is QUOTE. TODO: It is ABSURDLY expensive to 'equal' each time! *\/ 
-         *        { 
-         *   /\* we need to eval it again *\/ 
-         *   frame->arg[0] = result; 
-         *   fputws( L"quote - re-evaling", stderr); 
-         *   dump_frame( stderr, frame ); 
-         *   result = c_apply(frame, env); 
-         *        } */
-
         break;
 
     case SYMBOLTV:
@@ -227,11 +214,11 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
         }
         break;
         /*
-         * the Clojure practice of having a map serve in the function place of 
+         * the Clojure practice of having a map serve in the function place of
          * an s-expression is a good one and I should adopt it; also if the
          * object is a consp it could be interpretable source code but in the
-         * long run I don't want an interpreter, and if I can get away without 
-         * so much the better. 
+         * long run I don't want an interpreter, and if I can get away without
+         * so much the better.
          */
     }
 
@@ -245,7 +232,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
 
 /**
  * (apply fn args)
- * 
+ *
  * function. Apply the function which is the result of evaluating the
  * first argoment to the list of arguments which is the result of evaluating
  * the second argument
@@ -386,7 +373,7 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer env ) {
 /**
  * (read)
  * (read read-stream)
- * Read one complete lisp form and return it. If read-stream is specified and 
+ * Read one complete lisp form and return it. If read-stream is specified and
  * is a read stream, then read from that stream, else stdin.
  */
 struct cons_pointer
@@ -404,7 +391,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
 /**
  * (print expr)
  * (print expr write-stream)
- * Print one complete lisp form and return NIL. If write-stream is specified and 
+ * Print one complete lisp form and return NIL. If write-stream is specified and
  * is a write stream, then print to that stream, else stdout.
  */
 struct cons_pointer
@@ -434,13 +421,13 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
 
 
 /**
- * Function; evaluate the forms which are listed in my single argument 
+ * Function; evaluate the forms which are listed in my single argument
  * sequentially and return the value of the last. This function is called 'do'
  * in some dialects of Lisp.
- * 
+ *
  * @param frame My stack frame.
  * @param env My environment (ignored).
- * @return the value of the last form on the sequence which is my single 
+ * @return the value of the last form on the sequence which is my single
  * argument.
  */
 struct cons_pointer
@@ -459,9 +446,9 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
 }
 
 /**
- * Special form: conditional. Each arg is expected to be a list; if the first 
- * item in such a list evaluates to non-NIL, the remaining items in that list 
- * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * Special form: conditional. Each arg is expected to be a list; if the first
+ * item in such a list evaluates to non-NIL, the remaining items in that list
+ * are evaluated in turn and the value of the last returned. If no arg (clause)
  * has a first element which evaluates to non NIL, then NIL is returned.
  * @param frame My stack frame.
  * @param env My environment (ignored).

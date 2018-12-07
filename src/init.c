@@ -86,6 +86,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "cons", &lisp_cons );
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
+    bind_function( "eval", &lisp_eval );
     bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
     bind_function( "print", &lisp_print );
@@ -101,7 +102,6 @@ int main( int argc, char *argv[] ) {
      * primitive special forms
      */
     bind_special( "cond", &lisp_cond );
-    bind_function( "eval", &lisp_eval );
     bind_special( "quote", &lisp_quote );
 
 
