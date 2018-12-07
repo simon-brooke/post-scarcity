@@ -142,10 +142,46 @@ lisp_subtract( struct stack_frame *frame, struct cons_pointer env ) {
     } else if ( realp( frame->arg[0] ) && integerp( frame->arg[1] ) ) {
         result =
             make_real( arg0.payload.real.value -
-                       numeric_value( frame->arg[0] ) );
-    }                           // else we have an error!
+                       numeric_value( frame->arg[1] ) );
+    } else {
+      /* TODO: throw an exception */
+            lisp_throw( c_string_to_lisp_string
+                        ( "Cannot subtract: not a number" ), frame );
+    }
 
     // and if not nilp[frame->arg[2]) we also have an error.
 
     return result;
 }
+
+/**
+ * Divide one number by another.
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+struct cons_pointer
+lisp_divide( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+
+    struct cons_space_object arg0 = pointer2cell( frame->arg[0] );
+    struct cons_space_object arg1 = pointer2cell( frame->arg[1] );
+
+  if ( numberp(frame->arg[1]) && numeric_value(frame->arg[1]) == 0) {
+    lisp_throw( c_string_to_lisp_string
+                        ( "Cannot divide: divisor is zero" ), frame );
+  } else if ( integerp( frame->arg[0] ) && integerp( frame->arg[1] ) ) {
+      result = make_integer( arg0.payload.integer.value /
+                          arg1.payload.integer.value );
+    } else if ( numberp(frame->arg[0]) && numberp(frame->arg[1])) {
+      result = make_real( numeric_value(frame->arg[0]) / numeric_value(frame->arg[1]));
+    } else {
+            lisp_throw( c_string_to_lisp_string
+                        ( "Cannot divide: not a number" ), frame );
+    }
+
+  return result;
+}
+
+
+

@@ -71,9 +71,10 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords)
      */
-
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
+    /* deep_bind( c_string_to_lisp_symbol( L"λ"), LAMBDA ); */
+    deep_bind( c_string_to_lisp_symbol( "lambda"), LAMBDA );
 
     /*
      * primitive function operations

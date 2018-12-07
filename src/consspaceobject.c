@@ -11,8 +11,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 /*
- * wide characters 
+ * wide characters
  */
 #include <wchar.h>
 #include <wctype.h>
@@ -20,6 +21,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "print.h"
+#include "stack.h"
 
 /**
  * Check that the tag on the cell at this pointer is this tag
@@ -83,33 +85,53 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   cell.payload.cons.cdr.page,
                   cell.payload.cons.cdr.offset, cell.count );
         break;
+      case EXCEPTIONTV:
+      fwprintf(output, L"\t\tException cell: ");
+        print(output, cell.payload.exception.message);
+      fwprintf( output, L"\n");
+      /* TODO: dump the stack trace */
+      for (struct stack_frame * frame = cell.payload.exception.frame;
+           frame != NULL;
+           frame = frame->previous){
+        dump_frame(output, frame);
+      }
+      break;
+    case FREETV:
+        fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
+                  cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
+        break;
     case INTEGERTV:
         fwprintf( output,
                   L"\t\tInteger cell: value %ld, count %u\n",
                   cell.payload.integer.value, cell.count );
         break;
-    case FREETV:
-        fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
-                  cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
-        break;
+      case READTV:
+      fwprintf( output, L"\t\tInput stream\n");
     case REALTV:
         fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
                   cell.payload.real.value, cell.count );
         break;
     case STRINGTV:
+      if (cell.payload.string.character == 0) {
         fwprintf( output,
-                  L"\t\tString cell: character '%c' (%d) next at page %d offset %d, count %u\n",
+                  L"\t\tString cell: termination; next at page %d offset %d, count %u\n",
+                 cell.payload.string.character,
+                  cell.payload.string.cdr.page,
+                  cell.payload.string.cdr.offset, cell.count );
+      }else {
+        fwprintf( output,
+                  L"\t\tString cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
                   cell.payload.string.character,
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
                   cell.payload.string.cdr.offset, cell.count );
         fwprintf( output, L"\t\t value: " );
         print( output, pointer );
-        fwprintf( output, L"\n" );
+        fwprintf( output, L"\n" );}
         break;
     case SYMBOLTV:
         fwprintf( output,
-                  L"\t\tSymbol cell: character '%c' (%d) next at page %d offset %d, count %u\n",
+                  L"\t\tSymbol cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
                   cell.payload.string.character,
                   cell.payload.string.character,
                   cell.payload.string.cdr.page,
@@ -142,6 +164,22 @@ struct cons_pointer make_cons( struct cons_pointer car,
 }
 
 /**
+ * Construct an exception cell.
+ * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
+ * @param frame should be the frame in which the exception occurred.
+ */
+struct cons_pointer make_exception( struct cons_pointer message, struct stack_frame * frame) {
+    struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+    cell->payload.exception.message = message;
+    cell->payload.exception.frame = frame;
+
+    return pointer;
+}
+
+
+/**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer
@@ -159,7 +197,7 @@ make_function( struct cons_pointer src, struct cons_pointer ( *executable )
 /**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the 
+ * has one character and a pointer to the next; in the last cell the
  * pointer to next is NIL.
  */
 struct cons_pointer
@@ -188,7 +226,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
 /**
  * Construct a string from this character and
  * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the 
+ * has one character and a pointer to the next; in the last cell the
  * pointer to next is NIL.
  */
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
@@ -196,7 +234,7 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
 }
 
 /**
- * Construct a symbol from this character and this tail. 
+ * Construct a symbol from this character and this tail.
  */
 struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
     return make_string_like_thing( c, tail, SYMBOLTAG );
@@ -215,6 +253,32 @@ make_special( struct cons_pointer src, struct cons_pointer ( *executable )
     cell->payload.special.executable = executable;
 
     return pointer;
+}
+
+/**
+ * Construct a cell which points to a stream open for reading.
+ * @param input the C stream to wrap.
+ */
+struct cons_pointer make_read_stream( FILE * input) {
+    struct cons_pointer pointer = allocate_cell( READTAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+  cell->payload.stream.stream = input;
+
+  return pointer;
+}
+
+/**
+ * Construct a cell which points to a stream open for writeing.
+ * @param output the C stream to wrap.
+ */
+struct cons_pointer make_write_stream( FILE * output) {
+    struct cons_pointer pointer = allocate_cell( WRITETAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+  cell->payload.stream.stream = output;
+
+  return pointer;
 }
 
 /**

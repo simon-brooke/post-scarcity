@@ -1,8 +1,8 @@
 #!/bin/bash
 
 value='"Fred"'
-expected="String cell: character 'F'"
-echo ${value} | target/psse -d 2>&1 | grep "${expected}" > /dev/null
+expected="String cell: character 'F' (70)"
+echo ${value} | target/psse -d 2>/dev/null | grep "${expected}" > /dev/null
 
 if [ $? -eq 0 ]
 then

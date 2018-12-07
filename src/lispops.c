@@ -127,9 +127,6 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
         break;
 
     case FUNCTIONTV:
-        /*
-         * actually, this is apply
-         */
         {
             struct stack_frame *next = make_stack_frame( frame, args, env );
             result = ( *fn_cell.payload.special.executable ) ( next, env );
@@ -384,7 +381,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
         input = pointer2cell( frame->arg[0] ).payload.stream.stream;
     }
 
-    return read( input );
+    return read( frame, input );
 }
 
 
@@ -477,7 +474,7 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
         } else if ( nilp( clause_pointer ) ) {
             done = true;
         } else {
-            lisp_throw( c_string_to_lisp_string
+            result = lisp_throw( c_string_to_lisp_string
                         ( "Arguments to `cond` must be lists" ), frame );
         }
     }
@@ -494,8 +491,15 @@ struct cons_pointer
 lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
     fwprintf( stderr, L"\nERROR: " );
     print( stderr, message );
-    fwprintf( stderr,
-              L"\n\nAn exception was thrown and I've no idea what to do now\n" );
+    struct cons_pointer result = NIL;
 
-    exit( 1 );
+    struct cons_space_object cell = pointer2cell( message );
+
+  if ( cell.tag.value == EXCEPTIONTV) {
+    result = message;
+  } else {
+    result = make_exception( message, frame);
+  }
+
+  return result;
 }

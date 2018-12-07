@@ -1,7 +1,7 @@
 /*
  * conspage.c
  *
- * Setup and tear down cons pages, and (FOR NOW) do primitive 
+ * Setup and tear down cons pages, and (FOR NOW) do primitive
  * allocation/deallocation of cells.
  * NOTE THAT before we go multi-threaded, these functions must be
  * aggressively
@@ -30,7 +30,7 @@ bool conspageinitihasbeencalled = false;
 int initialised_cons_pages = 0;
 
 /**
- * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
+ * The (global) pointer to the (global) freelist. Not sure whether this ultimately
  * belongs in this file.
  */
 struct cons_pointer freelist = NIL;
@@ -54,19 +54,21 @@ void make_cons_page(  ) {
         for ( int i = 0; i < CONSPAGESIZE; i++ ) {
             struct cons_space_object *cell =
                 &conspages[initialised_cons_pages]->cell[i];
-            if ( initialised_cons_pages == 0 && i < 2 ) {
-                if ( i == 0 ) {
+            if ( initialised_cons_pages == 0 && i < 3 ) {
+              switch ( i) {
+                case 0:
                     /*
-                     * initialise cell as NIL 
+                     * initialise cell as NIL
                      */
                     strncpy( &cell->tag.bytes[0], NILTAG, TAGLENGTH );
                     cell->count = MAXREFERENCE;
                     cell->payload.free.car = NIL;
                     cell->payload.free.cdr = NIL;
                     fwprintf( stderr, L"Allocated special cell NIL\n" );
-                } else if ( i == 1 ) {
+                    break;
+                case 1:
                     /*
-                     * initialise cell as T 
+                     * initialise cell as T
                      */
                     strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
                     cell->count = MAXREFERENCE;
@@ -75,10 +77,21 @@ void make_cons_page(  ) {
                     cell->payload.free.cdr = ( struct cons_pointer ) {
                     0, 1};
                     fwprintf( stderr, L"Allocated special cell T\n" );
+                    break;
+                case 2:
+                    /*
+                     * initialise cell as λ
+                     */
+                    strncpy( &cell->tag.bytes[0], LAMBDATAG, TAGLENGTH );
+                    cell->count = MAXREFERENCE;
+                    cell->payload.string.character = (wint_t)L'λ';
+                    cell->payload.free.cdr = NIL;
+                    fwprintf( stderr, L"Allocated special cell LAMBDA\n" );
+                    break;
                 }
             } else {
                 /*
-                 * otherwise, standard initialisation 
+                 * otherwise, standard initialisation
                  */
                 strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
                 cell->payload.free.car = NIL;

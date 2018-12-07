@@ -84,17 +84,25 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         struct stack_frame *arg_frame = make_empty_frame( previous, env );
         arg_frame->arg[0] = cell.payload.cons.car;
         inc_ref( arg_frame->arg[0] );
-        result->arg[i] = lisp_eval( arg_frame, env );
-        inc_ref( result->arg[i] );
+      struct cons_pointer val = lisp_eval( arg_frame, env );
+      if (pointer2cell(val).tag.value == EXCEPTIONTV) {
+        result->arg[0] = val;
+        break;
+      } else {
+        result->arg[i] = val;
+      }
+      inc_ref(val);
         free_stack_frame( arg_frame );
 
         args = cell.payload.cons.cdr;
     }
+  if (!nilp( args)) {
     /*
      * TODO: this isn't right. These args should also each be evaled.
      */
     result->more = args;
     inc_ref( result->more );
+  }
 
     return result;
 }
