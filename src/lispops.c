@@ -475,7 +475,8 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
             done = true;
         } else {
             result = lisp_throw( c_string_to_lisp_string
-                        ( "Arguments to `cond` must be lists" ), frame );
+                                 ( "Arguments to `cond` must be lists" ),
+                                 frame );
         }
     }
     /* TODO: if there are more than 8 clauses we need to continue into the
@@ -495,11 +496,11 @@ lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
 
     struct cons_space_object cell = pointer2cell( message );
 
-  if ( cell.tag.value == EXCEPTIONTV) {
-    result = message;
-  } else {
-    result = make_exception( message, frame);
-  }
+    if ( cell.tag.value == EXCEPTIONTV ) {
+        result = message;
+    } else {
+        result = make_exception( message, frame );
+    }
 
-  return result;
+    return result;
 }

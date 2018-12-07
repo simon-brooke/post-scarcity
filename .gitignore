@@ -18,3 +18,5 @@ src/\.#*
 post-scarcity\.iml
 
 doc/
+
+log*

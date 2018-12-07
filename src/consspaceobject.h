@@ -272,8 +272,8 @@ struct cons_payload {
  * Message should be a Lisp string; frame should be a pointer to an (unfreed) stack frame.
  */
 struct exception_payload {
-  struct cons_pointer message;
-  struct stack_frame * frame;
+    struct cons_pointer message;
+    struct stack_frame *frame;
 };
 
 /**
@@ -461,7 +461,8 @@ struct cons_pointer make_cons( struct cons_pointer car,
  * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
  * @param frame should be the frame in which the exception occurred.
  */
-struct cons_pointer make_exception( struct cons_pointer message, struct stack_frame * frame);
+struct cons_pointer make_exception( struct cons_pointer message,
+                                    struct stack_frame *frame );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
@@ -496,13 +497,13 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail );
  * Construct a cell which points to a stream open for reading.
  * @param input the C stream to wrap.
  */
-struct cons_pointer make_read_stream( FILE * input);
+struct cons_pointer make_read_stream( FILE * input );
 
 /**
  * Construct a cell which points to a stream open for writeing.
  * @param output the C stream to wrap.
  */
-struct cons_pointer make_write_stream( FILE * output);
+struct cons_pointer make_write_stream( FILE * output );
 
 
 /**

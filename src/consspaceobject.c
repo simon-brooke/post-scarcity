@@ -63,6 +63,29 @@ void dec_ref( struct cons_pointer pointer ) {
     }
 }
 
+void dump_string_cell( FILE * output, wchar_t *prefix,
+                       struct cons_pointer pointer ) {
+    struct cons_space_object cell = pointer2cell( pointer );
+    if ( cell.payload.string.character == 0 ) {
+        fwprintf( output,
+                  L"\t\t%ls cell: termination; next at page %d offset %d, count %u\n",
+                  prefix,
+                  cell.payload.string.cdr.page, cell.payload.string.cdr.offset,
+                  cell.count );
+    } else {
+        fwprintf( output,
+                  L"\t\t%ls cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
+                  prefix,
+                  ( wint_t ) cell.payload.string.character,
+                  cell.payload.string.character,
+                  cell.payload.string.cdr.page,
+                  cell.payload.string.cdr.offset, cell.count );
+        fwprintf( output, L"\t\t value: " );
+        print( output, pointer );
+        fwprintf( output, L"\n" );
+    }
+}
+
 /**
  * dump the object at this cons_pointer to this output stream.
  */
@@ -85,17 +108,16 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   cell.payload.cons.cdr.page,
                   cell.payload.cons.cdr.offset, cell.count );
         break;
-      case EXCEPTIONTV:
-      fwprintf(output, L"\t\tException cell: ");
-        print(output, cell.payload.exception.message);
-      fwprintf( output, L"\n");
-      /* TODO: dump the stack trace */
-      for (struct stack_frame * frame = cell.payload.exception.frame;
-           frame != NULL;
-           frame = frame->previous){
-        dump_frame(output, frame);
-      }
-      break;
+    case EXCEPTIONTV:
+        fwprintf( output, L"\t\tException cell: " );
+        print( output, cell.payload.exception.message );
+        fwprintf( output, L"\n" );
+        /* TODO: dump the stack trace */
+        for ( struct stack_frame * frame = cell.payload.exception.frame;
+              frame != NULL; frame = frame->previous ) {
+            dump_frame( output, frame );
+        }
+        break;
     case FREETV:
         fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
                   cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
@@ -105,40 +127,17 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                   L"\t\tInteger cell: value %ld, count %u\n",
                   cell.payload.integer.value, cell.count );
         break;
-      case READTV:
-      fwprintf( output, L"\t\tInput stream\n");
+    case READTV:
+        fwprintf( output, L"\t\tInput stream\n" );
     case REALTV:
         fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
                   cell.payload.real.value, cell.count );
         break;
     case STRINGTV:
-      if (cell.payload.string.character == 0) {
-        fwprintf( output,
-                  L"\t\tString cell: termination; next at page %d offset %d, count %u\n",
-                 cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-      }else {
-        fwprintf( output,
-                  L"\t\tString cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
-                  cell.payload.string.character,
-                  cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-        fwprintf( output, L"\t\t value: " );
-        print( output, pointer );
-        fwprintf( output, L"\n" );}
+        dump_string_cell( output, L"String", pointer );
         break;
     case SYMBOLTV:
-        fwprintf( output,
-                  L"\t\tSymbol cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
-                  cell.payload.string.character,
-                  cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-        fwprintf( output, L"\t\t value:" );
-        print( output, pointer );
-        fwprintf( output, L"\n" );
+        dump_string_cell( output, L"Symbol", pointer );
         break;
     }
 }
@@ -168,7 +167,8 @@ struct cons_pointer make_cons( struct cons_pointer car,
  * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
  * @param frame should be the frame in which the exception occurred.
  */
-struct cons_pointer make_exception( struct cons_pointer message, struct stack_frame * frame) {
+struct cons_pointer make_exception( struct cons_pointer message,
+                                    struct stack_frame *frame ) {
     struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -259,26 +259,26 @@ make_special( struct cons_pointer src, struct cons_pointer ( *executable )
  * Construct a cell which points to a stream open for reading.
  * @param input the C stream to wrap.
  */
-struct cons_pointer make_read_stream( FILE * input) {
+struct cons_pointer make_read_stream( FILE * input ) {
     struct cons_pointer pointer = allocate_cell( READTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
-  cell->payload.stream.stream = input;
+    cell->payload.stream.stream = input;
 
-  return pointer;
+    return pointer;
 }
 
 /**
  * Construct a cell which points to a stream open for writeing.
  * @param output the C stream to wrap.
  */
-struct cons_pointer make_write_stream( FILE * output) {
+struct cons_pointer make_write_stream( FILE * output ) {
     struct cons_pointer pointer = allocate_cell( WRITETAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
-  cell->payload.stream.stream = output;
+    cell->payload.stream.stream = output;
 
-  return pointer;
+    return pointer;
 }
 
 /**
