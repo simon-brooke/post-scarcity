@@ -49,19 +49,19 @@ print_list_contents( FILE * output, struct cons_pointer pointer,
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     switch ( cell->tag.value ) {
-    case CONSTV:
-        if ( initial_space ) {
-            fputwc( btowc( ' ' ), output );
-        }
-        print( output, cell->payload.cons.car );
+        case CONSTV:
+            if ( initial_space ) {
+                fputwc( btowc( ' ' ), output );
+            }
+            print( output, cell->payload.cons.car );
 
-        print_list_contents( output, cell->payload.cons.cdr, true );
-        break;
-    case NILTV:
-        break;
-    default:
-        fwprintf( output, L" . " );
-        print( output, pointer );
+            print_list_contents( output, cell->payload.cons.cdr, true );
+            break;
+        case NILTV:
+            break;
+        default:
+            fwprintf( output, L" . " );
+            print( output, pointer );
     }
 }
 
@@ -80,58 +80,58 @@ void print( FILE * output, struct cons_pointer pointer ) {
      * statement can ultimately be replaced by a switch, which will be neater.
      */
     switch ( cell.tag.value ) {
-    case CONSTV:
-        print_list( output, pointer );
-        break;
-    case EXCEPTIONTV:
-        fwprintf( output, L"\nException: " );
-        print_string_contents( output, cell.payload.exception.message );
-        break;
-    case INTEGERTV:
-        fwprintf( output, L"%ld", cell.payload.integer.value );
-        break;
-    case LAMBDATV:
-        fwprintf( output, L"lambda" /* "λ" */  );
-        break;
-    case NILTV:
-        fwprintf( output, L"nil" );
-        break;
-    case REALTV:
-        /* TODO: using the C heap is a bad plan because it will fragment.
-         * As soon as I have working vector space I'll use a special purpose
-         * vector space object */
-        buffer = ( char * ) malloc( 24 );
-        memset( buffer, 0, 24 );
-        /* format it really long, then clear the trailing zeros */
-        sprintf( buffer, "%-.23Lg", cell.payload.real.value );
-        if ( strchr( buffer, '.' ) != NULL ) {
-            for ( int i = strlen( buffer ) - 1; buffer[i] == '0'; i-- ) {
-                buffer[i] = '\0';
+        case CONSTV:
+            print_list( output, pointer );
+            break;
+        case EXCEPTIONTV:
+            fwprintf( output, L"\nException: " );
+            print_string_contents( output, cell.payload.exception.message );
+            break;
+        case INTEGERTV:
+            fwprintf( output, L"%ld", cell.payload.integer.value );
+            break;
+        case LAMBDATV:
+            fwprintf( output, L"lambda" /* "λ" */  );
+            break;
+        case NILTV:
+            fwprintf( output, L"nil" );
+            break;
+        case REALTV:
+            /* TODO: using the C heap is a bad plan because it will fragment.
+             * As soon as I have working vector space I'll use a special purpose
+             * vector space object */
+            buffer = ( char * ) malloc( 24 );
+            memset( buffer, 0, 24 );
+            /* format it really long, then clear the trailing zeros */
+            sprintf( buffer, "%-.23Lg", cell.payload.real.value );
+            if ( strchr( buffer, '.' ) != NULL ) {
+                for ( int i = strlen( buffer ) - 1; buffer[i] == '0'; i-- ) {
+                    buffer[i] = '\0';
+                }
             }
-        }
-        fwprintf( output, L"%s", buffer );
-        free( buffer );
-        break;
-    case STRINGTV:
-        print_string( output, pointer );
-        break;
-    case SYMBOLTV:
-        print_string_contents( output, pointer );
-        break;
-    case TRUETV:
-        fwprintf( output, L"t" );
-        break;
-    case FUNCTIONTV:
-        fwprintf( output, L"(Function)" );
-        break;
-    case SPECIALTV:
-        fwprintf( output, L"(Special form)" );
-        break;
-    default:
-        fwprintf( stderr,
-                  L"Error: Unrecognised tag value %d (%c%c%c%c)\n",
-                  cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
-                  cell.tag.bytes[2], cell.tag.bytes[3] );
-        break;
+            fwprintf( output, L"%s", buffer );
+            free( buffer );
+            break;
+        case STRINGTV:
+            print_string( output, pointer );
+            break;
+        case SYMBOLTV:
+            print_string_contents( output, pointer );
+            break;
+        case TRUETV:
+            fwprintf( output, L"t" );
+            break;
+        case FUNCTIONTV:
+            fwprintf( output, L"(Function)" );
+            break;
+        case SPECIALTV:
+            fwprintf( output, L"(Special form)" );
+            break;
+        default:
+            fwprintf( stderr,
+                      L"Error: Unrecognised tag value %d (%c%c%c%c)\n",
+                      cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
+                      cell.tag.bytes[2], cell.tag.bytes[3] );
+            break;
     }
 }

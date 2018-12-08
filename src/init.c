@@ -48,15 +48,15 @@ int main( int argc, char *argv[] ) {
 
     while ( ( option = getopt( argc, argv, "pd" ) ) != -1 ) {
         switch ( option ) {
-        case 'd':
-            dump_at_end = true;
-            break;
-        case 'p':
-            show_prompt = true;
-            break;
-        default:
-            fwprintf( stderr, L"Unexpected option %c\n", option );
-            break;
+            case 'd':
+                dump_at_end = true;
+                break;
+            case 'p':
+                show_prompt = true;
+                break;
+            default:
+                fwprintf( stderr, L"Unexpected option %c\n", option );
+                break;
         }
     }
 

@@ -56,40 +56,40 @@ void make_cons_page(  ) {
                 &conspages[initialised_cons_pages]->cell[i];
             if ( initialised_cons_pages == 0 && i < 3 ) {
                 switch ( i ) {
-                case 0:
-                    /*
-                     * initialise cell as NIL
-                     */
-                    strncpy( &cell->tag.bytes[0], NILTAG, TAGLENGTH );
-                    cell->count = MAXREFERENCE;
-                    cell->payload.free.car = NIL;
-                    cell->payload.free.cdr = NIL;
-                    fwprintf( stderr, L"Allocated special cell NIL\n" );
-                    break;
-                case 1:
-                    /*
-                     * initialise cell as T
-                     */
-                    strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
-                    cell->count = MAXREFERENCE;
-                    cell->payload.free.car = ( struct cons_pointer ) {
-                        0, 1
-                    };
-                    cell->payload.free.cdr = ( struct cons_pointer ) {
-                        0, 1
-                    };
-                    fwprintf( stderr, L"Allocated special cell T\n" );
-                    break;
-                case 2:
-                    /*
-                     * initialise cell as λ
-                     */
-                    strncpy( &cell->tag.bytes[0], LAMBDATAG, TAGLENGTH );
-                    cell->count = MAXREFERENCE;
-                    cell->payload.string.character = ( wint_t ) L'λ';
-                    cell->payload.free.cdr = NIL;
-                    fwprintf( stderr, L"Allocated special cell LAMBDA\n" );
-                    break;
+                    case 0:
+                        /*
+                         * initialise cell as NIL
+                         */
+                        strncpy( &cell->tag.bytes[0], NILTAG, TAGLENGTH );
+                        cell->count = MAXREFERENCE;
+                        cell->payload.free.car = NIL;
+                        cell->payload.free.cdr = NIL;
+                        fwprintf( stderr, L"Allocated special cell NIL\n" );
+                        break;
+                    case 1:
+                        /*
+                         * initialise cell as T
+                         */
+                        strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
+                        cell->count = MAXREFERENCE;
+                        cell->payload.free.car = ( struct cons_pointer ) {
+                            0, 1
+                        };
+                        cell->payload.free.cdr = ( struct cons_pointer ) {
+                            0, 1
+                        };
+                        fwprintf( stderr, L"Allocated special cell T\n" );
+                        break;
+                    case 2:
+                        /*
+                         * initialise cell as λ
+                         */
+                        strncpy( &cell->tag.bytes[0], LAMBDATAG, TAGLENGTH );
+                        cell->count = MAXREFERENCE;
+                        cell->payload.string.character = ( wint_t ) L'λ';
+                        cell->payload.free.cdr = NIL;
+                        fwprintf( stderr, L"Allocated special cell LAMBDA\n" );
+                        break;
                 }
             } else {
                 /*

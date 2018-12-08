@@ -100,45 +100,46 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
               cell.tag.value, pointer.page, pointer.offset, cell.count );
 
     switch ( cell.tag.value ) {
-    case CONSTV:
-        fwprintf( output,
-                  L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
-                  cell.payload.cons.car.page,
-                  cell.payload.cons.car.offset,
-                  cell.payload.cons.cdr.page,
-                  cell.payload.cons.cdr.offset, cell.count );
-        break;
-    case EXCEPTIONTV:
-        fwprintf( output, L"\t\tException cell: " );
-        print( output, cell.payload.exception.message );
-        fwprintf( output, L"\n" );
-        /* TODO: dump the stack trace */
-        for ( struct stack_frame * frame = cell.payload.exception.frame;
-              frame != NULL; frame = frame->previous ) {
-            dump_frame( output, frame );
-        }
-        break;
-    case FREETV:
-        fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
-                  cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
-        break;
-    case INTEGERTV:
-        fwprintf( output,
-                  L"\t\tInteger cell: value %ld, count %u\n",
-                  cell.payload.integer.value, cell.count );
-        break;
-    case READTV:
-        fwprintf( output, L"\t\tInput stream\n" );
-    case REALTV:
-        fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
-                  cell.payload.real.value, cell.count );
-        break;
-    case STRINGTV:
-        dump_string_cell( output, L"String", pointer );
-        break;
-    case SYMBOLTV:
-        dump_string_cell( output, L"Symbol", pointer );
-        break;
+        case CONSTV:
+            fwprintf( output,
+                      L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
+                      cell.payload.cons.car.page,
+                      cell.payload.cons.car.offset,
+                      cell.payload.cons.cdr.page,
+                      cell.payload.cons.cdr.offset, cell.count );
+            break;
+        case EXCEPTIONTV:
+            fwprintf( output, L"\t\tException cell: " );
+            print( output, cell.payload.exception.message );
+            fwprintf( output, L"\n" );
+            /* TODO: dump the stack trace */
+            for ( struct stack_frame * frame = cell.payload.exception.frame;
+                  frame != NULL; frame = frame->previous ) {
+                dump_frame( output, frame );
+            }
+            break;
+        case FREETV:
+            fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
+                      cell.payload.cons.cdr.page,
+                      cell.payload.cons.cdr.offset );
+            break;
+        case INTEGERTV:
+            fwprintf( output,
+                      L"\t\tInteger cell: value %ld, count %u\n",
+                      cell.payload.integer.value, cell.count );
+            break;
+        case READTV:
+            fwprintf( output, L"\t\tInput stream\n" );
+        case REALTV:
+            fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
+                      cell.payload.real.value, cell.count );
+            break;
+        case STRINGTV:
+            dump_string_cell( output, L"String", pointer );
+            break;
+        case SYMBOLTV:
+            dump_string_cell( output, L"Symbol", pointer );
+            break;
     }
 }
 

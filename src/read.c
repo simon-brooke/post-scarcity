@@ -60,40 +60,42 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
           c == '\0' || iswblank( c ) || iswcntrl( c ); c = fgetwc( input ) );
 
     switch ( c ) {
-    case EOF:
-        result = lisp_throw( c_string_to_lisp_string
-                             ( "End of input while reading" ), frame );
-        break;
-    case '\'':
-        result = c_quote( read_continuation( frame, input, fgetwc( input ) ) );
-        break;
-    case '(':
-        result = read_list( frame, input, fgetwc( input ) );
-        break;
-    case '"':
-        result = read_string( input, fgetwc( input ) );
-        break;
-    default:
-        if ( c == '.' ) {
-            wint_t next = fgetwc( input );
-            if ( iswdigit( next ) ) {
-                ungetwc( next, input );
+        case EOF:
+            result = lisp_throw( c_string_to_lisp_string
+                                 ( "End of input while reading" ), frame );
+            break;
+        case '\'':
+            result =
+                c_quote( read_continuation( frame, input, fgetwc( input ) ) );
+            break;
+        case '(':
+            result = read_list( frame, input, fgetwc( input ) );
+            break;
+        case '"':
+            result = read_string( input, fgetwc( input ) );
+            break;
+        default:
+            if ( c == '.' ) {
+                wint_t next = fgetwc( input );
+                if ( iswdigit( next ) ) {
+                    ungetwc( next, input );
+                    result = read_number( input, c );
+                } else if ( iswblank( next ) ) {
+                    /* dotted pair. TODO: this isn't right, we
+                     * really need to backtrack up a level. */
+                    result =
+                        read_continuation( frame, input, fgetwc( input ) );
+                } else {
+                    read_symbol( input, c );
+                }
+            } else if ( iswdigit( c ) ) {
                 result = read_number( input, c );
-            } else if ( iswblank( next ) ) {
-                /* dotted pair. TODO: this isn't right, we
-                 * really need to backtrack up a level. */
-                result = read_continuation( frame, input, fgetwc( input ) );
+            } else if ( iswprint( c ) ) {
+                result = read_symbol( input, c );
             } else {
-                read_symbol( input, c );
+                fwprintf( stderr,
+                          L"Unrecognised start of input character %c\n", c );
             }
-        } else if ( iswdigit( c ) ) {
-            result = read_number( input, c );
-        } else if ( iswprint( c ) ) {
-            result = read_symbol( input, c );
-        } else {
-            fwprintf( stderr, L"Unrecognised start of input character %c\n",
-                      c );
-        }
     }
 
     return result;
@@ -177,15 +179,16 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
     struct cons_pointer result;
 
     switch ( initial ) {
-    case '\0':
-        result = make_string( initial, NIL );
-        break;
-    case '"':
-        result = make_string( '\0', NIL );
-        break;
-    default:
-        result = make_string( initial, read_string( input, fgetwc( input ) ) );
-        break;
+        case '\0':
+            result = make_string( initial, NIL );
+            break;
+        case '"':
+            result = make_string( '\0', NIL );
+            break;
+        default:
+            result =
+                make_string( initial, read_string( input, fgetwc( input ) ) );
+            break;
     }
 
     return result;
@@ -196,37 +199,39 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
     struct cons_pointer result;
 
     switch ( initial ) {
-    case '\0':
-        result = make_symbol( initial, NIL );
-        break;
-    case '"':
-        /*
-         * THIS IS NOT A GOOD IDEA, but is legal
-         */
-        result = make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
-        break;
-    case ')':
-        /*
-         * unquoted strings may not include right-parenthesis
-         */
-        result = make_symbol( '\0', NIL );
-        /*
-         * push back the character read
-         */
-        ungetwc( initial, input );
-        break;
-    default:
-        if ( iswprint( initial ) && !iswblank( initial ) ) {
+        case '\0':
+            result = make_symbol( initial, NIL );
+            break;
+        case '"':
+            /*
+             * THIS IS NOT A GOOD IDEA, but is legal
+             */
             result =
                 make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
-        } else {
-            result = NIL;
+            break;
+        case ')':
+            /*
+             * unquoted strings may not include right-parenthesis
+             */
+            result = make_symbol( '\0', NIL );
             /*
              * push back the character read
              */
             ungetwc( initial, input );
-        }
-        break;
+            break;
+        default:
+            if ( iswprint( initial ) && !iswblank( initial ) ) {
+                result =
+                    make_symbol( initial,
+                                 read_symbol( input, fgetwc( input ) ) );
+            } else {
+                result = NIL;
+                /*
+                 * push back the character read
+                 */
+                ungetwc( initial, input );
+            }
+            break;
     }
 
     fputws( L"Read symbol '", stderr );

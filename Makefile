@@ -11,7 +11,7 @@ TESTS := $(shell find unit-tests -name *.sh)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli0 \
+INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 -d0 -di1 -nfc1 -i4 -ip0 -l75 -lp -npcs \
 -npsl -nsc -nsob -nss -nut -prs -l79 -ts2
 

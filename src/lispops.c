@@ -96,6 +96,38 @@ struct cons_pointer eval_form( struct stack_frame *parent,
     return result;
 }
 
+/**
+ * The Lisp interpreter.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param lexpr the lambda expression to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer
+lisp_lambda( struct stack_frame *frame, struct cons_pointer lexpr,
+             struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer should_be_lambda =
+        eval_form( frame, c_car( lexpr ), env );
+
+    if ( lambdap( should_be_lambda ) ) {
+        struct cons_pointer new_env = env;
+    } else {
+        char *buffer = malloc( 1024 );
+        memset( buffer, '\0', 1024 );
+        sprintf( buffer,
+                 "Expected lambda, but found cell with tag %d (%c%c%c%c)",
+                 fn_cell.tag.value, fn_cell.tag.bytes[0],
+                 fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
+                 fn_cell.tag.bytes[3] );
+        struct cons_pointer message = c_string_to_lisp_string( buffer );
+        free( buffer );
+        result = lisp_throw( message, frame );
+    }
+    return result;
+}
+
+
 
 /**
  * Internal guts of apply.
@@ -118,35 +150,43 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer args = c_cdr( frame->arg[0] );
 
     switch ( fn_cell.tag.value ) {
-    case SPECIALTV:
-        {
-            struct stack_frame *next = make_special_frame( frame, args, env );
-            result = ( *fn_cell.payload.special.executable ) ( next, env );
-            free_stack_frame( next );
-        }
-        break;
+        case SPECIALTV:
+            {
+                struct stack_frame *next =
+                    make_special_frame( frame, args, env );
+                result = ( *fn_cell.payload.special.executable ) ( next, env );
+                free_stack_frame( next );
+            }
+            break;
 
-    case FUNCTIONTV:
-        {
-            struct stack_frame *next = make_stack_frame( frame, args, env );
-            result = ( *fn_cell.payload.special.executable ) ( next, env );
-            free_stack_frame( next );
-        }
-        break;
+        case FUNCTIONTV:
+            {
+                struct stack_frame *next =
+                    make_stack_frame( frame, args, env );
+                result = ( *fn_cell.payload.special.executable ) ( next, env );
+                free_stack_frame( next );
+            }
+            break;
 
-    default:
-        {
-            char *buffer = malloc( 1024 );
-            memset( buffer, '\0', 1024 );
-            sprintf( buffer,
-                     "Unexpected cell with tag %d (%c%c%c%c) in function position",
-                     fn_cell.tag.value, fn_cell.tag.bytes[0],
-                     fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
-                     fn_cell.tag.bytes[3] );
-            struct cons_pointer message = c_string_to_lisp_string( buffer );
-            free( buffer );
-            result = lisp_throw( message, frame );
-        }
+        case CONSTV:
+            {
+                result = lisp_lambda( frame, fn_pointer, env );
+            }
+            break;
+        default:
+            {
+                char *buffer = malloc( 1024 );
+                memset( buffer, '\0', 1024 );
+                sprintf( buffer,
+                         "Unexpected cell with tag %d (%c%c%c%c) in function position",
+                         fn_cell.tag.value, fn_cell.tag.bytes[0],
+                         fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
+                         fn_cell.tag.bytes[3] );
+                struct cons_pointer message =
+                    c_string_to_lisp_string( buffer );
+                free( buffer );
+                result = lisp_throw( message, frame );
+            }
     }
 
     return result;
@@ -193,30 +233,31 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
     dump_frame( stderr, frame );
 
     switch ( cell.tag.value ) {
-    case CONSTV:
-        result = c_apply( frame, env );
-        break;
+        case CONSTV:
+            result = c_apply( frame, env );
+            break;
 
-    case SYMBOLTV:
-        {
-            struct cons_pointer canonical = internedp( frame->arg[0], env );
-            if ( nilp( canonical ) ) {
-                struct cons_pointer message =
-                    c_string_to_lisp_string
-                    ( "Attempt to take value of unbound symbol." );
-                result = lisp_throw( message, frame );
-            } else {
-                result = c_assoc( canonical, env );
+        case SYMBOLTV:
+            {
+                struct cons_pointer canonical =
+                    internedp( frame->arg[0], env );
+                if ( nilp( canonical ) ) {
+                    struct cons_pointer message =
+                        c_string_to_lisp_string
+                        ( "Attempt to take value of unbound symbol." );
+                    result = lisp_throw( message, frame );
+                } else {
+                    result = c_assoc( canonical, env );
+                }
             }
-        }
-        break;
-        /*
-         * the Clojure practice of having a map serve in the function place of
-         * an s-expression is a good one and I should adopt it; also if the
-         * object is a consp it could be interpretable source code but in the
-         * long run I don't want an interpreter, and if I can get away without
-         * so much the better.
-         */
+            break;
+            /*
+             * the Clojure practice of having a map serve in the function place of
+             * an s-expression is a good one and I should adopt it; also if the
+             * object is a consp it could be interpretable source code but in the
+             * long run I don't want an interpreter, and if I can get away without
+             * so much the better.
+             */
     }
 
     fputws( L"Eval returning ", stderr );

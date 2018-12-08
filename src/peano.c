@@ -42,17 +42,17 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
         struct cons_space_object current = pointer2cell( frame->arg[i] );
 
         switch ( current.tag.value ) {
-        case INTEGERTV:
-            i_accumulator += current.payload.integer.value;
-            d_accumulator += numeric_value( frame->arg[i] );
-            break;
-        case REALTV:
-            d_accumulator += current.payload.real.value;
-            is_int = false;
-            break;
-        default:
-            lisp_throw( c_string_to_lisp_string( "Cannot add: not a number" ),
-                        frame );
+            case INTEGERTV:
+                i_accumulator += current.payload.integer.value;
+                d_accumulator += numeric_value( frame->arg[i] );
+                break;
+            case REALTV:
+                d_accumulator += current.payload.real.value;
+                is_int = false;
+                break;
+            default:
+                lisp_throw( c_string_to_lisp_string
+                            ( "Cannot add: not a number" ), frame );
         }
 
         if ( !nilp( frame->more ) ) {
@@ -87,17 +87,17 @@ lisp_multiply( struct stack_frame *frame, struct cons_pointer env ) {
         struct cons_space_object arg = pointer2cell( frame->arg[i] );
 
         switch ( arg.tag.value ) {
-        case INTEGERTV:
-            i_accumulator *= arg.payload.integer.value;
-            d_accumulator *= numeric_value( frame->arg[i] );
-            break;
-        case REALTV:
-            d_accumulator *= arg.payload.real.value;
-            is_int = false;
-            break;
-        default:
-            lisp_throw( c_string_to_lisp_string
-                        ( "Cannot multiply: not a number" ), frame );
+            case INTEGERTV:
+                i_accumulator *= arg.payload.integer.value;
+                d_accumulator *= numeric_value( frame->arg[i] );
+                break;
+            case REALTV:
+                d_accumulator *= arg.payload.real.value;
+                is_int = false;
+                break;
+            default:
+                lisp_throw( c_string_to_lisp_string
+                            ( "Cannot multiply: not a number" ), frame );
         }
 
         if ( !nilp( frame->more ) ) {
