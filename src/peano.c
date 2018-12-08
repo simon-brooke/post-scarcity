@@ -170,13 +170,16 @@ lisp_divide( struct stack_frame *frame, struct cons_pointer env ) {
     if ( numberp( frame->arg[1] ) && numeric_value( frame->arg[1] ) == 0 ) {
         lisp_throw( c_string_to_lisp_string
                     ( "Cannot divide: divisor is zero" ), frame );
-    } else if ( integerp( frame->arg[0] ) && integerp( frame->arg[1] ) ) {
-        result = make_integer( arg0.payload.integer.value /
-                               arg1.payload.integer.value );
     } else if ( numberp( frame->arg[0] ) && numberp( frame->arg[1] ) ) {
-        result =
-            make_real( numeric_value( frame->arg[0] ) /
-                       numeric_value( frame->arg[1] ) );
+        long int i = ( long int ) numeric_value( frame->arg[0] ) /
+            numeric_value( frame->arg[1] );
+        long double r = ( long double ) numeric_value( frame->arg[0] ) /
+            numeric_value( frame->arg[1] );
+        if ( fabsl( ( long double ) i - r ) < 0.0000000001 ) {
+            result = make_integer( i );
+        } else {
+            result = make_real( r );
+        }
     } else {
         lisp_throw( c_string_to_lisp_string
                     ( "Cannot divide: not a number" ), frame );

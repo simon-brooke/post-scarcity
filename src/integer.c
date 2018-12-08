@@ -21,7 +21,7 @@
  * but only integers and reals are so far implemented.
  */
 long double numeric_value( struct cons_pointer pointer ) {
-    double result = NAN;
+    long double result = NAN;
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     if ( integerp( pointer ) ) {

@@ -9,6 +9,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 /*
  * wide characters
@@ -72,6 +73,7 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
 
 void print( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
+    char *buffer;
 
     /*
      * Because tags have values as well as bytes, this if ... else if
@@ -95,7 +97,20 @@ void print( FILE * output, struct cons_pointer pointer ) {
         fwprintf( output, L"nil" );
         break;
     case REALTV:
-        fwprintf( output, L"%Lf", cell.payload.real.value );
+        /* TODO: using the C heap is a bad plan because it will fragment.
+         * As soon as I have working vector space I'll use a special purpose
+         * vector space object */
+        buffer = ( char * ) malloc( 24 );
+        memset( buffer, 0, 24 );
+        /* format it really long, then clear the trailing zeros */
+        sprintf( buffer, "%-.23Lg", cell.payload.real.value );
+        if ( strchr( buffer, '.' ) != NULL ) {
+            for ( int i = strlen( buffer ) - 1; buffer[i] == '0'; i-- ) {
+                buffer[i] = '\0';
+            }
+        }
+        fwprintf( output, L"%s", buffer );
+        free( buffer );
         break;
     case STRINGTV:
         print_string( output, pointer );

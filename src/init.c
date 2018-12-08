@@ -73,7 +73,6 @@ int main( int argc, char *argv[] ) {
      */
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
-    /* deep_bind( c_string_to_lisp_symbol( L"λ"), LAMBDA ); */
     deep_bind( c_string_to_lisp_symbol( "lambda" ), LAMBDA );
 
     /*
@@ -85,6 +84,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
     bind_function( "cons", &lisp_cons );
+    bind_function( "divide", &lisp_divide );
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
     bind_function( "eval", &lisp_eval );
@@ -98,6 +98,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "+", &lisp_add );
     bind_function( "*", &lisp_multiply );
     bind_function( "-", &lisp_subtract );
+    bind_function( "/", &lisp_divide );
 
     /*
      * primitive special forms
