@@ -63,7 +63,7 @@ void dec_ref( struct cons_pointer pointer ) {
     }
 }
 
-void dump_string_cell( FILE * output, wchar_t * prefix,
+void dump_string_cell( FILE * output, wchar_t *prefix,
                        struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     if ( cell.payload.string.character == 0 ) {
@@ -129,10 +129,10 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                       cell.payload.integer.value, cell.count );
             break;
         case LAMBDATV:
-            fwprintf( output, L"Lambda cell; args: " );
+            fwprintf( output, L"\t\tLambda cell; args: " );
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
-            print( output, cell.payload.lambda.args );
+            print( output, cell.payload.lambda.body );
             break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );

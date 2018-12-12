@@ -31,13 +31,17 @@
 struct cons_pointer c_type( struct cons_pointer pointer );
 
 /*
- * special forms 
+ * special forms
  */
 struct cons_pointer lisp_eval( struct stack_frame *frame,
                                struct cons_pointer env );
 struct cons_pointer lisp_apply( struct stack_frame *frame,
                                 struct cons_pointer env );
-                                /**
+
+struct cons_pointer
+lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env );
+
+/**
  * The Lisp interpreter.
  *
  * @param frame the stack frame in which the expression is to be interpreted;
@@ -51,7 +55,7 @@ struct cons_pointer lisp_quote( struct stack_frame *frame,
                                 struct cons_pointer env );
 
 /*
- * functions 
+ * functions
  */
 struct cons_pointer lisp_cons( struct stack_frame *frame,
                                struct cons_pointer env );
@@ -80,22 +84,22 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env );
 
 
 /**
- * Function; evaluate the forms which are listed in my single argument 
+ * Function; evaluate the forms which are listed in my single argument
  * sequentially and return the value of the last. This function is called 'do'
  * in some dialects of Lisp.
- * 
+ *
  * @param frame My stack frame.
  * @param env My environment (ignored).
- * @return the value of the last form on the sequence which is my single 
+ * @return the value of the last form on the sequence which is my single
  * argument.
  */
 struct cons_pointer
 lisp_progn( struct stack_frame *frame, struct cons_pointer env );
 
 /**
- * Special form: conditional. Each arg is expected to be a list; if the first 
- * item in such a list evaluates to non-NIL, the remaining items in that list 
- * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * Special form: conditional. Each arg is expected to be a list; if the first
+ * item in such a list evaluates to non-NIL, the remaining items in that list
+ * are evaluated in turn and the value of the last returned. If no arg (clause)
  * has a first element which evaluates to non NIL, then NIL is returned.
  * @param frame My stack frame.
  * @param env My environment (ignored).
@@ -105,7 +109,7 @@ struct cons_pointer
 lisp_cond( struct stack_frame *frame, struct cons_pointer env );
 
 /*
- * neither, at this stage, really 
+ * neither, at this stage, really
  */
 struct cons_pointer lisp_throw( struct cons_pointer message,
                                 struct stack_frame *frame );

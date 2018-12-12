@@ -73,9 +73,11 @@ void make_cons_page(  ) {
                         strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
                         cell->count = MAXREFERENCE;
                         cell->payload.free.car = ( struct cons_pointer ) {
-                        0, 1};
+                            0, 1
+                        };
                         cell->payload.free.cdr = ( struct cons_pointer ) {
-                        0, 1};
+                            0, 1
+                        };
                         fwprintf( stderr, L"Allocated special cell T\n" );
                         break;
                 }
@@ -110,7 +112,8 @@ void dump_pages( FILE * output ) {
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {
-                         i, j} );
+                         i, j
+                         } );
         }
     }
 }

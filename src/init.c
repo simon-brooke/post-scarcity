@@ -48,12 +48,14 @@ int main( int argc, char *argv[] ) {
 
     while ( ( option = getopt( argc, argv, "pd" ) ) != -1 ) {
         switch ( option ) {
+            case 'c':
+                print_use_colours = true;
+                break;
             case 'd':
                 dump_at_end = true;
                 break;
             case 'p':
                 show_prompt = true;
-                print_use_colours = true;
                 break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
@@ -106,6 +108,7 @@ int main( int argc, char *argv[] ) {
     bind_special( "cond", &lisp_cond );
     bind_special( "lambda", &lisp_lambda );
     bind_special( "quote", &lisp_quote );
+    bind_special( "set!", &lisp_set_shriek );
 
 
     /* bind the oblist last, at this stage. Something clever needs to be done
