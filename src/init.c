@@ -53,7 +53,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 'p':
                 show_prompt = true;
-		print_use_colours = true;
+                print_use_colours = true;
                 break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
@@ -74,6 +74,7 @@ int main( int argc, char *argv[] ) {
      */
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
+    /* lambda is even more privileged than a special form */
     deep_bind( c_string_to_lisp_symbol( "lambda" ), LAMBDA );
 
     /*

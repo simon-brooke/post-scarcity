@@ -37,6 +37,16 @@ struct cons_pointer lisp_eval( struct stack_frame *frame,
                                struct cons_pointer env );
 struct cons_pointer lisp_apply( struct stack_frame *frame,
                                 struct cons_pointer env );
+                                /**
+ * The Lisp interpreter.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param lexpr the lambda expression to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer lisp_lambda( struct stack_frame *frame,
+                                 struct cons_pointer env );
+
 struct cons_pointer lisp_quote( struct stack_frame *frame,
                                 struct cons_pointer env );
 

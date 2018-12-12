@@ -35,6 +35,13 @@
 #define CONSTV      1397641027
 
 /**
+ * An exception.
+ */
+#define EXCEPTIONTAG "EXEP"
+/* TODO: this is wrong */
+#define EXCEPTIONTV 1346721861
+
+/**
  * An unallocated cell on the free list - should never be encountered by a Lisp
  * function. 1162170950
  */
@@ -116,13 +123,6 @@
 #define WRITETAG    "WRIT"
 /* TODO: this is wrong */
 #define WRITETV 1414091351
-
-/**
- * An exception.
- */
-#define EXCEPTIONTAG "EXEP"
-/* TODO: this is wrong */
-#define EXCEPTIONTV 1346721861
 
 /**
  * a cons pointer which points to the special NIL cell

@@ -22,20 +22,34 @@
 #include "integer.h"
 #include "print.h"
 
+/**
+ * Whether or not we colorise output.
+ * TODO: this should be a Lisp symbol binding, not a C variable.
+ */
 int print_use_colours = 0;
 
+/**
+ * print all the characters in the symbol or string indicated by `pointer` 
+ * onto this `output`; if `pointer` does not indicate a string or symbol,
+ * don't print anything but just return.
+ */
 void print_string_contents( FILE * output, struct cons_pointer pointer ) {
-    if ( stringp( pointer ) || symbolp( pointer ) ) {
+    while ( stringp( pointer ) || symbolp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wint_t c = cell->payload.string.character;
 
         if ( c != '\0' ) {
             fputwc( c, output );
         }
-        print_string_contents( output, cell->payload.string.cdr );
+        pointer = cell->payload.string.cdr;
     }
 }
 
+/**
+ * print all the characters in the string indicated by `pointer` onto
+ * the stream at this `output`, prepending and appending double quote
+ * characters.
+ */
 void print_string( FILE * output, struct cons_pointer pointer ) {
     fputwc( btowc( '"' ), output );
     print_string_contents( output, pointer );
@@ -43,7 +57,9 @@ void print_string( FILE * output, struct cons_pointer pointer ) {
 }
 
 /**
- * Print a single list cell (cons cell).
+ * Print a single list cell (cons cell) indicated by `pointer` to the
+ * stream indicated by `output`. if `initial_space` is `true`, prepend 
+ * a space character.
  */
 void
 print_list_contents( FILE * output, struct cons_pointer pointer,
@@ -83,6 +99,10 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
 
 }
 
+/**
+ * Print the cons-space object indicated by `pointer` to the stream indicated 
+ * by `output`.
+ */
 void print( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     char *buffer;
