@@ -128,11 +128,10 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     struct cons_pointer new_env = env;
     struct cons_pointer args = cell.payload.lambda.args;
     struct cons_pointer body = cell.payload.lambda.body;
-    struct cons_pointer vals = frame->arg[0];
 
-    while ( consp( args ) && consp( vals ) ) {
+    for ( int i = 0; i < args_in_frame && consp( args ); i++ ) {
         struct cons_pointer arg = c_car( args );
-        struct cons_pointer val = c_car( vals );
+        struct cons_pointer val = frame->arg[i];
         print( stderr, c_string_to_lisp_string( "\n\tBinding " ) );
         print( stderr, arg );
         print( stderr, c_string_to_lisp_string( " to " ) );
@@ -141,8 +140,6 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
         new_env = make_cons( make_cons( arg, val ), new_env );
         args = c_cdr( args );
-        vals = c_cdr( vals );
-
     }
 
     while ( !nilp( body ) ) {
@@ -194,6 +191,8 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
             {
                 struct stack_frame *next =
                     make_stack_frame( frame, args, env );
+                fputws( L"Stack frame for lambda\n", stderr );
+                dump_frame( stderr, next );
                 result = eval_lambda( fn_cell, next, env );
                 free_stack_frame( next );
             }
