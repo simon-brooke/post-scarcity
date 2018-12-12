@@ -53,6 +53,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 'p':
                 show_prompt = true;
+		print_use_colours = true;
                 break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );

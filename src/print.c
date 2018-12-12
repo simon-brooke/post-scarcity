@@ -22,6 +22,8 @@
 #include "integer.h"
 #include "print.h"
 
+int print_use_colours = 0;
+
 void print_string_contents( FILE * output, struct cons_pointer pointer ) {
     if ( stringp( pointer ) || symbolp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
@@ -66,9 +68,19 @@ print_list_contents( FILE * output, struct cons_pointer pointer,
 }
 
 void print_list( FILE * output, struct cons_pointer pointer ) {
-    fputwc( btowc( '(' ), output );
+    if ( print_use_colours ) {
+        fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
+    } else {
+        fputws( L"(", output );
+    };
+
     print_list_contents( output, pointer, false );
-    fputwc( btowc( ')' ), output );
+    if ( print_use_colours ) {
+        fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
+    } else {
+        fputws( L")", output );
+    }
+
 }
 
 void print( FILE * output, struct cons_pointer pointer ) {
@@ -84,11 +96,19 @@ void print( FILE * output, struct cons_pointer pointer ) {
             print_list( output, pointer );
             break;
         case EXCEPTIONTV:
-            fwprintf( output, L"\nException: " );
+            fwprintf( output, L"\n%sException: ",
+                      print_use_colours ? "\x1B[31m" : "" );
             print_string_contents( output, cell.payload.exception.message );
+            fputws( L"\x1B[39m", output );
             break;
         case INTEGERTV:
-            fwprintf( output, L"%ld", cell.payload.integer.value );
+            if ( print_use_colours ) {
+                fputws( L"\x1B[34m", output );
+            }
+            fwprintf( output, L"%ld%", cell.payload.integer.value );
+            if ( print_use_colours ) {
+                fputws( L"\x1B[39m", output );
+            }
             break;
         case LAMBDATV:
             fwprintf( output, L"lambda" /* "λ" */  );
@@ -109,14 +129,30 @@ void print( FILE * output, struct cons_pointer pointer ) {
                     buffer[i] = '\0';
                 }
             }
+            if ( print_use_colours ) {
+                fputws( L"\x1B[34m", output );
+            }
             fwprintf( output, L"%s", buffer );
+            if ( print_use_colours ) {
+                fputws( L"\x1B[39m", output );
+            }
             free( buffer );
             break;
         case STRINGTV:
+            if ( print_use_colours ) {
+                fputws( L"\x1B[36m", output );
+            }
             print_string( output, pointer );
+            if ( print_use_colours ) {
+                fputws( L"\x1B[39m", output );
+            }
             break;
         case SYMBOLTV:
+            if ( print_use_colours )
+                fputws( L"\x1B[1;33m", output );
             print_string_contents( output, pointer );
+            if ( print_use_colours )
+                fputws( L"\x1B[0;39m", output );
             break;
         case TRUETV:
             fwprintf( output, L"t" );
@@ -129,9 +165,10 @@ void print( FILE * output, struct cons_pointer pointer ) {
             break;
         default:
             fwprintf( stderr,
-                      L"Error: Unrecognised tag value %d (%c%c%c%c)\n",
+                      L"%sError: Unrecognised tag value %d (%c%c%c%c)%s\n",
+                      "\x1B[31m",
                       cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
-                      cell.tag.bytes[2], cell.tag.bytes[3] );
+                      cell.tag.bytes[2], cell.tag.bytes[3], "\x1B[39m" );
             break;
     }
 }

@@ -114,12 +114,13 @@ lisp_lambda( struct stack_frame *frame, struct cons_pointer lexpr,
         struct cons_pointer new_env = env;
     } else {
         char *buffer = malloc( 1024 );
+        struct cons_space_object not_lambda = pointer2cell( should_be_lambda );
         memset( buffer, '\0', 1024 );
         sprintf( buffer,
                  "Expected lambda, but found cell with tag %d (%c%c%c%c)",
-                 fn_cell.tag.value, fn_cell.tag.bytes[0],
-                 fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
-                 fn_cell.tag.bytes[3] );
+                 not_lambda.tag.value, not_lambda.tag.bytes[0],
+                 not_lambda.tag.bytes[1], not_lambda.tag.bytes[2],
+                 not_lambda.tag.bytes[3] );
         struct cons_pointer message = c_string_to_lisp_string( buffer );
         free( buffer );
         result = lisp_throw( message, frame );

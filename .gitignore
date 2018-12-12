@@ -20,3 +20,11 @@ post-scarcity\.iml
 doc/
 
 log*
+
+\.cproject
+
+\.gdb_history
+
+\.project
+
+\.settings/language\.settings\.xml

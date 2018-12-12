@@ -63,7 +63,7 @@ void dec_ref( struct cons_pointer pointer ) {
     }
 }
 
-void dump_string_cell( FILE * output, wchar_t *prefix,
+void dump_string_cell( FILE * output, wchar_t * prefix,
                        struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     if ( cell.payload.string.character == 0 ) {
