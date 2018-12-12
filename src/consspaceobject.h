@@ -61,8 +61,7 @@
 #define INTEGERTV   1381256777
 
 /**
- * Lambda is very special, and, like NIL and TRUE, we need to identify it
- * quickly and cheaply. So we will give it, too, a special cons cell at {0,2}
+ * A lambda cell.
  */
 #define LAMBDATAG  "LMDA"
 #define LAMBDATV   1094995276
@@ -135,11 +134,6 @@
 #define TRUE (struct cons_pointer){ 0, 1}
 
 /**
- * a cons pointer which points to the special λ cell
- */
-#define LAMBDA (struct cons_pointer){ 0,2}
-
-/**
  * the maximum possible value of a reference count
  */
 #define MAXREFERENCE 4294967295
@@ -173,7 +167,7 @@
 #define functionp(conspoint) (check_tag(conspoint,FUNCTIONTAG))
 
 /**
- * true if conspointer points to the special Lambda cell, else false
+ * true if conspointer points to a special Lambda cell, else false
  */
 #define lambdap(conspoint) (check_tag(conspoint,LAMBDATAG))
 
@@ -309,11 +303,15 @@ struct integer_payload {
     long int value;
 };
 
+struct lambda_payload {
+    struct cons_pointer args;
+    struct cons_pointer body;
+};
+
 /**
  * payload for a real number cell. Internals of this liable to change to give 128 bits
  * precision, but I'm not sure of the detail.
- */
-struct real_payload {
+ */ struct real_payload {
     long double value;
 };
 
@@ -404,6 +402,10 @@ struct cons_space_object {
          */
         struct integer_payload integer;
         /*
+         * if tag == LAMBDATAG 
+         */
+        struct lambda_payload lambda;
+        /*
          * if tag == NILTAG; we'll treat the special cell NIL as just a cons
          */
         struct cons_payload nil;
@@ -471,6 +473,12 @@ struct cons_pointer make_function( struct cons_pointer src,
                                    struct cons_pointer ( *executable )
                                     ( struct stack_frame *,
                                       struct cons_pointer ) );
+
+/**
+ * Construct a lambda (interpretable source) cell
+ */
+struct cons_pointer make_lambda( struct cons_pointer args,
+                                 struct cons_pointer body );
 
 /**
  * Construct a cell which points to an executable Lisp special form.

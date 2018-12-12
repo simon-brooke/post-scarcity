@@ -78,8 +78,8 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     && ( equal( cell_a->payload.string.cdr,
                                 cell_b->payload.string.cdr )
                          || ( end_of_string( cell_a->payload.string.cdr )
-                              && end_of_string( cell_b->payload.
-                                                string.cdr ) ) );
+                              && end_of_string( cell_b->payload.string.
+                                                cdr ) ) );
                 break;
             case INTEGERTV:
             case REALTV:

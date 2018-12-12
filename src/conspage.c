@@ -54,7 +54,7 @@ void make_cons_page(  ) {
         for ( int i = 0; i < CONSPAGESIZE; i++ ) {
             struct cons_space_object *cell =
                 &conspages[initialised_cons_pages]->cell[i];
-            if ( initialised_cons_pages == 0 && i < 3 ) {
+            if ( initialised_cons_pages == 0 && i < 2 ) {
                 switch ( i ) {
                     case 0:
                         /*
@@ -77,16 +77,6 @@ void make_cons_page(  ) {
                         cell->payload.free.cdr = ( struct cons_pointer ) {
                         0, 1};
                         fwprintf( stderr, L"Allocated special cell T\n" );
-                        break;
-                    case 2:
-                        /*
-                         * initialise cell as λ
-                         */
-                        strncpy( &cell->tag.bytes[0], LAMBDATAG, TAGLENGTH );
-                        cell->count = MAXREFERENCE;
-                        cell->payload.string.character = ( wint_t ) L'λ';
-                        cell->payload.free.cdr = NIL;
-                        fwprintf( stderr, L"Allocated special cell LAMBDA\n" );
                         break;
                 }
             } else {

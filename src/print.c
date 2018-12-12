@@ -131,7 +131,11 @@ void print( FILE * output, struct cons_pointer pointer ) {
             }
             break;
         case LAMBDATV:
-            fwprintf( output, L"lambda" /* "λ" */  );
+            fputws( L"(lambda ", output );
+            print( output, cell.payload.lambda.args );
+            fputws( L" ", output );
+            print( output, cell.payload.lambda.body );
+            fputws( L")", output );
             break;
         case NILTV:
             fwprintf( output, L"nil" );

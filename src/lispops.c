@@ -100,58 +100,58 @@ struct cons_pointer eval_form( struct stack_frame *parent,
  * The Lisp interpreter.
  *
  * @param frame the stack frame in which the expression is to be interpreted;
- * @param lexpr the lambda expression to be interpreted;
  * @param env the environment in which it is to be intepreted.
  */
 struct cons_pointer
 lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
-    struct cons_pointer result = NIL;
-    struct cons_pointer lexpr = frame->arg[0];
-    struct cons_pointer should_be_lambda =
-        eval_form( frame, c_car( lexpr ), env );
-
     dump_frame( stderr, frame );
+    struct cons_pointer body =
+        !nilp( frame->arg[args_in_frame - 1] ) ? frame->more : NIL;
 
-    if ( lambdap( should_be_lambda ) ) {
-        struct cons_pointer new_env = env;
-        struct cons_pointer args = c_car( c_cdr( lexpr ) );
-        struct cons_pointer body = c_cdr( c_cdr( lexpr ) );
-
-        for ( int i = 1; i < args_in_frame && consp( args ); i++ ) {
-            args = c_cdr( args );
-            struct cons_pointer arg = c_car( args );
-            print( stderr, c_string_to_lisp_string( "\n\tBinding " ) );
-            print( stderr, arg );
-            print( stderr, c_string_to_lisp_string( " to " ) );
-            print( stderr, frame->arg[i] );
-
-            new_env = make_cons( make_cons( arg, frame->arg[i] ), new_env );
+    for ( int i = args_in_frame - 1; i >= 0; i-- ) {
+        if ( !nilp( frame->arg[i] ) ) {
+            body = make_cons( frame->arg[i], body );
         }
 
-        while ( !nilp( body ) ) {
-            struct cons_pointer sexpr = c_car( body );
-            body = c_cdr( body );
-
-            result = eval_form( frame, sexpr, new_env );
-        }
-    } else {
-        if ( exceptionp( should_be_lambda ) ) {
-            result = should_be_lambda;
-        } else {
-            char *buffer = malloc( 1024 );
-            struct cons_space_object not_lambda =
-                pointer2cell( should_be_lambda );
-            memset( buffer, '\0', 1024 );
-            sprintf( buffer,
-                     "Expected lambda, but found cell with tag %d (%c%c%c%c)",
-                     not_lambda.tag.value, not_lambda.tag.bytes[0],
-                     not_lambda.tag.bytes[1], not_lambda.tag.bytes[2],
-                     not_lambda.tag.bytes[3] );
-            struct cons_pointer message = c_string_to_lisp_string( buffer );
-            free( buffer );
-            result = lisp_throw( message, frame );
-        }
     }
+
+    return make_lambda( frame->arg[0], body );
+}
+
+
+struct cons_pointer
+eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
+             struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    fwprintf( stderr, L"eval_lambda called" );
+
+    struct cons_pointer new_env = env;
+    struct cons_pointer args = cell.payload.lambda.args;
+    struct cons_pointer body = cell.payload.lambda.body;
+    struct cons_pointer vals = frame->arg[0];
+
+    while ( consp( args ) && consp( vals ) ) {
+        struct cons_pointer arg = c_car( args );
+        struct cons_pointer val = c_car( vals );
+        print( stderr, c_string_to_lisp_string( "\n\tBinding " ) );
+        print( stderr, arg );
+        print( stderr, c_string_to_lisp_string( " to " ) );
+        print( stderr, val );
+        fputws( L"\"\n", stderr );
+
+        new_env = make_cons( make_cons( arg, val ), new_env );
+        args = c_cdr( args );
+        vals = c_cdr( vals );
+
+    }
+
+    while ( !nilp( body ) ) {
+        struct cons_pointer sexpr = c_car( body );
+        body = c_cdr( body );
+        fputws( L"In lambda: ", stderr );
+        result = eval_form( frame, sexpr, new_env );
+    }
+
     return result;
 }
 
@@ -178,13 +178,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer args = c_cdr( frame->arg[0] );
 
     switch ( fn_cell.tag.value ) {
-        case SPECIALTV:
-            {
-                struct stack_frame *next =
-                    make_special_frame( frame, args, env );
-                result = ( *fn_cell.payload.special.executable ) ( next, env );
-                free_stack_frame( next );
-            }
+        case EXCEPTIONTV:
+            /* just pass exceptions straight back */
+            result = fn_pointer;
             break;
         case FUNCTIONTV:
             {
@@ -194,16 +190,21 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
                 free_stack_frame( next );
             }
             break;
-        case CONSTV:
+        case LAMBDATV:
             {
-                fwprintf( stdout,
-                          L"Treating cons as lambda expression (apply)\n" );
-                result = lisp_lambda( frame, env );
+                struct stack_frame *next =
+                    make_stack_frame( frame, args, env );
+                result = eval_lambda( fn_cell, next, env );
+                free_stack_frame( next );
             }
             break;
-        case EXCEPTIONTV:
-            /* just pass exceptions straight back */
-            result = fn_pointer;
+        case SPECIALTV:
+            {
+                struct stack_frame *next =
+                    make_special_frame( frame, args, env );
+                result = ( *fn_cell.payload.special.executable ) ( next, env );
+                free_stack_frame( next );
+            }
             break;
         default:
             {
@@ -266,12 +267,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
 
     switch ( cell.tag.value ) {
         case CONSTV:
-            print( stderr, frame->arg[0] );
-            if ( lambdap( c_car( frame->arg[0] ) ) ) {
-                fwprintf( stdout,
-                          L"Treating cons as lambda expression (eval)\n" );
-                result = lisp_lambda( frame, env );
-            } else {
+            {
                 result = c_apply( frame, env );
             }
             break;

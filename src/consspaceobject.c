@@ -128,6 +128,12 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                       L"\t\tInteger cell: value %ld, count %u\n",
                       cell.payload.integer.value, cell.count );
             break;
+        case LAMBDATV:
+            fwprintf( output, L"Lambda cell; args: " );
+            print( output, cell.payload.lambda.args );
+            fwprintf( output, L";\n\t\t\tbody: " );
+            print( output, cell.payload.lambda.args );
+            break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );
         case REALTV:
@@ -152,8 +158,7 @@ struct cons_pointer make_cons( struct cons_pointer car,
 
     pointer = allocate_cell( CONSTAG );
 
-    struct cons_space_object *cell =
-        &conspages[pointer.page]->cell[pointer.offset];
+    struct cons_space_object *cell = &pointer2cell( pointer );
 
     inc_ref( car );
     inc_ref( cdr );
@@ -191,6 +196,21 @@ make_function( struct cons_pointer src, struct cons_pointer ( *executable )
 
     cell->payload.function.source = src;
     cell->payload.function.executable = executable;
+
+    return pointer;
+}
+
+/**
+ * Construct a lambda (interpretable source) cell
+ */
+struct cons_pointer make_lambda( struct cons_pointer args,
+                                 struct cons_pointer body ) {
+    struct cons_pointer pointer = allocate_cell( LAMBDATAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+    inc_ref( args );
+    inc_ref( body );
+    cell->payload.lambda.args = args;
+    cell->payload.lambda.body = body;
 
     return pointer;
 }

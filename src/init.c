@@ -74,8 +74,6 @@ int main( int argc, char *argv[] ) {
      */
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
-    /* lambda is even more privileged than a special form */
-    deep_bind( c_string_to_lisp_symbol( "lambda" ), LAMBDA );
 
     /*
      * primitive function operations
@@ -106,6 +104,7 @@ int main( int argc, char *argv[] ) {
      * primitive special forms
      */
     bind_special( "cond", &lisp_cond );
+    bind_special( "lambda", &lisp_lambda );
     bind_special( "quote", &lisp_quote );
 
 
