@@ -48,7 +48,10 @@ struct cons_pointer repl_eval( struct cons_pointer input ) {
 
     frame->arg[0] = input;
     struct cons_pointer result = lisp_eval( frame, oblist );
-    free_stack_frame( frame );
+
+    if ( !exceptionp( result ) ) {
+        free_stack_frame( frame );
+    }
 
     return result;
 }
@@ -86,12 +89,20 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
             fwprintf( out_stream, L"\n:: " );
         }
 
-        struct cons_pointer val = repl_eval( repl_read( input_stream ) );
+        struct cons_pointer input = repl_read( input_stream );
 
-        /* suppress the 'end of stream' exception */
-        if ( !exceptionp( val ) &&
-             !feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
-            repl_print( output_stream, val );
+        if ( exceptionp( input ) ) {
+            break;
+        } else {
+
+            struct cons_pointer val = repl_eval( input );
+
+            /* suppress the 'end of stream' exception */
+            if ( !exceptionp( val ) &&
+                 !feof( pointer2cell( input_stream ).payload.stream.
+                        stream ) ) {
+                repl_print( output_stream, val );
+            }
         }
     }
 }

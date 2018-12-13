@@ -120,6 +120,9 @@ void print( FILE * output, struct cons_pointer pointer ) {
                       print_use_colours ? "\x1B[31m" : "" );
             print_string_contents( output, cell.payload.exception.message );
             break;
+        case FUNCTIONTV:
+            fwprintf( output, L"(Function)" );
+            break;
         case INTEGERTV:
             if ( print_use_colours ) {
                 fputws( L"\x1B[34m", output );
@@ -140,6 +143,9 @@ void print( FILE * output, struct cons_pointer pointer ) {
                                       make_cons( cell.payload.lambda.args,
                                                  cell.payload.lambda.
                                                  body ) ) );
+            break;
+        case READTV:
+            fwprintf( output, L"(Input stream)" );
             break;
         case REALTV:
             /* TODO: using the C heap is a bad plan because it will fragment.
@@ -171,14 +177,11 @@ void print( FILE * output, struct cons_pointer pointer ) {
                 fputws( L"\x1B[1;33m", output );
             print_string_contents( output, pointer );
             break;
-        case TRUETV:
-            fwprintf( output, L"t" );
-            break;
-        case FUNCTIONTV:
-            fwprintf( output, L"(Function)" );
-            break;
         case SPECIALTV:
             fwprintf( output, L"(Special form)" );
+            break;
+        case TRUETV:
+            fwprintf( output, L"t" );
             break;
         default:
             fwprintf( stderr,

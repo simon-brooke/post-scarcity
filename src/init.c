@@ -46,7 +46,7 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    while ( ( option = getopt( argc, argv, "pd" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "pdc" ) ) != -1 ) {
         switch ( option ) {
             case 'c':
                 print_use_colours = true;
@@ -108,6 +108,7 @@ int main( int argc, char *argv[] ) {
     bind_special( "cond", &lisp_cond );
     bind_special( "lambda", &lisp_lambda );
     bind_special( "nlambda", &lisp_nlambda );
+    bind_special( "progn", &lisp_progn );
     bind_special( "quote", &lisp_quote );
     bind_special( "set!", &lisp_set_shriek );
 

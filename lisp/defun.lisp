@@ -2,17 +2,18 @@
 ;; to defun as a list of sexprs.
 (set! defun!
       (nlambda
-       (name args body)
-       (cond (symbolp name)
-         (set! name (apply lambda (cons args body))))))
+       form
+       (cond ((symbolp (car form))
+         (set! (car form) (apply lambda (cdr form)))))
+       (t nil)))
 
-(defun! square (x) ((* x x)))
+(defun! square (x) (* x x))
 
 (set! defsp!
       (nlambda
-       (name args body)
-       (cond (symbolp name)
-         (set! name (nlambda args body)))))
+       form
+       (cond (symbolp (car form))
+         (set! (car form) (apply nlambda (cdr form))))))
 
 (defsp! cube (x) ((* x x x)))
 

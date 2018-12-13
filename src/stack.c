@@ -105,7 +105,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
         inc_ref( more );
     }
 
-  dump_frame( stderr, result );
+    dump_frame( stderr, result );
     return result;
 }
 
@@ -176,9 +176,9 @@ void dump_frame( FILE * output, struct stack_frame *frame ) {
         print( output, frame->arg[arg] );
         fputws( L"\n", output );
     }
-    fputws( L"More: \t", output);
-    print( output, frame->more);
-        fputws( L"\n", output );
+    fputws( L"More: \t", output );
+    print( output, frame->more );
+    fputws( L"\n", output );
 }
 
 

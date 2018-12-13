@@ -26,6 +26,36 @@
 #include "stack.h"
 
 /**
+ * Internal guts of add. Dark and mysterious.
+ */
+struct cons_pointer add_accumulate( struct cons_pointer arg,
+                                    struct stack_frame *frame,
+                                    long int *i_accumulator,
+                                    long double *d_accumulator, int *is_int ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( arg );
+
+    switch ( cell.tag.value ) {
+        case INTEGERTV:
+            ( *i_accumulator ) += cell.payload.integer.value;
+            ( *d_accumulator ) += numeric_value( arg );
+            break;
+        case REALTV:
+            ( *d_accumulator ) += cell.payload.real.value;
+            ( *is_int ) &= false;
+            break;
+        case EXCEPTIONTV:
+            result = arg;
+            break;
+        default:
+            result = lisp_throw( c_string_to_lisp_string
+                                 ( "Cannot multiply: not a number" ), frame );
+    }
+    return result;
+}
+
+
+/**
  * Add an indefinite number of numbers together
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
@@ -36,46 +66,21 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     long int i_accumulator = 0;
     long double d_accumulator = 0;
-    bool is_int = true;
+    int is_int = true;
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
-        struct cons_space_object current = pointer2cell( frame->arg[i] );
-
-        switch ( current.tag.value ) {
-            case INTEGERTV:
-                i_accumulator += current.payload.integer.value;
-                d_accumulator += numeric_value( frame->arg[i] );
-                break;
-            case REALTV:
-                d_accumulator += current.payload.real.value;
-                is_int = false;
-                break;
-            default:
-                lisp_throw( c_string_to_lisp_string
-                            ( "Cannot add: not a number" ), frame );
-        }
+        result =
+            add_accumulate( frame->arg[i], frame, &i_accumulator,
+                            &d_accumulator, &is_int );
     }
 
     struct cons_pointer more = frame->more;
 
     while ( consp( more ) ) {
-        struct cons_pointer pointer = c_car( more );
-        more = c_cdr( more);
-        struct cons_space_object current = pointer2cell( pointer );
-
-        switch ( current.tag.value ) {
-            case INTEGERTV:
-                i_accumulator += current.payload.integer.value;
-                d_accumulator += numeric_value( pointer );
-                break;
-            case REALTV:
-                d_accumulator += current.payload.real.value;
-                is_int = false;
-                break;
-            default:
-                lisp_throw( c_string_to_lisp_string
-                            ( "Cannot add: not a number" ), frame );
-        }
+        result =
+            add_accumulate( c_car( more ), frame, &i_accumulator,
+                            &d_accumulator, &is_int );
+        more = c_cdr( more );
     }
 
     if ( is_int ) {
@@ -84,6 +89,36 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
         result = make_real( d_accumulator );
     }
 
+    return result;
+}
+
+/**
+ * Internal guts of multiply. Dark and mysterious.
+ */
+struct cons_pointer multiply_accumulate( struct cons_pointer arg,
+                                         struct stack_frame *frame,
+                                         long int *i_accumulator,
+                                         long double *d_accumulator,
+                                         int *is_int ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( arg );
+
+    switch ( cell.tag.value ) {
+        case INTEGERTV:
+            ( *i_accumulator ) *= cell.payload.integer.value;
+            ( *d_accumulator ) *= numeric_value( arg );
+            break;
+        case REALTV:
+            ( *d_accumulator ) *= cell.payload.real.value;
+            ( *is_int ) &= false;
+            break;
+        case EXCEPTIONTV:
+            result = arg;
+            break;
+        default:
+            result = lisp_throw( c_string_to_lisp_string
+                                 ( "Cannot multiply: not a number" ), frame );
+    }
     return result;
 }
 
@@ -98,53 +133,32 @@ lisp_multiply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     long int i_accumulator = 1;
     long double d_accumulator = 1;
-    bool is_int = true;
+    int is_int = true;
 
-    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
-        struct cons_space_object arg = pointer2cell( frame->arg[i] );
-
-        switch ( arg.tag.value ) {
-            case INTEGERTV:
-                i_accumulator *= arg.payload.integer.value;
-                d_accumulator *= numeric_value( frame->arg[i] );
-                break;
-            case REALTV:
-                d_accumulator *= arg.payload.real.value;
-                is_int = false;
-                break;
-            default:
-                lisp_throw( c_string_to_lisp_string
-                            ( "Cannot multiply: not a number" ), frame );
-        }
+    for ( int i = 0;
+          i < args_in_frame && !nilp( frame->arg[i] ) && !exceptionp( result );
+          i++ ) {
+        result =
+            multiply_accumulate( frame->arg[i], frame, &i_accumulator,
+                                 &d_accumulator, &is_int );
     }
 
     struct cons_pointer more = frame->more;
 
-    while ( consp( more ) ) {
-        struct cons_pointer pointer = c_car( more );
-        more = c_cdr( more);
-        struct cons_space_object current = pointer2cell( pointer );
-
-        switch ( current.tag.value ) {
-            case INTEGERTV:
-                i_accumulator *= current.payload.integer.value;
-                d_accumulator *= numeric_value( pointer );
-                break;
-            case REALTV:
-                d_accumulator *= current.payload.real.value;
-                is_int = false;
-                break;
-            default:
-                lisp_throw( c_string_to_lisp_string
-                            ( "Cannot add: not a number" ), frame );
-        }
+    while ( consp( more ) && !exceptionp( result ) ) {
+        result =
+            multiply_accumulate( c_car( more ), frame, &i_accumulator,
+                                 &d_accumulator, &is_int );
+        more = c_cdr( more );
     }
 
+    if ( !exceptionp( result ) ) {
         if ( is_int ) {
             result = make_integer( i_accumulator );
         } else {
             result = make_real( d_accumulator );
         }
+    }
 
     return result;
 }
