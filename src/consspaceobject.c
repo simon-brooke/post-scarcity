@@ -216,6 +216,22 @@ struct cons_pointer make_lambda( struct cons_pointer args,
 }
 
 /**
+ * Construct an nlambda (interpretable source) cell; to a
+ * lambda as a special form is to a function.
+ */
+struct cons_pointer make_nlambda( struct cons_pointer args,
+                                 struct cons_pointer body ) {
+    struct cons_pointer pointer = allocate_cell( NLAMBDATAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+    inc_ref( args );
+    inc_ref( body );
+    cell->payload.lambda.args = args;
+    cell->payload.lambda.body = body;
+
+    return pointer;
+}
+
+/**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
  * has one character and a pointer to the next; in the last cell the

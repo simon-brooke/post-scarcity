@@ -96,15 +96,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
     return result;
 }
 
-/**
- * The Lisp interpreter.
- *
- * @param frame the stack frame in which the expression is to be interpreted;
- * @param env the environment in which it is to be intepreted.
- */
-struct cons_pointer
-lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
-    dump_frame( stderr, frame );
+struct cons_pointer compose_body(  struct stack_frame *frame ) {
     struct cons_pointer body =
         !nilp( frame->arg[args_in_frame - 1] ) ? frame->more : NIL;
 
@@ -112,10 +104,31 @@ lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
         if ( !nilp( frame->arg[i] ) ) {
             body = make_cons( frame->arg[i], body );
         }
-
     }
 
-    return make_lambda( frame->arg[0], body );
+  return body;
+}
+
+/**
+ * Construct an interpretable function.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer
+lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
+    return make_lambda( frame->arg[0], compose_body( frame ) );
+}
+
+/**
+ * Construct an interpretable special form.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer
+lisp_nlambda( struct stack_frame *frame, struct cons_pointer env ) {
+    return make_nlambda( frame->arg[0], compose_body( frame ) );
 }
 
 
@@ -151,7 +164,6 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
     return result;
 }
-
 
 
 /**
@@ -194,6 +206,14 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
                 fputws( L"Stack frame for lambda\n", stderr );
                 dump_frame( stderr, next );
                 result = eval_lambda( fn_cell, next, env );
+                free_stack_frame( next );
+            }
+            break;
+        case NLAMBDATV:
+            {
+                struct stack_frame *next =
+                    make_special_frame( frame, args, env );
+                result = ( *fn_cell.payload.special.executable ) ( next, env );
                 free_stack_frame( next );
             }
             break;

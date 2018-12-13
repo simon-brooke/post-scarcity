@@ -42,7 +42,7 @@ struct cons_pointer
 lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env );
 
 /**
- * The Lisp interpreter.
+ * Construct an interpretable function.
  *
  * @param frame the stack frame in which the expression is to be interpreted;
  * @param lexpr the lambda expression to be interpreted;
@@ -50,6 +50,15 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env );
  */
 struct cons_pointer lisp_lambda( struct stack_frame *frame,
                                  struct cons_pointer env );
+
+/**
+ * Construct an interpretable special form.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer
+lisp_nlambda( struct stack_frame *frame, struct cons_pointer env );
 
 struct cons_pointer lisp_quote( struct stack_frame *frame,
                                 struct cons_pointer env );

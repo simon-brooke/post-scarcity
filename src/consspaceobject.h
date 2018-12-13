@@ -74,6 +74,12 @@
 #define NILTV       541870414
 
 /**
+ * An nlambda cell.
+ */
+#define NLAMBDATAG  "NLMD"
+#define NLAMBDATV   1145916494
+
+/**
  * An open read stream.
  */
 #define READTAG     "READ"
@@ -303,6 +309,9 @@ struct integer_payload {
     long int value;
 };
 
+/**
+ * payload for lambda and nlambda cells
+ */
 struct lambda_payload {
     struct cons_pointer args;
     struct cons_pointer body;
@@ -402,7 +411,7 @@ struct cons_space_object {
          */
         struct integer_payload integer;
         /*
-         * if tag == LAMBDATAG 
+         * if tag == LAMBDATAG or NLAMBDATAG
          */
         struct lambda_payload lambda;
         /*
@@ -481,6 +490,13 @@ struct cons_pointer make_lambda( struct cons_pointer args,
                                  struct cons_pointer body );
 
 /**
+ * Construct an nlambda (interpretable source) cell; to a
+ * lambda as a special form is to a function.
+ */
+struct cons_pointer make_nlambda( struct cons_pointer args,
+                                 struct cons_pointer body );
+
+  /**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,

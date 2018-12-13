@@ -60,6 +60,10 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
           c == '\0' || iswblank( c ) || iswcntrl( c ); c = fgetwc( input ) );
 
     switch ( c ) {
+        case ';':
+            for ( c= fgetwc( input ); c != '\n';  c= fgetwc( input ));
+            /* skip all characters from semi-colon to the end of the line */
+            break;
         case EOF:
             result = lisp_throw( c_string_to_lisp_string
                                  ( "End of input while reading" ), frame );

@@ -107,6 +107,7 @@ int main( int argc, char *argv[] ) {
      */
     bind_special( "cond", &lisp_cond );
     bind_special( "lambda", &lisp_lambda );
+    bind_special( "nlambda", &lisp_nlambda );
     bind_special( "quote", &lisp_quote );
     bind_special( "set!", &lisp_set_shriek );
 

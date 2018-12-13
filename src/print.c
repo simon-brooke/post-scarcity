@@ -29,7 +29,7 @@
 int print_use_colours = 0;
 
 /**
- * print all the characters in the symbol or string indicated by `pointer` 
+ * print all the characters in the symbol or string indicated by `pointer`
  * onto this `output`; if `pointer` does not indicate a string or symbol,
  * don't print anything but just return.
  */
@@ -58,7 +58,7 @@ void print_string( FILE * output, struct cons_pointer pointer ) {
 
 /**
  * Print a single list cell (cons cell) indicated by `pointer` to the
- * stream indicated by `output`. if `initial_space` is `true`, prepend 
+ * stream indicated by `output`. if `initial_space` is `true`, prepend
  * a space character.
  */
 void
@@ -100,7 +100,7 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
 }
 
 /**
- * Print the cons-space object indicated by `pointer` to the stream indicated 
+ * Print the cons-space object indicated by `pointer` to the stream indicated
  * by `output`.
  */
 void print( FILE * output, struct cons_pointer pointer ) {
@@ -131,14 +131,17 @@ void print( FILE * output, struct cons_pointer pointer ) {
             }
             break;
         case LAMBDATV:
-            fputws( L"(lambda ", output );
-            print( output, cell.payload.lambda.args );
-            fputws( L" ", output );
-            print( output, cell.payload.lambda.body );
-            fputws( L")", output );
+            print( output, make_cons( c_string_to_lisp_symbol("lambda"),
+                                     make_cons( cell.payload.lambda.args,
+                                               cell.payload.lambda.body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
+            break;
+        case NLAMBDATV:
+            print( output, make_cons( c_string_to_lisp_symbol("nlambda"),
+                                     make_cons( cell.payload.lambda.args,
+                                               cell.payload.lambda.body ) ) );
             break;
         case REALTV:
             /* TODO: using the C heap is a bad plan because it will fragment.
