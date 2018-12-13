@@ -54,17 +54,34 @@ lisp_add( struct stack_frame *frame, struct cons_pointer env ) {
                 lisp_throw( c_string_to_lisp_string
                             ( "Cannot add: not a number" ), frame );
         }
+    }
 
-        if ( !nilp( frame->more ) ) {
-            lisp_throw( c_string_to_lisp_string
-                        ( "Cannot yet add more than 8 numbers" ), frame );
-        }
+    struct cons_pointer more = frame->more;
 
-        if ( is_int ) {
-            result = make_integer( i_accumulator );
-        } else {
-            result = make_real( d_accumulator );
+    while ( consp( more ) ) {
+        struct cons_pointer pointer = c_car( more );
+        more = c_cdr( more);
+        struct cons_space_object current = pointer2cell( pointer );
+
+        switch ( current.tag.value ) {
+            case INTEGERTV:
+                i_accumulator += current.payload.integer.value;
+                d_accumulator += numeric_value( pointer );
+                break;
+            case REALTV:
+                d_accumulator += current.payload.real.value;
+                is_int = false;
+                break;
+            default:
+                lisp_throw( c_string_to_lisp_string
+                            ( "Cannot add: not a number" ), frame );
         }
+    }
+
+    if ( is_int ) {
+        result = make_integer( i_accumulator );
+    } else {
+        result = make_real( d_accumulator );
     }
 
     return result;
@@ -99,18 +116,35 @@ lisp_multiply( struct stack_frame *frame, struct cons_pointer env ) {
                 lisp_throw( c_string_to_lisp_string
                             ( "Cannot multiply: not a number" ), frame );
         }
+    }
 
-        if ( !nilp( frame->more ) ) {
-            lisp_throw( c_string_to_lisp_string
-                        ( "Cannot yet multiply more than 8 numbers" ), frame );
+    struct cons_pointer more = frame->more;
+
+    while ( consp( more ) ) {
+        struct cons_pointer pointer = c_car( more );
+        more = c_cdr( more);
+        struct cons_space_object current = pointer2cell( pointer );
+
+        switch ( current.tag.value ) {
+            case INTEGERTV:
+                i_accumulator *= current.payload.integer.value;
+                d_accumulator *= numeric_value( pointer );
+                break;
+            case REALTV:
+                d_accumulator *= current.payload.real.value;
+                is_int = false;
+                break;
+            default:
+                lisp_throw( c_string_to_lisp_string
+                            ( "Cannot add: not a number" ), frame );
         }
+    }
 
         if ( is_int ) {
             result = make_integer( i_accumulator );
         } else {
             result = make_real( d_accumulator );
         }
-    }
 
     return result;
 }

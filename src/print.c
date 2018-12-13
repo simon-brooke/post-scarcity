@@ -119,29 +119,27 @@ void print( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output, L"\n%sException: ",
                       print_use_colours ? "\x1B[31m" : "" );
             print_string_contents( output, cell.payload.exception.message );
-            fputws( L"\x1B[39m", output );
             break;
         case INTEGERTV:
             if ( print_use_colours ) {
                 fputws( L"\x1B[34m", output );
             }
             fwprintf( output, L"%ld%", cell.payload.integer.value );
-            if ( print_use_colours ) {
-                fputws( L"\x1B[39m", output );
-            }
             break;
         case LAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol("lambda"),
-                                     make_cons( cell.payload.lambda.args,
-                                               cell.payload.lambda.body ) ) );
+            print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
+                                      make_cons( cell.payload.lambda.args,
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
             break;
         case NLAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol("nlambda"),
-                                     make_cons( cell.payload.lambda.args,
-                                               cell.payload.lambda.body ) ) );
+            print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
+                                      make_cons( cell.payload.lambda.args,
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case REALTV:
             /* TODO: using the C heap is a bad plan because it will fragment.
@@ -160,9 +158,6 @@ void print( FILE * output, struct cons_pointer pointer ) {
                 fputws( L"\x1B[34m", output );
             }
             fwprintf( output, L"%s", buffer );
-            if ( print_use_colours ) {
-                fputws( L"\x1B[39m", output );
-            }
             free( buffer );
             break;
         case STRINGTV:
@@ -170,16 +165,11 @@ void print( FILE * output, struct cons_pointer pointer ) {
                 fputws( L"\x1B[36m", output );
             }
             print_string( output, pointer );
-            if ( print_use_colours ) {
-                fputws( L"\x1B[39m", output );
-            }
             break;
         case SYMBOLTV:
             if ( print_use_colours )
                 fputws( L"\x1B[1;33m", output );
             print_string_contents( output, pointer );
-            if ( print_use_colours )
-                fputws( L"\x1B[0;39m", output );
             break;
         case TRUETV:
             fwprintf( output, L"t" );
@@ -197,5 +187,9 @@ void print( FILE * output, struct cons_pointer pointer ) {
                       cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
                       cell.tag.bytes[2], cell.tag.bytes[3], "\x1B[39m" );
             break;
+    }
+
+    if ( print_use_colours ) {
+        fputws( L"\x1B[39m", output );
     }
 }

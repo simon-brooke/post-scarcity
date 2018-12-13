@@ -98,14 +98,14 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
 
         args = cell.payload.cons.cdr;
     }
-    if ( !nilp( args ) ) {
-        /*
-         * TODO: this isn't right. These args should also each be evaled.
-         */
-        result->more = args;
-        inc_ref( result->more );
+    if ( consp( args ) ) {
+        /* if we still have args, eval them and stick the values on `more` */
+        struct cons_pointer more = eval_forms( previous, args, env );
+        result->more = more;
+        inc_ref( more );
     }
 
+  dump_frame( stderr, result );
     return result;
 }
 
@@ -133,8 +133,10 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
 
         args = cell.payload.cons.cdr;
     }
-    result->more = args;
-    inc_ref( args );
+    if ( consp( args ) ) {
+        result->more = args;
+        inc_ref( args );
+    }
 
     return result;
 }
@@ -174,6 +176,9 @@ void dump_frame( FILE * output, struct stack_frame *frame ) {
         print( output, frame->arg[arg] );
         fputws( L"\n", output );
     }
+    fputws( L"More: \t", output);
+    print( output, frame->more);
+        fputws( L"\n", output );
 }
 
 

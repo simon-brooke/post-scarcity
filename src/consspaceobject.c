@@ -92,7 +92,7 @@ void dump_string_cell( FILE * output, wchar_t *prefix,
 void dump_object( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     fwprintf( output,
-              L"\tDumping %c%c%c%c (%d) at page %d, offset %d count %u\n",
+              L"\t%c%c%c%c (%d) at page %d, offset %d count %u\n",
               cell.tag.bytes[0],
               cell.tag.bytes[1],
               cell.tag.bytes[2],
@@ -112,7 +112,6 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output, L"\t\tException cell: " );
             print( output, cell.payload.exception.message );
             fwprintf( output, L"\n" );
-            /* TODO: dump the stack trace */
             for ( struct stack_frame * frame = cell.payload.exception.frame;
                   frame != NULL; frame = frame->previous ) {
                 dump_frame( output, frame );
@@ -220,7 +219,7 @@ struct cons_pointer make_lambda( struct cons_pointer args,
  * lambda as a special form is to a function.
  */
 struct cons_pointer make_nlambda( struct cons_pointer args,
-                                 struct cons_pointer body ) {
+                                  struct cons_pointer body ) {
     struct cons_pointer pointer = allocate_cell( NLAMBDATAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
     inc_ref( args );

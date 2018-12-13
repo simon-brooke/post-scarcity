@@ -61,7 +61,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
 
     switch ( c ) {
         case ';':
-            for ( c= fgetwc( input ); c != '\n';  c= fgetwc( input ));
+            for ( c = fgetwc( input ); c != '\n'; c = fgetwc( input ) );
             /* skip all characters from semi-colon to the end of the line */
             break;
         case EOF:

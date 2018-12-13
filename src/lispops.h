@@ -30,6 +30,39 @@
  */
 struct cons_pointer c_type( struct cons_pointer pointer );
 
+/**
+ * Implementation of car in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_car( struct cons_pointer arg );
+
+/**
+ * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_cdr( struct cons_pointer arg );
+
+
+/**
+ * Useful building block; evaluate this single form in the context of this
+ * parent stack frame and this environment.
+ * @param parent the parent stack frame.
+ * @param form the form to be evaluated.
+ * @param env the evaluation environment.
+ * @return the result of evaluating the form.
+ */
+struct cons_pointer eval_form( struct stack_frame *parent,
+                               struct cons_pointer form,
+                               struct cons_pointer env );
+
+/**
+ * eval all the forms in this `list` in the context of this stack `frame`
+ * and this `env`, and return a list of their values. If the arg passed as
+ * `list` is not in fact a list, return nil.
+ */
+struct cons_pointer eval_forms( struct stack_frame *frame,
+                                struct cons_pointer list,
+                                struct cons_pointer env );
+
+
 /*
  * special forms
  */

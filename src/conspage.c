@@ -129,7 +129,7 @@ void free_cell( struct cons_pointer pointer ) {
 
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
-            fwprintf( stderr, L"Freeing cell\n" );
+            fwprintf( stderr, L"Freeing cell " );
             dump_object( stderr, pointer );
             strncpy( &cell->tag.bytes[0], FREETAG, 4 );
             cell->payload.free.car = NIL;

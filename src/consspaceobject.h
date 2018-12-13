@@ -494,7 +494,7 @@ struct cons_pointer make_lambda( struct cons_pointer args,
  * lambda as a special form is to a function.
  */
 struct cons_pointer make_nlambda( struct cons_pointer args,
-                                 struct cons_pointer body );
+                                  struct cons_pointer body );
 
   /**
  * Construct a cell which points to an executable Lisp special form.
