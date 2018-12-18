@@ -169,9 +169,10 @@ void dump_frame( FILE * output, struct stack_frame *frame ) {
     for ( int arg = 0; arg < args_in_frame; arg++ ) {
         struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-        fwprintf( output, L"Arg %d:\t%c%c%c%c\t", arg,
+        fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ", arg,
                   cell.tag.bytes[0],
-                  cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3] );
+                  cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3],
+                  cell.count );
 
         print( output, frame->arg[arg] );
         fputws( L"\n", output );

@@ -4,11 +4,11 @@
  * For now this implements an oblist and shallow binding; local environments can
  * be consed onto the front of the oblist. Later, this won't do; bindings will happen
  * in namespaces, which will probably be implemented as hash tables.
- * 
+ *
  * Doctrine is that cons cells are immutable, and life is a lot more simple if they are;
  * so when a symbol is rebound in the master oblist, what in fact we do is construct
  * a new oblist without the previous binding but with the new binding. Anything which,
- * prior to this action, held a pointer to the old oblist (as all current threads' 
+ * prior to this action, held a pointer to the old oblist (as all current threads'
  * environments must do) continues to hold a pointer to the old oblist, and consequently
  * doesn't see the change. This is probably good but does mean you cannot use bindings
  * on the oblist to signal between threads.
@@ -26,12 +26,12 @@
 #include "print.h"
 
 /**
- * The object list. What is added to this during system setup is 'global', that is, 
+ * The object list. What is added to this during system setup is 'global', that is,
  * visible to all sessions/threads. What is added during a session/thread is local to
  * that session/thread (because shallow binding). There must be some way for a user to
  * make the contents of their own environment persistent between threads but I don't
  * know what it is yet. At some stage there must be a way to rebind deep values so
- * they're visible to all users/threads, but again I don't yet have any idea how 
+ * they're visible to all users/threads, but again I don't yet have any idea how
  * that will work.
  */
 struct cons_pointer oblist = NIL;
@@ -114,8 +114,8 @@ bind( struct cons_pointer key, struct cons_pointer value,
 }
 
 /**
- * Binds this key to this value in the global oblist, but doesn't affect the 
- * current environment. May not be useful except in bootstrapping (and even 
+ * Binds this key to this value in the global oblist, but doesn't affect the
+ * current environment. May not be useful except in bootstrapping (and even
  * there it may not be especially useful).
  */
 struct cons_pointer
@@ -133,10 +133,9 @@ struct cons_pointer
 intern( struct cons_pointer key, struct cons_pointer environment ) {
     struct cons_pointer result = environment;
     struct cons_pointer canonical = internedp( key, environment );
-
     if ( nilp( canonical ) ) {
         /*
-         * not currently bound 
+         * not currently bound
          */
         result = bind( key, NIL, environment );
     }

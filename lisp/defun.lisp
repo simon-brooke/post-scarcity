@@ -4,8 +4,8 @@
       (nlambda
        form
        (cond ((symbolp (car form))
-         (set! (car form) (apply lambda (cdr form)))))
-       (t nil)))
+         (set (car form) (apply lambda (cdr form))))
+         (t nil))))
 
 (defun! square (x) (* x x))
 

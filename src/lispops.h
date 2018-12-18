@@ -72,6 +72,12 @@ struct cons_pointer lisp_apply( struct stack_frame *frame,
                                 struct cons_pointer env );
 
 struct cons_pointer
+lisp_oblist( struct stack_frame *frame, struct cons_pointer env );
+
+struct cons_pointer
+lisp_set( struct stack_frame *frame, struct cons_pointer env );
+
+struct cons_pointer
 lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env );
 
 /**

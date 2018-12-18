@@ -177,6 +177,9 @@ struct cons_pointer make_exception( struct cons_pointer message,
     struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
+    inc_ref( message );
     cell->payload.exception.message = message;
     cell->payload.exception.frame = frame;
 
@@ -206,6 +209,9 @@ struct cons_pointer make_lambda( struct cons_pointer args,
                                  struct cons_pointer body ) {
     struct cons_pointer pointer = allocate_cell( LAMBDATAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
+
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
     inc_ref( args );
     inc_ref( body );
     cell->payload.lambda.args = args;
@@ -221,6 +227,9 @@ struct cons_pointer make_lambda( struct cons_pointer args,
 struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body ) {
     struct cons_pointer pointer = allocate_cell( NLAMBDATAG );
+
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
     struct cons_space_object *cell = &pointer2cell( pointer );
     inc_ref( args );
     inc_ref( body );

@@ -132,8 +132,8 @@ void print( FILE * output, struct cons_pointer pointer ) {
         case LAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
@@ -141,8 +141,8 @@ void print( FILE * output, struct cons_pointer pointer ) {
         case NLAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case READTV:
             fwprintf( output, L"(Input stream)" );
@@ -173,8 +173,9 @@ void print( FILE * output, struct cons_pointer pointer ) {
             print_string( output, pointer );
             break;
         case SYMBOLTV:
-            if ( print_use_colours )
+            if ( print_use_colours ) {
                 fputws( L"\x1B[1;33m", output );
+            }
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
@@ -185,10 +186,10 @@ void print( FILE * output, struct cons_pointer pointer ) {
             break;
         default:
             fwprintf( stderr,
-                      L"%sError: Unrecognised tag value %d (%c%c%c%c)%s\n",
-                      "\x1B[31m",
+                      L"%sError: Unrecognised tag value %d (%c%c%c%c)\n",
+                      print_use_colours ? "\x1B[31m" : "",
                       cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
-                      cell.tag.bytes[2], cell.tag.bytes[3], "\x1B[39m" );
+                      cell.tag.bytes[2], cell.tag.bytes[3] );
             break;
     }
 

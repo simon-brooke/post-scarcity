@@ -92,8 +92,10 @@ int main( int argc, char *argv[] ) {
     bind_function( "eval", &lisp_eval );
     bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
+    bind_function( "oblist", &lisp_oblist );
     bind_function( "print", &lisp_print );
     bind_function( "progn", &lisp_progn );
+    bind_function( "set", &lisp_set );
     bind_function( "subtract", &lisp_subtract );
     bind_function( "type", &lisp_type );
 
@@ -111,11 +113,6 @@ int main( int argc, char *argv[] ) {
     bind_special( "progn", &lisp_progn );
     bind_special( "quote", &lisp_quote );
     bind_special( "set!", &lisp_set_shriek );
-
-
-    /* bind the oblist last, at this stage. Something clever needs to be done
-     * here and I'm not sure what it is. */
-    deep_bind( c_string_to_lisp_symbol( "oblist" ), oblist );
 
     repl( stdin, stdout, stderr, show_prompt );
 

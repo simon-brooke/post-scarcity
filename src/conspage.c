@@ -127,6 +127,33 @@ void dump_pages( FILE * output ) {
 void free_cell( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
+    switch ( cell->tag.value ) {
+            /* for all the types of cons-space object which point to other
+             * cons-space objects, cascade the decrement. */
+        case CONSTV:
+            dec_ref( cell->payload.cons.car );
+            dec_ref( cell->payload.cons.cdr );
+            break;
+        case EXCEPTIONTV:
+            dec_ref( cell->payload.exception.message );
+            break;
+        case FUNCTIONTV:
+            dec_ref( cell->payload.function.source );
+            break;
+        case LAMBDATV:
+        case NLAMBDATV:
+            dec_ref( cell->payload.lambda.args );
+            dec_ref( cell->payload.lambda.body );
+            break;
+        case SPECIALTV:
+            dec_ref( cell->payload.special.source );
+            break;
+        case STRINGTV:
+        case SYMBOLTV:
+            dec_ref( cell->payload.string.cdr );
+            break;
+    }
+
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
             fwprintf( stderr, L"Freeing cell " );

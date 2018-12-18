@@ -97,10 +97,12 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
 
             struct cons_pointer val = repl_eval( input );
 
-            /* suppress the 'end of stream' exception */
-            if ( !exceptionp( val ) &&
-                 !feof( pointer2cell( input_stream ).payload.stream.
-                        stream ) ) {
+            if ( feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
+                /* suppress the 'end of stream' exception */
+                if ( !exceptionp( val ) ) {
+                    repl_print( output_stream, val );
+                }
+            } else {
                 repl_print( output_stream, val );
             }
         }

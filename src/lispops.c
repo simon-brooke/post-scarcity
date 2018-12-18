@@ -63,7 +63,7 @@ struct cons_pointer c_car( struct cons_pointer arg ) {
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    if ( consp( arg ) ) {
+    if ( consp( arg ) || stringp( arg ) || symbolp( arg ) ) {
         result = pointer2cell( arg ).payload.cons.cdr;
     }
 
@@ -115,6 +115,16 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
                    eval_forms( frame, c_cdr( list ), env ) ) : NIL;
 }
 
+/**
+ * Return the object list (root namespace).
+ *
+ * (oblist)
+ */
+struct cons_pointer
+lisp_oblist( struct stack_frame *frame, struct cons_pointer env ) {
+    return oblist;
+}
+
 
 /**
  * used to construct the body for `lambda` and `nlambda` expressions.
@@ -123,11 +133,17 @@ struct cons_pointer compose_body( struct stack_frame *frame ) {
     struct cons_pointer body =
         !nilp( frame->arg[args_in_frame - 1] ) ? frame->more : NIL;
 
-    for ( int i = args_in_frame - 1; i >= 0; i-- ) {
-        if ( !nilp( frame->arg[i] ) ) {
+    for ( int i = args_in_frame - 1; i > 0; i-- ) {
+        if ( !nilp( body ) ) {
+            body = make_cons( frame->arg[i], body );
+        } else if ( !nilp( frame->arg[i] ) ) {
             body = make_cons( frame->arg[i], body );
         }
     }
+
+    fputws( L"compose_body returning ", stderr );
+    print( stderr, body );
+    fputws( L"\n", stderr );
 
     return body;
 }
@@ -169,7 +185,7 @@ struct cons_pointer
 eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    fwprintf( stderr, L"eval_lambda called" );
+    fwprintf( stderr, L"eval_lambda called\n" );
 
     struct cons_pointer new_env = env;
     struct cons_pointer names = cell.payload.lambda.args;
@@ -278,7 +294,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
             {
                 struct stack_frame *next =
                     make_special_frame( frame, args, env );
-                result = ( *fn_cell.payload.special.executable ) ( next, env );
+                fputws( L"Stack frame for nlambda\n", stderr );
+                dump_frame( stderr, next );
+                result = eval_lambda( fn_cell, next, env );
                 if ( !exceptionp( result ) ) {
                     /* if we're returning an exception, we should NOT free the
                      * stack frame. Corollary is, when we free an exception, we
@@ -440,13 +458,45 @@ lisp_quote( struct stack_frame *frame, struct cons_pointer env ) {
     return frame->arg[0];
 }
 
+
+/**
+ * (set name value)
+ * (set name value namespace)
+ *
+ * Function.
+ * `namespace` defaults to the oblist.
+ * Binds the value of `name` in the `namespace` to value of `value`, altering
+ * the namespace in so doing. `namespace` defaults to the value of `oblist`.
+ */
+struct cons_pointer
+lisp_set( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer namespace =
+        nilp( frame->arg[2] ) ? oblist : frame->arg[2];
+
+    if ( symbolp( frame->arg[0] ) ) {
+        deep_bind( frame->arg[0], frame->arg[1] );
+        result = frame->arg[1];
+    } else {
+        result =
+            make_exception( make_cons
+                            ( c_string_to_lisp_string
+                              ( "The first argument to `set!` is not a symbol: " ),
+                              make_cons( frame->arg[0], NIL ) ), frame );
+    }
+
+    return result;
+}
+
+
 /**
  * (set! symbol value)
  * (set! symbol value namespace)
  *
  * Special form.
  * `namespace` defaults to the oblist.
- * Binds `symbol` to `value` in the namespace, altering the namespace in so doing.
+ * Binds `symbol` in the `namespace` to value of `value`, altering
+ * the namespace in so doing. `namespace` defaults to the value of `oblist`.
  */
 struct cons_pointer
 lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env ) {
@@ -455,13 +505,15 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env ) {
         nilp( frame->arg[2] ) ? oblist : frame->arg[2];
 
     if ( symbolp( frame->arg[0] ) ) {
-        deep_bind( frame->arg[0], eval_form( frame, frame->arg[1], env ) );
-        result = frame->arg[1];
+        struct cons_pointer val = eval_form( frame, frame->arg[1], env );
+        deep_bind( frame->arg[0], val );
+        result = val;
     } else {
         result =
-            make_exception( c_string_to_lisp_string
-                            ( "The first argument to `set!` is not a symbol" ),
-                            frame );
+            make_exception( make_cons
+                            ( c_string_to_lisp_string
+                              ( "The first argument to `set!` is not a symbol: " ),
+                              make_cons( frame->arg[0], NIL ) ), frame );
     }
 
     return result;
@@ -670,15 +722,16 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
 
         if ( consp( clause_pointer ) ) {
             struct cons_space_object cell = pointer2cell( clause_pointer );
-          result = eval_form( frame, c_car( clause_pointer ), env);
+            result = eval_form( frame, c_car( clause_pointer ), env );
 
             if ( !nilp( result ) ) {
-                struct cons_pointer vals = eval_forms( frame, c_cdr( clause_pointer ), env );
+                struct cons_pointer vals =
+                    eval_forms( frame, c_cdr( clause_pointer ), env );
 
-              while (consp( vals)) {
-                result = c_car(vals);
-                vals = c_cdr(vals);
-              }
+                while ( consp( vals ) ) {
+                    result = c_car( vals );
+                    vals = c_cdr( vals );
+                }
 
                 done = true;
             }
@@ -698,6 +751,11 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
 
 /**
  * TODO: make this do something sensible somehow.
+ * This requires that a frame be a heap-space object with a cons-space
+ * object pointing to it. Then this should become a normal lisp function
+ * which expects a normally bound frame and environment, such that
+ * frame->arg[0] is the message, and frame->arg[1] is the cons-space
+ * pointer to the frame in which the exception occurred.
  */
 struct cons_pointer
 lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
