@@ -390,8 +390,10 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
                     internedp( frame->arg[0], env );
                 if ( nilp( canonical ) ) {
                     struct cons_pointer message =
+                      c_cons(
                         c_string_to_lisp_string
-                        ( "Attempt to take value of unbound symbol." );
+                        ( "Attempt to take value of unbound symbol." ),
+                      frame->arg[0]);
                     result = lisp_throw( message, frame );
                 } else {
                     result = c_assoc( canonical, env );

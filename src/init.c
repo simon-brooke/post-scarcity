@@ -103,6 +103,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "*", &lisp_multiply );
     bind_function( "-", &lisp_subtract );
     bind_function( "/", &lisp_divide );
+    bind_function( "=", &lisp_equal );
 
     /*
      * primitive special forms
