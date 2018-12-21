@@ -66,7 +66,8 @@ struct stack_frame *make_empty_frame( struct stack_frame *previous,
  */
 struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
-                                      struct cons_pointer env ) {
+                                      struct cons_pointer env,
+                                      struct cons_pointer *exception ) {
     struct stack_frame *result = make_empty_frame( previous, env );
 
     for ( int i = 0; i < args_in_frame && consp( args ); i++ ) {
@@ -87,7 +88,7 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
 
         struct cons_pointer val = lisp_eval( arg_frame, env );
         if ( exceptionp( val ) ) {
-            result->arg[0] = val;
+            exception = &val;
             break;
         } else {
             result->arg[i] = val;

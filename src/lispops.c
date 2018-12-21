@@ -241,7 +241,6 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 struct cons_pointer
 c_apply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-
     struct stack_frame *fn_frame = make_empty_frame( frame, env );
     fn_frame->arg[0] = c_car( frame->arg[0] );
     inc_ref( fn_frame->arg[0] );
@@ -264,28 +263,34 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
             break;
         case FUNCTIONTV:
             {
+                struct cons_pointer exep = NIL;
                 struct stack_frame *next =
-                    make_stack_frame( frame, args, env );
+                    make_stack_frame( frame, args, env, &exep );
                 result = ( *fn_cell.payload.special.executable ) ( next, env );
-                if ( !exceptionp( result ) ) {
+                if ( exceptionp( exep ) ) {
                     /* if we're returning an exception, we should NOT free the
                      * stack frame. Corollary is, when we free an exception, we
                      * should free all the frames it's holding on to. */
+                    result = exep;
+                } else {
                     free_stack_frame( next );
                 }
             }
             break;
         case LAMBDATV:
             {
+                struct cons_pointer exep = NIL;
                 struct stack_frame *next =
-                    make_stack_frame( frame, args, env );
+                    make_stack_frame( frame, args, env, &exep );
                 fputws( L"Stack frame for lambda\n", stderr );
                 dump_frame( stderr, next );
                 result = eval_lambda( fn_cell, next, env );
-                if ( !exceptionp( result ) ) {
+                if ( exceptionp( result ) ) {
                     /* if we're returning an exception, we should NOT free the
                      * stack frame. Corollary is, when we free an exception, we
                      * should free all the frames it's holding on to. */
+                    result = exep;
+                } else {
                     free_stack_frame( next );
                 }
             }
@@ -390,10 +395,9 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
                     internedp( frame->arg[0], env );
                 if ( nilp( canonical ) ) {
                     struct cons_pointer message =
-                      c_cons(
-                        c_string_to_lisp_string
-                        ( "Attempt to take value of unbound symbol." ),
-                      frame->arg[0]);
+                        make_cons( c_string_to_lisp_string
+                                   ( "Attempt to take value of unbound symbol." ),
+                                   frame->arg[0] );
                     result = lisp_throw( message, frame );
                 } else {
                     result = c_assoc( canonical, env );
