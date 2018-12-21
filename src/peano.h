@@ -43,6 +43,15 @@ extern "C" {
     struct cons_pointer
      lisp_subtract( struct stack_frame *frame, struct cons_pointer env );
 
+/**
+ * Divide one number by another.
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer or real.
+ */
+    struct cons_pointer
+     lisp_divide( struct stack_frame *frame, struct cons_pointer env );
+
 #ifdef __cplusplus
 }
 #endif

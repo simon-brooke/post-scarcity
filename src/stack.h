@@ -4,13 +4,13 @@
  * The Lisp evaluation stack.
  *
  * Stack frames could be implemented in cons space; indeed, the stack
- * could simply be an assoc list consed onto the front of the environment. 
- * But such a stack would be costly to search. The design sketched here, 
- * with stack frames as special objects, SHOULD be substantially more 
+ * could simply be an assoc list consed onto the front of the environment.
+ * But such a stack would be costly to search. The design sketched here,
+ * with stack frames as special objects, SHOULD be substantially more
  * efficient, but does imply we need to generalise the idea of cons pages
  * with freelists to a more general 'equal sized object pages', so that
  * allocating/freeing stack frames can be more efficient.
- * 
+ *
  * Stack frames are not yet a first class object; they have no VECP pointer
  * in cons space.
  *
@@ -35,7 +35,8 @@ struct stack_frame *make_empty_frame( struct stack_frame *previous,
 
 struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
-                                      struct cons_pointer env );
+                                      struct cons_pointer env,
+                                      struct cons_pointer *exception );
 void free_stack_frame( struct stack_frame *frame );
 
 /**
@@ -48,7 +49,7 @@ void dump_frame( FILE * output, struct stack_frame *frame );
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 
 /**
- * A 'special' frame is exactly like a normal stack frame except that the 
+ * A 'special' frame is exactly like a normal stack frame except that the
  * arguments are unevaluated.
  * @param previous the previous stack frame;
  * @param args a list of the arguments to be stored in this stack frame;
@@ -61,7 +62,7 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
 
 /*
  * struct stack_frame is defined in consspaceobject.h to break circularity
- * TODO: refactor. 
+ * TODO: refactor.
  */
 
 #endif

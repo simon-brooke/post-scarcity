@@ -1,7 +1,7 @@
 /*
  * conspage.c
  *
- * Setup and tear down cons pages, and (FOR NOW) do primitive 
+ * Setup and tear down cons pages, and (FOR NOW) do primitive
  * allocation/deallocation of cells.
  * NOTE THAT before we go multi-threaded, these functions must be
  * aggressively
@@ -30,7 +30,7 @@ bool conspageinitihasbeencalled = false;
 int initialised_cons_pages = 0;
 
 /**
- * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
+ * The (global) pointer to the (global) freelist. Not sure whether this ultimately
  * belongs in this file.
  */
 struct cons_pointer freelist = NIL;
@@ -55,30 +55,35 @@ void make_cons_page(  ) {
             struct cons_space_object *cell =
                 &conspages[initialised_cons_pages]->cell[i];
             if ( initialised_cons_pages == 0 && i < 2 ) {
-                if ( i == 0 ) {
-                    /*
-                     * initialise cell as NIL 
-                     */
-                    strncpy( &cell->tag.bytes[0], NILTAG, TAGLENGTH );
-                    cell->count = MAXREFERENCE;
-                    cell->payload.free.car = NIL;
-                    cell->payload.free.cdr = NIL;
-                    fwprintf( stderr, L"Allocated special cell NIL\n" );
-                } else if ( i == 1 ) {
-                    /*
-                     * initialise cell as T 
-                     */
-                    strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
-                    cell->count = MAXREFERENCE;
-                    cell->payload.free.car = ( struct cons_pointer ) {
-                    0, 1};
-                    cell->payload.free.cdr = ( struct cons_pointer ) {
-                    0, 1};
-                    fwprintf( stderr, L"Allocated special cell T\n" );
+                switch ( i ) {
+                    case 0:
+                        /*
+                         * initialise cell as NIL
+                         */
+                        strncpy( &cell->tag.bytes[0], NILTAG, TAGLENGTH );
+                        cell->count = MAXREFERENCE;
+                        cell->payload.free.car = NIL;
+                        cell->payload.free.cdr = NIL;
+                        fwprintf( stderr, L"Allocated special cell NIL\n" );
+                        break;
+                    case 1:
+                        /*
+                         * initialise cell as T
+                         */
+                        strncpy( &cell->tag.bytes[0], TRUETAG, TAGLENGTH );
+                        cell->count = MAXREFERENCE;
+                        cell->payload.free.car = ( struct cons_pointer ) {
+                            0, 1
+                        };
+                        cell->payload.free.cdr = ( struct cons_pointer ) {
+                            0, 1
+                        };
+                        fwprintf( stderr, L"Allocated special cell T\n" );
+                        break;
                 }
             } else {
                 /*
-                 * otherwise, standard initialisation 
+                 * otherwise, standard initialisation
                  */
                 strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
                 cell->payload.free.car = NIL;
@@ -107,7 +112,8 @@ void dump_pages( FILE * output ) {
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {
-                         i, j} );
+                         i, j
+                         } );
         }
     }
 }
@@ -121,9 +127,36 @@ void dump_pages( FILE * output ) {
 void free_cell( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
+    switch ( cell->tag.value ) {
+            /* for all the types of cons-space object which point to other
+             * cons-space objects, cascade the decrement. */
+        case CONSTV:
+            dec_ref( cell->payload.cons.car );
+            dec_ref( cell->payload.cons.cdr );
+            break;
+        case EXCEPTIONTV:
+            dec_ref( cell->payload.exception.message );
+            break;
+        case FUNCTIONTV:
+            dec_ref( cell->payload.function.source );
+            break;
+        case LAMBDATV:
+        case NLAMBDATV:
+            dec_ref( cell->payload.lambda.args );
+            dec_ref( cell->payload.lambda.body );
+            break;
+        case SPECIALTV:
+            dec_ref( cell->payload.special.source );
+            break;
+        case STRINGTV:
+        case SYMBOLTV:
+            dec_ref( cell->payload.string.cdr );
+            break;
+    }
+
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
-            fwprintf( stderr, L"Freeing cell\n" );
+            fwprintf( stderr, L"Freeing cell " );
             dump_object( stderr, pointer );
             strncpy( &cell->tag.bytes[0], FREETAG, 4 );
             cell->payload.free.car = NIL;

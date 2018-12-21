@@ -46,17 +46,20 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    while ( ( option = getopt( argc, argv, "pd" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "pdc" ) ) != -1 ) {
         switch ( option ) {
-        case 'd':
-            dump_at_end = true;
-            break;
-        case 'p':
-            show_prompt = true;
-            break;
-        default:
-            fwprintf( stderr, L"Unexpected option %c\n", option );
-            break;
+            case 'c':
+                print_use_colours = true;
+                break;
+            case 'd':
+                dump_at_end = true;
+                break;
+            case 'p':
+                show_prompt = true;
+                break;
+            default:
+                fwprintf( stderr, L"Unexpected option %c\n", option );
+                break;
         }
     }
 
@@ -71,7 +74,6 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords)
      */
-
     deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
     deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
 
@@ -84,30 +86,34 @@ int main( int argc, char *argv[] ) {
     bind_function( "car", &lisp_car );
     bind_function( "cdr", &lisp_cdr );
     bind_function( "cons", &lisp_cons );
+    bind_function( "divide", &lisp_divide );
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
     bind_function( "eval", &lisp_eval );
     bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
+    bind_function( "oblist", &lisp_oblist );
     bind_function( "print", &lisp_print );
     bind_function( "progn", &lisp_progn );
+    bind_function( "set", &lisp_set );
     bind_function( "subtract", &lisp_subtract );
     bind_function( "type", &lisp_type );
 
     bind_function( "+", &lisp_add );
     bind_function( "*", &lisp_multiply );
     bind_function( "-", &lisp_subtract );
+    bind_function( "/", &lisp_divide );
+    bind_function( "=", &lisp_equal );
 
     /*
      * primitive special forms
      */
     bind_special( "cond", &lisp_cond );
+    bind_special( "lambda", &lisp_lambda );
+    bind_special( "nlambda", &lisp_nlambda );
+    bind_special( "progn", &lisp_progn );
     bind_special( "quote", &lisp_quote );
-
-
-    /* bind the oblist last, at this stage. Something clever needs to be done
-     * here and I'm not sure what it is. */
-    deep_bind( c_string_to_lisp_symbol( "oblist" ), oblist );
+    bind_special( "set!", &lisp_set_shriek );
 
     repl( stdin, stdout, stderr, show_prompt );
 

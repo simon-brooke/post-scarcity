@@ -66,10 +66,11 @@ struct stack_frame *make_empty_frame( struct stack_frame *previous,
  */
 struct stack_frame *make_stack_frame( struct stack_frame *previous,
                                       struct cons_pointer args,
-                                      struct cons_pointer env ) {
+                                      struct cons_pointer env,
+                                      struct cons_pointer *exception ) {
     struct stack_frame *result = make_empty_frame( previous, env );
 
-    for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+    for ( int i = 0; i < args_in_frame && consp( args ); i++ ) {
         /* iterate down the arg list filling in the arg slots in the
          * frame. When there are no more slots, if there are still args,
          * stash them on more */
@@ -81,21 +82,31 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
          * processor to be evaled in parallel; but see notes here:
          * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
          */
-        struct stack_frame *arg_frame = make_empty_frame( previous, env );
+        struct stack_frame *arg_frame = make_empty_frame( result, env );
         arg_frame->arg[0] = cell.payload.cons.car;
         inc_ref( arg_frame->arg[0] );
-        result->arg[i] = lisp_eval( arg_frame, env );
-        inc_ref( result->arg[i] );
+
+        struct cons_pointer val = lisp_eval( arg_frame, env );
+        if ( exceptionp( val ) ) {
+            exception = &val;
+            break;
+        } else {
+            result->arg[i] = val;
+        }
+        inc_ref( val );
+
         free_stack_frame( arg_frame );
 
         args = cell.payload.cons.cdr;
     }
-    /*
-     * TODO: this isn't right. These args should also each be evaled.
-     */
-    result->more = args;
-    inc_ref( result->more );
+    if ( consp( args ) ) {
+        /* if we still have args, eval them and stick the values on `more` */
+        struct cons_pointer more = eval_forms( previous, args, env );
+        result->more = more;
+        inc_ref( more );
+    }
 
+    dump_frame( stderr, result );
     return result;
 }
 
@@ -123,8 +134,10 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
 
         args = cell.payload.cons.cdr;
     }
-    result->more = args;
-    inc_ref( args );
+    if ( consp( args ) ) {
+        result->more = args;
+        inc_ref( args );
+    }
 
     return result;
 }
@@ -139,7 +152,9 @@ void free_stack_frame( struct stack_frame *frame ) {
     for ( int i = 0; i < args_in_frame; i++ ) {
         dec_ref( frame->arg[i] );
     }
-    dec_ref( frame->more );
+    if ( !nilp( frame->more ) ) {
+        dec_ref( frame->more );
+    }
 
     free( frame );
 }
@@ -155,13 +170,17 @@ void dump_frame( FILE * output, struct stack_frame *frame ) {
     for ( int arg = 0; arg < args_in_frame; arg++ ) {
         struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-        fwprintf( output, L"Arg %d:\t%c%c%c%c\t", arg,
+        fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ", arg,
                   cell.tag.bytes[0],
-                  cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3] );
+                  cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3],
+                  cell.count );
 
         print( output, frame->arg[arg] );
         fputws( L"\n", output );
     }
+    fputws( L"More: \t", output );
+    print( output, frame->more );
+    fputws( L"\n", output );
 }
 
 

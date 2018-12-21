@@ -11,7 +11,7 @@ else
     exit 1
 fi
 
-expected='5.500000'
+expected='5.5'
 actual=`echo "(add 2.5 3)" | target/psse 2> /dev/null | head -2 | tail -1`
 
 if [ "${expected}" = "${actual}" ]

@@ -15,5 +15,6 @@
 #define __print_h
 
 void print( FILE * output, struct cons_pointer pointer );
+extern int print_use_colours;
 
 #endif

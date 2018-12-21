@@ -1,4 +1,3 @@
-
 TARGET ?= target/psse
 SRC_DIRS ?= ./src
 
@@ -11,9 +10,12 @@ TESTS := $(shell find unit-tests -name *.sh)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-INDENT_FLAGS := -kr -br -brf -brs -ce -cdw -npsl -nut -prs -l79 -ts2
 
-VERSION := "0.0.0"
+INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
+-d0 -di1 -nfc1 -i4 -ip0 -l75 -lp -npcs \
+-npsl -nsc -nsob -nss -nut -prs -l79 -ts2
+
+VERSION := "0.0.2"
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g
 LDFLAGS := -lm
@@ -25,14 +27,18 @@ doc: $(SRCS) Makefile
 	doxygen
 
 format: $(SRCS) $(HDRS) Makefile
+ifeq ($(shell uname -s), Darwin)
+	gindent $(INDENT_FLAGS) $(SRCS) $(HDRS)
+else
 	indent $(INDENT_FLAGS) $(SRCS) $(HDRS)
+endif
 
 test: $(OBJS) $(TESTS) Makefile
 	bash ./unit-tests.sh
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ *~
 
 repl:
 	$(TARGET) -p 2> psse.log

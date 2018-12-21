@@ -11,8 +11,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 /*
- * wide characters 
+ * wide characters
  */
 #include <wchar.h>
 #include <wctype.h>
@@ -20,6 +21,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "print.h"
+#include "stack.h"
 
 /**
  * Check that the tag on the cell at this pointer is this tag
@@ -61,13 +63,36 @@ void dec_ref( struct cons_pointer pointer ) {
     }
 }
 
+void dump_string_cell( FILE * output, wchar_t *prefix,
+                       struct cons_pointer pointer ) {
+    struct cons_space_object cell = pointer2cell( pointer );
+    if ( cell.payload.string.character == 0 ) {
+        fwprintf( output,
+                  L"\t\t%ls cell: termination; next at page %d offset %d, count %u\n",
+                  prefix,
+                  cell.payload.string.cdr.page, cell.payload.string.cdr.offset,
+                  cell.count );
+    } else {
+        fwprintf( output,
+                  L"\t\t%ls cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
+                  prefix,
+                  ( wint_t ) cell.payload.string.character,
+                  cell.payload.string.character,
+                  cell.payload.string.cdr.page,
+                  cell.payload.string.cdr.offset, cell.count );
+        fwprintf( output, L"\t\t value: " );
+        print( output, pointer );
+        fwprintf( output, L"\n" );
+    }
+}
+
 /**
  * dump the object at this cons_pointer to this output stream.
  */
 void dump_object( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     fwprintf( output,
-              L"\tDumping %c%c%c%c (%d) at page %d, offset %d count %u\n",
+              L"\t%c%c%c%c (%d) at page %d, offset %d count %u\n",
               cell.tag.bytes[0],
               cell.tag.bytes[1],
               cell.tag.bytes[2],
@@ -75,49 +100,51 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
               cell.tag.value, pointer.page, pointer.offset, cell.count );
 
     switch ( cell.tag.value ) {
-    case CONSTV:
-        fwprintf( output,
-                  L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
-                  cell.payload.cons.car.page,
-                  cell.payload.cons.car.offset,
-                  cell.payload.cons.cdr.page,
-                  cell.payload.cons.cdr.offset, cell.count );
-        break;
-    case INTEGERTV:
-        fwprintf( output,
-                  L"\t\tInteger cell: value %ld, count %u\n",
-                  cell.payload.integer.value, cell.count );
-        break;
-    case FREETV:
-        fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
-                  cell.payload.cons.cdr.page, cell.payload.cons.cdr.offset );
-        break;
-    case REALTV:
-        fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
-                  cell.payload.real.value, cell.count );
-        break;
-    case STRINGTV:
-        fwprintf( output,
-                  L"\t\tString cell: character '%c' (%d) next at page %d offset %d, count %u\n",
-                  cell.payload.string.character,
-                  cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-        fwprintf( output, L"\t\t value: " );
-        print( output, pointer );
-        fwprintf( output, L"\n" );
-        break;
-    case SYMBOLTV:
-        fwprintf( output,
-                  L"\t\tSymbol cell: character '%c' (%d) next at page %d offset %d, count %u\n",
-                  cell.payload.string.character,
-                  cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-        fwprintf( output, L"\t\t value:" );
-        print( output, pointer );
-        fwprintf( output, L"\n" );
-        break;
+        case CONSTV:
+            fwprintf( output,
+                      L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
+                      cell.payload.cons.car.page,
+                      cell.payload.cons.car.offset,
+                      cell.payload.cons.cdr.page,
+                      cell.payload.cons.cdr.offset, cell.count );
+            break;
+        case EXCEPTIONTV:
+            fwprintf( output, L"\t\tException cell: " );
+            print( output, cell.payload.exception.message );
+            fwprintf( output, L"\n" );
+            for ( struct stack_frame * frame = cell.payload.exception.frame;
+                  frame != NULL; frame = frame->previous ) {
+                dump_frame( output, frame );
+            }
+            break;
+        case FREETV:
+            fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
+                      cell.payload.cons.cdr.page,
+                      cell.payload.cons.cdr.offset );
+            break;
+        case INTEGERTV:
+            fwprintf( output,
+                      L"\t\tInteger cell: value %ld, count %u\n",
+                      cell.payload.integer.value, cell.count );
+            break;
+        case LAMBDATV:
+            fwprintf( output, L"\t\tLambda cell; args: " );
+            print( output, cell.payload.lambda.args );
+            fwprintf( output, L";\n\t\t\tbody: " );
+            print( output, cell.payload.lambda.body );
+            break;
+        case READTV:
+            fwprintf( output, L"\t\tInput stream\n" );
+        case REALTV:
+            fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
+                      cell.payload.real.value, cell.count );
+            break;
+        case STRINGTV:
+            dump_string_cell( output, L"String", pointer );
+            break;
+        case SYMBOLTV:
+            dump_string_cell( output, L"Symbol", pointer );
+            break;
     }
 }
 
@@ -130,8 +157,7 @@ struct cons_pointer make_cons( struct cons_pointer car,
 
     pointer = allocate_cell( CONSTAG );
 
-    struct cons_space_object *cell =
-        &conspages[pointer.page]->cell[pointer.offset];
+    struct cons_space_object *cell = &pointer2cell( pointer );
 
     inc_ref( car );
     inc_ref( cdr );
@@ -140,6 +166,26 @@ struct cons_pointer make_cons( struct cons_pointer car,
 
     return pointer;
 }
+
+/**
+ * Construct an exception cell.
+ * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
+ * @param frame should be the frame in which the exception occurred.
+ */
+struct cons_pointer make_exception( struct cons_pointer message,
+                                    struct stack_frame *frame ) {
+    struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
+    inc_ref( message );
+    cell->payload.exception.message = message;
+    cell->payload.exception.frame = frame;
+
+    return pointer;
+}
+
 
 /**
  * Construct a cell which points to an executable Lisp special form.
@@ -157,9 +203,46 @@ make_function( struct cons_pointer src, struct cons_pointer ( *executable )
 }
 
 /**
+ * Construct a lambda (interpretable source) cell
+ */
+struct cons_pointer make_lambda( struct cons_pointer args,
+                                 struct cons_pointer body ) {
+    struct cons_pointer pointer = allocate_cell( LAMBDATAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
+    inc_ref( args );
+    inc_ref( body );
+    cell->payload.lambda.args = args;
+    cell->payload.lambda.body = body;
+
+    return pointer;
+}
+
+/**
+ * Construct an nlambda (interpretable source) cell; to a
+ * lambda as a special form is to a function.
+ */
+struct cons_pointer make_nlambda( struct cons_pointer args,
+                                  struct cons_pointer body ) {
+    struct cons_pointer pointer = allocate_cell( NLAMBDATAG );
+
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+
+    struct cons_space_object *cell = &pointer2cell( pointer );
+    inc_ref( args );
+    inc_ref( body );
+    cell->payload.lambda.args = args;
+    cell->payload.lambda.body = body;
+
+    return pointer;
+}
+
+/**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the 
+ * has one character and a pointer to the next; in the last cell the
  * pointer to next is NIL.
  */
 struct cons_pointer
@@ -188,7 +271,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
 /**
  * Construct a string from this character and
  * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the 
+ * has one character and a pointer to the next; in the last cell the
  * pointer to next is NIL.
  */
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
@@ -196,7 +279,7 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
 }
 
 /**
- * Construct a symbol from this character and this tail. 
+ * Construct a symbol from this character and this tail.
  */
 struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
     return make_string_like_thing( c, tail, SYMBOLTAG );
@@ -213,6 +296,32 @@ make_special( struct cons_pointer src, struct cons_pointer ( *executable )
 
     cell->payload.special.source = src;
     cell->payload.special.executable = executable;
+
+    return pointer;
+}
+
+/**
+ * Construct a cell which points to a stream open for reading.
+ * @param input the C stream to wrap.
+ */
+struct cons_pointer make_read_stream( FILE * input ) {
+    struct cons_pointer pointer = allocate_cell( READTAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+    cell->payload.stream.stream = input;
+
+    return pointer;
+}
+
+/**
+ * Construct a cell which points to a stream open for writeing.
+ * @param output the C stream to wrap.
+ */
+struct cons_pointer make_write_stream( FILE * output ) {
+    struct cons_pointer pointer = allocate_cell( WRITETAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
+
+    cell->payload.stream.stream = output;
 
     return pointer;
 }

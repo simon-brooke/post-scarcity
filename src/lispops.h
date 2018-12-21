@@ -30,18 +30,80 @@
  */
 struct cons_pointer c_type( struct cons_pointer pointer );
 
+/**
+ * Implementation of car in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_car( struct cons_pointer arg );
+
+/**
+ * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_cdr( struct cons_pointer arg );
+
+
+/**
+ * Useful building block; evaluate this single form in the context of this
+ * parent stack frame and this environment.
+ * @param parent the parent stack frame.
+ * @param form the form to be evaluated.
+ * @param env the evaluation environment.
+ * @return the result of evaluating the form.
+ */
+struct cons_pointer eval_form( struct stack_frame *parent,
+                               struct cons_pointer form,
+                               struct cons_pointer env );
+
+/**
+ * eval all the forms in this `list` in the context of this stack `frame`
+ * and this `env`, and return a list of their values. If the arg passed as
+ * `list` is not in fact a list, return nil.
+ */
+struct cons_pointer eval_forms( struct stack_frame *frame,
+                                struct cons_pointer list,
+                                struct cons_pointer env );
+
+
 /*
- * special forms 
+ * special forms
  */
 struct cons_pointer lisp_eval( struct stack_frame *frame,
                                struct cons_pointer env );
 struct cons_pointer lisp_apply( struct stack_frame *frame,
                                 struct cons_pointer env );
+
+struct cons_pointer
+lisp_oblist( struct stack_frame *frame, struct cons_pointer env );
+
+struct cons_pointer
+lisp_set( struct stack_frame *frame, struct cons_pointer env );
+
+struct cons_pointer
+lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env );
+
+/**
+ * Construct an interpretable function.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param lexpr the lambda expression to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer lisp_lambda( struct stack_frame *frame,
+                                 struct cons_pointer env );
+
+/**
+ * Construct an interpretable special form.
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param env the environment in which it is to be intepreted.
+ */
+struct cons_pointer
+lisp_nlambda( struct stack_frame *frame, struct cons_pointer env );
+
 struct cons_pointer lisp_quote( struct stack_frame *frame,
                                 struct cons_pointer env );
 
 /*
- * functions 
+ * functions
  */
 struct cons_pointer lisp_cons( struct stack_frame *frame,
                                struct cons_pointer env );
@@ -70,22 +132,22 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env );
 
 
 /**
- * Function; evaluate the forms which are listed in my single argument 
+ * Function; evaluate the forms which are listed in my single argument
  * sequentially and return the value of the last. This function is called 'do'
  * in some dialects of Lisp.
- * 
+ *
  * @param frame My stack frame.
  * @param env My environment (ignored).
- * @return the value of the last form on the sequence which is my single 
+ * @return the value of the last form on the sequence which is my single
  * argument.
  */
 struct cons_pointer
 lisp_progn( struct stack_frame *frame, struct cons_pointer env );
 
 /**
- * Special form: conditional. Each arg is expected to be a list; if the first 
- * item in such a list evaluates to non-NIL, the remaining items in that list 
- * are evaluated in turn and the value of the last returned. If no arg (clause) 
+ * Special form: conditional. Each arg is expected to be a list; if the first
+ * item in such a list evaluates to non-NIL, the remaining items in that list
+ * are evaluated in turn and the value of the last returned. If no arg (clause)
  * has a first element which evaluates to non NIL, then NIL is returned.
  * @param frame My stack frame.
  * @param env My environment (ignored).
@@ -95,7 +157,7 @@ struct cons_pointer
 lisp_cond( struct stack_frame *frame, struct cons_pointer env );
 
 /*
- * neither, at this stage, really 
+ * neither, at this stage, really
  */
 struct cons_pointer lisp_throw( struct cons_pointer message,
                                 struct stack_frame *frame );
