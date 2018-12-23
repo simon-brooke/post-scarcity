@@ -56,12 +56,13 @@ bool zerop( struct cons_pointer arg ) {
  * not a number is passed in.
  */
 long double to_long_double( struct cons_pointer arg ) {
-    long double result = NAN;   /* not a number, as a long double */
+    long double result = 0;     /* not a number, as a long double */
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            result = cell.payload.integer.value * 1.0;
+            result = ( double ) cell.payload.integer.value;
+            break;
         case RATIOTV:
             {
                 struct cons_space_object dividend =
@@ -70,14 +71,21 @@ long double to_long_double( struct cons_pointer arg ) {
                     pointer2cell( cell.payload.ratio.divisor );
 
                 result =
-                    dividend.payload.integer.value /
+                    ( long double ) dividend.payload.integer.value /
                     divisor.payload.integer.value;
             }
             break;
         case REALTV:
             result = cell.payload.real.value;
             break;
+        default:
+            result = NAN;
+            break;
     }
+
+    fputws( L"to_long_double( ", stderr );
+    print( stderr, arg );
+    fwprintf( stderr, L") => %lf\n", result );
 
     return result;
 }
@@ -128,9 +136,9 @@ long int least_common_multiple( long int m, long int n ) {
 struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
                                      struct cons_pointer arg1,
                                      struct cons_pointer arg2 ) {
-    fputws( L"add_ratio_ratio: srg1 = ", stderr );
+    fputws( L"add_ratio_ratio( arg1 = ", stderr );
     print( stderr, arg1 );
-    fputws( L"; srg2 = ", stderr );
+    fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
 
     struct cons_pointer result;
@@ -145,10 +153,9 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
         dr2v =
         pointer2cell( cell2.payload.ratio.divisor ).payload.integer.value,
         lcm = least_common_multiple( dr1v, dr2v ),
-  m1 = lcm / dr1v,
-  m2 = lcm / dr2v;
+        m1 = lcm / dr1v, m2 = lcm / dr2v;
 
-      fwprintf(stderr , L"; lcm = %ld; m1 = %ld; m2 = %ld\n", lcm, m1, m2);
+    fwprintf( stderr, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm, m1, m2 );
 
     if ( dr1v == dr2v ) {
         result =
@@ -156,22 +163,35 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
                         make_integer( dd1v + dd2v ),
                         cell1.payload.ratio.divisor );
 
-      long int ddrv = pointer2cell(pointer2cell(result).payload.ratio.dividend).payload.integer.value,
-      drrv = pointer2cell(pointer2cell(result).payload.ratio.divisor).payload.integer.value,
-      gcd = greatest_common_divisor(ddrv, drrv);
+        long int ddrv =
+            pointer2cell( pointer2cell( result ).payload.ratio.
+                          dividend ).payload.integer.value, drrv =
+            pointer2cell( pointer2cell( result ).payload.ratio.
+                          divisor ).payload.integer.value, gcd =
+            greatest_common_divisor( ddrv, drrv );
 
-      if (gcd > 1) {
-        result = make_ratio( frame, make_integer(ddrv/gcd),make_integer(drrv/gcd));
-      }
+        if ( gcd > 1 ) {
+            if ( drrv / gcd == 1 ) {
+                result = make_integer( ddrv / gcd );
+            } else {
+                result =
+                    make_ratio( frame, make_integer( ddrv / gcd ),
+                                make_integer( drrv / gcd ) );
+            }
+        }
     } else {
         result = add_ratio_ratio( frame,
-                            make_ratio( frame,
-                                       make_integer( dd1v * m1 ),
-                                       make_integer( dr1v * m1 )),
-                            make_ratio( frame,
-                                       make_integer( dd2v * m2 ),
-                                       make_integer( dr2v * m2 ) ));
-   }
+                                  make_ratio( frame,
+                                              make_integer( dd1v * m1 ),
+                                              make_integer( dr1v * m1 ) ),
+                                  make_ratio( frame,
+                                              make_integer( dd2v * m2 ),
+                                              make_integer( dr2v * m2 ) ) );
+    }
+
+    fputws( L" => ", stderr );
+    print( stderr, result );
+    fputws( L"\n", stderr );
 
     return result;
 }
@@ -201,6 +221,11 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
+    fputws( L"add_2( arg1 = ", stderr );
+    print( stderr, arg1 );
+    fputws( L"; arg2 = ", stderr );
+    print( stderr, arg2 );
+
     if ( zerop( arg1 ) ) {
         result = arg2;
     } else if ( zerop( arg2 ) ) {
@@ -217,8 +242,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        make_integer( cell1.payload.integer.value +
-                                      cell2.payload.integer.value );
+                        result = make_integer( cell1.payload.integer.value +
+                                               cell2.payload.integer.value );
                         break;
                     case RATIOTV:
                         result = add_integer_ratio( frame, arg1, arg2 );
@@ -226,7 +251,7 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                     case REALTV:
                         result =
                             make_real( to_long_double( arg1 ) +
-                                       cell2.payload.real.value );
+                                       to_long_double( arg2 ) );
                         break;
                     default:
                         result = lisp_throw( c_string_to_lisp_string
@@ -247,12 +272,26 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                         break;
                     case REALTV:
                         result =
-                            make_real( cell2.payload.real.value +
-                                       to_long_double( arg1 ) );
+                            make_real( to_long_double( arg1 ) +
+                                       to_long_double( arg2 ) );
                         break;
                 }
+                break;
+            case REALTV:
+                result =
+                    make_real( to_long_double( arg1 ) +
+                               to_long_double( arg2 ) );
+                break;
+            default:
+                result = lisp_throw( c_string_to_lisp_string
+                                     ( "Cannot add: not a number" ), frame );
         }
     }
+
+    fputws( L"}; => ", stderr );
+    print( stderr, arg2 );
+    fputws( L"\n", stderr );
+
 
     return result;
 }
@@ -268,8 +307,8 @@ struct cons_pointer lisp_add( struct stack_frame
                               cons_pointer env ) {
     struct cons_pointer result = make_integer( 0 );
     for ( int i = 0;
-          i < args_in_frame && !nilp( frame->arg[i] ) && !exceptionp( result );
-          i++ ) {
+          i < args_in_frame &&
+          !nilp( frame->arg[i] ) && !exceptionp( result ); i++ ) {
         result = add_2( frame, result, frame->arg[i] );
     }
 
