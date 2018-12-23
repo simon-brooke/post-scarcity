@@ -31,7 +31,8 @@
  * atoms because I don't yet know what an atom is or how it's stored.
  */
 
-struct cons_pointer read_number( FILE * input, wint_t initial );
+struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
+                                 wint_t initial, bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame, FILE * input,
                                wint_t initial );
 struct cons_pointer read_string( FILE * input, wint_t initial );
@@ -89,7 +90,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
                     wint_t next = fgetwc( input );
                     if ( iswdigit( next ) ) {
                         ungetwc( next, input );
-                        result = read_number( input, c );
+                        result = read_number( frame, input, c, true );
                     } else if ( iswblank( next ) ) {
                         /* dotted pair. TODO: this isn't right, we
                          * really need to backtrack up a level. */
@@ -102,7 +103,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
                 break;
             default:
                 if ( iswdigit( c ) ) {
-                    result = read_number( input, c );
+                    result = read_number( frame, input, c, false );
                 } else if ( iswprint( c ) ) {
                     result = read_symbol( input, c );
                 } else {
@@ -120,17 +121,33 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
 /**
  * read a number from this input stream, given this initial character.
  */
-struct cons_pointer read_number( FILE * input, wint_t initial ) {
+struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
+                                 wint_t initial, bool seen_period ) {
     struct cons_pointer result = NIL;
     long int accumulator = 0;
+    long int dividend = 0;
     int places_of_decimals = 0;
-    bool seen_period = false;
     wint_t c;
     fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );
     for ( c = initial; iswdigit( c )
-          || c == btowc( '.' ); c = fgetwc( input ) ) {
+          || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
-            seen_period = true;
+            if ( seen_period || dividend > 0 ) {
+                return make_exception( c_string_to_lisp_string
+                                       ( "Malformed number: too many periods" ),
+                                       frame );
+            } else {
+                seen_period = true;
+            }
+        } else if ( c == btowc( '/' ) ) {
+            if ( seen_period || dividend > 0 ) {
+                return make_exception( c_string_to_lisp_string
+                                       ( "Malformed number: dividend must be integer" ),
+                                       frame );
+            } else {
+                dividend = accumulator;
+                accumulator = 0;
+            }
         } else {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
             fwprintf( stderr,
@@ -151,6 +168,10 @@ struct cons_pointer read_number( FILE * input, wint_t initial ) {
             ( accumulator / pow( 10, places_of_decimals ) );
         fwprintf( stderr, L"read_numer returning %Lf\n", rv );
         result = make_real( rv );
+    } else if ( dividend > 0 ) {
+        result =
+            make_ratio( frame, make_integer( dividend ),
+                        make_integer( accumulator ) );
     } else {
         result = make_integer( accumulator );
     }

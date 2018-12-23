@@ -92,6 +92,12 @@
 #define REALTV      1279346002
 
 /**
+ * A ratio.
+ */
+#define RATIOTAG    "RTIO"
+#define RATIOTV     1330205778
+
+/**
  * A special form - one whose arguments are not pre-evaluated but passed as a
  * s-expression. 1296453715
  */
@@ -196,6 +202,11 @@
  * true if conspointer points to an integer cell, else false
  */
 #define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
+
+/**
+ * true if conspointer points to a rational number cell, else false
+ */
+#define ratiop(conspoint) (check_tag(conspoint,RATIOTAG))
 
 /**
  * true if conspointer points to a read stream cell, else false
@@ -318,9 +329,18 @@ struct lambda_payload {
 };
 
 /**
+ * payload for ratio cells. Both dividend and divisor must point to integer (or, later, bignum) cells.
+ */
+struct ratio_payload {
+    struct cons_pointer dividend;
+    struct cons_pointer divisor;
+};
+
+/**
  * payload for a real number cell. Internals of this liable to change to give 128 bits
  * precision, but I'm not sure of the detail.
- */ struct real_payload {
+ */
+struct real_payload {
     long double value;
 };
 
@@ -419,6 +439,10 @@ struct cons_space_object {
          */
         struct cons_payload nil;
         /*
+         * if tag == RATIOTAG
+         */
+        struct ratio_payload ratio;
+        /*
          * if tag == READTAG || tag == WRITETAG
          */
         struct stream_payload stream;
@@ -496,7 +520,15 @@ struct cons_pointer make_lambda( struct cons_pointer args,
 struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body );
 
-  /**
+/**
+ * Construct a ratio frame from these two pointers, expected to be integers
+ * or (later) bignums, in the context of this stack_frame.
+ */
+struct cons_pointer make_ratio( struct stack_frame *frame,
+                                struct cons_pointer dividend,
+                                struct cons_pointer divisor );
+
+/**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,

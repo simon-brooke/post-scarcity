@@ -145,6 +145,10 @@ void free_cell( struct cons_pointer pointer ) {
             dec_ref( cell->payload.lambda.args );
             dec_ref( cell->payload.lambda.body );
             break;
+        case RATIOTV:
+            dec_ref( cell->payload.ratio.dividend );
+            dec_ref( cell->payload.ratio.divisor );
+            break;
         case SPECIALTV:
             dec_ref( cell->payload.special.source );
             break;

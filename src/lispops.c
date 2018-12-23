@@ -659,9 +659,9 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
 
     result = print( output, frame->arg[0] );
 
-  fputws( L"Print returning ", stderr);
-  print(stderr, result);
-  fputws( L"\n", stderr);
+    fputws( L"Print returning ", stderr );
+    print( stderr, result );
+    fputws( L"\n", stderr );
 
     return result;
 }

@@ -96,6 +96,7 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
         inc_ref( input );
 
         if ( exceptionp( input ) ) {
+            /* suppress the end-of-stream exception */
             if ( !feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
                 repl_print( output_stream, input );
             }

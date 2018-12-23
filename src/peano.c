@@ -27,6 +27,8 @@
 
 long double to_long_double( struct cons_pointer arg );
 long int to_long_int( struct stack_frame *frame, struct cons_pointer arg );
+struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
+                           struct cons_pointer arg2 );
 
 
 bool zerop( struct cons_pointer arg ) {
@@ -119,6 +121,52 @@ long int least_common_multiplier( long int m, long int n ) {
 }
 
 /**
+ * return a cons_pointer indicating a number which is the sum of
+* the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
+* this is going to break horribly.
+*/
+struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
+                                    struct cons_pointer arg1,
+                           struct cons_pointer arg2 ) {
+    struct cons_pointer result;
+    struct cons_space_object cell1 = pointer2cell( arg1 );
+    struct cons_space_object cell2 = pointer2cell( arg2 );
+    long int dd1v = pointer2cell(cell1.payload.ratio.dividend).payload.integer.value,
+  dd2v = pointer2cell(cell2.payload.ratio.dividend).payload.integer.value,
+  dr1v = pointer2cell(cell1.payload.ratio.divisor).payload.integer.value,
+  dr2v = pointer2cell(cell2.payload.ratio.divisor).payload.integer.value,
+    lcm = least_common_multiplier(dr1v, dr2v),
+  m1 = lcm/dr2v,
+  m2 = lcm/dr1v;
+
+  if (dr1v == dr2v) {
+    result = make_ratio( frame, add_2(frame, cell1.payload.ratio.dividend, cell2.payload.ratio.dividend),
+                        cell1.payload.ratio.divisor);
+  } else {
+  result = make_ratio( frame,
+                      make_integer((dd1v * m1) + (dd2v * m2)),
+                    make_integer((dr1v * m1) + (dr2v * m2)));
+    }
+
+    return result;
+}
+
+
+/**
+ * return a cons_pointer indicating a number which is the sum of
+* the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
+* this is going to break horribly.
+*/
+struct cons_pointer add_integer_ratio( struct stack_frame *frame,
+                                    struct cons_pointer intarg,
+                           struct cons_pointer ratarg ) {
+  return add_ratio_ratio( frame,
+                         make_ratio( frame, intarg, make_integer( 1)),
+                         ratarg);
+}
+
+
+/**
 * return a cons_pointer indicating a number which is the sum of
 * the numbers indicated by `arg1` and `arg2`.
 */
@@ -136,23 +184,23 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
 
         switch ( cell1.tag.value ) {
             case EXCEPTIONTV:
-                result = cell1;
+                result = arg1;
                 break;
             case INTEGERTV:
                 switch ( cell2.tag.value ) {
                     case EXCEPTIONTV:
-                        result = cell2;
+                        result = arg2;
                         break;
                     case INTEGERTV:
                         make_integer( cell1.payload.integer.value +
                                       cell2.payload.integer.value );
                         break;
                     case RATIOTV:
-                        result = add_integer_ratio( arg1, arg2 );
+                        result = add_integer_ratio( frame, arg1, arg2 );
                         break;
                     case REALTV:
                         result =
-                            make_real( cell1.payload.integer.value +
+                            make_real( to_long_double(arg1) +
                                        cell2.payload.real.value );
                         break;
                     default:
@@ -164,17 +212,18 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
             case RATIOTV:
                 switch ( cell2.tag.value ) {
                     case EXCEPTIONTV:
-                        result = cell2;
+                        result = arg2;
                         break;
                     case INTEGERTV:
-                        result = add_integer_ratio( arg1, arg2 );
+                        result = add_integer_ratio( frame, arg2, arg1 );
                         break;
                     case RATIOTV:
+                        result = add_ratio_ratio( frame, arg1, arg2);
                         break;
                     case REALTV:
                         result =
                             make_real( cell2.payload.real.value +
-                                       ratio_to_long_double( arg1 ) );
+                                       to_long_double( arg1 ) );
                         break;
                 }
         }
@@ -192,15 +241,14 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
 struct cons_pointer lisp_add( struct stack_frame
                               *frame, struct
                               cons_pointer env ) {
-    struct cons_pointer result = NIL;
     struct cons_pointer result = make_integer( 0 );
-    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
-        result = add_q( frame, result, frame->arg[i] );
+    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i]) && !exceptionp(result); i++ ) {
+        result = add_2( frame, result, frame->arg[i] );
     }
 
     struct cons_pointer more = frame->more;
-    while ( consp( more ) ) {
-        result = add_2( frame, result, c _car( more ) );
+    while ( consp( more )  && !exceptionp(result) ) {
+        result = add_2( frame, result, c_car( more ) );
         more = c_cdr( more );
     }
 
