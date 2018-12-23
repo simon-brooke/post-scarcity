@@ -88,8 +88,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
 
     struct cons_pointer result = NIL;
     struct stack_frame *next = make_empty_frame( parent, env );
-    next->arg[0] = form;
-    inc_ref( next->arg[0] );
+    set_reg( next, 0, form );
     result = lisp_eval( next, env );
 
     if ( !exceptionp( result ) ) {
@@ -242,8 +241,7 @@ struct cons_pointer
 c_apply( struct stack_frame *frame, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct stack_frame *fn_frame = make_empty_frame( frame, env );
-    fn_frame->arg[0] = c_car( frame->arg[0] );
-    inc_ref( fn_frame->arg[0] );
+    set_reg( fn_frame, 0, c_car( frame->arg[0] ) );
     struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
 
     if ( !exceptionp( result ) ) {
@@ -438,9 +436,8 @@ lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
     fputws( L"Apply: ", stderr );
     dump_frame( stderr, frame );
 
-    frame->arg[0] = make_cons( frame->arg[0], frame->arg[1] );
-    inc_ref( frame->arg[0] );
-    frame->arg[1] = NIL;
+    set_reg( frame, 0, make_cons( frame->arg[0], frame->arg[1] ) );
+    set_reg( frame, 1, NIL );
 
     struct cons_pointer result = c_apply( frame, env );
 
@@ -653,15 +650,20 @@ lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
  */
 struct cons_pointer
 lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
     FILE *output = stdout;
 
     if ( writep( frame->arg[1] ) ) {
         output = pointer2cell( frame->arg[1] ).payload.stream.stream;
     }
 
-    print( output, frame->arg[0] );
+    result = print( output, frame->arg[0] );
 
-    return NIL;
+  fputws( L"Print returning ", stderr);
+  print(stderr, result);
+  fputws( L"\n", stderr);
+
+    return result;
 }
 
 

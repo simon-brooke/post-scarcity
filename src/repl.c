@@ -33,7 +33,7 @@
 struct cons_pointer repl_read( struct cons_pointer stream_pointer ) {
     struct stack_frame *frame = make_empty_frame( NULL, oblist );
 
-    frame->arg[0] = stream_pointer;
+    set_reg( frame, 0, stream_pointer );
     struct cons_pointer result = lisp_read( frame, oblist );
     free_stack_frame( frame );
 
@@ -46,7 +46,7 @@ struct cons_pointer repl_read( struct cons_pointer stream_pointer ) {
 struct cons_pointer repl_eval( struct cons_pointer input ) {
     struct stack_frame *frame = make_empty_frame( NULL, oblist );
 
-    frame->arg[0] = input;
+    set_reg( frame, 0, input );
     struct cons_pointer result = lisp_eval( frame, oblist );
 
     if ( !exceptionp( result ) ) {
@@ -63,8 +63,8 @@ struct cons_pointer repl_print( struct cons_pointer stream_pointer,
                                 struct cons_pointer value ) {
     struct stack_frame *frame = make_empty_frame( NULL, oblist );
 
-    frame->arg[0] = value;
-    frame->arg[1] = NIL /* stream_pointer */ ;
+    set_reg( frame, 0, value );
+    set_reg( frame, 1, stream_pointer );
     struct cons_pointer result = lisp_print( frame, oblist );
     free_stack_frame( frame );
 
@@ -82,7 +82,10 @@ void
 repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
       bool show_prompt ) {
     struct cons_pointer input_stream = make_read_stream( in_stream );
+    pointer2cell( input_stream ).count = MAXREFERENCE;
+
     struct cons_pointer output_stream = make_write_stream( out_stream );
+    pointer2cell( output_stream ).count = MAXREFERENCE;
 
     while ( !feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
         if ( show_prompt ) {
@@ -90,21 +93,16 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
         }
 
         struct cons_pointer input = repl_read( input_stream );
+        inc_ref( input );
 
         if ( exceptionp( input ) ) {
+            if ( !feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
+                repl_print( output_stream, input );
+            }
             break;
         } else {
-
-            struct cons_pointer val = repl_eval( input );
-
-            if ( feof( pointer2cell( input_stream ).payload.stream.stream ) ) {
-                /* suppress the 'end of stream' exception */
-                if ( !exceptionp( val ) ) {
-                    repl_print( output_stream, val );
-                }
-            } else {
-                repl_print( output_stream, val );
-            }
+            repl_print( output_stream, repl_eval( input ) );
         }
+        dec_ref( input );
     }
 }

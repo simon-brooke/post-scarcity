@@ -49,7 +49,7 @@ struct stack_frame *make_empty_frame( struct stack_frame *previous,
     result->function = NIL;
 
     for ( int i = 0; i < args_in_frame; i++ ) {
-        result->arg[i] = NIL;
+        set_reg( result, i, NIL );
     }
 
     return result;
@@ -83,17 +83,15 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
          * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
          */
         struct stack_frame *arg_frame = make_empty_frame( result, env );
-        arg_frame->arg[0] = cell.payload.cons.car;
-        inc_ref( arg_frame->arg[0] );
+        set_reg( arg_frame, 0, cell.payload.cons.car );
 
         struct cons_pointer val = lisp_eval( arg_frame, env );
         if ( exceptionp( val ) ) {
             exception = &val;
             break;
         } else {
-            result->arg[i] = val;
+            set_reg( result, i, val );
         }
-        inc_ref( val );
 
         free_stack_frame( arg_frame );
 
@@ -129,8 +127,7 @@ struct stack_frame *make_special_frame( struct stack_frame *previous,
          * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
-        result->arg[i] = cell.payload.cons.car;
-        inc_ref( result->arg[i] );
+        set_reg( result, i, cell.payload.cons.car );
 
         args = cell.payload.cons.cdr;
     }

@@ -103,7 +103,7 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
  * Print the cons-space object indicated by `pointer` to the stream indicated
  * by `output`.
  */
-void print( FILE * output, struct cons_pointer pointer ) {
+struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     char *buffer;
 
@@ -132,8 +132,8 @@ void print( FILE * output, struct cons_pointer pointer ) {
         case LAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ) ) );
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
@@ -141,8 +141,8 @@ void print( FILE * output, struct cons_pointer pointer ) {
         case NLAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ) ) );
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case READTV:
             fwprintf( output, L"(Input stream)" );
@@ -196,4 +196,6 @@ void print( FILE * output, struct cons_pointer pointer ) {
     if ( print_use_colours ) {
         fputws( L"\x1B[39m", output );
     }
+
+  return pointer;
 }

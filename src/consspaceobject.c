@@ -54,7 +54,7 @@ void inc_ref( struct cons_pointer pointer ) {
 void dec_ref( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
-    if ( cell->count <= MAXREFERENCE ) {
+    if ( cell->count > 0 ) {
         cell->count--;
 
         if ( cell->count == 0 ) {

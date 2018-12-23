@@ -25,6 +25,13 @@
 #define __stack_h
 
 /**
+ * set a register in a stack frame. Alwaye use this macro to do so,
+ • because that way we can be sure the inc_ref happens!
+ */
+#define set_reg(frame,register,value)frame->arg[register]=value; inc_ref(value)
+
+
+/**
  * Make an empty stack frame, and return it.
  * @param previous the current top-of-stack;
  * @param env the environment in which evaluation happens.
