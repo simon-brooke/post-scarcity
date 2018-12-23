@@ -116,7 +116,7 @@ long int greatest_common_divisor( long int m, long int n ) {
     return o;
 }
 
-long int least_common_multiplier( long int m, long int n ) {
+long int least_common_multiple( long int m, long int n ) {
     return m / greatest_common_divisor( m, n ) * n;
 }
 
@@ -126,27 +126,52 @@ long int least_common_multiplier( long int m, long int n ) {
 * this is going to break horribly.
 */
 struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
-                                    struct cons_pointer arg1,
-                           struct cons_pointer arg2 ) {
+                                     struct cons_pointer arg1,
+                                     struct cons_pointer arg2 ) {
+    fputws( L"add_ratio_ratio: srg1 = ", stderr );
+    print( stderr, arg1 );
+    fputws( L"; srg2 = ", stderr );
+    print( stderr, arg2 );
+
     struct cons_pointer result;
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
-    long int dd1v = pointer2cell(cell1.payload.ratio.dividend).payload.integer.value,
-  dd2v = pointer2cell(cell2.payload.ratio.dividend).payload.integer.value,
-  dr1v = pointer2cell(cell1.payload.ratio.divisor).payload.integer.value,
-  dr2v = pointer2cell(cell2.payload.ratio.divisor).payload.integer.value,
-    lcm = least_common_multiplier(dr1v, dr2v),
-  m1 = lcm/dr2v,
-  m2 = lcm/dr1v;
+    long int dd1v =
+        pointer2cell( cell1.payload.ratio.dividend ).payload.integer.value,
+        dd2v =
+        pointer2cell( cell2.payload.ratio.dividend ).payload.integer.value,
+        dr1v =
+        pointer2cell( cell1.payload.ratio.divisor ).payload.integer.value,
+        dr2v =
+        pointer2cell( cell2.payload.ratio.divisor ).payload.integer.value,
+        lcm = least_common_multiple( dr1v, dr2v ),
+  m1 = lcm / dr1v,
+  m2 = lcm / dr2v;
 
-  if (dr1v == dr2v) {
-    result = make_ratio( frame, add_2(frame, cell1.payload.ratio.dividend, cell2.payload.ratio.dividend),
-                        cell1.payload.ratio.divisor);
-  } else {
-  result = make_ratio( frame,
-                      make_integer((dd1v * m1) + (dd2v * m2)),
-                    make_integer((dr1v * m1) + (dr2v * m2)));
-    }
+      fwprintf(stderr , L"; lcm = %ld; m1 = %ld; m2 = %ld\n", lcm, m1, m2);
+
+    if ( dr1v == dr2v ) {
+        result =
+            make_ratio( frame,
+                        make_integer( dd1v + dd2v ),
+                        cell1.payload.ratio.divisor );
+
+      long int ddrv = pointer2cell(pointer2cell(result).payload.ratio.dividend).payload.integer.value,
+      drrv = pointer2cell(pointer2cell(result).payload.ratio.divisor).payload.integer.value,
+      gcd = greatest_common_divisor(ddrv, drrv);
+
+      if (gcd > 1) {
+        result = make_ratio( frame, make_integer(ddrv/gcd),make_integer(drrv/gcd));
+      }
+    } else {
+        result = add_ratio_ratio( frame,
+                            make_ratio( frame,
+                                       make_integer( dd1v * m1 ),
+                                       make_integer( dr1v * m1 )),
+                            make_ratio( frame,
+                                       make_integer( dd2v * m2 ),
+                                       make_integer( dr2v * m2 ) ));
+   }
 
     return result;
 }
@@ -158,11 +183,11 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
 * this is going to break horribly.
 */
 struct cons_pointer add_integer_ratio( struct stack_frame *frame,
-                                    struct cons_pointer intarg,
-                           struct cons_pointer ratarg ) {
-  return add_ratio_ratio( frame,
-                         make_ratio( frame, intarg, make_integer( 1)),
-                         ratarg);
+                                       struct cons_pointer intarg,
+                                       struct cons_pointer ratarg ) {
+    return add_ratio_ratio( frame,
+                            make_ratio( frame, intarg, make_integer( 1 ) ),
+                            ratarg );
 }
 
 
@@ -200,7 +225,7 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                         break;
                     case REALTV:
                         result =
-                            make_real( to_long_double(arg1) +
+                            make_real( to_long_double( arg1 ) +
                                        cell2.payload.real.value );
                         break;
                     default:
@@ -218,7 +243,7 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                         result = add_integer_ratio( frame, arg2, arg1 );
                         break;
                     case RATIOTV:
-                        result = add_ratio_ratio( frame, arg1, arg2);
+                        result = add_ratio_ratio( frame, arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -242,12 +267,14 @@ struct cons_pointer lisp_add( struct stack_frame
                               *frame, struct
                               cons_pointer env ) {
     struct cons_pointer result = make_integer( 0 );
-    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i]) && !exceptionp(result); i++ ) {
+    for ( int i = 0;
+          i < args_in_frame && !nilp( frame->arg[i] ) && !exceptionp( result );
+          i++ ) {
         result = add_2( frame, result, frame->arg[i] );
     }
 
     struct cons_pointer more = frame->more;
-    while ( consp( more )  && !exceptionp(result) ) {
+    while ( consp( more ) && !exceptionp( result ) ) {
         result = add_2( frame, result, c_car( more ) );
         more = c_cdr( more );
     }
