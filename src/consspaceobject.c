@@ -133,6 +133,14 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
             break;
+        case RATIOTV:
+            fwprintf( output,
+                      L"\t\tRational cell: value %ld/%ld, count %u\n",
+                      pointer2cell( cell.payload.ratio.dividend ).
+                      payload.integer.value,
+                      pointer2cell( cell.payload.ratio.divisor ).
+                      payload.integer.value, cell.count );
+            break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );
         case REALTV:

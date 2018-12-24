@@ -127,6 +127,9 @@ void dump_pages( FILE * output ) {
 void free_cell( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
+    fwprintf( stderr, L"Freeing cell " );
+    dump_object( stderr, pointer );
+
     switch ( cell->tag.value ) {
             /* for all the types of cons-space object which point to other
              * cons-space objects, cascade the decrement. */
@@ -160,20 +163,18 @@ void free_cell( struct cons_pointer pointer ) {
 
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
-            fwprintf( stderr, L"Freeing cell " );
-            dump_object( stderr, pointer );
             strncpy( &cell->tag.bytes[0], FREETAG, 4 );
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
             freelist = pointer;
         } else {
             fwprintf( stderr,
-                      L"Attempt to free cell with %d dangling references at page %d, offset %d\n",
+                      L"ERROR: Attempt to free cell with %d dangling references at page %d, offset %d\n",
                       cell->count, pointer.page, pointer.offset );
         }
     } else {
         fwprintf( stderr,
-                  L"Attempt to free cell which is already FREE at page %d, offset %d\n",
+                  L"ERROR: Attempt to free cell which is already FREE at page %d, offset %d\n",
                   pointer.page, pointer.offset );
     }
 }
