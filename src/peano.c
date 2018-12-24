@@ -132,10 +132,10 @@ struct cons_pointer simplify_ratio( struct stack_frame *frame,
                                     struct cons_pointer arg ) {
     struct cons_pointer result = arg;
     long int ddrv =
-        pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
-        payload.integer.value, drrv =
-        pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
-        payload.integer.value, gcd = greatest_common_divisor( ddrv, drrv );
+        pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).payload.
+        integer.value, drrv =
+        pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).payload.
+        integer.value, gcd = greatest_common_divisor( ddrv, drrv );
 
     if ( gcd > 1 ) {
         if ( drrv / gcd == 1 ) {
@@ -163,7 +163,7 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
     fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
 
-    struct cons_pointer r1, result;
+    struct cons_pointer r, result;
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
     long int dd1v =
@@ -180,22 +180,29 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
     fwprintf( stderr, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm, m1, m2 );
 
     if ( dr1v == dr2v ) {
-        r1 = make_ratio( frame,
+        r = make_ratio( frame,
                          make_integer( dd1v + dd2v ),
                          cell1.payload.ratio.divisor );
     } else {
-        r1 = add_ratio_ratio( frame,
-                              make_ratio( frame,
-                                          make_integer( dd1v * m1 ),
-                                          make_integer( dr1v * m1 ) ),
-                              make_ratio( frame,
-                                          make_integer( dd2v * m2 ),
-                                          make_integer( dr2v * m2 ) ) );
+        struct cons_pointer dd1vm = make_integer( dd1v * m1 ),
+            dr1vm = make_integer( dr1v * m1 ),
+            dd2vm = make_integer( dd2v * m2 ),
+            dr2vm = make_integer( dr2v * m2 ),
+            r1 = make_ratio( frame, dd1vm, dr1vm ),
+            r2 = make_ratio( frame, dd2vm, dr2vm );
+
+        r = add_ratio_ratio( frame, r1, r2 );
+
+        /* because the references on dd1vm, dr1vm, dd2vm and dr2vm were
+         * never incremented except when making r1 and r2, decrementing
+         * r1 and r2 should be enought to garbage collect them. */
+        dec_ref( r1 );
+        dec_ref( r2 );
     }
 
-    result = simplify_ratio( frame, r1 );
-    if ( !eq( r1, result ) ) {
-        dec_ref( r1 );
+    result = simplify_ratio( frame, r );
+    if ( !eq( r, result ) ) {
+        dec_ref( r );
     }
 
     fputws( L" => ", stderr );
@@ -214,9 +221,13 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
 struct cons_pointer add_integer_ratio( struct stack_frame *frame,
                                        struct cons_pointer intarg,
                                        struct cons_pointer ratarg ) {
-    return add_ratio_ratio( frame,
-                            make_ratio( frame, intarg, make_integer( 1 ) ),
-                            ratarg );
+    struct cons_pointer one = make_integer( 1 ),
+        ratio = make_ratio( frame, intarg, one ),
+        result = add_ratio_ratio( frame, ratio, ratarg );
+
+    dec_ref( one );
+    dec_ref( ratio );
+    return result;
 }
 
 
@@ -298,8 +309,9 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                                to_long_double( arg2 ) );
                 break;
             default:
-                result = lisp_throw( c_string_to_lisp_string
-                                     ( "Cannot add: not a number" ), frame );
+                result = exceptionp( arg2 ) ? arg2 :
+                    lisp_throw( c_string_to_lisp_string
+                                ( "Cannot add: not a number" ), frame );
         }
     }
 
@@ -388,9 +400,14 @@ struct cons_pointer multiply_ratio_ratio( struct
 struct cons_pointer multiply_integer_ratio( struct stack_frame *frame,
                                             struct cons_pointer intarg,
                                             struct cons_pointer ratarg ) {
-    return multiply_ratio_ratio( frame,
-                                 make_ratio( frame, intarg,
-                                             make_integer( 1 ) ), ratarg );
+    struct cons_pointer one = make_integer( 1 ),
+        ratio = make_ratio( frame, intarg, one ),
+        result = multiply_ratio_ratio( frame, ratio, ratarg );
+
+    dec_ref( one);
+    dec_ref( ratio);
+
+    return result;
 }
 
 
@@ -467,7 +484,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                 }
                 break;
             case REALTV:
-                result =
+                result = exceptionp( arg2 ) ? arg2 :
                     make_real( to_long_double( arg1 ) *
                                to_long_double( arg2 ) );
                 break;
@@ -515,6 +532,7 @@ struct cons_pointer lisp_multiply( struct
             && !exceptionp( result ) ) {
         tmp = result;
         result = multiply_2( frame, result, c_car( more ) );
+
         if ( !eq( tmp, result ) ) {
             dec_ref( tmp );
         }
@@ -543,8 +561,8 @@ struct cons_pointer inverse( struct stack_frame *frame,
         case RATIOTV:
             result = make_ratio( frame,
                                  make_integer( 0 -
-                                               to_long_int( cell.payload.
-                                                            ratio.dividend ) ),
+                                               to_long_int( cell.payload.ratio.
+                                                            dividend ) ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
@@ -650,7 +668,7 @@ struct cons_pointer lisp_subtract( struct
             }
             break;
         case REALTV:
-            result =
+            result = exceptionp( frame->arg[1] ) ? frame->arg[1] :
                 make_real( to_long_double( frame->arg[0] ) -
                            to_long_double( frame->arg[1] ) );
             break;
@@ -661,6 +679,26 @@ struct cons_pointer lisp_subtract( struct
     }
 
     // and if not nilp[frame->arg[2]) we also have an error.
+
+    return result;
+}
+
+/**
+ * return a cons_pointer to a ratio which represents the value of the ratio
+ * indicated by `arg1` divided by the ratio indicated by `arg2`. If either
+ * of these aren't RTIO cells, something horrid will happen and it is YOUR FAULT.
+ */
+struct cons_pointer divide_ratio_ratio( struct stack_frame *frame,
+                                        struct cons_pointer arg1,
+                                        struct cons_pointer arg2 ) {
+    struct cons_pointer i = make_ratio( frame,
+                                        pointer2cell( arg2 ).payload.ratio.
+                                        divisor,
+                                        pointer2cell( arg2 ).payload.ratio.
+                                        dividend ), result =
+        multiply_ratio_ratio( frame, arg1, i );
+
+    dec_ref( i );
 
     return result;
 }
@@ -678,27 +716,84 @@ struct cons_pointer lisp_divide( struct
     struct cons_pointer result = NIL;
     struct cons_space_object arg0 = pointer2cell( frame->arg[0] );
     struct cons_space_object arg1 = pointer2cell( frame->arg[1] );
-    if ( numberp( frame->arg[1] )
-         && numeric_value( frame->arg[1] ) == 0 ) {
-        lisp_throw
-            ( c_string_to_lisp_string
-              ( "Cannot divide: divisor is zero" ), frame );
-    } else if ( numberp( frame->arg[0] )
-                && numberp( frame->arg[1] ) ) {
-        long int i = ( long int )
-            numeric_value( frame->arg[0] ) / numeric_value( frame->arg[1] );
-        long double r = ( long double )
-            numeric_value( frame->arg[0] )
-            / numeric_value( frame->arg[1] );
-        if ( fabsl( ( long double ) i - r ) < 0.0000000001 ) {
-            result = make_integer( i );
-        } else {
-            result = make_real( r );
-        }
-    } else {
-        lisp_throw
-            ( c_string_to_lisp_string
-              ( "Cannot divide: not a number" ), frame );
+
+    switch ( arg0.tag.value ) {
+        case EXCEPTIONTV:
+            result = frame->arg[0];
+            break;
+        case INTEGERTV:
+            switch ( arg1.tag.value ) {
+                case EXCEPTIONTV:
+                    result = frame->arg[1];
+                    break;
+              case INTEGERTV: {
+                    struct cons_pointer unsimplified = make_ratio( frame, frame->arg[0], frame->arg[1] );
+                    result = simplify_ratio(frame, unsimplified);
+              if (!eq(unsimplified,result)){
+                dec_ref(unsimplified);
+              }
+              }
+                    break;
+              case RATIOTV: {
+                    struct cons_pointer one = make_integer( 1 );
+                    struct cons_pointer ratio =
+                        make_ratio( frame, frame->arg[0], one );
+                    result =
+                        divide_ratio_ratio( frame, ratio, frame->arg[1] );
+                    dec_ref( ratio );
+              }
+                    break;
+                case REALTV:
+                    result =
+                        make_real( to_long_double( frame->arg[0] ) /
+                                   to_long_double( frame->arg[1] ) );
+                    break;
+                default:
+                    result = lisp_throw( c_string_to_lisp_string
+                                         ( "Cannot divide: not a number" ),
+                                         frame );
+                    break;
+            }
+            break;
+        case RATIOTV:
+            switch ( arg1.tag.value ) {
+                case EXCEPTIONTV:
+                    result = frame->arg[1];
+                    break;
+              case INTEGERTV: {
+                    struct cons_pointer one = make_integer( 1 );
+                    struct cons_pointer ratio =
+                        make_ratio( frame, frame->arg[1], one );
+                    result = divide_ratio_ratio( frame, frame->arg[0], ratio );
+                    dec_ref( ratio );
+              }
+                    break;
+                case RATIOTV:
+                    result =
+                        divide_ratio_ratio( frame, frame->arg[0],
+                                            frame->arg[1] );
+                    break;
+                case REALTV:
+                    result =
+                        make_real( to_long_double( frame->arg[0] ) /
+                                   to_long_double( frame->arg[1] ) );
+                    break;
+                default:
+                    result = lisp_throw( c_string_to_lisp_string
+                                         ( "Cannot divide: not a number" ),
+                                         frame );
+                    break;
+            }
+            break;
+        case REALTV:
+            result = exceptionp( frame->arg[1] ) ? frame->arg[1] :
+                make_real( to_long_double( frame->arg[0] ) /
+                           to_long_double( frame->arg[1] ) );
+            break;
+        default:
+            result = lisp_throw( c_string_to_lisp_string
+                                 ( "Cannot divide: not a number" ), frame );
+            break;
     }
 
     return result;

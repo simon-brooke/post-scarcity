@@ -132,8 +132,8 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case LAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
@@ -141,8 +141,8 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case NLAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );
