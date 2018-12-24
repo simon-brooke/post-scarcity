@@ -12,7 +12,7 @@
 #include "read.h"
 
 /**
- * Allocate a real number cell representing this value and return a cons 
+ * Allocate a real number cell representing this value and return a cons
  * pointer to it.
  * @param value the value to wrap;
  * @return a real number cell wrapping this value.
@@ -22,5 +22,9 @@ struct cons_pointer make_real( long double value ) {
     struct cons_space_object *cell = &pointer2cell( result );
     cell->payload.real.value = value;
 
-    return result;
+#ifdef DEBUG
+    dump_object( stderr, result );
+#endif
+
+  return result;
 }

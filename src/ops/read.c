@@ -22,6 +22,7 @@
 #include "intern.h"
 #include "lispops.h"
 #include "print.h"
+#include "ratio.h"
 #include "read.h"
 #include "real.h"
 

@@ -129,8 +129,7 @@ lisp_oblist( struct stack_frame *frame, struct cons_pointer env ) {
  * used to construct the body for `lambda` and `nlambda` expressions.
  */
 struct cons_pointer compose_body( struct stack_frame *frame ) {
-    struct cons_pointer body =
-        !nilp( frame->arg[args_in_frame - 1] ) ? frame->more : NIL;
+    struct cons_pointer body = frame->more;
 
     for ( int i = args_in_frame - 1; i > 0; i-- ) {
         if ( !nilp( body ) ) {

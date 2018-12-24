@@ -248,31 +248,6 @@ struct cons_pointer make_nlambda( struct cons_pointer args,
 }
 
 /**
- * Construct a ratio frame from these two pointers, expected to be integers
- * or (later) bignums, in the context of this stack_frame.
- */
-struct cons_pointer make_ratio( struct stack_frame *frame,
-                                struct cons_pointer dividend,
-                                struct cons_pointer divisor ) {
-    struct cons_pointer result;
-    if ( integerp( dividend ) && integerp( divisor ) ) {
-        inc_ref( dividend );
-        inc_ref( divisor );
-        result = allocate_cell( RATIOTAG );
-        struct cons_space_object *cell = &pointer2cell( result );
-        cell->payload.ratio.dividend = dividend;
-        cell->payload.ratio.divisor = divisor;
-    } else {
-        result =
-            make_exception( c_string_to_lisp_string
-                            ( "Dividend and divisor of a ratio must be integers" ),
-                            frame );
-    }
-
-    return result;
-}
-
-/**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
  * has one character and a pointer to the next; in the last cell the

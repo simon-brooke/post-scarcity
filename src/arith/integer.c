@@ -13,7 +13,6 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
-#include "read.h"
 
 /**
  * return the numeric value of this cell, as a C primitive double, not
@@ -41,7 +40,9 @@ struct cons_pointer make_integer( long int value ) {
     struct cons_space_object *cell = &pointer2cell( result );
     cell->payload.integer.value = value;
 
+#ifdef DEBUG
     dump_object( stderr, result );
+#endif
 
     return result;
 }
