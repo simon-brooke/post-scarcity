@@ -17,7 +17,7 @@ INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 
 VERSION := "0.0.2"
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g -DDEBUG
 LDFLAGS := -lm
 
 $(TARGET): $(OBJS) Makefile

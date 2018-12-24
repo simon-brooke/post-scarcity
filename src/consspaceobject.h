@@ -127,12 +127,11 @@
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VECP"
-
+#define VECTORPOINTTV 0
 /**
  * An open write stream.
  */
 #define WRITETAG    "WRIT"
-/* TODO: this is wrong */
 #define WRITETV 1414091351
 
 /**
@@ -222,7 +221,12 @@
  * true if conspointer points to some sort of a number cell,
  * else false
  */
-#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,REALTAG))
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||heck_tag(conspoint,REALTAG))
+
+/**
+ * true if thr conspointer points to a vector pointer.
+ */
+#define vectorpointp(conspoint) (check_tag(conspoint,VECTORPOINTTAG))
 
 /**
  * true if conspointer points to a write stream cell, else false.
@@ -381,6 +385,9 @@ struct string_payload {
     struct cons_pointer cdr;
 };
 
+/**
+ * payload of a vector pointer cell.
+ */
 struct vectorp_payload {
     union {
         char bytes[TAGLENGTH];  /* the tag (type) of the
