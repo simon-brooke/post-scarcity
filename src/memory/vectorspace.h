@@ -42,10 +42,10 @@
 
 #define pointer_to_vso(pointer)(vectorpointp(pointer)? pointer2cell(pointer).payload.vectorp.address : 0)
 
-struct cons_pointer make_vso( char *tag, long int payload_size);
+struct cons_pointer make_vso( char *tag, long int payload_size );
 
 struct vector_space_header {
-      union {
+    union {
         char bytes[TAGLENGTH];  /* the tag (type) of the
                                  * vector-space object this cell
                                  * points to, considered as bytes.
@@ -56,15 +56,13 @@ struct vector_space_header {
     } tag;
     struct cons_pointer vecp;   /* back pointer to the vector pointer
                                  * which uniquely points to this vso */
-  uint64_t size;                /* the size of my payload, in bytes */
-  char mark;                    /* mark bit for marking/sweeping the
+    uint64_t size;              /* the size of my payload, in bytes */
+    char mark;                  /* mark bit for marking/sweeping the
                                  * heap (not in this version) */
-  char payload;                 /* we'll malloc `size` bytes for payload,
+    char payload;               /* we'll malloc `size` bytes for payload,
                                  * `payload` is just the first of these.
                                  * TODO: this is almost certainly not
                                  * idiomatic C. */
 };
 
 #endif
-
-

@@ -29,14 +29,14 @@
  * NOTE that `tag` should be the vector-space tag of the particular type of
  * vector-space object, NOT `VECTORPOINTTAG`.
  */
-struct cons_pointer make_vec_pointer(char *tag, uint64_t address) {
+struct cons_pointer make_vec_pointer( char *tag, uint64_t address ) {
     struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
     struct cons_space_object cell = pointer2cell( pointer );
 
     strncpy( &cell.payload.vectorp.tag.bytes[0], tag, 4 );
     cell.payload.vectorp.address = address;
 
-  return pointer;
+    return pointer;
 }
 
 /**
@@ -45,25 +45,25 @@ struct cons_pointer make_vec_pointer(char *tag, uint64_t address) {
  * NOTE that `tag` should be the vector-space tag of the particular type of
  * vector-space object, NOT `VECTORPOINTTAG`.
  */
-struct cons_pointer make_vso( char *tag, long int payload_size) {
-  struct cons_pointer result = NIL;
-  long int total_size = sizeof(struct vector_space_header) + payload_size;
+struct cons_pointer make_vso( char *tag, long int payload_size ) {
+    struct cons_pointer result = NIL;
+    long int total_size = sizeof( struct vector_space_header ) + payload_size;
 
-  struct vector_space_header *vso = malloc(total_size );
+    struct vector_space_header *vso = malloc( total_size );
 
-  if (vso != NULL) {
-  strncpy( vso->tag.bytes[0], tag, TAGLENGTH );
-  vso->vecp = make_vec_pointer(tag, (uint64_t)vso);
-  vso->size = payload_size;
+    if ( vso != NULL ) {
+        strncpy( &vso->tag.bytes[0], tag, TAGLENGTH );
+        vso->vecp = make_vec_pointer( tag, ( uint64_t ) vso );
+        vso->size = payload_size;
 
 #ifdef DEBUG
-  fwprintf(stderr, L"Allocated vector-space object of type %s, total size %ld, payload size %ld\n",
-           tag, total_size, payload_size);
+        fwprintf( stderr,
+                  L"Allocated vector-space object of type %s, total size %ld, payload size %ld\n",
+                  tag, total_size, payload_size );
 #endif
 
-    result = vso->vecp;
-  }
+        result = vso->vecp;
+    }
 
-  return result;
+    return result;
 }
-

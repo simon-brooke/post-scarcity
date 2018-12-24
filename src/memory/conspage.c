@@ -159,13 +159,14 @@ void free_cell( struct cons_pointer pointer ) {
         case SYMBOLTV:
             dec_ref( cell->payload.string.cdr );
             break;
-            case VECTORPOINTTV:
+        case VECTORPOINTTV:
             /* for vector space pointers, free the actual vector-space
              * object. Dangerous! */
 #ifdef DEBUG
-      fwprintf(stderr, L"About to free vector-space object at %ld\n", cell->payload.vectorp.address);
+            fwprintf( stderr, L"About to free vector-space object at %ld\n",
+                      cell->payload.vectorp.address );
 #endif
-            free( (void *)cell->payload.vectorp.address);
+            free( ( void * ) cell->payload.vectorp.address );
             break;
 
     }
