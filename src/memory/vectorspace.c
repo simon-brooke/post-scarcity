@@ -45,9 +45,9 @@ struct cons_pointer make_vec_pointer( char *tag, uint64_t address ) {
  * NOTE that `tag` should be the vector-space tag of the particular type of
  * vector-space object, NOT `VECTORPOINTTAG`.
  */
-struct cons_pointer make_vso( char *tag, long int payload_size ) {
+struct cons_pointer make_vso( char *tag, int64_t payload_size ) {
     struct cons_pointer result = NIL;
-    long int total_size = sizeof( struct vector_space_header ) + payload_size;
+    int64_t total_size = sizeof( struct vector_space_header ) + payload_size;
 
     struct vector_space_header *vso = malloc( total_size );
 

@@ -127,8 +127,10 @@ void dump_pages( FILE * output ) {
 void free_cell( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
+#ifdef DEBUG
     fwprintf( stderr, L"Freeing cell " );
     dump_object( stderr, pointer );
+#endif
 
     switch ( cell->tag.value ) {
             /* for all the types of cons-space object which point to other
@@ -173,7 +175,7 @@ void free_cell( struct cons_pointer pointer ) {
 
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
-            strncpy( &cell->tag.bytes[0], FREETAG, 4 );
+            strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
             freelist = pointer;
@@ -209,7 +211,7 @@ struct cons_pointer allocate_cell( char *tag ) {
         if ( strncmp( &cell->tag.bytes[0], FREETAG, TAGLENGTH ) == 0 ) {
             freelist = cell->payload.free.cdr;
 
-            strncpy( &cell->tag.bytes[0], tag, 4 );
+            strncpy( &cell->tag.bytes[0], tag, TAGLENGTH );
 
             cell->count = 0;
             cell->payload.cons.car = NIL;

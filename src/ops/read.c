@@ -125,8 +125,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
 struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
                                  wint_t initial, bool seen_period ) {
     struct cons_pointer result = NIL;
-    long int accumulator = 0;
-    long int dividend = 0;
+    int64_t accumulator = 0;
+    int64_t dividend = 0;
     int places_of_decimals = 0;
     wint_t c;
     fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );

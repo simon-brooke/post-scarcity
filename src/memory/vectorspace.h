@@ -35,6 +35,11 @@
 #define NAMESPACETV 0
 
 /*
+ * a stack frame.
+ */
+#define STACKFRAMETAG "STAK"
+#define STACKFRAMETV
+/*
  * a vector of cons pointers.
  */
 #define VECTORTAG "VECT"
@@ -42,7 +47,7 @@
 
 #define pointer_to_vso(pointer)(vectorpointp(pointer)? pointer2cell(pointer).payload.vectorp.address : 0)
 
-struct cons_pointer make_vso( char *tag, long int payload_size );
+struct cons_pointer make_vso( char *tag, int64_t payload_size );
 
 struct vector_space_header {
     union {

@@ -28,9 +28,9 @@ struct cons_pointer inverse( struct stack_frame *frame,
                              struct cons_pointer arg );
 
 /**
- * return, as a long int, the greatest common divisor of `m` and `n`,
+ * return, as a int64_t, the greatest common divisor of `m` and `n`,
  */
-long int greatest_common_divisor( long int m, long int n ) {
+int64_t greatest_common_divisor( int64_t m, int64_t n ) {
     int o;
     while ( m ) {
         o = m;
@@ -42,9 +42,9 @@ long int greatest_common_divisor( long int m, long int n ) {
 }
 
 /**
- * return, as a long int, the least common multiple of `m` and `n`,
+ * return, as a int64_t, the least common multiple of `m` and `n`,
  */
-long int least_common_multiple( long int m, long int n ) {
+int64_t least_common_multiple( int64_t m, int64_t n ) {
     return m / greatest_common_divisor( m, n ) * n;
 }
 
@@ -59,7 +59,7 @@ struct cons_pointer simplify_ratio( struct stack_frame *frame,
     struct cons_pointer result = arg;
 
   if (ratiop(arg)) {
-    long int ddrv =
+    int64_t ddrv =
         pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
         payload.integer.value, drrv =
         pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
@@ -106,7 +106,7 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
   if ( ratiop(arg1) && ratiop(arg2)) {
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
-    long int dd1v =
+    int64_t dd1v =
         pointer2cell( cell1.payload.ratio.dividend ).payload.integer.value,
         dd2v =
         pointer2cell( cell2.payload.ratio.dividend ).payload.integer.value,
@@ -231,7 +231,7 @@ struct cons_pointer multiply_ratio_ratio( struct
   if ( ratiop(arg1) && ratiop(arg2)) {
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
-    long int dd1v =
+    int64_t dd1v =
         pointer2cell( cell1.payload.ratio.dividend ).payload.integer.value,
         dd2v =
         pointer2cell( cell2.payload.ratio.dividend ).payload.integer.value,

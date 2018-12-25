@@ -27,7 +27,7 @@
 #include "stack.h"
 
 long double to_long_double( struct cons_pointer arg );
-long int to_long_int( struct cons_pointer arg );
+int64_t to_long_int( struct cons_pointer arg );
 struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
                            struct cons_pointer arg2 );
 
@@ -97,8 +97,8 @@ long double to_long_double( struct cons_pointer arg ) {
  * if a ratio may legally have zero as a divisor, or something which is
  * not a number (or is a big number) is passed in.
  */
-long int to_long_int( struct cons_pointer arg ) {
-    long int result = 0;
+int64_t to_long_int( struct cons_pointer arg ) {
+    int64_t result = 0;
     struct cons_space_object cell = pointer2cell( arg );
     switch ( cell.tag.value ) {
         case INTEGERTV:
@@ -125,10 +125,13 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
+#ifdef DEBUG
     fputws( L"add_2( arg1 = ", stderr );
     print( stderr, arg1 );
     fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
+    fputws( L")\n", stderr);
+#endif
 
     if ( zerop( arg1 ) ) {
         result = arg2;
@@ -199,9 +202,11 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
         }
     }
 
+#ifdef DEBUG
     fputws( L"}; => ", stderr );
     print( stderr, arg2 );
     fputws( L"\n", stderr );
+#endif
 
     return result;
 }
@@ -254,17 +259,19 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
+#ifdef DEBUG
     fputws( L"multiply_2( arg1 = ", stderr );
     print( stderr, arg1 );
     fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
+    fputws( L")\n", stderr);
+#endif
 
     if ( zerop( arg1 ) ) {
         result = arg2;
     } else if ( zerop( arg2 ) ) {
         result = arg1;
     } else {
-
         switch ( cell1.tag.value ) {
             case EXCEPTIONTV:
                 result = arg1;
@@ -328,9 +335,11 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
         }
     }
 
-    fputws( L"}; => ", stderr );
+#ifdef DEBUG
+    fputws( L" => ", stderr );
     print( stderr, arg2 );
     fputws( L"\n", stderr );
+#endif
 
     return result;
 }

@@ -28,6 +28,13 @@
 /**
  * tag values, all of which must be 4 bytes. Must not collide with vector space tag values
  */
+
+/**
+ * A word within a bignum - arbitrary precision integer.
+ */
+#define BIGNUMTAG "BIGN"
+#define BIGNUMTV 1313294658
+
 /**
  * An ordinary cons cell: 1397641027
  */
@@ -38,7 +45,6 @@
  * An exception.
  */
 #define EXCEPTIONTAG "EXEP"
-/* TODO: this is wrong */
 #define EXCEPTIONTV 1346721861
 
 /**
@@ -165,6 +171,11 @@
 /**
  * true if conspointer points to a cons cell, else false
  */
+#define bignump(conspoint) (check_tag(conspoint,BIGNUMTAG))
+
+/**
+ * true if conspointer points to a cons cell, else false
+ */
 #define consp(conspoint) (check_tag(conspoint,CONSTAG))
 
 /**
@@ -221,7 +232,7 @@
  * true if conspointer points to some sort of a number cell,
  * else false
  */
-#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||heck_tag(conspoint,REALTAG))
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG)||check_tag(conspoint,BIGNUMTAG))
 
 /**
  * true if thr conspointer points to a vector pointer.
@@ -275,6 +286,16 @@ struct stack_frame {
 };
 
 /**
+ * payload of a bignum cell. Intentionally similar to an integer payload, but
+ * with a next pointer.
+ */
+struct bignum_payload {
+    int64_t value;
+    struct cons_pointer next;
+};
+
+
+/**
  * payload of a cons cell.
  */
 struct cons_payload {
@@ -321,7 +342,7 @@ struct free_payload {
  * optional bignum object.
  */
 struct integer_payload {
-    long int value;
+    int64_t value;
 };
 
 /**
