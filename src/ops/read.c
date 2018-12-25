@@ -148,6 +148,8 @@ struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
       initial = fgetwc( input );
     }
 
+
+
 #ifdef DEBUG
     fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );
 #endif
@@ -164,7 +166,7 @@ struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
         } else if ( c == btowc( '/' ) ) {
             if ( seen_period || dividend > 0 ) {
                 return make_exception( c_string_to_lisp_string
-                                       ( "Malformed number: dividend must be integer" ),
+                                       ( "Malformed number: dividend of rational must be integer" ),
                                        frame );
             } else {
                 dividend = negative ? 0 - accumulator : accumulator;

@@ -95,6 +95,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "oblist", &lisp_oblist );
     bind_function( "print", &lisp_print );
     bind_function( "progn", &lisp_progn );
+    bind_function( "reverse", &lisp_reverse );
     bind_function( "set", &lisp_set );
     bind_function( "subtract", &lisp_subtract );
     bind_function( "type", &lisp_type );

@@ -234,6 +234,8 @@
  */
 #define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG)||check_tag(conspoint,BIGNUMTAG))
 
+#define sequencep(conspoint) (check_tag(conspoint,CONSTAG)||check_tag(conspoint,STRINGTAG)||check_tag(conspoint,SYMBOLTAG))
+
 /**
  * true if thr conspointer points to a vector pointer.
  */
