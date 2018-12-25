@@ -86,6 +86,16 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
             case '"':
                 result = read_string( input, fgetwc( input ) );
                 break;
+          case '-': {
+                    wint_t next = fgetwc( input );
+                    ungetwc( next, input );
+                    if ( iswdigit( next ) ) {
+                      result = read_number( frame, input, c, false );
+                    } else {
+                      result = read_symbol( input, c );
+                    }
+          }
+                break;
             case '.':
                 {
                     wint_t next = fgetwc( input );
@@ -113,6 +123,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
                                         ( "Unrecognised start of input character" ),
                                         frame );
                 }
+            break;
         }
     }
 
@@ -121,6 +132,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame, FILE * input,
 
 /**
  * read a number from this input stream, given this initial character.
+ * TODO: to be able to read bignums, we need to read the number from the
+ * input stream into a Lisp string, and then convert it to a number.
  */
 struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
                                  wint_t initial, bool seen_period ) {
@@ -129,11 +142,19 @@ struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
     int64_t dividend = 0;
     int places_of_decimals = 0;
     wint_t c;
+    bool negative = initial == btowc( '-');
+
+    if (negative) {
+      initial = fgetwc( input );
+    }
+
+#ifdef DEBUG
     fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );
+#endif
     for ( c = initial; iswdigit( c )
           || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
-            if ( seen_period || dividend > 0 ) {
+            if ( seen_period || dividend != 0 ) {
                 return make_exception( c_string_to_lisp_string
                                        ( "Malformed number: too many periods" ),
                                        frame );
@@ -146,14 +167,17 @@ struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
                                        ( "Malformed number: dividend must be integer" ),
                                        frame );
             } else {
-                dividend = accumulator;
-                accumulator = 0;
+                dividend = negative ? 0 - accumulator : accumulator;
+
+              accumulator = 0;
             }
         } else {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
+#ifdef DEBUG
             fwprintf( stderr,
                       L"Added character %c, accumulator now %ld\n",
                       c, accumulator );
+#endif
             if ( seen_period ) {
                 places_of_decimals++;
             }
@@ -167,13 +191,21 @@ struct cons_pointer read_number( struct stack_frame *frame, FILE * input,
     if ( seen_period ) {
         long double rv = ( long double )
             ( accumulator / pow( 10, places_of_decimals ) );
+      if (negative) {
+        rv = 0 - rv;
+      }
+#ifdef DEBUG
         fwprintf( stderr, L"read_numer returning %Lf\n", rv );
+#endif
         result = make_real( rv );
-    } else if ( dividend > 0 ) {
+    } else if ( dividend != 0 ) {
         result =
             make_ratio( frame, make_integer( dividend ),
                         make_integer( accumulator ) );
     } else {
+      if (negative) {
+        accumulator = 0 - accumulator;
+      }
         result = make_integer( accumulator );
     }
 
@@ -189,14 +221,19 @@ struct cons_pointer read_list( struct
                                *frame, FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     if ( initial != ')' ) {
-        fwprintf( stderr,
+#ifdef DEBUG
+       fwprintf( stderr,
                   L"read_list starting '%C' (%d)\n", initial, initial );
-        struct cons_pointer car = read_continuation( frame, input,
+#endif
+       struct cons_pointer car = read_continuation( frame, input,
                                                      initial );
         result = make_cons( car, read_list( frame, input, fgetwc( input ) ) );
-    } else {
+    }
+#ifdef DEBUG
+  else {
         fwprintf( stderr, L"End of list detected\n" );
     }
+#endif
 
     return result;
 }
@@ -267,9 +304,12 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
             break;
     }
 
+#ifdef DEBUG
     fputws( L"Read symbol '", stderr );
     print( stderr, result );
     fputws( L"'\n", stderr );
+#endif
+
     return result;
 }
 
