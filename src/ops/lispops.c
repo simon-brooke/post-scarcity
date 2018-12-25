@@ -172,7 +172,7 @@ void log_binding( struct cons_pointer name, struct cons_pointer val ) {
 #ifdef DEBUG
     fputws( L"\n\tBinding ", stderr );
     print( stderr, name );
-    fputws( L" to ", stderr);
+    fputws( L" to ", stderr );
     print( stderr, val );
     fputws( L"\"\n", stderr );
 #endif
@@ -657,25 +657,25 @@ lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
 /**
  * reverse a sequence.
  */
-struct cons_pointer c_reverse( struct cons_pointer arg) {
-  struct cons_pointer result = NIL;
+struct cons_pointer c_reverse( struct cons_pointer arg ) {
+    struct cons_pointer result = NIL;
 
-  for (struct cons_pointer p = arg; sequencep(p); p = c_cdr(p)) {
-    struct cons_space_object o = pointer2cell(p);
-    switch (o.tag.value) {
-      case CONSTV:
-        result = make_cons(o.payload.cons.car, result);
-        break;
-      case STRINGTV:
-        result = make_string(o.payload.string.character, result);
-        break;
-      case SYMBOLTV:
-        result = make_symbol(o.payload.string.character, result);
-        break;
+    for ( struct cons_pointer p = arg; sequencep( p ); p = c_cdr( p ) ) {
+        struct cons_space_object o = pointer2cell( p );
+        switch ( o.tag.value ) {
+            case CONSTV:
+                result = make_cons( o.payload.cons.car, result );
+                break;
+            case STRINGTV:
+                result = make_string( o.payload.string.character, result );
+                break;
+            case SYMBOLTV:
+                result = make_symbol( o.payload.string.character, result );
+                break;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 
@@ -683,8 +683,9 @@ struct cons_pointer c_reverse( struct cons_pointer arg) {
  * (reverse sequence)
  * Return a sequence like this sequence but with the members in the reverse order.
  */
-struct cons_pointer lisp_reverse( struct stack_frame *frame, struct cons_pointer env ) {
-  return c_reverse( frame->arg[0]);
+struct cons_pointer lisp_reverse( struct stack_frame *frame,
+                                  struct cons_pointer env ) {
+    return c_reverse( frame->arg[0] );
 }
 
 

@@ -12,37 +12,37 @@
 #define __ratio_h
 
 struct cons_pointer simplify_ratio( struct stack_frame *frame,
-                                    struct cons_pointer arg ) ;
+                                    struct cons_pointer arg );
 
 struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
                                      struct cons_pointer arg1,
-                                     struct cons_pointer arg2 ) ;
+                                     struct cons_pointer arg2 );
 
 struct cons_pointer add_integer_ratio( struct stack_frame *frame,
                                        struct cons_pointer intarg,
-                                       struct cons_pointer ratarg ) ;
+                                       struct cons_pointer ratarg );
 
 struct cons_pointer divide_ratio_ratio( struct stack_frame *frame,
                                         struct cons_pointer arg1,
-                                        struct cons_pointer arg2 ) ;
+                                        struct cons_pointer arg2 );
 
 struct cons_pointer multiply_ratio_ratio( struct
                                           stack_frame
                                           *frame, struct
                                           cons_pointer arg1, struct
-                                          cons_pointer arg2 ) ;
+                                          cons_pointer arg2 );
 
 struct cons_pointer multiply_integer_ratio( struct stack_frame *frame,
                                             struct cons_pointer intarg,
-                                            struct cons_pointer ratarg ) ;
+                                            struct cons_pointer ratarg );
 
 struct cons_pointer subtract_ratio_ratio( struct stack_frame *frame,
                                           struct cons_pointer arg1,
-                                          struct cons_pointer arg2 ) ;
+                                          struct cons_pointer arg2 );
 
 struct cons_pointer make_ratio( struct stack_frame *frame,
                                 struct cons_pointer dividend,
-                                struct cons_pointer divisor ) ;
+                                struct cons_pointer divisor );
 
 
 #endif

@@ -118,7 +118,12 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case EXCEPTIONTV:
             fwprintf( output, L"\n%sException: ",
                       print_use_colours ? "\x1B[31m" : "" );
-            print_string_contents( output, cell.payload.exception.message );
+            if ( stringp( cell.payload.exception.message ) ) {
+                print_string_contents( output,
+                                       cell.payload.exception.message );
+            } else {
+                print( output, cell.payload.exception.message );
+            }
             break;
         case FUNCTIONTV:
             fwprintf( output, L"(Function)" );
@@ -132,8 +137,8 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case LAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
@@ -141,8 +146,8 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case NLAMBDATV:
             print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.lambda.
-                                                 body ) ) );
+                                                 cell.payload.
+                                                 lambda.body ) ) );
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );

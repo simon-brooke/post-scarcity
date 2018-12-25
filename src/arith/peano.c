@@ -130,7 +130,7 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer arg1,
     print( stderr, arg1 );
     fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
-    fputws( L")\n", stderr);
+    fputws( L")\n", stderr );
 #endif
 
     if ( zerop( arg1 ) ) {
@@ -264,7 +264,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
     print( stderr, arg1 );
     fputws( L"; arg2 = ", stderr );
     print( stderr, arg2 );
-    fputws( L")\n", stderr);
+    fputws( L")\n", stderr );
 #endif
 
     if ( zerop( arg1 ) ) {
@@ -406,8 +406,8 @@ struct cons_pointer inverse( struct stack_frame *frame,
         case RATIOTV:
             result = make_ratio( frame,
                                  make_integer( 0 -
-                                               to_long_int( cell.payload.
-                                                            ratio.dividend ) ),
+                                               to_long_int( cell.payload.ratio.
+                                                            dividend ) ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:

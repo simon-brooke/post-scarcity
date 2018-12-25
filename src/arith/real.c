@@ -26,5 +26,5 @@ struct cons_pointer make_real( long double value ) {
     dump_object( stderr, result );
 #endif
 
-  return result;
+    return result;
 }

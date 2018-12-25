@@ -40,7 +40,7 @@ struct cons_pointer c_car( struct cons_pointer arg );
  */
 struct cons_pointer c_cdr( struct cons_pointer arg );
 
-struct cons_pointer c_reverse( struct cons_pointer arg);
+struct cons_pointer c_reverse( struct cons_pointer arg );
 
 /**
  * Useful building block; evaluate this single form in the context of this
@@ -123,7 +123,7 @@ struct cons_pointer lisp_print( struct stack_frame *frame,
 struct cons_pointer lisp_read( struct stack_frame *frame,
                                struct cons_pointer env );
 struct cons_pointer lisp_reverse( struct stack_frame *frame,
-                                 struct cons_pointer env );
+                                  struct cons_pointer env );
 /**
  * Function: Get the Lisp type of the single argument.
  * @param frame My stack frame.
