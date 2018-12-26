@@ -63,98 +63,6 @@ void dec_ref( struct cons_pointer pointer ) {
     }
 }
 
-void dump_string_cell( FILE * output, wchar_t *prefix,
-                       struct cons_pointer pointer ) {
-    struct cons_space_object cell = pointer2cell( pointer );
-    if ( cell.payload.string.character == 0 ) {
-        fwprintf( output,
-                  L"\t\t%ls cell: termination; next at page %d offset %d, count %u\n",
-                  prefix,
-                  cell.payload.string.cdr.page, cell.payload.string.cdr.offset,
-                  cell.count );
-    } else {
-        fwprintf( output,
-                  L"\t\t%ls cell: character '%lc' (%d) next at page %d offset %d, count %u\n",
-                  prefix,
-                  ( wint_t ) cell.payload.string.character,
-                  cell.payload.string.character,
-                  cell.payload.string.cdr.page,
-                  cell.payload.string.cdr.offset, cell.count );
-        fwprintf( output, L"\t\t value: " );
-        print( output, pointer );
-        fwprintf( output, L"\n" );
-    }
-}
-
-/**
- * dump the object at this cons_pointer to this output stream.
- */
-void dump_object( FILE * output, struct cons_pointer pointer ) {
-    struct cons_space_object cell = pointer2cell( pointer );
-    fwprintf( output,
-              L"\t%c%c%c%c (%d) at page %d, offset %d count %u\n",
-              cell.tag.bytes[0],
-              cell.tag.bytes[1],
-              cell.tag.bytes[2],
-              cell.tag.bytes[3],
-              cell.tag.value, pointer.page, pointer.offset, cell.count );
-
-    switch ( cell.tag.value ) {
-        case CONSTV:
-            fwprintf( output,
-                      L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
-                      cell.payload.cons.car.page,
-                      cell.payload.cons.car.offset,
-                      cell.payload.cons.cdr.page,
-                      cell.payload.cons.cdr.offset, cell.count );
-            break;
-        case EXCEPTIONTV:
-            fwprintf( output, L"\t\tException cell: " );
-            print( output, cell.payload.exception.message );
-            fwprintf( output, L"\n" );
-            for ( struct stack_frame * frame = cell.payload.exception.frame;
-                  frame != NULL; frame = frame->previous ) {
-                dump_frame( output, frame );
-            }
-            break;
-        case FREETV:
-            fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
-                      cell.payload.cons.cdr.page,
-                      cell.payload.cons.cdr.offset );
-            break;
-        case INTEGERTV:
-            fwprintf( output,
-                      L"\t\tInteger cell: value %ld, count %u\n",
-                      cell.payload.integer.value, cell.count );
-            break;
-        case LAMBDATV:
-            fwprintf( output, L"\t\tLambda cell; args: " );
-            print( output, cell.payload.lambda.args );
-            fwprintf( output, L";\n\t\t\tbody: " );
-            print( output, cell.payload.lambda.body );
-            break;
-        case RATIOTV:
-            fwprintf( output,
-                      L"\t\tRational cell: value %ld/%ld, count %u\n",
-                      pointer2cell( cell.payload.ratio.dividend ).payload.
-                      integer.value,
-                      pointer2cell( cell.payload.ratio.divisor ).payload.
-                      integer.value, cell.count );
-            break;
-        case READTV:
-            fwprintf( output, L"\t\tInput stream\n" );
-        case REALTV:
-            fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
-                      cell.payload.real.value, cell.count );
-            break;
-        case STRINGTV:
-            dump_string_cell( output, L"String", pointer );
-            break;
-        case SYMBOLTV:
-            dump_string_cell( output, L"Symbol", pointer );
-            break;
-    }
-}
 
 /**
  * Construct a cons cell from this pair of pointers.
@@ -178,20 +86,24 @@ struct cons_pointer make_cons( struct cons_pointer car,
 /**
  * Construct an exception cell.
  * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
- * @param frame should be the frame in which the exception occurred.
+ * @param frame_pointer should be the pointer to the frame in which the exception occurred.
  */
 struct cons_pointer make_exception( struct cons_pointer message,
-                                    struct stack_frame *frame ) {
-    struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
-    struct cons_space_object *cell = &pointer2cell( pointer );
+                                   struct cons_pointer frame_pointer ) {
+  struct cons_pointer result = NIL;
+  struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
+  struct cons_space_object *cell = &pointer2cell( pointer );
 
-    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+  inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
 
-    inc_ref( message );
-    cell->payload.exception.message = message;
-    cell->payload.exception.frame = frame;
+  inc_ref( message );
+  inc_ref( frame_pointer);
+  cell->payload.exception.message = message;
+  cell->payload.exception.frame = frame_pointer;
 
-    return pointer;
+  result = pointer;
+
+  return result;
 }
 
 
@@ -200,7 +112,8 @@ struct cons_pointer make_exception( struct cons_pointer message,
  */
 struct cons_pointer
 make_function( struct cons_pointer src, struct cons_pointer ( *executable )
-                ( struct stack_frame *, struct cons_pointer ) ) {
+                ( struct stack_frame *,
+                                     struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer pointer = allocate_cell( FUNCTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -298,7 +211,8 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
  */
 struct cons_pointer
 make_special( struct cons_pointer src, struct cons_pointer ( *executable )
-               ( struct stack_frame * frame, struct cons_pointer env ) ) {
+               ( struct stack_frame * frame,
+                                     struct cons_pointer, struct cons_pointer env ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 

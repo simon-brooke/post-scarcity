@@ -11,9 +11,6 @@
  * with freelists to a more general 'equal sized object pages', so that
  * allocating/freeing stack frames can be more efficient.
  *
- * Stack frames are not yet a first class object; they have no VECP pointer
- * in cons space.
- *
  * (c) 2017 Simon Brooke <simon@journeyman.cc>
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
@@ -25,36 +22,57 @@
 #include "lispops.h"
 #include "print.h"
 #include "stack.h"
+#include "vectorspace.h"
+
+/**
+ * get the actual stackframe object from this `pointer`, or NULL if
+ * `pointer` is not a stackframe pointer.
+ */
+struct stack_frame * get_stack_frame(struct cons_pointer pointer) {
+  struct stack_frame * result = NULL;
+  struct vector_space_object * vso =
+    pointer2cell(pointer).payload.vectorp.address;
+
+  if (vectorpointp(pointer) && stackframep(vso))
+  {
+    result = (struct stack_frame *) &(vso->payload);
+  }
+
+  return result;
+}
 
 /**
  * Make an empty stack frame, and return it.
  * @param previous the current top-of-stack;
  * @param env the environment in which evaluation happens.
- * @return the new frame.
+ * @return the new frame, or NULL if memory is exhausted.
  */
-struct stack_frame *make_empty_frame( struct stack_frame *previous,
-                                      struct cons_pointer env ) {
-    struct stack_frame *result = malloc( sizeof( struct stack_frame ) );
+struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
+  struct cons_pointer result = make_vso(STACKFRAMETAG, sizeof(struct stack_frame));
+  if (!nilp(result)) {
+    struct stack_frame *frame = get_stack_frame(result);
     /*
      * TODO: later, pop a frame off a free-list of stack frames
      */
 
-    result->previous = previous;
+    frame->previous = previous;
+    inc_ref(previous);
 
     /*
      * clearing the frame with memset would probably be slightly quicker, but
      * this is clear.
      */
-    result->more = NIL;
-    result->function = NIL;
+    frame->more = NIL;
+    frame->function = NIL;
+    frame->args = 0;
 
     for ( int i = 0; i < args_in_frame; i++ ) {
-        set_reg( result, i, NIL );
+        set_reg( frame, i, NIL );
     }
+  }
 
     return result;
 }
-
 
 /**
  * Allocate a new stack frame with its previous pointer set to this value,
@@ -62,50 +80,70 @@ struct stack_frame *make_empty_frame( struct stack_frame *previous,
  * @param previous the current top-of-stack;
  * @args the arguments to load into this frame;
  * @param env the environment in which evaluation happens.
- * @return the new frame.
+ * @return the new frame, or an exception if one occurred while building it.
  */
-struct stack_frame *make_stack_frame( struct stack_frame *previous,
-                                      struct cons_pointer args,
-                                      struct cons_pointer env,
-                                      struct cons_pointer *exception ) {
-    struct stack_frame *result = make_empty_frame( previous, env );
+struct cons_pointer make_stack_frame( struct cons_pointer previous,
+                                     struct cons_pointer args,
+                                     struct cons_pointer env ) {
+  struct cons_pointer result = make_empty_frame( previous );
 
-    for ( int i = 0; i < args_in_frame && consp( args ); i++ ) {
-        /* iterate down the arg list filling in the arg slots in the
+  if (nilp(result))
+  {
+    /* i.e. out of memory */
+    result = make_exception(c_string_to_lisp_string( "Memory exhausted."), previous);
+  } else {
+    struct stack_frame * frame = get_stack_frame(result);
+
+    for ( frame->args = 0; frame->args < args_in_frame && consp( args ); frame->args++ ) {
+      /* iterate down the arg list filling in the arg slots in the
          * frame. When there are no more slots, if there are still args,
          * stash them on more */
-        struct cons_space_object cell = pointer2cell( args );
+      struct cons_space_object cell = pointer2cell( args );
 
-        /*
+      /*
          * TODO: if we were running on real massively parallel hardware,
          * each arg except the first should be handed off to another
          * processor to be evaled in parallel; but see notes here:
          * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
          */
-        struct stack_frame *arg_frame = make_empty_frame( result, env );
+      struct cons_pointer arg_frame_pointer = make_empty_frame( result);
+      inc_ref(arg_frame_pointer);
+
+      if(nilp(arg_frame_pointer)) {
+        result = make_exception(c_string_to_lisp_string( "Memory exhausted."), previous);
+        break;
+      } else {
+        struct stack_frame *arg_frame = get_stack_frame( arg_frame_pointer );
         set_reg( arg_frame, 0, cell.payload.cons.car );
 
-        struct cons_pointer val = lisp_eval( arg_frame, env );
+        struct cons_pointer val = lisp_eval( arg_frame, arg_frame_pointer, env );
         if ( exceptionp( val ) ) {
-            exception = &val;
-            break;
+          result = val;
+          break;
         } else {
-            set_reg( result, i, val );
+          set_reg( frame, frame->args, val );
         }
 
-        free_stack_frame( arg_frame );
+        dec_ref(arg_frame_pointer);
 
         args = cell.payload.cons.cdr;
+      }
     }
-    if ( consp( args ) ) {
+    if (!exceptionp(result)) {
+      if ( consp( args ) ) {
         /* if we still have args, eval them and stick the values on `more` */
-        struct cons_pointer more = eval_forms( previous, args, env );
-        result->more = more;
+        struct cons_pointer more = eval_forms( get_stack_frame(previous), previous, args, env );
+        frame->more = more;
         inc_ref( more );
-    }
+      }
 
-    dump_frame( stderr, result );
-    return result;
+#ifdef DEBUG
+      dump_frame( stderr, result );
+#endif
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -116,25 +154,39 @@ struct stack_frame *make_stack_frame( struct stack_frame *previous,
  * @param env the execution environment;
  * @return a new special frame.
  */
-struct stack_frame *make_special_frame( struct stack_frame *previous,
+struct cons_pointer make_special_frame( struct cons_pointer previous,
                                         struct cons_pointer args,
                                         struct cons_pointer env ) {
-    struct stack_frame *result = make_empty_frame( previous, env );
+  struct cons_pointer result = make_empty_frame( previous );
 
-    for ( int i = 0; i < args_in_frame && !nilp( args ); i++ ) {
+  if (nilp(result))
+  {
+    /* i.e. out of memory */
+    result = make_exception(c_string_to_lisp_string( "Memory exhausted."), previous);
+  } else {
+    struct stack_frame * frame = get_stack_frame(result);
+
+    for ( frame->args = 0; frame->args < args_in_frame && !nilp( args ); frame->args++ ) {
         /* iterate down the arg list filling in the arg slots in the
          * frame. When there are no more slots, if there are still args,
          * stash them on more */
         struct cons_space_object cell = pointer2cell( args );
 
-        set_reg( result, i, cell.payload.cons.car );
+        set_reg( frame, frame->args, cell.payload.cons.car );
 
         args = cell.payload.cons.cdr;
     }
-    if ( consp( args ) ) {
-        result->more = args;
+    if (!exceptionp(result)) {
+      if ( consp( args ) ) {
+        frame->more = args;
         inc_ref( args );
+      }
+
+#ifdef DEBUG
+      dump_frame( stderr, result );
+#endif
     }
+  }
 
     return result;
 }
@@ -160,26 +212,41 @@ void free_stack_frame( struct stack_frame *frame ) {
 /**
  * Dump a stackframe to this stream for debugging
  * @param output the stream
- * @param frame the frame
+ * @param frame_pointer the pointer to the frame
  */
-void dump_frame( FILE * output, struct stack_frame *frame ) {
-    fputws( L"Dumping stack frame\n", output );
-    for ( int arg = 0; arg < args_in_frame; arg++ ) {
-        struct cons_space_object cell = pointer2cell( frame->arg[arg] );
+void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
+  struct stack_frame *frame = get_stack_frame(frame_pointer);
 
-        fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ", arg,
-                  cell.tag.bytes[0],
-                  cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3],
-                  cell.count );
+  if (frame != NULL) {
+    for ( int arg = 0; arg < frame->args; arg++ ) {
+      struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-        print( output, frame->arg[arg] );
-        fputws( L"\n", output );
+      fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ", arg,
+               cell.tag.bytes[0],
+               cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3],
+               cell.count );
+
+      print( output, frame->arg[arg] );
+      fputws( L"\n", output );
     }
     fputws( L"More: \t", output );
     print( output, frame->more );
     fputws( L"\n", output );
+  }
 }
 
+void dump_stack_trace(FILE * output, struct cons_pointer pointer) {
+  if (exceptionp(pointer)) {
+    print( output, pointer2cell(pointer).payload.exception.message );
+    fwprintf( output, L"\n" );
+    dump_stack_trace(output, pointer2cell(pointer).payload.exception.frame);
+  } else {
+    while (vectorpointp(pointer) && stackframep(pointer_to_vso(pointer))) {
+      dump_frame( output, pointer);
+      pointer = get_stack_frame(pointer)->previous;
+    }
+  }
+}
 
 /**
  * Fetch a pointer to the value of the local variable at this index.

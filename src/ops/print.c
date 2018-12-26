@@ -20,6 +20,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "integer.h"
+#include "stack.h"
 #include "print.h"
 
 /**
@@ -118,12 +119,7 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case EXCEPTIONTV:
             fwprintf( output, L"\n%sException: ",
                       print_use_colours ? "\x1B[31m" : "" );
-            if ( stringp( cell.payload.exception.message ) ) {
-                print_string_contents( output,
-                                       cell.payload.exception.message );
-            } else {
-                print( output, cell.payload.exception.message );
-            }
+            dump_stack_trace(output, pointer);
             break;
         case FUNCTIONTV:
             fwprintf( output, L"(Function)" );

@@ -38,7 +38,7 @@ test: $(OBJS) $(TESTS) Makefile
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ *~
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ *~
 
 repl:
 	$(TARGET) -p 2> psse.log

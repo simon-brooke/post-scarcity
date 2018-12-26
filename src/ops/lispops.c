@@ -80,6 +80,7 @@ struct cons_pointer c_cdr( struct cons_pointer arg ) {
  * @return the result of evaluating the form.
  */
 struct cons_pointer eval_form( struct stack_frame *parent,
+                               struct cons_pointer parent_pointer,
                                struct cons_pointer form,
                                struct cons_pointer env ) {
     fputws( L"eval_form: ", stderr );
@@ -87,15 +88,19 @@ struct cons_pointer eval_form( struct stack_frame *parent,
     fputws( L"\n", stderr );
 
     struct cons_pointer result = NIL;
-    struct stack_frame *next = make_empty_frame( parent, env );
+    struct cons_pointer next_pointer = make_empty_frame( parent_pointer );
+    inc_ref( next_pointer);
+
+    struct stack_frame * next = get_stack_frame(next_pointer);
     set_reg( next, 0, form );
-    result = lisp_eval( next, env );
+
+    result = lisp_eval( next, next_pointer, env );
 
     if ( !exceptionp( result ) ) {
         /* if we're returning an exception, we should NOT free the
          * stack frame. Corollary is, when we free an exception, we
          * should free all the frames it's holding on to. */
-        free_stack_frame( next );
+        dec_ref(next_pointer);
     }
 
     return result;
@@ -106,12 +111,13 @@ struct cons_pointer eval_form( struct stack_frame *parent,
  * and this `env`, and return a list of their values. If the arg passed as
  * `list` is not in fact a list, return nil.
  */
-struct cons_pointer eval_forms( struct stack_frame *frame,
+struct cons_pointer eval_forms( struct stack_frame *frame, struct cons_pointer frame_pointer,
                                 struct cons_pointer list,
                                 struct cons_pointer env ) {
+  /* TODO: refactor. This runs up the C stack. */
     return consp( list ) ?
-        make_cons( eval_form( frame, c_car( list ), env ),
-                   eval_forms( frame, c_cdr( list ), env ) ) : NIL;
+        make_cons( eval_form( frame, frame_pointer, c_car( list ), env ),
+                   eval_forms( frame, frame_pointer, c_cdr( list ), env ) ) : NIL;
 }
 
 /**
@@ -120,7 +126,7 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
  * (oblist)
  */
 struct cons_pointer
-lisp_oblist( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_oblist( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return oblist;
 }
 
@@ -153,7 +159,7 @@ struct cons_pointer compose_body( struct stack_frame *frame ) {
  * @param env the environment in which it is to be intepreted.
  */
 struct cons_pointer
-lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_lambda( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return make_lambda( frame->arg[0], compose_body( frame ) );
 }
 
@@ -164,7 +170,7 @@ lisp_lambda( struct stack_frame *frame, struct cons_pointer env ) {
  * @param env the environment in which it is to be intepreted.
  */
 struct cons_pointer
-lisp_nlambda( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return make_nlambda( frame->arg[0], compose_body( frame ) );
 }
 
@@ -182,7 +188,7 @@ void log_binding( struct cons_pointer name, struct cons_pointer val ) {
  * Evaluate a lambda or nlambda expression.
  */
 struct cons_pointer
-eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
+eval_lambda( struct cons_space_object cell, struct stack_frame *frame, struct cons_pointer frame_pointer,
              struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     fwprintf( stderr, L"eval_lambda called\n" );
@@ -206,10 +212,11 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     } else if ( symbolp( names ) ) {
         /* if `names` is a symbol, rather than a list of symbols,
          * then bind a list of the values of args to that symbol. */
+        /* TODO: eval all the things in frame->more */
         struct cons_pointer vals = frame->more;
 
         for ( int i = args_in_frame - 1; i >= 0; i-- ) {
-            struct cons_pointer val = eval_form( frame, frame->arg[i], env );
+            struct cons_pointer val = eval_form( frame, frame_pointer, frame->arg[i], env );
 
             if ( nilp( val ) && nilp( vals ) ) {  /* nothing */
             } else {
@@ -223,8 +230,10 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     while ( !nilp( body ) ) {
         struct cons_pointer sexpr = c_car( body );
         body = c_cdr( body );
+#ifdef DEBUG
         fputws( L"In lambda: ", stderr );
-        result = eval_form( frame, sexpr, new_env );
+#endif
+        result = eval_form( frame, frame_pointer, sexpr, new_env );
     }
 
     return result;
@@ -239,17 +248,23 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
  * @return the result of evaluating the function with its arguments.
  */
 struct cons_pointer
-c_apply( struct stack_frame *frame, struct cons_pointer env ) {
+c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct stack_frame *fn_frame = make_empty_frame( frame, env );
+
+  /* construct a child frame and within it evaluate the first argument - the
+   * argument in the function position. */
+    struct cons_pointer fn_frame_pointer = make_empty_frame( frame_pointer );
+    inc_ref( fn_frame_pointer);
+    struct stack_frame *fn_frame = get_stack_frame(fn_frame_pointer);
+
     set_reg( fn_frame, 0, c_car( frame->arg[0] ) );
-    struct cons_pointer fn_pointer = lisp_eval( fn_frame, env );
+    struct cons_pointer fn_pointer = lisp_eval( fn_frame, fn_frame_pointer, env );
 
     if ( !exceptionp( result ) ) {
         /* if we're returning an exception, we should NOT free the
          * stack frame. Corollary is, when we free an exception, we
          * should free all the frames it's holding on to. */
-        free_stack_frame( fn_frame );
+        dec_ref(fn_frame_pointer);
     }
 
     struct cons_space_object fn_cell = pointer2cell( fn_pointer );
@@ -263,67 +278,66 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
         case FUNCTIONTV:
             {
                 struct cons_pointer exep = NIL;
-                struct stack_frame *next =
-                    make_stack_frame( frame, args, env, &exep );
-                result = ( *fn_cell.payload.special.executable ) ( next, env );
-                if ( exceptionp( exep ) ) {
-                    /* if we're returning an exception, we should NOT free the
-                     * stack frame. Corollary is, when we free an exception, we
-                     * should free all the frames it's holding on to. */
-                    result = exep;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+              inc_ref(next_pointer);
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
                 } else {
-                    free_stack_frame( next );
+                struct stack_frame *next = get_stack_frame(next_pointer);
+
+                result = ( *fn_cell.payload.function.executable ) ( next, next_pointer, env );
+                  dec_ref(next_pointer);
                 }
             }
             break;
         case LAMBDATV:
             {
                 struct cons_pointer exep = NIL;
-                struct stack_frame *next =
-                    make_stack_frame( frame, args, env, &exep );
-#ifdef DEBUG
-                fputws( L"Stack frame for lambda\n", stderr );
-                dump_frame( stderr, next );
-#endif
-                result = eval_lambda( fn_cell, next, env );
-                if ( exceptionp( result ) ) {
-                    /* if we're returning an exception, we should NOT free the
-                     * stack frame. Corollary is, when we free an exception, we
-                     * should free all the frames it's holding on to. */
-                    result = exep;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref(next_pointer);
+              if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
                 } else {
-                    free_stack_frame( next );
+                struct stack_frame *next = get_stack_frame(next_pointer);
+                result = eval_lambda( fn_cell, next, next_pointer, env );
+                if ( !exceptionp( result ) ) {
+                    dec_ref(next_pointer);
                 }
+              }
             }
             break;
         case NLAMBDATV:
             {
-                struct stack_frame *next =
-                    make_special_frame( frame, args, env );
-#ifdef DEBUG
-                fputws( L"Stack frame for nlambda\n", stderr );
-                dump_frame( stderr, next );
-#endif
-                result = eval_lambda( fn_cell, next, env );
+                struct cons_pointer next_pointer =
+                     make_special_frame( frame_pointer, args, env );
+              inc_ref(next_pointer);
+              if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                struct stack_frame *next = get_stack_frame(frame_pointer);
+              result = eval_lambda( fn_cell, next, next_pointer, env );
                 if ( !exceptionp( result ) ) {
-                    /* if we're returning an exception, we should NOT free the
-                     * stack frame. Corollary is, when we free an exception, we
-                     * should free all the frames it's holding on to. */
-                    free_stack_frame( next );
+                    dec_ref(next_pointer);
                 }
+              }
             }
             break;
         case SPECIALTV:
             {
-                struct stack_frame *next =
-                    make_special_frame( frame, args, env );
-                result = ( *fn_cell.payload.special.executable ) ( next, env );
+                struct cons_pointer next_pointer =
+                     make_special_frame( frame_pointer, args, env );
+              inc_ref(next_pointer);
+              if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                struct stack_frame *next = get_stack_frame(frame_pointer);
+                result = ( *fn_cell.payload.special.executable ) ( next, next_pointer, env );
                 if ( !exceptionp( result ) ) {
-                    /* if we're returning an exception, we should NOT free the
-                     * stack frame. Corollary is, when we free an exception, we
-                     * should free all the frames it's holding on to. */
-                    free_stack_frame( next );
+                    dec_ref(next_pointer);
                 }
+              }
             }
             break;
         default:
@@ -338,9 +352,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer env ) {
                 struct cons_pointer message =
                     c_string_to_lisp_string( buffer );
                 free( buffer );
-                result = lisp_throw( message, frame );
+                result = throw_exception( message, frame_pointer );
             }
     }
+  dec_ref(fn_frame_pointer);
 
     return result;
 }
@@ -378,19 +393,19 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
  * If a special form, passes the cdr of s_expr to the special form as argument.
  */
 struct cons_pointer
-lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = frame->arg[0];
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
 #ifdef DEBUG
     fputws( L"Eval: ", stderr );
-    dump_frame( stderr, frame );
+    dump_frame( stderr, frame_pointer );
 #endif
 
     switch ( cell.tag.value ) {
         case CONSTV:
             {
-                result = c_apply( frame, env );
+                result = c_apply( frame, frame_pointer, env );
             }
             break;
 
@@ -403,7 +418,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
                         make_cons( c_string_to_lisp_string
                                    ( "Attempt to take value of unbound symbol." ),
                                    frame->arg[0] );
-                    result = lisp_throw( message, frame );
+                    result = throw_exception( message, frame_pointer );
                 } else {
                     result = c_assoc( canonical, env );
                     inc_ref( result );
@@ -441,15 +456,15 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer env ) {
  * the second argument
  */
 struct cons_pointer
-lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_apply( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
 #ifdef DEBUG
     fputws( L"Apply: ", stderr );
-    dump_frame( stderr, frame );
+    dump_frame( stderr, frame_pointer );
 #endif
     set_reg( frame, 0, make_cons( frame->arg[0], frame->arg[1] ) );
     set_reg( frame, 1, NIL );
 
-    struct cons_pointer result = c_apply( frame, env );
+    struct cons_pointer result = c_apply( frame, frame_pointer, env );
 
 #ifdef DEBUG
     fputws( L"Apply returning ", stderr );
@@ -469,7 +484,7 @@ lisp_apply( struct stack_frame *frame, struct cons_pointer env ) {
  * this isn't at this stage checked) unevaluated.
  */
 struct cons_pointer
-lisp_quote( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_quote( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return frame->arg[0];
 }
 
@@ -484,7 +499,7 @@ lisp_quote( struct stack_frame *frame, struct cons_pointer env ) {
  * the namespace in so doing. `namespace` defaults to the value of `oblist`.
  */
 struct cons_pointer
-lisp_set( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_pointer namespace =
         nilp( frame->arg[2] ) ? oblist : frame->arg[2];
@@ -497,7 +512,7 @@ lisp_set( struct stack_frame *frame, struct cons_pointer env ) {
             make_exception( make_cons
                             ( c_string_to_lisp_string
                               ( "The first argument to `set!` is not a symbol: " ),
-                              make_cons( frame->arg[0], NIL ) ), frame );
+                              make_cons( frame->arg[0], NIL ) ), frame_pointer );
     }
 
     return result;
@@ -514,13 +529,13 @@ lisp_set( struct stack_frame *frame, struct cons_pointer env ) {
  * the namespace in so doing. `namespace` defaults to the value of `oblist`.
  */
 struct cons_pointer
-lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_pointer namespace =
         nilp( frame->arg[2] ) ? oblist : frame->arg[2];
 
     if ( symbolp( frame->arg[0] ) ) {
-        struct cons_pointer val = eval_form( frame, frame->arg[1], env );
+        struct cons_pointer val = eval_form( frame, frame_pointer, frame->arg[1], env );
         deep_bind( frame->arg[0], val );
         result = val;
     } else {
@@ -528,7 +543,7 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env ) {
             make_exception( make_cons
                             ( c_string_to_lisp_string
                               ( "The first argument to `set!` is not a symbol: " ),
-                              make_cons( frame->arg[0], NIL ) ), frame );
+                              make_cons( frame->arg[0], NIL ) ), frame_pointer );
     }
 
     return result;
@@ -543,7 +558,7 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer env ) {
  * otherwise returns a new cons cell.
  */
 struct cons_pointer
-lisp_cons( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer car = frame->arg[0];
     struct cons_pointer cdr = frame->arg[1];
     struct cons_pointer result;
@@ -567,7 +582,7 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer env ) {
  * strings, and TODO read streams and other things which can be considered as sequences.
  */
 struct cons_pointer
-lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
     if ( consp( frame->arg[0] ) ) {
@@ -579,7 +594,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
     } else {
         struct cons_pointer message =
             c_string_to_lisp_string( "Attempt to take CAR of non sequence" );
-        result = lisp_throw( message, frame );
+        result = throw_exception( message, frame_pointer );
     }
 
     return result;
@@ -591,7 +606,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer env ) {
  * strings, and TODO read streams and other things which can be considered as sequences.
  */
 struct cons_pointer
-lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
     if ( consp( frame->arg[0] ) ) {
@@ -603,7 +618,7 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
     } else {
         struct cons_pointer message =
             c_string_to_lisp_string( "Attempt to take CDR of non sequence" );
-        result = lisp_throw( message, frame );
+        result = throw_exception( message, frame_pointer );
     }
 
     return result;
@@ -614,7 +629,7 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer env ) {
  * Returns the value associated with key in store, or NIL if not found.
  */
 struct cons_pointer
-lisp_assoc( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return c_assoc( frame->arg[0], frame->arg[1] );
 }
 
@@ -622,7 +637,7 @@ lisp_assoc( struct stack_frame *frame, struct cons_pointer env ) {
  * (eq a b)
  * Returns T if a and b are pointers to the same object, else NIL
  */
-struct cons_pointer lisp_eq( struct stack_frame *frame,
+struct cons_pointer lisp_eq( struct stack_frame *frame, struct cons_pointer frame_pointer,
                              struct cons_pointer env ) {
     return eq( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
@@ -632,7 +647,7 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
  * Returns T if a and b are pointers to structurally identical objects, else NIL
  */
 struct cons_pointer
-lisp_equal( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
 
@@ -643,14 +658,14 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer env ) {
  * is a read stream, then read from that stream, else stdin.
  */
 struct cons_pointer
-lisp_read( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     FILE *input = stdin;
 
     if ( readp( frame->arg[0] ) ) {
         input = pointer2cell( frame->arg[0] ).payload.stream.stream;
     }
 
-    return read( frame, input );
+    return read( frame, frame_pointer, input );
 }
 
 
@@ -683,7 +698,7 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
  * (reverse sequence)
  * Return a sequence like this sequence but with the members in the reverse order.
  */
-struct cons_pointer lisp_reverse( struct stack_frame *frame,
+struct cons_pointer lisp_reverse( struct stack_frame *frame, struct cons_pointer frame_pointer,
                                   struct cons_pointer env ) {
     return c_reverse( frame->arg[0] );
 }
@@ -696,7 +711,10 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
  * is a write stream, then print to that stream, else stdout.
  */
 struct cons_pointer
-lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
+#ifdef DEBUG
+  fputws(L"Entering print\n", stderr);
+#endif
     struct cons_pointer result = NIL;
     FILE *output = stdout;
 
@@ -706,9 +724,11 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
 
     result = print( output, frame->arg[0] );
 
+#ifdef DEBUG
     fputws( L"Print returning ", stderr );
-    print( stderr, result );
+    // print( stderr, result );
     fputws( L"\n", stderr );
+#endif
 
     return result;
 }
@@ -721,7 +741,7 @@ lisp_print( struct stack_frame *frame, struct cons_pointer env ) {
  * @return As a Lisp string, the tag of the object which is the argument.
  */
 struct cons_pointer
-lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_type( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     return c_type( frame->arg[0] );
 }
 
@@ -739,16 +759,16 @@ lisp_type( struct stack_frame *frame, struct cons_pointer env ) {
  * argument.
  */
 struct cons_pointer
-lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer remaining = frame->more;
     struct cons_pointer result = NIL;
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
-        result = eval_form( frame, frame->arg[i], env );
+        result = eval_form( frame, frame_pointer, frame->arg[i], env );
     }
 
     while ( consp( remaining ) ) {
-        result = eval_form( frame, c_car( remaining ), env );
+        result = eval_form( frame, frame_pointer, c_car( remaining ), env );
 
         remaining = c_cdr( remaining );
     }
@@ -766,7 +786,7 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer env ) {
  * @return the value of the last form of the first successful clause.
  */
 struct cons_pointer
-lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
+lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     bool done = false;
 
@@ -777,11 +797,11 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
 
         if ( consp( clause_pointer ) ) {
             struct cons_space_object cell = pointer2cell( clause_pointer );
-            result = eval_form( frame, c_car( clause_pointer ), env );
+            result = eval_form( frame, frame_pointer, c_car( clause_pointer ), env );
 
             if ( !nilp( result ) ) {
                 struct cons_pointer vals =
-                    eval_forms( frame, c_cdr( clause_pointer ), env );
+                    eval_forms( frame, frame_pointer,c_cdr( clause_pointer ), env );
 
                 while ( consp( vals ) ) {
                     result = c_car( vals );
@@ -793,9 +813,9 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
         } else if ( nilp( clause_pointer ) ) {
             done = true;
         } else {
-            result = lisp_throw( c_string_to_lisp_string
+            result = throw_exception( c_string_to_lisp_string
                                  ( "Arguments to `cond` must be lists" ),
-                                 frame );
+                                 frame_pointer);
         }
     }
     /* TODO: if there are more than 8 clauses we need to continue into the
@@ -805,15 +825,17 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer env ) {
 }
 
 /**
- * TODO: make this do something sensible somehow.
- * This requires that a frame be a heap-space object with a cons-space
+ * Throw an exception.
+ * `throw_exception` is a misnomer, because it doesn't obey the calling signature of a
+ * lisp function; but it is nevertheless to be preferred to make_exception. A
+ * real `throw_exception`, which does, will be needed.
  * object pointing to it. Then this should become a normal lisp function
  * which expects a normally bound frame and environment, such that
  * frame->arg[0] is the message, and frame->arg[1] is the cons-space
  * pointer to the frame in which the exception occurred.
  */
 struct cons_pointer
-lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
+throw_exception( struct cons_pointer message, struct cons_pointer frame_pointer ) {
     fwprintf( stderr, L"\nERROR: " );
     print( stderr, message );
     struct cons_pointer result = NIL;
@@ -823,8 +845,23 @@ lisp_throw( struct cons_pointer message, struct stack_frame *frame ) {
     if ( cell.tag.value == EXCEPTIONTV ) {
         result = message;
     } else {
-        result = make_exception( message, frame );
+        result = make_exception( message, frame_pointer );
     }
 
     return result;
+}
+
+/**
+ * (exception <message>)
+ *
+ * Function. Returns an exception whose message is this `message`, and whose
+ * stack frame is the parent stack frame when the function is invoked.
+ * `message` does not have to be a string but should be something intelligible
+ * which can be read.
+ * If `message` is itself an exception, returns that instead.
+ */
+struct cons_pointer
+lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env ) {
+  struct cons_pointer message = frame->arg[0];
+  return exceptionp(message) ? message : make_exception(message, frame->previous);
 }

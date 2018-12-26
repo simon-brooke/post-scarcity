@@ -13,6 +13,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "dump.h"
 #include "equal.h"
 #include "integer.h"
 #include "lispops.h"
@@ -24,7 +25,7 @@
  * declared in peano.c, can't include piano.h here because
  * circularity. TODO: refactor.
  */
-struct cons_pointer inverse( struct stack_frame *frame,
+struct cons_pointer inverse( struct cons_pointer frame_pointer,
                              struct cons_pointer arg );
 
 /**
@@ -54,7 +55,7 @@ int64_t least_common_multiple( int64_t m, int64_t n ) {
  * be in a simplified representation. If `arg` isn't a ratio,
  * will throw exception.
  */
-struct cons_pointer simplify_ratio( struct stack_frame *frame,
+struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
                                     struct cons_pointer arg ) {
     struct cons_pointer result = arg;
 
@@ -70,15 +71,15 @@ struct cons_pointer simplify_ratio( struct stack_frame *frame,
                 result = make_integer( ddrv / gcd );
             } else {
                 result =
-                    make_ratio( frame, make_integer( ddrv / gcd ),
+                    make_ratio( frame_pointer, make_integer( ddrv / gcd ),
                                 make_integer( drrv / gcd ) );
             }
         }
     } else {
         result =
-            lisp_throw( make_cons( c_string_to_lisp_string
+            throw_exception( make_cons( c_string_to_lisp_string
                                    ( "Shouldn't happen: bad arg to simplify_ratio" ),
-                                   arg ), frame );
+                                   arg ),  frame_pointer );
     }
 
     return result;
@@ -91,7 +92,7 @@ struct cons_pointer simplify_ratio( struct stack_frame *frame,
  * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
  * this is going to break horribly.
  */
-struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
+struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
                                      struct cons_pointer arg1,
                                      struct cons_pointer arg2 ) {
     struct cons_pointer r, result;
@@ -123,7 +124,7 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
 #endif
 
         if ( dr1v == dr2v ) {
-            r = make_ratio( frame,
+            r = make_ratio(  frame_pointer,
                             make_integer( dd1v + dd2v ),
                             cell1.payload.ratio.divisor );
         } else {
@@ -131,10 +132,10 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
                 dr1vm = make_integer( dr1v * m1 ),
                 dd2vm = make_integer( dd2v * m2 ),
                 dr2vm = make_integer( dr2v * m2 ),
-                r1 = make_ratio( frame, dd1vm, dr1vm ),
-                r2 = make_ratio( frame, dd2vm, dr2vm );
+                r1 = make_ratio(  frame_pointer, dd1vm, dr1vm ),
+                r2 = make_ratio(  frame_pointer, dd2vm, dr2vm );
 
-            r = add_ratio_ratio( frame, r1, r2 );
+            r = add_ratio_ratio( frame_pointer, r1, r2 );
 
             /* because the references on dd1vm, dr1vm, dd2vm and dr2vm were
              * never incremented except when making r1 and r2, decrementing
@@ -143,17 +144,17 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
             dec_ref( r2 );
         }
 
-        result = simplify_ratio( frame, r );
+        result = simplify_ratio(  frame_pointer, r );
         if ( !eq( r, result ) ) {
             dec_ref( r );
         }
     } else {
         result =
-            lisp_throw( make_cons( c_string_to_lisp_string
+            throw_exception( make_cons( c_string_to_lisp_string
                                    ( "Shouldn't happen: bad arg to add_ratio_ratio" ),
                                    make_cons( arg1,
                                               make_cons( arg2, NIL ) ) ),
-                        frame );
+                         frame_pointer );
     }
 
 #ifdef DEBUG
@@ -171,26 +172,26 @@ struct cons_pointer add_ratio_ratio( struct stack_frame *frame,
  * the intger indicated by `intarg` and the ratio indicated by
  * `ratarg`. If you pass other types, this is going to break horribly.
  */
-struct cons_pointer add_integer_ratio( struct stack_frame *frame,
+struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
                                        struct cons_pointer intarg,
                                        struct cons_pointer ratarg ) {
     struct cons_pointer result;
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
         struct cons_pointer one = make_integer( 1 ),
-            ratio = make_ratio( frame, intarg, one );
+            ratio = make_ratio( frame_pointer, intarg, one );
 
-        result = add_ratio_ratio( frame, ratio, ratarg );
+        result = add_ratio_ratio(  frame_pointer, ratio, ratarg );
 
         dec_ref( one );
         dec_ref( ratio );
     } else {
         result =
-            lisp_throw( make_cons( c_string_to_lisp_string
+            throw_exception( make_cons( c_string_to_lisp_string
                                    ( "Shouldn't happen: bad arg to add_integer_ratio" ),
                                    make_cons( intarg,
                                               make_cons( ratarg, NIL ) ) ),
-                        frame );
+                        frame_pointer );
     }
 
     return result;
@@ -201,15 +202,15 @@ struct cons_pointer add_integer_ratio( struct stack_frame *frame,
  * indicated by `arg1` divided by the ratio indicated by `arg2`. If either
  * of these aren't RTIO cells, something horrid will happen and it is YOUR FAULT.
  */
-struct cons_pointer divide_ratio_ratio( struct stack_frame *frame,
+struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
-    struct cons_pointer i = make_ratio( frame,
+    struct cons_pointer i = make_ratio(  frame_pointer,
                                         pointer2cell( arg2 ).payload.ratio.
                                         divisor,
                                         pointer2cell( arg2 ).payload.ratio.
                                         dividend ), result =
-        multiply_ratio_ratio( frame, arg1, i );
+        multiply_ratio_ratio(  frame_pointer, arg1, i );
 
     dec_ref( i );
 
@@ -221,9 +222,7 @@ struct cons_pointer divide_ratio_ratio( struct stack_frame *frame,
  * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
  * this is going to break horribly.
  */
-struct cons_pointer multiply_ratio_ratio( struct
-                                          stack_frame
-                                          *frame, struct
+struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, struct
                                           cons_pointer arg1, struct
                                           cons_pointer arg2 ) {
     struct cons_pointer result;
@@ -249,18 +248,18 @@ struct cons_pointer multiply_ratio_ratio( struct
             ddrv = dd1v * dd2v, drrv = dr1v * dr2v;
 
         struct cons_pointer unsimplified =
-            make_ratio( frame, make_integer( ddrv ),
+            make_ratio(  frame_pointer, make_integer( ddrv ),
                         make_integer( drrv ) );
-        result = simplify_ratio( frame, unsimplified );
+        result = simplify_ratio( frame_pointer, unsimplified );
 
         if ( !eq( unsimplified, result ) ) {
             dec_ref( unsimplified );
         }
     } else {
         result =
-            lisp_throw( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_string
                         ( "Shouldn't happen: bad arg to multiply_ratio_ratio" ),
-                        frame );
+                         frame_pointer );
     }
 
     return result;
@@ -271,23 +270,23 @@ struct cons_pointer multiply_ratio_ratio( struct
  * the intger indicated by `intarg` and the ratio indicated by
  * `ratarg`. If you pass other types, this is going to break horribly.
  */
-struct cons_pointer multiply_integer_ratio( struct stack_frame *frame,
+struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
                                             struct cons_pointer intarg,
                                             struct cons_pointer ratarg ) {
     struct cons_pointer result;
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
         struct cons_pointer one = make_integer( 1 ),
-            ratio = make_ratio( frame, intarg, one );
-        result = multiply_ratio_ratio( frame, ratio, ratarg );
+            ratio = make_ratio( frame_pointer, intarg, one );
+        result = multiply_ratio_ratio(  frame_pointer, ratio, ratarg );
 
         dec_ref( one );
         dec_ref( ratio );
     } else {
         result =
-            lisp_throw( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_string
                         ( "Shouldn't happen: bad arg to multiply_integer_ratio" ),
-                        frame );
+                         frame_pointer );
     }
 
     return result;
@@ -299,11 +298,11 @@ struct cons_pointer multiply_integer_ratio( struct stack_frame *frame,
  * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
  * this is going to break horribly.
  */
-struct cons_pointer subtract_ratio_ratio( struct stack_frame *frame,
+struct cons_pointer subtract_ratio_ratio( struct cons_pointer frame_pointer,
                                           struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
-    struct cons_pointer i = inverse( frame, arg2 ),
-        result = add_ratio_ratio( frame, arg1, i );
+    struct cons_pointer i = inverse( frame_pointer, arg2 ),
+        result = add_ratio_ratio(  frame_pointer, arg1, i );
 
     dec_ref( i );
 
@@ -315,7 +314,7 @@ struct cons_pointer subtract_ratio_ratio( struct stack_frame *frame,
  * Construct a ratio frame from these two pointers, expected to be integers
  * or (later) bignums, in the context of this stack_frame.
  */
-struct cons_pointer make_ratio( struct stack_frame *frame,
+struct cons_pointer make_ratio( struct cons_pointer frame_pointer,
                                 struct cons_pointer dividend,
                                 struct cons_pointer divisor ) {
     struct cons_pointer result;
@@ -328,9 +327,9 @@ struct cons_pointer make_ratio( struct stack_frame *frame,
         cell->payload.ratio.divisor = divisor;
     } else {
         result =
-            lisp_throw( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_string
                         ( "Dividend and divisor of a ratio must be integers" ),
-                        frame );
+                         frame_pointer );
     }
 #ifdef DEBUG
     dump_object( stderr, result );

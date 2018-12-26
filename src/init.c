@@ -90,6 +90,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "eq", &lisp_eq );
     bind_function( "equal", &lisp_equal );
     bind_function( "eval", &lisp_eval );
+    bind_function( "exception", &lisp_exception );
     bind_function( "multiply", &lisp_multiply );
     bind_function( "read", &lisp_read );
     bind_function( "oblist", &lisp_oblist );
@@ -98,6 +99,7 @@ int main( int argc, char *argv[] ) {
     bind_function( "reverse", &lisp_reverse );
     bind_function( "set", &lisp_set );
     bind_function( "subtract", &lisp_subtract );
+    bind_function( "throw", &lisp_exception );
     bind_function( "type", &lisp_type );
 
     bind_function( "+", &lisp_add );

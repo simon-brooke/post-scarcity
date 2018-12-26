@@ -23,7 +23,7 @@ extern "C" {
  * @return a pointer to an integer or real.
  */
     struct cons_pointer
-     lisp_add( struct stack_frame *frame, struct cons_pointer env );
+     lisp_add( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env );
 
 /**
  * Multiply an indefinite number of numbers together
@@ -32,7 +32,7 @@ extern "C" {
  * @return a pointer to an integer or real.
  */
     struct cons_pointer
-     lisp_multiply( struct stack_frame *frame, struct cons_pointer env );
+     lisp_multiply( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env );
 
 /**
  * Subtract one number from another.
@@ -41,7 +41,7 @@ extern "C" {
  * @return a pointer to an integer or real.
  */
     struct cons_pointer
-     lisp_subtract( struct stack_frame *frame, struct cons_pointer env );
+     lisp_subtract( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env );
 
 /**
  * Divide one number by another.
@@ -50,7 +50,7 @@ extern "C" {
  * @return a pointer to an integer or real.
  */
     struct cons_pointer
-     lisp_divide( struct stack_frame *frame, struct cons_pointer env );
+     lisp_divide( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer env );
 
 #ifdef __cplusplus
 }
