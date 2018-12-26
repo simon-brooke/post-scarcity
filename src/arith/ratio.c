@@ -61,10 +61,10 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
 
     if ( ratiop( arg ) ) {
         int64_t ddrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).payload.
-            integer.value, drrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).payload.
-            integer.value, gcd = greatest_common_divisor( ddrv, drrv );
+            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
+            payload.integer.value, drrv =
+            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
+            payload.integer.value, gcd = greatest_common_divisor( ddrv, drrv );
 
         if ( gcd > 1 ) {
             if ( drrv / gcd == 1 ) {
@@ -78,8 +78,8 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                   ( "Shouldn't happen: bad arg to simplify_ratio" ),
-                                   arg ),  frame_pointer );
+                                        ( "Shouldn't happen: bad arg to simplify_ratio" ),
+                                        arg ), frame_pointer );
     }
 
     return result;
@@ -124,7 +124,7 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
 #endif
 
         if ( dr1v == dr2v ) {
-            r = make_ratio(  frame_pointer,
+            r = make_ratio( frame_pointer,
                             make_integer( dd1v + dd2v ),
                             cell1.payload.ratio.divisor );
         } else {
@@ -132,8 +132,8 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
                 dr1vm = make_integer( dr1v * m1 ),
                 dd2vm = make_integer( dd2v * m2 ),
                 dr2vm = make_integer( dr2v * m2 ),
-                r1 = make_ratio(  frame_pointer, dd1vm, dr1vm ),
-                r2 = make_ratio(  frame_pointer, dd2vm, dr2vm );
+                r1 = make_ratio( frame_pointer, dd1vm, dr1vm ),
+                r2 = make_ratio( frame_pointer, dd2vm, dr2vm );
 
             r = add_ratio_ratio( frame_pointer, r1, r2 );
 
@@ -144,17 +144,17 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
             dec_ref( r2 );
         }
 
-        result = simplify_ratio(  frame_pointer, r );
+        result = simplify_ratio( frame_pointer, r );
         if ( !eq( r, result ) ) {
             dec_ref( r );
         }
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                   ( "Shouldn't happen: bad arg to add_ratio_ratio" ),
-                                   make_cons( arg1,
-                                              make_cons( arg2, NIL ) ) ),
-                         frame_pointer );
+                                        ( "Shouldn't happen: bad arg to add_ratio_ratio" ),
+                                        make_cons( arg1,
+                                                   make_cons( arg2, NIL ) ) ),
+                             frame_pointer );
     }
 
 #ifdef DEBUG
@@ -181,17 +181,18 @@ struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
         struct cons_pointer one = make_integer( 1 ),
             ratio = make_ratio( frame_pointer, intarg, one );
 
-        result = add_ratio_ratio(  frame_pointer, ratio, ratarg );
+        result = add_ratio_ratio( frame_pointer, ratio, ratarg );
 
         dec_ref( one );
         dec_ref( ratio );
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                   ( "Shouldn't happen: bad arg to add_integer_ratio" ),
-                                   make_cons( intarg,
-                                              make_cons( ratarg, NIL ) ) ),
-                        frame_pointer );
+                                        ( "Shouldn't happen: bad arg to add_integer_ratio" ),
+                                        make_cons( intarg,
+                                                   make_cons( ratarg,
+                                                              NIL ) ) ),
+                             frame_pointer );
     }
 
     return result;
@@ -205,12 +206,12 @@ struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
 struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
-    struct cons_pointer i = make_ratio(  frame_pointer,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        divisor,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        dividend ), result =
-        multiply_ratio_ratio(  frame_pointer, arg1, i );
+    struct cons_pointer i = make_ratio( frame_pointer,
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.divisor,
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.dividend ), result =
+        multiply_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
 
@@ -248,7 +249,7 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
             ddrv = dd1v * dd2v, drrv = dr1v * dr2v;
 
         struct cons_pointer unsimplified =
-            make_ratio(  frame_pointer, make_integer( ddrv ),
+            make_ratio( frame_pointer, make_integer( ddrv ),
                         make_integer( drrv ) );
         result = simplify_ratio( frame_pointer, unsimplified );
 
@@ -258,8 +259,8 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                        ( "Shouldn't happen: bad arg to multiply_ratio_ratio" ),
-                         frame_pointer );
+                             ( "Shouldn't happen: bad arg to multiply_ratio_ratio" ),
+                             frame_pointer );
     }
 
     return result;
@@ -278,15 +279,15 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
         struct cons_pointer one = make_integer( 1 ),
             ratio = make_ratio( frame_pointer, intarg, one );
-        result = multiply_ratio_ratio(  frame_pointer, ratio, ratarg );
+        result = multiply_ratio_ratio( frame_pointer, ratio, ratarg );
 
         dec_ref( one );
         dec_ref( ratio );
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                        ( "Shouldn't happen: bad arg to multiply_integer_ratio" ),
-                         frame_pointer );
+                             ( "Shouldn't happen: bad arg to multiply_integer_ratio" ),
+                             frame_pointer );
     }
 
     return result;
@@ -302,7 +303,7 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer frame_pointer,
                                           struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
     struct cons_pointer i = inverse( frame_pointer, arg2 ),
-        result = add_ratio_ratio(  frame_pointer, arg1, i );
+        result = add_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
 
@@ -328,8 +329,8 @@ struct cons_pointer make_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                        ( "Dividend and divisor of a ratio must be integers" ),
-                         frame_pointer );
+                             ( "Dividend and divisor of a ratio must be integers" ),
+                             frame_pointer );
     }
 #ifdef DEBUG
     dump_object( stderr, result );

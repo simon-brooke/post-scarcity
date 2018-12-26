@@ -9,6 +9,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "dump.h"
 #include "read.h"
 
 /**

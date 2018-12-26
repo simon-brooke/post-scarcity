@@ -31,64 +31,65 @@
  * Dummy up a Lisp read call with its own stack frame.
  */
 struct cons_pointer repl_read( struct cons_pointer stream_pointer ) {
-  struct cons_pointer result = NIL;
-  struct cons_pointer frame_pointer = make_empty_frame( NIL );
-  if (!nilp(frame_pointer)) {
-    inc_ref(frame_pointer);
-    struct stack_frame *frame = get_stack_frame(frame_pointer);
+    struct cons_pointer result = NIL;
+    struct cons_pointer frame_pointer = make_empty_frame( NIL );
+    if ( !nilp( frame_pointer ) ) {
+        inc_ref( frame_pointer );
+        struct stack_frame *frame = get_stack_frame( frame_pointer );
 
-    if (frame != NULL){
+        if ( frame != NULL ) {
 
-      set_reg( frame, 0, stream_pointer );
-      struct cons_pointer result = lisp_read( frame, frame_pointer, oblist );
+            set_reg( frame, 0, stream_pointer );
+            struct cons_pointer result =
+                lisp_read( frame, frame_pointer, oblist );
+        }
+        dec_ref( frame_pointer );
     }
-    dec_ref(frame_pointer);
-  }
 
-  return result;
+    return result;
 }
 
 /**
  * Dummy up a Lisp eval call with its own stack frame.
  */
 struct cons_pointer repl_eval( struct cons_pointer input ) {
-  struct cons_pointer result = NIL;
-  struct cons_pointer frame_pointer = make_empty_frame( NIL );
-  if (!nilp(frame_pointer)) {
-    inc_ref(frame_pointer);
-    struct stack_frame *frame = get_stack_frame(frame_pointer);
+    struct cons_pointer result = NIL;
+    struct cons_pointer frame_pointer = make_empty_frame( NIL );
+    if ( !nilp( frame_pointer ) ) {
+        inc_ref( frame_pointer );
+        struct stack_frame *frame = get_stack_frame( frame_pointer );
 
-    if (frame != NULL){
-      set_reg( frame, 0, input );
-      result = lisp_eval( frame, frame_pointer, oblist );
+        if ( frame != NULL ) {
+            set_reg( frame, 0, input );
+            result = lisp_eval( frame, frame_pointer, oblist );
+        }
+
+        dec_ref( frame_pointer );
     }
 
-    dec_ref(frame_pointer);
-  }
-
-  return result;
+    return result;
 }
 
 /**
  * Dummy up a Lisp print call with its own stack frame.
  */
 struct cons_pointer repl_print( struct cons_pointer stream_pointer,
-                               struct cons_pointer value ) {
-  struct cons_pointer result = NIL;
-  struct cons_pointer frame_pointer = make_empty_frame( NIL );
-  if (!nilp(frame_pointer)) {
-    struct stack_frame *frame = get_stack_frame(frame_pointer);
+                                struct cons_pointer value ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer frame_pointer = make_empty_frame( NIL );
+    if ( !nilp( frame_pointer ) ) {
+        struct stack_frame *frame = get_stack_frame( frame_pointer );
 
-    if (frame != NULL){
-      set_reg( frame, 0, value );
-      set_reg( frame, 1, stream_pointer );
-      result = lisp_print( frame, frame_pointer, oblist );
-      free_stack_frame( frame );
+        if ( frame != NULL ) {
+            set_reg( frame, 0, value );
+            set_reg( frame, 1, stream_pointer );
+            result = lisp_print( frame, frame_pointer, oblist );
+            free_stack_frame( frame );
+        }
+        dec_ref( frame_pointer );
     }
-    dec_ref(frame_pointer);
-  }
 
-  return result;
+    return result;
 }
 
 /**

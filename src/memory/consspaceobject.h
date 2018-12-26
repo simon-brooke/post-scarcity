@@ -421,10 +421,10 @@ struct vectorp_payload {
                                  * tag. */
         uint32_t value;         /* the tag considered as a number */
     } tag;
-    struct vector_space_object * address;
-                                /* the address of the actual vector space
-                                 * object (TODO: will change when I actually
-                                 * implement vector space) */
+    struct vector_space_object *address;
+    /* the address of the actual vector space
+     * object (TODO: will change when I actually
+     * implement vector space) */
 };
 
 /**

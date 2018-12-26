@@ -28,7 +28,9 @@
 
 long double to_long_double( struct cons_pointer arg );
 int64_t to_long_int( struct cons_pointer arg );
-struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer arg1,
+struct cons_pointer add_2( struct stack_frame *frame,
+                           struct cons_pointer frame_pointer,
+                           struct cons_pointer arg1,
                            struct cons_pointer arg2 );
 
 
@@ -119,7 +121,9 @@ int64_t to_long_int( struct cons_pointer arg ) {
 * return a cons_pointer indicating a number which is the sum of
 * the numbers indicated by `arg1` and `arg2`.
 */
-struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_pointer, struct cons_pointer arg1,
+struct cons_pointer add_2( struct stack_frame *frame,
+                           struct cons_pointer frame_pointer,
+                           struct cons_pointer arg1,
                            struct cons_pointer arg2 ) {
     struct cons_pointer result;
     struct cons_space_object cell1 = pointer2cell( arg1 );
@@ -153,7 +157,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_
                                                cell2.payload.integer.value );
                         break;
                     case RATIOTV:
-                        result = add_integer_ratio( frame_pointer, arg1, arg2 );
+                        result =
+                            add_integer_ratio( frame_pointer, arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -162,8 +167,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                             ( "Cannot add: not a number" ),
-                                             frame_pointer );
+                                                  ( "Cannot add: not a number" ),
+                                                  frame_pointer );
                         break;
                 }
                 break;
@@ -173,7 +178,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result = add_integer_ratio( frame_pointer, arg2, arg1 );
+                        result =
+                            add_integer_ratio( frame_pointer, arg2, arg1 );
                         break;
                     case RATIOTV:
                         result = add_ratio_ratio( frame_pointer, arg1, arg2 );
@@ -185,8 +191,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                             ( "Cannot add: not a number" ),
-                                             frame_pointer );
+                                                  ( "Cannot add: not a number" ),
+                                                  frame_pointer );
                         break;
                 }
                 break;
@@ -198,7 +204,8 @@ struct cons_pointer add_2( struct stack_frame *frame, struct cons_pointer frame_
             default:
                 result = exceptionp( arg2 ) ? arg2 :
                     throw_exception( c_string_to_lisp_string
-                                ( "Cannot add: not a number" ), frame_pointer );
+                                     ( "Cannot add: not a number" ),
+                                     frame_pointer );
         }
     }
 
@@ -252,7 +259,8 @@ struct cons_pointer lisp_add( struct stack_frame
 * return a cons_pointer indicating a number which is the product of
 * the numbers indicated by `arg1` and `arg2`.
 */
-struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer frame_pointer,
+struct cons_pointer multiply_2( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
                                 struct cons_pointer arg1,
                                 struct cons_pointer arg2 ) {
     struct cons_pointer result;
@@ -286,7 +294,9 @@ struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer f
                                                cell2.payload.integer.value );
                         break;
                     case RATIOTV:
-                        result = multiply_integer_ratio( frame_pointer, arg1, arg2 );
+                        result =
+                            multiply_integer_ratio( frame_pointer, arg1,
+                                                    arg2 );
                         break;
                     case REALTV:
                         result =
@@ -295,8 +305,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer f
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                             ( "Cannot multiply: not a number" ),
-                                             frame_pointer );
+                                                  ( "Cannot multiply: not a number" ),
+                                                  frame_pointer );
                         break;
                 }
                 break;
@@ -306,10 +316,13 @@ struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer f
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result = multiply_integer_ratio( frame_pointer, arg2, arg1 );
+                        result =
+                            multiply_integer_ratio( frame_pointer, arg2,
+                                                    arg1 );
                         break;
                     case RATIOTV:
-                        result = multiply_ratio_ratio( frame_pointer, arg1, arg2 );
+                        result =
+                            multiply_ratio_ratio( frame_pointer, arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -318,8 +331,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer f
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                             ( "Cannot multiply: not a number" ),
-                                             frame_pointer );
+                                                  ( "Cannot multiply: not a number" ),
+                                                  frame_pointer );
                 }
                 break;
             case REALTV:
@@ -329,8 +342,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame, struct cons_pointer f
                 break;
             default:
                 result = throw_exception( c_string_to_lisp_string
-                                     ( "Cannot multiply: not a number" ),
-                                     frame_pointer );
+                                          ( "Cannot multiply: not a number" ),
+                                          frame_pointer );
                 break;
         }
     }
@@ -406,8 +419,8 @@ struct cons_pointer inverse( struct cons_pointer frame,
         case RATIOTV:
             result = make_ratio( frame,
                                  make_integer( 0 -
-                                               to_long_int( cell.payload.ratio.
-                                                            dividend ) ),
+                                               to_long_int( cell.payload.
+                                                            ratio.dividend ) ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
@@ -453,9 +466,10 @@ struct cons_pointer lisp_subtract( struct
                         struct cons_pointer tmp =
                             make_ratio( frame_pointer, frame->arg[0],
                                         make_integer( 1 ) );
-                        inc_ref(tmp);
+                        inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, tmp, frame->arg[1] );
+                            subtract_ratio_ratio( frame_pointer, tmp,
+                                                  frame->arg[1] );
                         dec_ref( tmp );
                     }
                     break;
@@ -466,8 +480,8 @@ struct cons_pointer lisp_subtract( struct
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
-                                         ( "Cannot subtract: not a number" ),
-                                         frame_pointer );
+                                              ( "Cannot subtract: not a number" ),
+                                              frame_pointer );
                     break;
             }
             break;
@@ -480,9 +494,10 @@ struct cons_pointer lisp_subtract( struct
                         struct cons_pointer tmp =
                             make_ratio( frame_pointer, frame->arg[1],
                                         make_integer( 1 ) );
-                        inc_ref(tmp);
+                        inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, frame->arg[0], tmp );
+                            subtract_ratio_ratio( frame_pointer, frame->arg[0],
+                                                  tmp );
                         dec_ref( tmp );
                     }
                     break;
@@ -498,8 +513,8 @@ struct cons_pointer lisp_subtract( struct
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
-                                         ( "Cannot subtract: not a number" ),
-                                         frame_pointer );
+                                              ( "Cannot subtract: not a number" ),
+                                              frame_pointer );
                     break;
             }
             break;
@@ -510,7 +525,8 @@ struct cons_pointer lisp_subtract( struct
             break;
         default:
             result = throw_exception( c_string_to_lisp_string
-                                 ( "Cannot subtract: not a number" ), frame_pointer );
+                                      ( "Cannot subtract: not a number" ),
+                                      frame_pointer );
             break;
     }
 
@@ -527,7 +543,7 @@ struct cons_pointer lisp_subtract( struct
  */
 struct cons_pointer lisp_divide( struct
                                  stack_frame
-                                 *frame,  struct cons_pointer frame_pointer, struct
+                                 *frame, struct cons_pointer frame_pointer, struct
                                  cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_space_object arg0 = pointer2cell( frame->arg[0] );
@@ -544,7 +560,8 @@ struct cons_pointer lisp_divide( struct
                     break;
                 case INTEGERTV:{
                         struct cons_pointer unsimplified =
-                            make_ratio( frame_pointer, frame->arg[0], frame->arg[1] );
+                            make_ratio( frame_pointer, frame->arg[0],
+                                        frame->arg[1] );
                         /* OK, if result may be unsimplified, we should not inc_ref it
                          * - but if not, we should dec_ref it. */
                         result = simplify_ratio( frame_pointer, unsimplified );
@@ -558,7 +575,8 @@ struct cons_pointer lisp_divide( struct
                         struct cons_pointer ratio =
                             make_ratio( frame_pointer, frame->arg[0], one );
                         result =
-                            divide_ratio_ratio( frame_pointer, ratio, frame->arg[1] );
+                            divide_ratio_ratio( frame_pointer, ratio,
+                                                frame->arg[1] );
                         dec_ref( ratio );
                     }
                     break;
@@ -569,8 +587,8 @@ struct cons_pointer lisp_divide( struct
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
-                                         ( "Cannot divide: not a number" ),
-                                         frame_pointer );
+                                              ( "Cannot divide: not a number" ),
+                                              frame_pointer );
                     break;
             }
             break;
@@ -581,14 +599,15 @@ struct cons_pointer lisp_divide( struct
                     break;
                 case INTEGERTV:{
                         struct cons_pointer one = make_integer( 1 );
-                  inc_ref( one);
+                        inc_ref( one );
                         struct cons_pointer ratio =
                             make_ratio( frame_pointer, frame->arg[1], one );
-                        inc_ref(ratio);
+                        inc_ref( ratio );
                         result =
-                            divide_ratio_ratio( frame_pointer, frame->arg[0], ratio );
+                            divide_ratio_ratio( frame_pointer, frame->arg[0],
+                                                ratio );
                         dec_ref( ratio );
-                  dec_ref(one);
+                        dec_ref( one );
                     }
                     break;
                 case RATIOTV:
@@ -603,8 +622,8 @@ struct cons_pointer lisp_divide( struct
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
-                                         ( "Cannot divide: not a number" ),
-                                         frame_pointer );
+                                              ( "Cannot divide: not a number" ),
+                                              frame_pointer );
                     break;
             }
             break;
@@ -615,7 +634,8 @@ struct cons_pointer lisp_divide( struct
             break;
         default:
             result = throw_exception( c_string_to_lisp_string
-                                 ( "Cannot divide: not a number" ), frame_pointer );
+                                      ( "Cannot divide: not a number" ),
+                                      frame_pointer );
             break;
     }
 

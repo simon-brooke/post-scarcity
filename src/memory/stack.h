@@ -41,19 +41,19 @@
  */
 #define set_reg(frame,register,value)frame->arg[register]=value; inc_ref(value)
 
-struct stack_frame * get_stack_frame(struct cons_pointer pointer);
+struct stack_frame *get_stack_frame( struct cons_pointer pointer );
 
 struct cons_pointer make_empty_frame( struct cons_pointer previous );
 
 struct cons_pointer make_stack_frame( struct cons_pointer previous,
-                                     struct cons_pointer args,
-                                     struct cons_pointer env );
+                                      struct cons_pointer args,
+                                      struct cons_pointer env );
 
 void free_stack_frame( struct stack_frame *frame );
 
 void dump_frame( FILE * output, struct cons_pointer pointer );
 
-void dump_stack_trace(FILE * output, struct cons_pointer frame_pointer);
+void dump_stack_trace( FILE * output, struct cons_pointer frame_pointer );
 
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 

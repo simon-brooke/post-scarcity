@@ -89,21 +89,21 @@ struct cons_pointer make_cons( struct cons_pointer car,
  * @param frame_pointer should be the pointer to the frame in which the exception occurred.
  */
 struct cons_pointer make_exception( struct cons_pointer message,
-                                   struct cons_pointer frame_pointer ) {
-  struct cons_pointer result = NIL;
-  struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
-  struct cons_space_object *cell = &pointer2cell( pointer );
+                                    struct cons_pointer frame_pointer ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
+    struct cons_space_object *cell = &pointer2cell( pointer );
 
-  inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
+    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
 
-  inc_ref( message );
-  inc_ref( frame_pointer);
-  cell->payload.exception.message = message;
-  cell->payload.exception.frame = frame_pointer;
+    inc_ref( message );
+    inc_ref( frame_pointer );
+    cell->payload.exception.message = message;
+    cell->payload.exception.frame = frame_pointer;
 
-  result = pointer;
+    result = pointer;
 
-  return result;
+    return result;
 }
 
 
@@ -113,7 +113,7 @@ struct cons_pointer make_exception( struct cons_pointer message,
 struct cons_pointer
 make_function( struct cons_pointer src, struct cons_pointer ( *executable )
                 ( struct stack_frame *,
-                                     struct cons_pointer, struct cons_pointer ) ) {
+                  struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer pointer = allocate_cell( FUNCTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -212,7 +212,7 @@ struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
 struct cons_pointer
 make_special( struct cons_pointer src, struct cons_pointer ( *executable )
                ( struct stack_frame * frame,
-                                     struct cons_pointer, struct cons_pointer env ) ) {
+                 struct cons_pointer, struct cons_pointer env ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 

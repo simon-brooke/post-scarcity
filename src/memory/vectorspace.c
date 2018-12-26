@@ -30,12 +30,19 @@
  * NOTE that `tag` should be the vector-space tag of the particular type of
  * vector-space object, NOT `VECTORPOINTTAG`.
  */
-struct cons_pointer make_vec_pointer( char * tag, struct vector_space_object * address ) {
+struct cons_pointer make_vec_pointer( char *tag,
+                                      struct vector_space_object *address ) {
+    fputws( L"Entered make_vec_pointer\n", stderr );
     struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
     struct cons_space_object cell = pointer2cell( pointer );
-
+    fwprintf( stderr,
+              L"make_vec_pointer: allocated cell, about to write tag '%s'\n",
+              tag );
     strncpy( &cell.payload.vectorp.tag.bytes[0], tag, 4 );
+    fputws( L"make_vec_pointer: tag written, about to set pointer address\n",
+            stderr );
     cell.payload.vectorp.address = address;
+    fputws( L"make_vec_pointer: all good, returning\n", stderr );
 
     return pointer;
 }
@@ -48,15 +55,18 @@ struct cons_pointer make_vec_pointer( char * tag, struct vector_space_object * a
  * Returns NIL if the vector could not be allocated due to memory exhaustion.
  */
 struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
+    fputws( L"Entered make_vso\n", stderr );
     struct cons_pointer result = NIL;
     int64_t total_size = sizeof( struct vector_space_header ) + payload_size;
 
     /* Pad size to 64 bit words. This is intended to promote access efficiancy
      * on 64 bit machines but may just be voodoo coding */
-    uint64_t padded = ceil((total_size * 8.0) / 8.0);
+    uint64_t padded = ceil( ( total_size * 8.0 ) / 8.0 );
+    fputws( L"make_vso: about to malloc\n", stderr );
     struct vector_space_object *vso = malloc( padded );
 
     if ( vso != NULL ) {
+        fwprintf( stderr, L"make_vso: about to write tag '%s'\n", tag );
         strncpy( &vso->header.tag.bytes[0], tag, TAGLENGTH );
         vso->header.vecp = make_vec_pointer( tag, vso );
         vso->header.size = payload_size;
@@ -65,13 +75,15 @@ struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
         fwprintf( stderr,
                   L"Allocated vector-space object of type %4.4s, total size %ld, payload size %ld\n",
                   tag, total_size, payload_size );
-  if (padded != total_size){
-    fwprintf(stderr, L"\t\tPadded from %d to %d\n",
-            total_size, padded);
-  }
+        if ( padded != total_size ) {
+            fwprintf( stderr, L"\t\tPadded from %d to %d\n",
+                      total_size, padded );
+        }
 #endif
 
         result = vso->header.vecp;
     }
+    fputws( L"make_vso: all good, returning\n", stderr );
+
     return result;
 }

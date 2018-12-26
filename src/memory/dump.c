@@ -72,7 +72,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             break;
         case EXCEPTIONTV:
             fwprintf( output, L"\t\tException cell: " );
-            dump_stack_trace( output, pointer);
+            dump_stack_trace( output, pointer );
             break;
         case FREETV:
             fwprintf( output, L"\t\tFree cell: next at page %d offset %d\n",
@@ -93,10 +93,10 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         case RATIOTV:
             fwprintf( output,
                       L"\t\tRational cell: value %ld/%ld, count %u\n",
-                      pointer2cell( cell.payload.ratio.dividend ).payload.
-                      integer.value,
-                      pointer2cell( cell.payload.ratio.divisor ).payload.
-                      integer.value, cell.count );
+                      pointer2cell( cell.payload.ratio.dividend ).
+                      payload.integer.value,
+                      pointer2cell( cell.payload.ratio.divisor ).
+                      payload.integer.value, cell.count );
             break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );
@@ -110,11 +110,12 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         case SYMBOLTV:
             dump_string_cell( output, L"Symbol", pointer );
             break;
-      case VECTORPOINTTV: {
-        struct vector_space_object * vso = cell.payload.vectorp.address;
-      fwprintf( output, L"\t\tVector space object of type %4.4s, payload size %d bytes\n",
-                vso->header.tag, vso->header.size);
-      }
-      break;
+        case VECTORPOINTTV:{
+                struct vector_space_object *vso = cell.payload.vectorp.address;
+                fwprintf( output,
+                          L"\t\tVector space object of type %4.4s, payload size %d bytes\n",
+                          vso->header.tag, vso->header.size );
+            }
+            break;
     }
 }

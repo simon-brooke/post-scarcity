@@ -61,7 +61,7 @@ struct vector_space_header {
 };
 
 struct vector_space_object {
-  struct vector_space_header header;
+    struct vector_space_header header;
     char payload;               /* we'll malloc `size` bytes for payload,
                                  * `payload` is just the first of these.
                                  * TODO: this is almost certainly not
