@@ -11,26 +11,32 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 
 #include "version.h"
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "debug.h"
 #include "intern.h"
 #include "lispops.h"
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
 
+// extern char *optarg; /* defined in unistd.h */
+
 void bind_function( char *name, struct cons_pointer ( *executable )
-                     ( struct stack_frame *, struct cons_pointer ) ) {
+                     ( struct stack_frame *,
+                       struct cons_pointer, struct cons_pointer ) ) {
     deep_bind( c_string_to_lisp_symbol( name ),
                make_function( NIL, executable ) );
 }
 
 void bind_special( char *name, struct cons_pointer ( *executable )
-                    ( struct stack_frame * frame, struct cons_pointer env ) ) {
+                    ( struct stack_frame *,
+                      struct cons_pointer, struct cons_pointer ) ) {
     deep_bind( c_string_to_lisp_symbol( name ),
                make_special( NIL, executable ) );
 }
@@ -46,7 +52,7 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    while ( ( option = getopt( argc, argv, "pdc" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "pdcv:" ) ) != -1 ) {
         switch ( option ) {
             case 'c':
                 print_use_colours = true;
@@ -57,6 +63,8 @@ int main( int argc, char *argv[] ) {
             case 'p':
                 show_prompt = true;
                 break;
+            case 'v':
+                verbosity = atoi( optarg );
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
                 break;
@@ -68,8 +76,14 @@ int main( int argc, char *argv[] ) {
                   L"Post scarcity software environment version %s\n\n",
                   VERSION );
     }
-
+#ifdef DEBUG
+    fputws( L"About to initialise cons pages\n", stderr );
+#endif
     initialise_cons_pages(  );
+
+#ifdef DEBUG
+    fputws( L"Initialised cons pages, about to bind\n", stderr );
+#endif
 
     /*
      * privileged variables (keywords)

@@ -13,7 +13,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
-#include "dump.h"
+#include "debug.h"
 #include "equal.h"
 #include "integer.h"
 #include "lispops.h"
@@ -332,9 +332,8 @@ struct cons_pointer make_ratio( struct cons_pointer frame_pointer,
                              ( "Dividend and divisor of a ratio must be integers" ),
                              frame_pointer );
     }
-#ifdef DEBUG
-    dump_object( stderr, result );
-#endif
+    debug_dump_object( result, DEBUG_ARITH );
+
 
     return result;
 }

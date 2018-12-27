@@ -9,7 +9,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
-#include "dump.h"
+#include "debug.h"
 #include "read.h"
 
 /**
@@ -23,9 +23,7 @@ struct cons_pointer make_real( long double value ) {
     struct cons_space_object *cell = &pointer2cell( result );
     cell->payload.real.value = value;
 
-#ifdef DEBUG
-    dump_object( stderr, result );
-#endif
+    debug_dump_object( result, DEBUG_ARITH );
 
     return result;
 }

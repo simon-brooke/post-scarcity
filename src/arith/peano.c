@@ -16,6 +16,7 @@
 
 #include "consspaceobject.h"
 #include "conspage.h"
+#include "debug.h"
 #include "equal.h"
 #include "integer.h"
 #include "intern.h"
@@ -86,8 +87,8 @@ long double to_long_double( struct cons_pointer arg ) {
             break;
     }
 
-    fputws( L"to_long_double( ", stderr );
-    print( stderr, arg );
+    debug_print( L"to_long_double( ", DEBUG_ARITH );
+    debug_print_object( arg, DEBUG_ARITH );
     fwprintf( stderr, L") => %lf\n", result );
 
     return result;
@@ -129,13 +130,11 @@ struct cons_pointer add_2( struct stack_frame *frame,
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
-#ifdef DEBUG
-    fputws( L"add_2( arg1 = ", stderr );
-    print( stderr, arg1 );
-    fputws( L"; arg2 = ", stderr );
-    print( stderr, arg2 );
-    fputws( L")\n", stderr );
-#endif
+    debug_print( L"add_2( arg1 = ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L"; arg2 = ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L"\n", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
         result = arg2;
@@ -209,11 +208,9 @@ struct cons_pointer add_2( struct stack_frame *frame,
         }
     }
 
-#ifdef DEBUG
-    fputws( L"}; => ", stderr );
-    print( stderr, arg2 );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L"}; => ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L"\n", DEBUG_ARITH );
 
     return result;
 }
@@ -267,13 +264,11 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
     struct cons_space_object cell1 = pointer2cell( arg1 );
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
-#ifdef DEBUG
-    fputws( L"multiply_2( arg1 = ", stderr );
-    print( stderr, arg1 );
-    fputws( L"; arg2 = ", stderr );
-    print( stderr, arg2 );
-    fputws( L")\n", stderr );
-#endif
+    debug_print( L"multiply_2( arg1 = ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L"; arg2 = ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L")", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
         result = arg2;
@@ -348,11 +343,9 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
         }
     }
 
-#ifdef DEBUG
-    fputws( L" => ", stderr );
-    print( stderr, arg2 );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L" => ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L"\n", DEBUG_ARITH );
 
     return result;
 }

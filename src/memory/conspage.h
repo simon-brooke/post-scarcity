@@ -19,7 +19,7 @@
  * 4294967296.
  *
  * Note that this means the total number of addressable cons cells is
- * 1.8e19, each of 20 bytes; or 3e20 bytes in total; and there are 
+ * 1.8e19, each of 20 bytes; or 3e20 bytes in total; and there are
  * up to a maximum of 4e9 of heap space objects, each of potentially
  * 4e9 bytes. So we're talking about a potential total of 8e100 bytes
  * of addressable memory, which is only slightly more than the
@@ -38,7 +38,7 @@ struct cons_page {
 };
 
 /**
- * The (global) pointer to the (global) freelist. Not sure whether this ultimately 
+ * The (global) pointer to the (global) freelist. Not sure whether this ultimately
  * belongs in this file.
  */
 extern struct cons_pointer freelist;

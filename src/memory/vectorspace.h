@@ -40,7 +40,7 @@
 #define VECTORTAG "VECT"
 #define VECTORTV 0
 
-#define pointer_to_vso(pointer)((vectorpointp(pointer)? pointer2cell(pointer).payload.vectorp.address : NULL))
+#define pointer_to_vso(pointer)((vectorpointp(pointer)? (struct vector_space_object *) pointer2cell(pointer).payload.vectorp.address : (struct vector_space_object *) NULL))
 #define vso_get_vecp(vso)((vso->header.vecp))
 
 struct cons_pointer make_vso( char *tag, uint64_t payload_size );

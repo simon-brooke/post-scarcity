@@ -18,6 +18,8 @@
 #include <wctype.h>
 
 #include "consspaceobject.h"
+#include "debug.h"
+#include "dump.h"
 #include "integer.h"
 #include "intern.h"
 #include "lispops.h"
@@ -59,6 +61,7 @@ struct cons_pointer c_quote( struct cons_pointer arg ) {
 struct cons_pointer read_continuation( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
                                        FILE * input, wint_t initial ) {
+    debug_print( L"entering read_continuation\n", DEBUG_IO );
     struct cons_pointer result = NIL;
 
     wint_t c;
@@ -141,6 +144,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 break;
         }
     }
+    debug_print( L"read_continuation returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
 
     return result;
 }
@@ -154,6 +159,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  FILE * input,
                                  wint_t initial, bool seen_period ) {
+    debug_print( L"entering read_number\n", DEBUG_IO );
     struct cons_pointer result = NIL;
     int64_t accumulator = 0;
     int64_t dividend = 0;
@@ -210,9 +216,6 @@ struct cons_pointer read_number( struct stack_frame *frame,
         if ( negative ) {
             rv = 0 - rv;
         }
-#ifdef DEBUG
-        fwprintf( stderr, L"read_numer returning %Lf\n", rv );
-#endif
         result = make_real( rv );
     } else if ( dividend != 0 ) {
         result =
@@ -224,6 +227,9 @@ struct cons_pointer read_number( struct stack_frame *frame,
         }
         result = make_integer( accumulator );
     }
+
+    debug_print( L"read_number returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
 
     return result;
 }
@@ -248,12 +254,9 @@ struct cons_pointer read_list( struct stack_frame *frame,
             make_cons( car,
                        read_list( frame, frame_pointer, input,
                                   fgetwc( input ) ) );
+    } else {
+        debug_print( L"End of list detected\n", DEBUG_IO );
     }
-#ifdef DEBUG
-    else {
-        fwprintf( stderr, L"End of list detected\n" );
-    }
-#endif
 
     return result;
 }
@@ -324,11 +327,8 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
             break;
     }
 
-#ifdef DEBUG
-    fputws( L"Read symbol '", stderr );
-    print( stderr, result );
-    fputws( L"'\n", stderr );
-#endif
+    debug_print( L"read_symbol returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
 
     return result;
 }

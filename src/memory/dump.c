@@ -20,6 +20,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "debug.h"
 #include "print.h"
 #include "stack.h"
 #include "vectorspace.h"
@@ -111,11 +112,25 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             dump_string_cell( output, L"Symbol", pointer );
             break;
         case VECTORPOINTTV:{
+                fwprintf( output,
+                          L"\t\tPointer to vector-space object at %p\n",
+                          cell.payload.vectorp.address );
                 struct vector_space_object *vso = cell.payload.vectorp.address;
                 fwprintf( output,
                           L"\t\tVector space object of type %4.4s, payload size %d bytes\n",
-                          vso->header.tag, vso->header.size );
+                          &vso->header.tag.bytes, vso->header.size );
+                switch ( vso->header.tag.value ) {
+                    case STACKFRAMETV:
+                        dump_frame( output, pointer );
+                        break;
+                    default:
+                        fputws( L"(Unknown vector type)\n", output );
+                        break;
+                }
             }
+            break;
+        default:
+            fputws( L"(Unknown cons space type)\n", output );
             break;
     }
 }

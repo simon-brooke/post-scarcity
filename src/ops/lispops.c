@@ -26,6 +26,8 @@
 
 #include "consspaceobject.h"
 #include "conspage.h"
+#include "debug.h"
+#include "dump.h"
 #include "equal.h"
 #include "integer.h"
 #include "intern.h"
@@ -83,9 +85,8 @@ struct cons_pointer eval_form( struct stack_frame *parent,
                                struct cons_pointer parent_pointer,
                                struct cons_pointer form,
                                struct cons_pointer env ) {
-    fputws( L"eval_form: ", stderr );
-    print( stderr, form );
-    fputws( L"\n", stderr );
+    debug_print( L"eval_form: ", DEBUG_EVAL );
+    debug_dump_object( form, DEBUG_EVAL );
 
     struct cons_pointer result = NIL;
     struct cons_pointer next_pointer = make_empty_frame( parent_pointer );
@@ -148,9 +149,8 @@ struct cons_pointer compose_body( struct stack_frame *frame ) {
         }
     }
 
-    fputws( L"compose_body returning ", stderr );
-    print( stderr, body );
-    fputws( L"\n", stderr );
+    debug_print( L"compose_body returning ", DEBUG_LAMBDA );
+    debug_dump_object( body, DEBUG_LAMBDA );
 
     return body;
 }
@@ -180,13 +180,10 @@ lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 void log_binding( struct cons_pointer name, struct cons_pointer val ) {
-#ifdef DEBUG
-    fputws( L"\n\tBinding ", stderr );
-    print( stderr, name );
-    fputws( L" to ", stderr );
-    print( stderr, val );
-    fputws( L"\"\n", stderr );
-#endif
+    debug_print( L"\n\tBinding ", DEBUG_ALLOC );
+    debug_dump_object( name, DEBUG_ALLOC );
+    debug_print( L" to ", DEBUG_ALLOC );
+    debug_dump_object( val, DEBUG_ALLOC );
 }
 
 /**
@@ -236,9 +233,9 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     while ( !nilp( body ) ) {
         struct cons_pointer sexpr = c_car( body );
         body = c_cdr( body );
-#ifdef DEBUG
-        fputws( L"In lambda: ", stderr );
-#endif
+
+        debug_print( L"In lambda: ", DEBUG_LAMBDA );
+
         result = eval_form( frame, frame_pointer, sexpr, new_env );
     }
 
@@ -414,8 +411,8 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
     struct cons_pointer result = frame->arg[0];
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
+    debug_print( L"Eval: ", DEBUG_EVAL );
 #ifdef DEBUG
-    fputws( L"Eval: ", stderr );
     dump_frame( stderr, frame_pointer );
 #endif
 
@@ -455,11 +452,8 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
             break;
     }
 
-#ifdef DEBUG
-    fputws( L"Eval returning ", stderr );
-    print( stderr, result );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L"Eval returning ", DEBUG_EVAL );
+    debug_dump_object( result, DEBUG_EVAL );
 
     return result;
 }
@@ -476,7 +470,7 @@ struct cons_pointer
 lisp_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
 #ifdef DEBUG
-    fputws( L"Apply: ", stderr );
+    debug_print( L"Apply: ", DEBUG_EVAL );
     dump_frame( stderr, frame_pointer );
 #endif
     set_reg( frame, 0, make_cons( frame->arg[0], frame->arg[1] ) );
@@ -484,11 +478,8 @@ lisp_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     struct cons_pointer result = c_apply( frame, frame_pointer, env );
 
-#ifdef DEBUG
-    fputws( L"Apply returning ", stderr );
-    print( stderr, result );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L"Apply returning ", DEBUG_EVAL );
+    debug_dump_object( result, DEBUG_EVAL );
 
     return result;
 }
@@ -690,13 +681,20 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
 struct cons_pointer
 lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
            struct cons_pointer env ) {
+#ifdef DEBUG
+    debug_print( L"entering lisp_read\n", DEBUG_IO );
+#endif
     FILE *input = stdin;
 
     if ( readp( frame->arg[0] ) ) {
         input = pointer2cell( frame->arg[0] ).payload.stream.stream;
     }
 
-    return read( frame, frame_pointer, input );
+    struct cons_pointer result = read( frame, frame_pointer, input );
+    debug_print( L"lisp_read returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
+
+    return result;
 }
 
 
@@ -745,23 +743,22 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
 struct cons_pointer
 lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-#ifdef DEBUG
-    fputws( L"Entering print\n", stderr );
-#endif
+    debug_print( L"Entering print\n", DEBUG_IO );
     struct cons_pointer result = NIL;
     FILE *output = stdout;
 
     if ( writep( frame->arg[1] ) ) {
+        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
+        debug_dump_object( frame->arg[1], DEBUG_IO );
         output = pointer2cell( frame->arg[1] ).payload.stream.stream;
     }
+    debug_print( L"lisp_print: about to print\n", DEBUG_IO );
+    debug_dump_object( frame->arg[0], DEBUG_IO );
 
     result = print( output, frame->arg[0] );
 
-#ifdef DEBUG
-    fputws( L"Print returning ", stderr );
-    // print( stderr, result );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L"lisp_print returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
 
     return result;
 }
@@ -828,8 +825,8 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     for ( int i = 0; i < args_in_frame && !done; i++ ) {
         struct cons_pointer clause_pointer = frame->arg[i];
-        fputws( L"Cond clause: ", stderr );
-        print( stderr, clause_pointer );
+        debug_print( L"Cond clause: ", DEBUG_EVAL );
+        debug_dump_object( clause_pointer, DEBUG_EVAL );
 
         if ( consp( clause_pointer ) ) {
             struct cons_space_object cell = pointer2cell( clause_pointer );
@@ -876,8 +873,8 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
 struct cons_pointer
 throw_exception( struct cons_pointer message,
                  struct cons_pointer frame_pointer ) {
-    fwprintf( stderr, L"\nERROR: " );
-    print( stderr, message );
+    debug_print( L"\nERROR: ", DEBUG_EVAL );
+    debug_dump_object( message, DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
     struct cons_space_object cell = pointer2cell( message );

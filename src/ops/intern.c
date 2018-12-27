@@ -21,6 +21,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "debug.h"
 #include "equal.h"
 #include "lispops.h"
 #include "print.h"
@@ -56,22 +57,22 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
             struct cons_space_object entry =
                 pointer2cell( pointer2cell( next ).payload.cons.car );
 
-            fputws( L"Internedp: checking whether `", stderr );
-            print( stderr, key );
-            fputws( L"` equals `", stderr );
-            print( stderr, entry.payload.cons.car );
-            fputws( L"`\n", stderr );
+            debug_print( L"Internedp: checking whether `", DEBUG_ALLOC );
+            debug_print_object( key, DEBUG_ALLOC );
+            debug_print( L"` equals `", DEBUG_ALLOC );
+            debug_print_object( entry.payload.cons.car, DEBUG_ALLOC );
+            debug_print( L"`\n", DEBUG_ALLOC );
 
             if ( equal( key, entry.payload.cons.car ) ) {
                 result = entry.payload.cons.car;
             }
         }
     } else {
-        fputws( L"`", stderr );
-        print( stderr, key );
-        fputws( L"` is a ", stderr );
-        print( stderr, c_type( key ) );
-        fputws( L", not a SYMB", stderr );
+        debug_print( L"`", DEBUG_ALLOC );
+        debug_print_object( key, DEBUG_ALLOC );
+        debug_print( L"` is a ", DEBUG_ALLOC );
+        debug_print_object( c_type( key ), DEBUG_ALLOC );
+        debug_print( L", not a SYMB", DEBUG_ALLOC );
     }
 
     return result;
@@ -120,7 +121,17 @@ bind( struct cons_pointer key, struct cons_pointer value,
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
+    debug_print( L"Entering deep_bind\n", DEBUG_ALLOC );
+    debug_print( L"\tSetting ", DEBUG_ALLOC );
+    debug_print_object( key, DEBUG_ALLOC );
+    debug_print( L" to ", DEBUG_ALLOC );
+    debug_print_object( value, DEBUG_ALLOC );
+    debug_print( L"\n", DEBUG_ALLOC );
+
     oblist = bind( key, value, oblist );
+
+    debug_print( L"Leaving deep_bind\n", DEBUG_ALLOC );
+
     return oblist;
 }
 

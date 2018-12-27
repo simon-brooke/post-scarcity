@@ -133,7 +133,7 @@
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VECP"
-#define VECTORPOINTTV 0
+#define VECTORPOINTTV 1346585942
 /**
  * An open write stream.
  */
@@ -263,9 +263,10 @@
  * An indirect pointer to a cons cell
  */
 struct cons_pointer {
-    uint32_t page;              /* the index of the page on which this cell
-                                 * resides */
-    uint32_t offset;            /* the index of the cell within the page */
+   /** the index of the page on which this cell resides */
+    uint32_t page;
+    /** the index of the cell within the page */
+    uint32_t offset;
 };
 
 /*
@@ -421,7 +422,7 @@ struct vectorp_payload {
                                  * tag. */
         uint32_t value;         /* the tag considered as a number */
     } tag;
-    struct vector_space_object *address;
+    void *address;
     /* the address of the actual vector space
      * object (TODO: will change when I actually
      * implement vector space) */

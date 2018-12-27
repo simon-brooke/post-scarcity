@@ -19,6 +19,8 @@
 
 #include "consspaceobject.h"
 #include "conspage.h"
+#include "debug.h"
+#include "dump.h"
 #include "lispops.h"
 #include "print.h"
 #include "stack.h"
@@ -30,21 +32,24 @@
  */
 struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
     struct stack_frame *result = NULL;
-    fputws
+    debug_print
         ( L"get_stack_frame: about to get a pointer to the vector space object\n",
-          stderr );
+          DEBUG_ALLOC );
     struct vector_space_object *vso =
         pointer2cell( pointer ).payload.vectorp.address;
-    fputws( L"get_stack_frame: got a pointer, about to test it\n", stderr );
+    debug_print( L"get_stack_frame: got a pointer, about to test it\n",
+                 DEBUG_ALLOC );
 
-    if ( vectorpointp( pointer ) ) {  // && stackframep(vso)){
-        fputws( L"get_stack_frame: pointer is good, about to set the result\n",
-                stderr );
+    if ( vectorpointp( pointer ) && stackframep( vso ) ) {
+        debug_print
+            ( L"get_stack_frame: pointer is good, about to set the result\n",
+              DEBUG_ALLOC );
 
         result = ( struct stack_frame * ) &( vso->payload );
-        fputws( L"get_stack_frame: all good, returning\n", stderr );
+        fwprintf( stderr, L"get_stack_frame: all good, returning %p\n",
+                  result );
     } else {
-        fputws( L"get_stack_frame: fail, returning NULL\n", stderr );
+        debug_print( L"get_stack_frame: fail, returning NULL\n", DEBUG_ALLOC );
     }
 
     return result;
@@ -57,11 +62,20 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
  * @return the new frame, or NULL if memory is exhausted.
  */
 struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
-    fputws( L"Entering make_empty_frame\n", stderr );
+    debug_print( L"Entering make_empty_frame\n", DEBUG_ALLOC );
     struct cons_pointer result =
         make_vso( STACKFRAMETAG, sizeof( struct stack_frame ) );
+
+    debug_dump_object( result, DEBUG_ALLOC );
+
+    fwprintf( stderr,
+              L"make_empty_frame: got vector_space_object with size %lu, tag %4.4s\n",
+              pointer_to_vso( result )->header.size,
+              &pointer_to_vso( result )->header.tag.bytes );
+
     if ( !nilp( result ) ) {
-        fputws( L"make_empty_frame: about to call get_stack_frame\n", stderr );
+        debug_print( L"make_empty_frame: about to call get_stack_frame\n",
+                     DEBUG_ALLOC );
         struct stack_frame *frame = get_stack_frame( result );
         /*
          * TODO: later, pop a frame off a free-list of stack frames
@@ -69,9 +83,10 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
 
         fwprintf( stderr,
                   L"make_empty_frame: about to set previous to %4.4s\n",
-                  pointer2cell( previous ).tag );
+                  &pointer2cell( previous ).tag.bytes );
         frame->previous = previous;
-        fputws( L"make_empty_frame: about to call inc_ref\n", stderr );
+        debug_print( L"make_empty_frame: about to call inc_ref\n",
+                     DEBUG_ALLOC );
         inc_ref( previous );
 
         /*
@@ -82,13 +97,13 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
         frame->function = NIL;
         frame->args = 0;
 
-        fputws( L"make_empty_frame: about to initialise arg registers\n",
-                stderr );
+        debug_print( L"make_empty_frame: about to initialise arg registers\n",
+                     DEBUG_ALLOC );
         for ( int i = 0; i < args_in_frame; i++ ) {
             set_reg( frame, i, NIL );
         }
     }
-    fputws( L"Leaving make_empty_frame\n", stderr );
+    debug_print( L"Leaving make_empty_frame\n", DEBUG_ALLOC );
 
     return result;
 }
@@ -104,7 +119,7 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
 struct cons_pointer make_stack_frame( struct cons_pointer previous,
                                       struct cons_pointer args,
                                       struct cons_pointer env ) {
-    fputws( L"Entering make_stack_frame\n", stderr );
+    debug_print( L"Entering make_stack_frame\n", DEBUG_ALLOC );
     struct cons_pointer result = make_empty_frame( previous );
 
     if ( nilp( result ) ) {
@@ -164,12 +179,11 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 frame->more = more;
                 inc_ref( more );
             }
-#ifdef DEBUG
-            dump_frame( stderr, result );
-#endif
+
+            debug_dump_object( result, DEBUG_ALLOC );
         }
     }
-    fputws( L"Leaving make_stack_frame\n", stderr );
+    debug_print( L"Leaving make_stack_frame\n", DEBUG_ALLOC );
 
     return result;
 }
@@ -185,7 +199,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
 struct cons_pointer make_special_frame( struct cons_pointer previous,
                                         struct cons_pointer args,
                                         struct cons_pointer env ) {
-    fputws( L"Entering make_special_frame\n", stderr );
+    debug_print( L"Entering make_special_frame\n", DEBUG_ALLOC );
 
     struct cons_pointer result = make_empty_frame( previous );
 
@@ -213,12 +227,11 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
                 frame->more = args;
                 inc_ref( args );
             }
-#ifdef DEBUG
-            dump_frame( stderr, result );
-#endif
+
+            debug_dump_object( result, DEBUG_ALLOC );
         }
     }
-    fputws( L"Leaving make_special_frame\n", stderr );
+    debug_print( L"Leaving make_special_frame\n", DEBUG_ALLOC );
 
     return result;
 }
