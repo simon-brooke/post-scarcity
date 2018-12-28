@@ -203,7 +203,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     if ( consp( names ) ) {
         /* if `names` is a list, bind successive items from that list
          * to values of arguments */
-        for ( int i = 0; i < args_in_frame && consp( names ); i++ ) {
+        for ( int i = 0; i < frame->args && consp( names ); i++ ) {
             struct cons_pointer name = c_car( names );
             struct cons_pointer val = frame->arg[i];
 
@@ -212,6 +212,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
             names = c_cdr( names );
         }
+      /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
         /* if `names` is a symbol, rather than a list of symbols,
          * then bind a list of the values of args to that symbol. */
@@ -316,7 +317,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     result = next_pointer;
                 } else {
                     struct stack_frame *next =
-                        get_stack_frame( frame_pointer );
+                        get_stack_frame( next_pointer );
                     result = eval_lambda( fn_cell, next, next_pointer, env );
                         dec_ref( next_pointer );
                 }
