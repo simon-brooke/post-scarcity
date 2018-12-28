@@ -14,7 +14,7 @@
 #ifndef __print_h
 #define __print_h
 
-void print( FILE * output, struct cons_pointer pointer );
+struct cons_pointer print( FILE * output, struct cons_pointer pointer );
 extern int print_use_colours;
 
 #endif

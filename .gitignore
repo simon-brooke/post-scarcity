@@ -28,3 +28,5 @@ log*
 \.project
 
 \.settings/language\.settings\.xml
+
+utils_src/readprintwc/out
