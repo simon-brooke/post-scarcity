@@ -1,10 +1,12 @@
-;; Because I don't (yet) have syntax for varargs, the body must be passed
-;; to defun as a list of sexprs.
+(set! list (lambda l l))
+
+(set! symbolp (lambda (x) (equal (type x) "SYMB")))
+
 (set! defun!
       (nlambda
        form
        (cond ((symbolp (car form))
-         (set (car form) (apply lambda (cdr form))))
+              (set (car form) (apply 'lambda (cdr form))))
          (t nil))))
 
 (defun! square (x) (* x x))
