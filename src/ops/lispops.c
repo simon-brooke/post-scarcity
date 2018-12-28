@@ -375,7 +375,7 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( pointer );
 
-    for (int i = TAGLENGTH; i >= 0; i--)
+    for (int i = TAGLENGTH -1; i >= 0; i--)
     {
       result = make_string((wchar_t)cell.tag.bytes[i], result);
     }

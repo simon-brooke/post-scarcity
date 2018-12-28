@@ -85,12 +85,20 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                       cell.payload.integer.value, cell.count );
             break;
         case LAMBDATV:
-            fwprintf( output, L"\t\tLambda cell; args: " );
+            fwprintf( output, L"\t\tLambda cell;\n\t\t args: " );
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
+            fputws( L"\n", output);
             break;
         case NILTV:
+            break;
+        case NLAMBDATV:
+            fwprintf( output, L"\t\tNlambda cell; \n\t\targs: " );
+            print( output, cell.payload.lambda.args );
+            fwprintf( output, L";\n\t\t\tbody: " );
+            print( output, cell.payload.lambda.body );
+            fputws( L"\n", output);
             break;
         case RATIOTV:
             fwprintf( output,

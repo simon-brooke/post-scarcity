@@ -21,6 +21,7 @@
 #define DEBUG_BOOTSTRAP 32
 #define DEBUG_IO 64
 #define DEBUG_REPL 128
+#define DEBUG_BIND 256
 
 extern int verbosity;
 

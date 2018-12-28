@@ -13,6 +13,7 @@
 #define DEBUG_BOOTSTRAP 32
 #define DEBUG_IO 64
 #define DEBUG_REPL 128
+#define DEBUG_BIND 256
 
 int check_level( int v, int level, char * name) {
   int result = 0;
@@ -37,7 +38,8 @@ int main( int argc, char *argv[] ) {
     check_level(v, DEBUG_LAMBDA, "DEBUG_LAMBDA") +
     check_level(v, DEBUG_BOOTSTRAP, "DEBUG_BOOTSTRAP") +
     check_level(v, DEBUG_IO, "DEBUG_IO") +
-    check_level(v, DEBUG_REPL, "DEBUG_REPL");
+    check_level(v, DEBUG_REPL, "DEBUG_REPL") +
+    check_level(v, DEBUG_BIND, "DEBUG_BIND");
     printf("\t%d matches\n", matches);
   }
 }
