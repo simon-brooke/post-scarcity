@@ -26,6 +26,18 @@
 #include "stack.h"
 #include "vectorspace.h"
 
+void set_reg(struct stack_frame * frame, int reg, struct cons_pointer value) {
+  debug_printf(DEBUG_STACK, L"Setting register %d to ", reg);
+  debug_print_object(value, DEBUG_STACK);
+  debug_println(DEBUG_STACK);
+  frame->arg[reg++] = value;
+  inc_ref(value);
+  if (reg > frame->args) {
+    frame->args = reg;
+  }
+}
+
+
 /**
  * get the actual stackframe object from this `pointer`, or NULL if
  * `pointer` is not a stackframe pointer.
@@ -53,32 +65,24 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
  * @return the new frame, or NULL if memory is exhausted.
  */
 struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
-    debug_print( L"Entering make_empty_frame\n", DEBUG_STACK );
+    debug_print( L"Entering make_empty_frame\n", DEBUG_ALLOC );
     struct cons_pointer result =
         make_vso( STACKFRAMETAG, sizeof( struct stack_frame ) );
 
-    debug_dump_object( result, DEBUG_STACK );
+    debug_dump_object( result, DEBUG_ALLOC );
 
-    debug_printf( DEBUG_STACK,
-              L"make_empty_frame: got vector_space_object with size %lu, tag %4.4s\n",
-              pointer_to_vso( result )->header.size,
-              &pointer_to_vso( result )->header.tag.bytes );
+//    debug_printf( DEBUG_STACK,
+//              L"make_empty_frame: got vector_space_object with size %lu, tag %4.4s\n",
+//              pointer_to_vso( result )->header.size,
+//              &pointer_to_vso( result )->header.tag.bytes );
 
     if ( !nilp( result ) ) {
-        debug_print( L"make_empty_frame: about to call get_stack_frame\n",
-                     DEBUG_STACK );
         struct stack_frame *frame = get_stack_frame( result );
         /*
          * TODO: later, pop a frame off a free-list of stack frames
          */
 
-        debug_printf( DEBUG_STACK,
-                  L"make_empty_frame: about to set previous to %4.4s\n",
-                  &pointer2cell( previous ).tag.bytes );
         frame->previous = previous;
-        debug_print( L"make_empty_frame: about to call inc_ref\n",
-                     DEBUG_STACK );
-        inc_ref( previous );
 
         /*
          * clearing the frame with memset would probably be slightly quicker, but
@@ -88,13 +92,12 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
         frame->function = NIL;
         frame->args = 0;
 
-        debug_print( L"make_empty_frame: about to initialise arg registers\n",
-                     DEBUG_STACK );
         for ( int i = 0; i < args_in_frame; i++ ) {
-            set_reg( frame, i, NIL );
+            frame->arg[i] = NIL;
         }
     }
-    debug_print( L"Leaving make_empty_frame\n", DEBUG_STACK );
+    debug_print( L"Leaving make_empty_frame\n", DEBUG_ALLOC );
+    debug_dump_object( result, DEBUG_ALLOC);
 
     return result;
 }
@@ -121,8 +124,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
     } else {
         struct stack_frame *frame = get_stack_frame( result );
 
-        for ( frame->args = 0; frame->args < args_in_frame && consp( args );
-              frame->args++ ) {
+        while ( frame->args < args_in_frame && consp( args )) {
             /* iterate down the arg list filling in the arg slots in the
              * frame. When there are no more slots, if there are still args,
              * stash them on more */
@@ -134,23 +136,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
              * processor to be evaled in parallel; but see notes here:
              * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
              */
-            struct cons_pointer arg_frame_pointer = make_empty_frame( result );
-            inc_ref( arg_frame_pointer );
-
-            if ( nilp( arg_frame_pointer ) ) {
-                result =
-                    make_exception( c_string_to_lisp_string
-                                    ( L"Memory exhausted." ), previous );
-                break;
-            } else {
-                struct stack_frame *arg_frame =
-                    get_stack_frame( arg_frame_pointer );
-                    debug_print( L"Setting argument 0 of arg_frame to ", DEBUG_STACK);
-                    debug_print_object(cell.payload.cons.car, DEBUG_STACK);
-                set_reg( arg_frame, 0, cell.payload.cons.car );
-
-                struct cons_pointer val =
-                    lisp_eval( arg_frame, arg_frame_pointer, env );
+                struct cons_pointer val = eval_form(frame, result, cell.payload.cons.car, env);
                 if ( exceptionp( val ) ) {
                     result = val;
                     break;
@@ -160,11 +146,9 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                     set_reg( frame, frame->args, val );
                 }
 
-                dec_ref( arg_frame_pointer );
-
                 args = cell.payload.cons.cdr;
             }
-        }
+
         if ( !exceptionp( result ) ) {
             if ( consp( args ) ) {
                 /* if we still have args, eval them and stick the values on `more` */
@@ -175,10 +159,10 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 inc_ref( more );
             }
 
-            debug_dump_object( result, DEBUG_STACK );
         }
     }
-    debug_print( L"Leaving make_stack_frame\n", DEBUG_STACK );
+    debug_print( L"make_stack_frame: returning\n", DEBUG_STACK );
+    debug_dump_object( result, DEBUG_STACK );
 
     return result;
 }
@@ -206,8 +190,7 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
     } else {
         struct stack_frame *frame = get_stack_frame( result );
 
-        for ( frame->args = 0; frame->args < args_in_frame && !nilp( args );
-              frame->args++ ) {
+        while ( frame->args < args_in_frame && !nilp( args )) {
             /* iterate down the arg list filling in the arg slots in the
              * frame. When there are no more slots, if there are still args,
              * stash them on more */
@@ -222,11 +205,10 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
                 frame->more = args;
                 inc_ref( args );
             }
-
-            debug_dump_object( result, DEBUG_STACK );
         }
     }
-    debug_print( L"Leaving make_special_frame\n", DEBUG_STACK );
+    debug_print( L"make_special_frame: returning\n", DEBUG_STACK );
+    debug_dump_object( result, DEBUG_STACK );
 
     return result;
 }

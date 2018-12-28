@@ -94,6 +94,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
 
     struct stack_frame *next = get_stack_frame( next_pointer );
     set_reg( next, 0, form );
+    next->args = 1;
 
     result = lisp_eval( next, next_pointer, env );
 
@@ -253,25 +254,15 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 struct cons_pointer
 c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
          struct cons_pointer env ) {
-    struct cons_pointer result = NIL;
+  debug_print(L"Entering c_apply\n", DEBUG_EVAL);
+  struct cons_pointer result = NIL;
 
-    /* construct a child frame and within it evaluate the first argument - the
-     * argument in the function position. */
-    struct cons_pointer fn_frame_pointer = make_empty_frame( frame_pointer );
-    inc_ref( fn_frame_pointer );
-    struct stack_frame *fn_frame = get_stack_frame( fn_frame_pointer );
-
-    set_reg( fn_frame, 0, c_car( frame->arg[0] ) );
     struct cons_pointer fn_pointer =
-        lisp_eval( fn_frame, fn_frame_pointer, env );
+        eval_form( frame, frame_pointer, c_car( frame->arg[0] ), env );
 
-    if ( !exceptionp( result ) ) {
-        /* if we're returning an exception, we should NOT free the
-         * stack frame. Corollary is, when we free an exception, we
-         * should free all the frames it's holding on to. */
-        dec_ref( fn_frame_pointer );
-    }
-
+    if ( exceptionp( fn_pointer ) ) {
+        result = fn_pointer;
+    } else {
     struct cons_space_object fn_cell = pointer2cell( fn_pointer );
     struct cons_pointer args = c_cdr( frame->arg[0] );
 
@@ -327,9 +318,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     struct stack_frame *next =
                         get_stack_frame( frame_pointer );
                     result = eval_lambda( fn_cell, next, next_pointer, env );
-                    if ( !exceptionp( result ) ) {
                         dec_ref( next_pointer );
-                    }
                 }
             }
             break;
@@ -341,15 +330,14 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 if ( exceptionp( next_pointer ) ) {
                     result = next_pointer;
                 } else {
-                    struct stack_frame *next =
-                        get_stack_frame( frame_pointer );
                     result =
-                        ( *fn_cell.payload.special.executable ) ( next,
+                        ( *fn_cell.payload.special.executable ) ( get_stack_frame( next_pointer ),
                                                                   next_pointer,
                                                                   env );
-                    if ( !exceptionp( result ) ) {
-                        dec_ref( next_pointer );
-                    }
+                   debug_print(L"Special form returning: ", DEBUG_EVAL);
+                  debug_print_object(result, DEBUG_EVAL);
+                  debug_println(DEBUG_EVAL);
+                    dec_ref( next_pointer );
                 }
             }
             break;
@@ -367,7 +355,11 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 result = throw_exception( message, frame_pointer );
             }
     }
-    dec_ref( fn_frame_pointer );
+    }
+
+    debug_print(L"c_apply: returning: ", DEBUG_EVAL);
+    debug_print_object(result, DEBUG_EVAL);
+    debug_println(DEBUG_EVAL);
 
     return result;
 }

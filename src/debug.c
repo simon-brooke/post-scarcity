@@ -43,6 +43,21 @@ void debug_print( wchar_t *message, int level ) {
 }
 
 /**
+ * print a line feed to stderr, if `verbosity` matches `level`.
+ * `verbosity is a set of flags, see debug_print.h; so you can
+ * turn debugging on for only one part of the system.
+ */
+void debug_println( int level ) {
+#ifdef DEBUG
+    if ( level & verbosity ) {
+        fwide( stderr, 1 );
+        fputws( L"\n", stderr );
+    }
+#endif
+}
+
+
+/**
  * `wprintf` adapted for the debug logging system. Print to stderr only
  * `verbosity` matches `level`. All other arguments as for `wprintf`.
  */

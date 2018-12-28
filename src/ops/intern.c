@@ -111,6 +111,12 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 struct cons_pointer
 bind( struct cons_pointer key, struct cons_pointer value,
       struct cons_pointer store ) {
+  debug_print(L"Binding ", DEBUG_ALLOC);
+  debug_print_object(key, DEBUG_ALLOC);
+  debug_print(L" to ", DEBUG_ALLOC);
+  debug_print_object(value, DEBUG_ALLOC);
+  debug_println(DEBUG_ALLOC);
+
     return make_cons( make_cons( key, value ), store );
 }
 

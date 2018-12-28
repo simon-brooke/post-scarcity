@@ -62,11 +62,13 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
     switch ( cell.tag.value ) {
         case CONSTV:
             fwprintf( output,
-                      L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u\n",
+                      L"\t\tCons cell: car at page %d offset %d, cdr at page %d offset %d, count %u :",
                       cell.payload.cons.car.page,
                       cell.payload.cons.car.offset,
                       cell.payload.cons.cdr.page,
                       cell.payload.cons.cdr.offset, cell.count );
+            print( output, pointer);
+            fputws( L"\n", output);
             break;
         case EXCEPTIONTV:
             fwprintf( output, L"\t\tException cell: " );

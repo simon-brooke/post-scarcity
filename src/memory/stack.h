@@ -39,7 +39,9 @@
  * set a register in a stack frame. Alwaye use this macro to do so,
  • because that way we can be sure the inc_ref happens!
  */
-#define set_reg(frame,register,value){frame->arg[register]=value; inc_ref(value);}
+//#define set_reg(frame,register,value){frame->arg[register]=value; inc_ref(value);}
+
+void set_reg(struct stack_frame * frame, int reg, struct cons_pointer value);
 
 struct stack_frame *get_stack_frame( struct cons_pointer pointer );
 
