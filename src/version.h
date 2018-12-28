@@ -8,4 +8,4 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#define VERSION "0.0.3"
+#define VERSION "0.0.4"
