@@ -55,11 +55,8 @@ void dump_string_cell( FILE * output, wchar_t *prefix,
 void dump_object( FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     fwprintf( output,
-              L"\t%c%c%c%c (%d) at page %d, offset %d count %u\n",
-              cell.tag.bytes[0],
-              cell.tag.bytes[1],
-              cell.tag.bytes[2],
-              cell.tag.bytes[3],
+              L"\t%4.4s (%d) at page %d, offset %d count %u\n",
+              cell.tag.bytes,
               cell.tag.value, pointer.page, pointer.offset, cell.count );
 
     switch ( cell.tag.value ) {
@@ -91,6 +88,8 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
             break;
+        case NILTV:
+            break;
         case RATIOTV:
             fwprintf( output,
                       L"\t\tRational cell: value %ld/%ld, count %u\n",
@@ -101,6 +100,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );
+            break;
         case REALTV:
             fwprintf( output, L"\t\tReal cell: value %Lf, count %u\n",
                       cell.payload.real.value, cell.count );
@@ -111,26 +111,28 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         case SYMBOLTV:
             dump_string_cell( output, L"Symbol", pointer );
             break;
+        case TRUETV:
+            break;
         case VECTORPOINTTV:{
                 fwprintf( output,
                           L"\t\tPointer to vector-space object at %p\n",
                           cell.payload.vectorp.address );
                 struct vector_space_object *vso = cell.payload.vectorp.address;
                 fwprintf( output,
-                          L"\t\tVector space object of type %4.4s, payload size %d bytes\n",
-                          &vso->header.tag.bytes, vso->header.size );
+                          L"\t\tVector space object of type %4.4s (%d), payload size %d bytes\n",
+                          &vso->header.tag.bytes, vso->header.tag.value, vso->header.size );
+          if (stackframep(vso)) {
+            dump_frame(output, pointer);
+          }
                 switch ( vso->header.tag.value ) {
                     case STACKFRAMETV:
                         dump_frame( output, pointer );
                         break;
-                    default:
-                        fputws( L"(Unknown vector type)\n", output );
-                        break;
                 }
             }
             break;
-        default:
-            fputws( L"(Unknown cons space type)\n", output );
+        case WRITETV:
+            fwprintf( output, L"\t\tOutput stream\n" );
             break;
     }
 }

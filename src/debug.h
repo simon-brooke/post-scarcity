@@ -20,9 +20,13 @@
 #define DEBUG_LAMBDA 16
 #define DEBUG_BOOTSTRAP 32
 #define DEBUG_IO 64
+#define DEBUG_REPL 128
 
 extern int verbosity;
+
 void debug_print( wchar_t *message, int level );
+void debug_printf( int level, wchar_t * format, ...);
 void debug_print_object( struct cons_pointer pointer, int level );
 void debug_dump_object( struct cons_pointer pointer, int level );
+
 #endif

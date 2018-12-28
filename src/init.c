@@ -27,14 +27,14 @@
 
 // extern char *optarg; /* defined in unistd.h */
 
-void bind_function( char *name, struct cons_pointer ( *executable )
+void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
     deep_bind( c_string_to_lisp_symbol( name ),
                make_function( NIL, executable ) );
 }
 
-void bind_special( char *name, struct cons_pointer ( *executable )
+void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
     deep_bind( c_string_to_lisp_symbol( name ),
@@ -52,7 +52,7 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    while ( ( option = getopt( argc, argv, "pdcv:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
         switch ( option ) {
             case 'c':
                 print_use_colours = true;
@@ -65,6 +65,7 @@ int main( int argc, char *argv[] ) {
                 break;
             case 'v':
                 verbosity = atoi( optarg );
+                break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
                 break;
@@ -76,62 +77,61 @@ int main( int argc, char *argv[] ) {
                   L"Post scarcity software environment version %s\n\n",
                   VERSION );
     }
-#ifdef DEBUG
-    fputws( L"About to initialise cons pages\n", stderr );
-#endif
+
+    debug_print( L"About to initialise cons pages\n", DEBUG_BOOTSTRAP );
+
     initialise_cons_pages(  );
 
-#ifdef DEBUG
-    fputws( L"Initialised cons pages, about to bind\n", stderr );
-#endif
+    debug_print( L"Initialised cons pages, about to bind\n", DEBUG_BOOTSTRAP );
 
     /*
      * privileged variables (keywords)
      */
-    deep_bind( c_string_to_lisp_symbol( "nil" ), NIL );
-    deep_bind( c_string_to_lisp_symbol( "t" ), TRUE );
+    deep_bind( c_string_to_lisp_symbol( L"nil" ), NIL );
+    deep_bind( c_string_to_lisp_symbol( L"t" ), TRUE );
 
     /*
      * primitive function operations
      */
-    bind_function( "add", &lisp_add );
-    bind_function( "apply", &lisp_apply );
-    bind_function( "assoc", &lisp_assoc );
-    bind_function( "car", &lisp_car );
-    bind_function( "cdr", &lisp_cdr );
-    bind_function( "cons", &lisp_cons );
-    bind_function( "divide", &lisp_divide );
-    bind_function( "eq", &lisp_eq );
-    bind_function( "equal", &lisp_equal );
-    bind_function( "eval", &lisp_eval );
-    bind_function( "exception", &lisp_exception );
-    bind_function( "multiply", &lisp_multiply );
-    bind_function( "read", &lisp_read );
-    bind_function( "oblist", &lisp_oblist );
-    bind_function( "print", &lisp_print );
-    bind_function( "progn", &lisp_progn );
-    bind_function( "reverse", &lisp_reverse );
-    bind_function( "set", &lisp_set );
-    bind_function( "subtract", &lisp_subtract );
-    bind_function( "throw", &lisp_exception );
-    bind_function( "type", &lisp_type );
+     bind_function( L"add", &lisp_add );
+     bind_function( L"apply", &lisp_apply );
+     bind_function( L"assoc", &lisp_assoc );
+     bind_function( L"car", &lisp_car );
+     bind_function( L"cdr", &lisp_cdr );
+     bind_function( L"cons", &lisp_cons );
+     bind_function( L"divide", &lisp_divide );
+     bind_function( L"eq", &lisp_eq );
+     bind_function( L"equal", &lisp_equal );
+     bind_function( L"eval", &lisp_eval );
+     bind_function( L"exception", &lisp_exception );
+     bind_function( L"multiply", &lisp_multiply );
+     bind_function( L"read", &lisp_read );
+     bind_function( L"oblist", &lisp_oblist );
+     bind_function( L"print", &lisp_print );
+     bind_function( L"progn", &lisp_progn );
+     bind_function( L"reverse", &lisp_reverse );
+     bind_function( L"set", &lisp_set );
+     bind_function( L"subtract", &lisp_subtract );
+     bind_function( L"throw", &lisp_exception );
+     bind_function( L"type", &lisp_type );
 
-    bind_function( "+", &lisp_add );
-    bind_function( "*", &lisp_multiply );
-    bind_function( "-", &lisp_subtract );
-    bind_function( "/", &lisp_divide );
-    bind_function( "=", &lisp_equal );
+     bind_function( L"+", &lisp_add );
+     bind_function( L"*", &lisp_multiply );
+     bind_function( L"-", &lisp_subtract );
+     bind_function( L"/", &lisp_divide );
+     bind_function( L"=", &lisp_equal );
 
     /*
      * primitive special forms
      */
-    bind_special( "cond", &lisp_cond );
-    bind_special( "lambda", &lisp_lambda );
-    /* bind_special( "λ", &lisp_lambda ); */
-    bind_special( "nlambda", &lisp_nlambda );
-    bind_special( "progn", &lisp_progn );
-    bind_special( "quote", &lisp_quote );
-    bind_special( "set!", &lisp_set_shriek );
+     bind_special( L"cond", &lisp_cond );
+     bind_special( L"lambda", &lisp_lambda );
+     // bind_special( L"λ", &lisp_lambda );
+     bind_special( L"nlambda", &lisp_nlambda );
+     // bind_special( L"nλ", &lisp_nlambda );
+     bind_special( L"progn", &lisp_progn );
+     bind_special( L"quote", &lisp_quote );
+     bind_special( L"set!", &lisp_set_shriek );
 
     repl( stdin, stdout, stderr, show_prompt );
 

@@ -78,7 +78,7 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                        ( "Shouldn't happen: bad arg to simplify_ratio" ),
+                                        ( L"Shouldn't happen: bad arg to simplify_ratio" ),
                                         arg ), frame_pointer );
     }
 
@@ -97,13 +97,11 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
                                      struct cons_pointer arg2 ) {
     struct cons_pointer r, result;
 
-#ifdef DEBUG
-    fputws( L"add_ratio_ratio( arg1 = ", stderr );
-    print( stderr, arg1 );
-    fputws( L"; arg2 = ", stderr );
-    print( stderr, arg2 );
-    fputws( L")\n", stderr );
-#endif
+    debug_print( L"add_ratio_ratio( arg1 = ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L"; arg2 = ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L")\n", DEBUG_ARITH );
 
     if ( ratiop( arg1 ) && ratiop( arg2 ) ) {
         struct cons_space_object cell1 = pointer2cell( arg1 );
@@ -119,9 +117,7 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
             lcm = least_common_multiple( dr1v, dr2v ),
             m1 = lcm / dr1v, m2 = lcm / dr2v;
 
-#ifdef DEBUG
-        fwprintf( stderr, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm, m1, m2 );
-#endif
+        debug_printf( DEBUG_ARITH, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm, m1, m2 );
 
         if ( dr1v == dr2v ) {
             r = make_ratio( frame_pointer,
@@ -151,17 +147,15 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                        ( "Shouldn't happen: bad arg to add_ratio_ratio" ),
+                                        ( L"Shouldn't happen: bad arg to add_ratio_ratio" ),
                                         make_cons( arg1,
                                                    make_cons( arg2, NIL ) ) ),
                              frame_pointer );
     }
 
-#ifdef DEBUG
-    fputws( L" => ", stderr );
-    print( stderr, result );
-    fputws( L"\n", stderr );
-#endif
+    debug_print( L" => ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
+    debug_print( L"\n", DEBUG_ARITH );
 
     return result;
 }
@@ -188,7 +182,7 @@ struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons( c_string_to_lisp_string
-                                        ( "Shouldn't happen: bad arg to add_integer_ratio" ),
+                                        ( L"Shouldn't happen: bad arg to add_integer_ratio" ),
                                         make_cons( intarg,
                                                    make_cons( ratarg,
                                                               NIL ) ) ),
@@ -210,7 +204,8 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         pointer2cell( arg2 ).payload.
                                         ratio.divisor,
                                         pointer2cell( arg2 ).payload.
-                                        ratio.dividend ), result =
+                                        ratio.dividend ),
+    result =
         multiply_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
@@ -228,13 +223,12 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
                                           cons_pointer arg2 ) {
     struct cons_pointer result;
 
-#ifdef DEBUG
-    fputws( L"multiply_ratio_ratio( arg1 = ", stderr );
-    print( stderr, arg1 );
-    fputws( L"; arg2 = ", stderr );
-    print( stderr, arg2 );
-    fputws( L")\n", stderr );
-#endif
+    debug_print( L"multiply_ratio_ratio( arg1 = ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L"; arg2 = ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L")\n", DEBUG_ARITH );
+
     if ( ratiop( arg1 ) && ratiop( arg2 ) ) {
         struct cons_space_object cell1 = pointer2cell( arg1 );
         struct cons_space_object cell2 = pointer2cell( arg2 );
@@ -259,7 +253,7 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                             ( "Shouldn't happen: bad arg to multiply_ratio_ratio" ),
+                             ( L"Shouldn't happen: bad arg to multiply_ratio_ratio" ),
                              frame_pointer );
     }
 
@@ -286,7 +280,7 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                             ( "Shouldn't happen: bad arg to multiply_integer_ratio" ),
+                             ( L"Shouldn't happen: bad arg to multiply_integer_ratio" ),
                              frame_pointer );
     }
 
@@ -329,7 +323,7 @@ struct cons_pointer make_ratio( struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( c_string_to_lisp_string
-                             ( "Dividend and divisor of a ratio must be integers" ),
+                             ( L"Dividend and divisor of a ratio must be integers" ),
                              frame_pointer );
     }
     debug_dump_object( result, DEBUG_ARITH );

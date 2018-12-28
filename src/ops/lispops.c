@@ -193,7 +193,7 @@ struct cons_pointer
 eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    fwprintf( stderr, L"eval_lambda called\n" );
+    debug_print( L"eval_lambda called\n", DEBUG_EVAL );
 
     struct cons_pointer new_env = env;
     struct cons_pointer names = cell.payload.lambda.args;
@@ -355,13 +355,12 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
             break;
         default:
             {
-                char *buffer = malloc( 1024 );
-                memset( buffer, '\0', 1024 );
-                sprintf( buffer,
-                         "Unexpected cell with tag %d (%c%c%c%c) in function position",
-                         fn_cell.tag.value, fn_cell.tag.bytes[0],
-                         fn_cell.tag.bytes[1], fn_cell.tag.bytes[2],
-                         fn_cell.tag.bytes[3] );
+              int bs = sizeof(wchar_t) * 1024;
+                wchar_t *buffer = malloc( bs );
+                memset( buffer, '\0', bs );
+                swprintf( buffer, bs,
+                         L"Unexpected cell with tag %d (%4.4s) in function position",
+                         fn_cell.tag.value, &fn_cell.tag.bytes[0] );
                 struct cons_pointer message =
                     c_string_to_lisp_string( buffer );
                 free( buffer );
@@ -380,13 +379,13 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
 struct cons_pointer c_type( struct cons_pointer pointer ) {
-    char *buffer = malloc( TAGLENGTH + 1 );
-    memset( buffer, 0, TAGLENGTH + 1 );
+    struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( pointer );
-    strncpy( buffer, cell.tag.bytes, TAGLENGTH );
 
-    struct cons_pointer result = c_string_to_lisp_string( buffer );
-    free( buffer );
+    for (int i = TAGLENGTH; i >= 0; i--)
+    {
+      result = make_string((wchar_t)cell.tag.bytes[i], result);
+    }
 
     return result;
 }
@@ -408,13 +407,11 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
 struct cons_pointer
 lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
            struct cons_pointer env ) {
+    debug_print( L"Eval: ", DEBUG_EVAL );
+    debug_dump_object( frame_pointer, DEBUG_EVAL );
+
     struct cons_pointer result = frame->arg[0];
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
-
-    debug_print( L"Eval: ", DEBUG_EVAL );
-#ifdef DEBUG
-    dump_frame( stderr, frame_pointer );
-#endif
 
     switch ( cell.tag.value ) {
         case CONSTV:
@@ -430,7 +427,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 if ( nilp( canonical ) ) {
                     struct cons_pointer message =
                         make_cons( c_string_to_lisp_string
-                                   ( "Attempt to take value of unbound symbol." ),
+                                   ( L"Attempt to take value of unbound symbol." ),
                                    frame->arg[0] );
                     result = throw_exception( message, frame_pointer );
                 } else {
@@ -522,7 +519,7 @@ lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result =
             make_exception( make_cons
                             ( c_string_to_lisp_string
-                              ( "The first argument to `set!` is not a symbol: " ),
+                              ( L"The first argument to `set` is not a symbol: " ),
                               make_cons( frame->arg[0], NIL ) ),
                             frame_pointer );
     }
@@ -556,7 +553,7 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result =
             make_exception( make_cons
                             ( c_string_to_lisp_string
-                              ( "The first argument to `set!` is not a symbol: " ),
+                              ( L"The first argument to `set!` is not a symbol: " ),
                               make_cons( frame->arg[0], NIL ) ),
                             frame_pointer );
     }
@@ -610,7 +607,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = make_string( cell.payload.string.character, NIL );
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string( "Attempt to take CAR of non sequence" );
+            c_string_to_lisp_string( L"Attempt to take CAR of non sequence" );
         result = throw_exception( message, frame_pointer );
     }
 
@@ -635,7 +632,7 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = cell.payload.string.cdr;
     } else {
         struct cons_pointer message =
-            c_string_to_lisp_string( "Attempt to take CDR of non sequence" );
+            c_string_to_lisp_string( L"Attempt to take CDR of non sequence" );
         result = throw_exception( message, frame_pointer );
     }
 
@@ -850,7 +847,7 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
             done = true;
         } else {
             result = throw_exception( c_string_to_lisp_string
-                                      ( "Arguments to `cond` must be lists" ),
+                                      ( L"Arguments to `cond` must be lists" ),
                                       frame_pointer );
         }
     }

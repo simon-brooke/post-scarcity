@@ -8,6 +8,7 @@
  */
 
 #include <ctype.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,9 +36,25 @@ int verbosity = 0;
 void debug_print( wchar_t *message, int level ) {
 #ifdef DEBUG
     if ( level & verbosity ) {
+        fwide( stderr, 1 );
         fputws( message, stderr );
     }
 #endif
+}
+
+/**
+ * `wprintf` adapted for the debug logging system. Print to stderr only
+ * `verbosity` matches `level`. All other arguments as for `wprintf`.
+ */
+void debug_printf( int level, wchar_t * format, ...) {
+  #ifdef DEBUG
+  if ( level & verbosity ) {
+    fwide( stderr, 1 );
+    va_list(args);
+    va_start(args, format);
+    vfwprintf(stderr, format, args);
+  }
+  #endif
 }
 
 /**
@@ -48,6 +65,7 @@ void debug_print( wchar_t *message, int level ) {
 void debug_print_object( struct cons_pointer pointer, int level ) {
 #ifdef DEBUG
     if ( level & verbosity ) {
+        fwide( stderr, 1 );
         print( stderr, pointer );
     }
 #endif
@@ -59,6 +77,7 @@ void debug_print_object( struct cons_pointer pointer, int level ) {
 void debug_dump_object( struct cons_pointer pointer, int level ) {
 #ifdef DEBUG
     if ( level & verbosity ) {
+          fwide( stderr, 1 );
         dump_object( stderr, pointer );
     }
 #endif

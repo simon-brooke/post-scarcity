@@ -20,6 +20,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "debug.h"
 #include "print.h"
 #include "stack.h"
 
@@ -178,11 +179,13 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         cell->payload.string.character = c;
         cell->payload.string.cdr.page = tail.page;
         /* TODO: There's a problem here. Sometimes the offsets on
-         * strings are quite massively off. */
+         * strings are quite massively off. Fix is probably
+         * cell->payload.string.cdr = tsil */
         cell->payload.string.cdr.offset = tail.offset;
     } else {
-        fwprintf( stderr,
-                  L"Warning: only NIL and %s can be appended to %s\n",
+      // TODO: should throw an exception!
+        debug_printf( DEBUG_ALLOC,
+                  L"Warning: only NIL and %s can be prepended to %s\n",
                   tag, tag );
     }
 
@@ -249,26 +252,26 @@ struct cons_pointer make_write_stream( FILE * output ) {
 }
 
 /**
- * Return a lisp string representation of this old skool ASCII string.
+ * Return a lisp string representation of this wide character string.
  */
-struct cons_pointer c_string_to_lisp_string( char *string ) {
+struct cons_pointer c_string_to_lisp_string( wchar_t *string ) {
     struct cons_pointer result = NIL;
 
-    for ( int i = strlen( string ); i > 0; i-- ) {
-        result = make_string( ( wint_t ) string[i - 1], result );
+    for ( int i = wcslen( string ); i > 0; i-- ) {
+        result = make_string( string[i - 1], result );
     }
 
     return result;
 }
 
 /**
- * Return a lisp symbol representation of this old skool ASCII string.
+ * Return a lisp symbol representation of this wide character string.
  */
-struct cons_pointer c_string_to_lisp_symbol( char *symbol ) {
+struct cons_pointer c_string_to_lisp_symbol( wchar_t *symbol ) {
     struct cons_pointer result = NIL;
 
-    for ( int i = strlen( symbol ); i > 0; i-- ) {
-        result = make_symbol( ( wint_t ) symbol[i - 1], result );
+    for ( int i = wcslen( symbol ); i > 0; i-- ) {
+        result = make_symbol( symbol[i - 1], result );
     }
 
     return result;

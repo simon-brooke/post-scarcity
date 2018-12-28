@@ -32,24 +32,15 @@
  */
 struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
     struct stack_frame *result = NULL;
-    debug_print
-        ( L"get_stack_frame: about to get a pointer to the vector space object\n",
-          DEBUG_ALLOC );
     struct vector_space_object *vso =
         pointer2cell( pointer ).payload.vectorp.address;
-    debug_print( L"get_stack_frame: got a pointer, about to test it\n",
-                 DEBUG_ALLOC );
 
     if ( vectorpointp( pointer ) && stackframep( vso ) ) {
-        debug_print
-            ( L"get_stack_frame: pointer is good, about to set the result\n",
-              DEBUG_ALLOC );
-
         result = ( struct stack_frame * ) &( vso->payload );
-        fwprintf( stderr, L"get_stack_frame: all good, returning %p\n",
+        debug_printf( DEBUG_STACK, L"get_stack_frame: all good, returning %p\n",
                   result );
     } else {
-        debug_print( L"get_stack_frame: fail, returning NULL\n", DEBUG_ALLOC );
+        debug_print( L"get_stack_frame: fail, returning NULL\n", DEBUG_STACK );
     }
 
     return result;
@@ -62,31 +53,31 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
  * @return the new frame, or NULL if memory is exhausted.
  */
 struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
-    debug_print( L"Entering make_empty_frame\n", DEBUG_ALLOC );
+    debug_print( L"Entering make_empty_frame\n", DEBUG_STACK );
     struct cons_pointer result =
         make_vso( STACKFRAMETAG, sizeof( struct stack_frame ) );
 
-    debug_dump_object( result, DEBUG_ALLOC );
+    debug_dump_object( result, DEBUG_STACK );
 
-    fwprintf( stderr,
+    debug_printf( DEBUG_STACK,
               L"make_empty_frame: got vector_space_object with size %lu, tag %4.4s\n",
               pointer_to_vso( result )->header.size,
               &pointer_to_vso( result )->header.tag.bytes );
 
     if ( !nilp( result ) ) {
         debug_print( L"make_empty_frame: about to call get_stack_frame\n",
-                     DEBUG_ALLOC );
+                     DEBUG_STACK );
         struct stack_frame *frame = get_stack_frame( result );
         /*
          * TODO: later, pop a frame off a free-list of stack frames
          */
 
-        fwprintf( stderr,
+        debug_printf( DEBUG_STACK,
                   L"make_empty_frame: about to set previous to %4.4s\n",
                   &pointer2cell( previous ).tag.bytes );
         frame->previous = previous;
         debug_print( L"make_empty_frame: about to call inc_ref\n",
-                     DEBUG_ALLOC );
+                     DEBUG_STACK );
         inc_ref( previous );
 
         /*
@@ -98,12 +89,12 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
         frame->args = 0;
 
         debug_print( L"make_empty_frame: about to initialise arg registers\n",
-                     DEBUG_ALLOC );
+                     DEBUG_STACK );
         for ( int i = 0; i < args_in_frame; i++ ) {
             set_reg( frame, i, NIL );
         }
     }
-    debug_print( L"Leaving make_empty_frame\n", DEBUG_ALLOC );
+    debug_print( L"Leaving make_empty_frame\n", DEBUG_STACK );
 
     return result;
 }
@@ -119,13 +110,13 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
 struct cons_pointer make_stack_frame( struct cons_pointer previous,
                                       struct cons_pointer args,
                                       struct cons_pointer env ) {
-    debug_print( L"Entering make_stack_frame\n", DEBUG_ALLOC );
+    debug_print( L"Entering make_stack_frame\n", DEBUG_STACK );
     struct cons_pointer result = make_empty_frame( previous );
 
     if ( nilp( result ) ) {
         /* i.e. out of memory */
         result =
-            make_exception( c_string_to_lisp_string( "Memory exhausted." ),
+            make_exception( c_string_to_lisp_string( L"Memory exhausted." ),
                             previous );
     } else {
         struct stack_frame *frame = get_stack_frame( result );
@@ -149,11 +140,13 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
             if ( nilp( arg_frame_pointer ) ) {
                 result =
                     make_exception( c_string_to_lisp_string
-                                    ( "Memory exhausted." ), previous );
+                                    ( L"Memory exhausted." ), previous );
                 break;
             } else {
                 struct stack_frame *arg_frame =
                     get_stack_frame( arg_frame_pointer );
+                    debug_print( L"Setting argument 0 of arg_frame to ", DEBUG_STACK);
+                    debug_print_object(cell.payload.cons.car, DEBUG_STACK);
                 set_reg( arg_frame, 0, cell.payload.cons.car );
 
                 struct cons_pointer val =
@@ -162,6 +155,8 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                     result = val;
                     break;
                 } else {
+                    debug_printf( DEBUG_STACK, L"Setting argument %d to ", frame->args);
+                    debug_print_object(cell.payload.cons.car, DEBUG_STACK);
                     set_reg( frame, frame->args, val );
                 }
 
@@ -180,10 +175,10 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 inc_ref( more );
             }
 
-            debug_dump_object( result, DEBUG_ALLOC );
+            debug_dump_object( result, DEBUG_STACK );
         }
     }
-    debug_print( L"Leaving make_stack_frame\n", DEBUG_ALLOC );
+    debug_print( L"Leaving make_stack_frame\n", DEBUG_STACK );
 
     return result;
 }
@@ -199,14 +194,14 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
 struct cons_pointer make_special_frame( struct cons_pointer previous,
                                         struct cons_pointer args,
                                         struct cons_pointer env ) {
-    debug_print( L"Entering make_special_frame\n", DEBUG_ALLOC );
+    debug_print( L"Entering make_special_frame\n", DEBUG_STACK );
 
     struct cons_pointer result = make_empty_frame( previous );
 
     if ( nilp( result ) ) {
         /* i.e. out of memory */
         result =
-            make_exception( c_string_to_lisp_string( "Memory exhausted." ),
+            make_exception( c_string_to_lisp_string( L"Memory exhausted." ),
                             previous );
     } else {
         struct stack_frame *frame = get_stack_frame( result );
@@ -228,10 +223,10 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
                 inc_ref( args );
             }
 
-            debug_dump_object( result, DEBUG_ALLOC );
+            debug_dump_object( result, DEBUG_STACK );
         }
     }
-    debug_print( L"Leaving make_special_frame\n", DEBUG_ALLOC );
+    debug_print( L"Leaving make_special_frame\n", DEBUG_STACK );
 
     return result;
 }
@@ -263,6 +258,7 @@ void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
+        fwprintf( output, L"Stack frame with %d arguments:\n", frame->args);
         for ( int arg = 0; arg < frame->args; arg++ ) {
             struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
@@ -274,16 +270,19 @@ void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
             print( output, frame->arg[arg] );
             fputws( L"\n", output );
         }
+      if (!nilp(frame->more))
+      {
         fputws( L"More: \t", output );
         print( output, frame->more );
         fputws( L"\n", output );
+      }
     }
 }
 
 void dump_stack_trace( FILE * output, struct cons_pointer pointer ) {
     if ( exceptionp( pointer ) ) {
         print( output, pointer2cell( pointer ).payload.exception.message );
-        fwprintf( output, L"\n" );
+        fputws( L"\n", output );
         dump_stack_trace( output,
                           pointer2cell( pointer ).payload.exception.frame );
     } else {

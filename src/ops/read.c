@@ -49,7 +49,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial );
  * quote reader macro in C (!)
  */
 struct cons_pointer c_quote( struct cons_pointer arg ) {
-    return make_cons( c_string_to_lisp_symbol( "quote" ),
+    return make_cons( c_string_to_lisp_symbol( L"quote" ),
                       make_cons( arg, NIL ) );
 }
 
@@ -71,8 +71,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
 
     if ( feof( input ) ) {
         result =
-            make_exception( c_string_to_lisp_string
-                            ( "End of file while reading" ), frame_pointer );
+            throw_exception( c_string_to_lisp_string
+                            ( L"End of file while reading" ), frame_pointer );
     } else {
         switch ( c ) {
             case ';':
@@ -81,7 +81,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 break;
             case EOF:
                 result = throw_exception( c_string_to_lisp_string
-                                          ( "End of input while reading" ),
+                                          ( L"End of input while reading" ),
                                           frame_pointer );
                 break;
             case '\'':
@@ -136,8 +136,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     result = read_symbol( input, c );
                 } else {
                     result =
-                        make_exception( make_cons( c_string_to_lisp_string
-                                                   ( "Unrecognised start of input character" ),
+                        throw_exception( make_cons( c_string_to_lisp_string
+                                                   ( L"Unrecognised start of input character" ),
                                                    make_string( c, NIL ) ),
                                         frame_pointer );
                 }
@@ -170,23 +170,23 @@ struct cons_pointer read_number( struct stack_frame *frame,
     if ( negative ) {
         initial = fgetwc( input );
     }
-#ifdef DEBUG
-    fwprintf( stderr, L"read_number starting '%c' (%d)\n", initial, initial );
-#endif
+
+    debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial, initial );
+
     for ( c = initial; iswdigit( c )
           || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
             if ( seen_period || dividend != 0 ) {
-                return make_exception( c_string_to_lisp_string
-                                       ( "Malformed number: too many periods" ),
+                return throw_exception( c_string_to_lisp_string
+                                       ( L"Malformed number: too many periods" ),
                                        frame_pointer );
             } else {
                 seen_period = true;
             }
         } else if ( c == btowc( '/' ) ) {
             if ( seen_period || dividend > 0 ) {
-                return make_exception( c_string_to_lisp_string
-                                       ( "Malformed number: dividend of rational must be integer" ),
+                return throw_exception( c_string_to_lisp_string
+                                       ( L"Malformed number: dividend of rational must be integer" ),
                                        frame_pointer );
             } else {
                 dividend = negative ? 0 - accumulator : accumulator;
@@ -195,11 +195,11 @@ struct cons_pointer read_number( struct stack_frame *frame,
             }
         } else {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
-#ifdef DEBUG
-            fwprintf( stderr,
+
+            debug_printf( DEBUG_IO,
                       L"Added character %c, accumulator now %ld\n",
                       c, accumulator );
-#endif
+
             if ( seen_period ) {
                 places_of_decimals++;
             }
@@ -243,10 +243,8 @@ struct cons_pointer read_list( struct stack_frame *frame,
                                FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     if ( initial != ')' ) {
-#ifdef DEBUG
-        fwprintf( stderr,
+        debug_printf( DEBUG_IO,
                   L"read_list starting '%C' (%d)\n", initial, initial );
-#endif
         struct cons_pointer car =
             read_continuation( frame, frame_pointer, input,
                                initial );

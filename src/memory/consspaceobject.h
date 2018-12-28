@@ -582,11 +582,11 @@ struct cons_pointer make_write_stream( FILE * output );
 /**
  * Return a lisp string representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_string( char *string );
+struct cons_pointer c_string_to_lisp_string( wchar_t *string );
 
 /**
  * Return a lisp symbol representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_symbol( char *symbol );
+struct cons_pointer c_string_to_lisp_symbol( wchar_t *symbol );
 
 #endif
