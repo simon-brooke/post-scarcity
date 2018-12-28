@@ -28,6 +28,13 @@
 /**
  * tag values, all of which must be 4 bytes. Must not collide with vector space tag values
  */
+
+/**
+ * A word within a bignum - arbitrary precision integer.
+ */
+#define BIGNUMTAG "BIGN"
+#define BIGNUMTV 1313294658
+
 /**
  * An ordinary cons cell: 1397641027
  */
@@ -38,7 +45,6 @@
  * An exception.
  */
 #define EXCEPTIONTAG "EXEP"
-/* TODO: this is wrong */
 #define EXCEPTIONTV 1346721861
 
 /**
@@ -92,6 +98,12 @@
 #define REALTV      1279346002
 
 /**
+ * A ratio.
+ */
+#define RATIOTAG    "RTIO"
+#define RATIOTV     1330205778
+
+/**
  * A special form - one whose arguments are not pre-evaluated but passed as a
  * s-expression. 1296453715
  */
@@ -121,12 +133,11 @@
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VECP"
-
+#define VECTORPOINTTV 1346585942
 /**
  * An open write stream.
  */
 #define WRITETAG    "WRIT"
-/* TODO: this is wrong */
 #define WRITETV 1414091351
 
 /**
@@ -156,6 +167,11 @@
  * (there should only be one of these so it's slightly redundant).
  */
 #define nilp(conspoint) (check_tag(conspoint,NILTAG))
+
+/**
+ * true if conspointer points to a cons cell, else false
+ */
+#define bignump(conspoint) (check_tag(conspoint,BIGNUMTAG))
 
 /**
  * true if conspointer points to a cons cell, else false
@@ -198,6 +214,11 @@
 #define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
 
 /**
+ * true if conspointer points to a rational number cell, else false
+ */
+#define ratiop(conspoint) (check_tag(conspoint,RATIOTAG))
+
+/**
  * true if conspointer points to a read stream cell, else false
  */
 #define readp(conspoint) (check_tag(conspoint,READTAG))
@@ -211,7 +232,14 @@
  * true if conspointer points to some sort of a number cell,
  * else false
  */
-#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,REALTAG))
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG)||check_tag(conspoint,BIGNUMTAG))
+
+#define sequencep(conspoint) (check_tag(conspoint,CONSTAG)||check_tag(conspoint,STRINGTAG)||check_tag(conspoint,SYMBOLTAG))
+
+/**
+ * true if thr conspointer points to a vector pointer.
+ */
+#define vectorpointp(conspoint) (check_tag(conspoint,VECTORPOINTTAG))
 
 /**
  * true if conspointer points to a write stream cell, else false.
@@ -235,9 +263,10 @@
  * An indirect pointer to a cons cell
  */
 struct cons_pointer {
-    uint32_t page;              /* the index of the page on which this cell
-                                 * resides */
-    uint32_t offset;            /* the index of the cell within the page */
+   /** the index of the page on which this cell resides */
+    uint32_t page;
+    /** the index of the cell within the page */
+    uint32_t offset;
 };
 
 /*
@@ -250,14 +279,25 @@ struct cons_pointer {
  * here to avoid circularity. TODO: refactor.
  */
 struct stack_frame {
-    struct stack_frame *previous; /* the previous frame */
+    struct cons_pointer previous; /* the previous frame */
     struct cons_pointer arg[args_in_frame];
     /*
      * first 8 arument bindings
      */
     struct cons_pointer more;   /* list of any further argument bindings */
     struct cons_pointer function; /* the function to be called */
+    int args;
 };
+
+/**
+ * payload of a bignum cell. Intentionally similar to an integer payload, but
+ * with a next pointer.
+ */
+struct bignum_payload {
+    int64_t value;
+    struct cons_pointer next;
+};
+
 
 /**
  * payload of a cons cell.
@@ -273,7 +313,7 @@ struct cons_payload {
  */
 struct exception_payload {
     struct cons_pointer message;
-    struct stack_frame *frame;
+    struct cons_pointer frame;
 };
 
 /**
@@ -288,6 +328,7 @@ struct exception_payload {
 struct function_payload {
     struct cons_pointer source;
     struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer,
                                           struct cons_pointer );
 };
 
@@ -306,7 +347,7 @@ struct free_payload {
  * optional bignum object.
  */
 struct integer_payload {
-    long int value;
+    int64_t value;
 };
 
 /**
@@ -318,9 +359,18 @@ struct lambda_payload {
 };
 
 /**
+ * payload for ratio cells. Both dividend and divisor must point to integer (or, later, bignum) cells.
+ */
+struct ratio_payload {
+    struct cons_pointer dividend;
+    struct cons_pointer divisor;
+};
+
+/**
  * payload for a real number cell. Internals of this liable to change to give 128 bits
  * precision, but I'm not sure of the detail.
- */ struct real_payload {
+ */
+struct real_payload {
     long double value;
 };
 
@@ -332,13 +382,11 @@ struct lambda_payload {
  * its argument list) and a cons pointer (representing its environment) and a
  * stack frame (representing the previous stack frame) as arguments and returns
  * a cons pointer (representing its result).
- *
- * NOTE that this means that special forms do not appear on the lisp stack,
- * which may be confusing. TODO: think about this.
  */
 struct special_payload {
     struct cons_pointer source;
     struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer,
                                           struct cons_pointer );
 };
 
@@ -361,6 +409,9 @@ struct string_payload {
     struct cons_pointer cdr;
 };
 
+/**
+ * payload of a vector pointer cell.
+ */
 struct vectorp_payload {
     union {
         char bytes[TAGLENGTH];  /* the tag (type) of the
@@ -371,9 +422,10 @@ struct vectorp_payload {
                                  * tag. */
         uint32_t value;         /* the tag considered as a number */
     } tag;
-    uint64_t address;           /* the address of the actual vector space
-                                 * object (TODO: will change when I actually
-                                 * implement vector space) */
+    void *address;
+    /* the address of the actual vector space
+     * object (TODO: will change when I actually
+     * implement vector space) */
 };
 
 /**
@@ -419,6 +471,10 @@ struct cons_space_object {
          */
         struct cons_payload nil;
         /*
+         * if tag == RATIOTAG
+         */
+        struct ratio_payload ratio;
+        /*
          * if tag == READTAG || tag == WRITETAG
          */
         struct stream_payload stream;
@@ -460,20 +516,11 @@ void inc_ref( struct cons_pointer pointer );
  */
 void dec_ref( struct cons_pointer pointer );
 
-/**
- * dump the object at this cons_pointer to this output stream.
- */
-void dump_object( FILE * output, struct cons_pointer pointer );
-
 struct cons_pointer make_cons( struct cons_pointer car,
                                struct cons_pointer cdr );
-/**
- * Construct an exception cell.
- * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
- * @param frame should be the frame in which the exception occurred.
- */
+
 struct cons_pointer make_exception( struct cons_pointer message,
-                                    struct stack_frame *frame );
+                                    struct cons_pointer frame_pointer );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
@@ -481,6 +528,7 @@ struct cons_pointer make_exception( struct cons_pointer message,
 struct cons_pointer make_function( struct cons_pointer src,
                                    struct cons_pointer ( *executable )
                                     ( struct stack_frame *,
+                                      struct cons_pointer,
                                       struct cons_pointer ) );
 
 /**
@@ -496,12 +544,13 @@ struct cons_pointer make_lambda( struct cons_pointer args,
 struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body );
 
-  /**
+/**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,
                                   struct cons_pointer ( *executable )
                                    ( struct stack_frame *,
+                                     struct cons_pointer,
                                      struct cons_pointer ) );
 
 /**
@@ -533,11 +582,11 @@ struct cons_pointer make_write_stream( FILE * output );
 /**
  * Return a lisp string representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_string( char *string );
+struct cons_pointer c_string_to_lisp_string( wchar_t *string );
 
 /**
  * Return a lisp symbol representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_symbol( char *symbol );
+struct cons_pointer c_string_to_lisp_symbol( wchar_t *symbol );
 
 #endif

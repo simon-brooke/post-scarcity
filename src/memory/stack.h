@@ -25,38 +25,41 @@
 #define __stack_h
 
 /**
- * Make an empty stack frame, and return it.
- * @param previous the current top-of-stack;
- * @param env the environment in which evaluation happens.
- * @return the new frame.
+ * macros for the tag of a stack frame.
  */
-struct stack_frame *make_empty_frame( struct stack_frame *previous,
-                                      struct cons_pointer env );
-
-struct stack_frame *make_stack_frame( struct stack_frame *previous,
-                                      struct cons_pointer args,
-                                      struct cons_pointer env,
-                                      struct cons_pointer *exception );
-void free_stack_frame( struct stack_frame *frame );
+#define STACKFRAMETAG "STAK"
+#define STACKFRAMETV 1262572627
 
 /**
- * Dump a stackframe to this stream for debugging
- * @param output the stream
- * @param frame the frame
+ * is this vector-space object a stack frame?
  */
-void dump_frame( FILE * output, struct stack_frame *frame );
+#define stackframep(vso)(((struct vector_space_object *)vso)->header.tag.value == STACKFRAMETV)
+
+/**
+ * set a register in a stack frame. Alwaye use this macro to do so,
+ • because that way we can be sure the inc_ref happens!
+ */
+//#define set_reg(frame,register,value){frame->arg[register]=value; inc_ref(value);}
+
+void set_reg(struct stack_frame * frame, int reg, struct cons_pointer value);
+
+struct stack_frame *get_stack_frame( struct cons_pointer pointer );
+
+struct cons_pointer make_empty_frame( struct cons_pointer previous );
+
+struct cons_pointer make_stack_frame( struct cons_pointer previous,
+                                      struct cons_pointer args,
+                                      struct cons_pointer env );
+
+void free_stack_frame( struct stack_frame *frame );
+
+void dump_frame( FILE * output, struct cons_pointer pointer );
+
+void dump_stack_trace( FILE * output, struct cons_pointer frame_pointer );
 
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 
-/**
- * A 'special' frame is exactly like a normal stack frame except that the
- * arguments are unevaluated.
- * @param previous the previous stack frame;
- * @param args a list of the arguments to be stored in this stack frame;
- * @param env the execution environment;
- * @return a new special frame.
- */
-struct stack_frame *make_special_frame( struct stack_frame *previous,
+struct cons_pointer make_special_frame( struct cons_pointer previous,
                                         struct cons_pointer args,
                                         struct cons_pointer env );
 
