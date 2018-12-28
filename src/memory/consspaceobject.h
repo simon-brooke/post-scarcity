@@ -133,7 +133,7 @@
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VECP"
-#define VECTORPOINTTV 0
+#define VECTORPOINTTV 1346585942
 /**
  * An open write stream.
  */
@@ -263,9 +263,10 @@
  * An indirect pointer to a cons cell
  */
 struct cons_pointer {
-    uint32_t page;              /* the index of the page on which this cell
-                                 * resides */
-    uint32_t offset;            /* the index of the cell within the page */
+   /** the index of the page on which this cell resides */
+    uint32_t page;
+    /** the index of the cell within the page */
+    uint32_t offset;
 };
 
 /*
@@ -278,13 +279,14 @@ struct cons_pointer {
  * here to avoid circularity. TODO: refactor.
  */
 struct stack_frame {
-    struct stack_frame *previous; /* the previous frame */
+    struct cons_pointer previous; /* the previous frame */
     struct cons_pointer arg[args_in_frame];
     /*
      * first 8 arument bindings
      */
     struct cons_pointer more;   /* list of any further argument bindings */
     struct cons_pointer function; /* the function to be called */
+    int args;
 };
 
 /**
@@ -311,7 +313,7 @@ struct cons_payload {
  */
 struct exception_payload {
     struct cons_pointer message;
-    struct stack_frame *frame;
+    struct cons_pointer frame;
 };
 
 /**
@@ -326,6 +328,7 @@ struct exception_payload {
 struct function_payload {
     struct cons_pointer source;
     struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer,
                                           struct cons_pointer );
 };
 
@@ -379,13 +382,11 @@ struct real_payload {
  * its argument list) and a cons pointer (representing its environment) and a
  * stack frame (representing the previous stack frame) as arguments and returns
  * a cons pointer (representing its result).
- *
- * NOTE that this means that special forms do not appear on the lisp stack,
- * which may be confusing. TODO: think about this.
  */
 struct special_payload {
     struct cons_pointer source;
     struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer,
                                           struct cons_pointer );
 };
 
@@ -421,9 +422,10 @@ struct vectorp_payload {
                                  * tag. */
         uint32_t value;         /* the tag considered as a number */
     } tag;
-    uint64_t address;           /* the address of the actual vector space
-                                 * object (TODO: will change when I actually
-                                 * implement vector space) */
+    void *address;
+    /* the address of the actual vector space
+     * object (TODO: will change when I actually
+     * implement vector space) */
 };
 
 /**
@@ -514,20 +516,11 @@ void inc_ref( struct cons_pointer pointer );
  */
 void dec_ref( struct cons_pointer pointer );
 
-/**
- * dump the object at this cons_pointer to this output stream.
- */
-void dump_object( FILE * output, struct cons_pointer pointer );
-
 struct cons_pointer make_cons( struct cons_pointer car,
                                struct cons_pointer cdr );
-/**
- * Construct an exception cell.
- * @param message should be a lisp string describing the problem, but actually any cons pointer will do;
- * @param frame should be the frame in which the exception occurred.
- */
+
 struct cons_pointer make_exception( struct cons_pointer message,
-                                    struct stack_frame *frame );
+                                    struct cons_pointer frame_pointer );
 
 /**
  * Construct a cell which points to an executable Lisp special form.
@@ -535,6 +528,7 @@ struct cons_pointer make_exception( struct cons_pointer message,
 struct cons_pointer make_function( struct cons_pointer src,
                                    struct cons_pointer ( *executable )
                                     ( struct stack_frame *,
+                                      struct cons_pointer,
                                       struct cons_pointer ) );
 
 /**
@@ -551,19 +545,12 @@ struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body );
 
 /**
- * Construct a ratio frame from these two pointers, expected to be integers
- * or (later) bignums, in the context of this stack_frame.
- */
-struct cons_pointer make_ratio( struct stack_frame *frame,
-                                struct cons_pointer dividend,
-                                struct cons_pointer divisor );
-
-/**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer make_special( struct cons_pointer src,
                                   struct cons_pointer ( *executable )
                                    ( struct stack_frame *,
+                                     struct cons_pointer,
                                      struct cons_pointer ) );
 
 /**
@@ -595,11 +582,11 @@ struct cons_pointer make_write_stream( FILE * output );
 /**
  * Return a lisp string representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_string( char *string );
+struct cons_pointer c_string_to_lisp_string( wchar_t *string );
 
 /**
  * Return a lisp symbol representation of this old skool ASCII string.
  */
-struct cons_pointer c_string_to_lisp_symbol( char *symbol );
+struct cons_pointer c_string_to_lisp_symbol( wchar_t *symbol );
 
 #endif

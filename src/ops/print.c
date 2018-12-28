@@ -20,6 +20,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "integer.h"
+#include "stack.h"
 #include "print.h"
 
 /**
@@ -36,7 +37,7 @@ int print_use_colours = 0;
 void print_string_contents( FILE * output, struct cons_pointer pointer ) {
     while ( stringp( pointer ) || symbolp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
-        wint_t c = cell->payload.string.character;
+        wchar_t c = cell->payload.string.character;
 
         if ( c != '\0' ) {
             fputwc( c, output );
@@ -118,12 +119,7 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case EXCEPTIONTV:
             fwprintf( output, L"\n%sException: ",
                       print_use_colours ? "\x1B[31m" : "" );
-            if ( stringp( cell.payload.exception.message ) ) {
-                print_string_contents( output,
-                                       cell.payload.exception.message );
-            } else {
-                print( output, cell.payload.exception.message );
-            }
+            dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
             fwprintf( output, L"(Function)" );
@@ -135,19 +131,19 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output, L"%ld%", cell.payload.integer.value );
             break;
         case LAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol( "lambda" ),
+            print( output, make_cons( c_string_to_lisp_symbol( L"lambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ) ) );
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case NILTV:
             fwprintf( output, L"nil" );
             break;
         case NLAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol( "nlambda" ),
+            print( output, make_cons( c_string_to_lisp_symbol( L"nlambda" ),
                                       make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ) ) );
+                                                 cell.payload.lambda.
+                                                 body ) ) );
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );
@@ -193,6 +189,9 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             break;
         case TRUETV:
             fwprintf( output, L"t" );
+            break;
+        case WRITETV:
+            fwprintf( output, L"(Output stream)" );
             break;
         default:
             fwprintf( stderr,

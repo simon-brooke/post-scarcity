@@ -23,7 +23,7 @@ LDFLAGS := -lm
 $(TARGET): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
-doc: $(SRCS) Makefile
+doc: $(SRCS) Makefile Doxyfile
 	doxygen
 
 format: $(SRCS) $(HDRS) Makefile
@@ -38,7 +38,7 @@ test: $(OBJS) $(TESTS) Makefile
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ *~
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ *~
 
 repl:
 	$(TARGET) -p 2> psse.log
