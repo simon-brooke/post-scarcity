@@ -16,6 +16,10 @@ long double numeric_value( struct cons_pointer pointer );
 /**
  * Allocate an integer cell representing this value and return a cons pointer to it.
  */
-struct cons_pointer make_integer( int64_t value );
+struct cons_pointer make_integer( int64_t value, struct cons_pointer more );
+
+struct cons_pointer add_integers( struct cons_pointer a, struct cons_pointer b);
+
+struct cons_pointer multiply_integers( struct cons_pointer a, struct cons_pointer b);
 
 #endif

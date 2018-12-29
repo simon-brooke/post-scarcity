@@ -85,8 +85,9 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                 break;
             case INTEGERTV:
                 result =
-                    cell_a->payload.integer.value ==
-                    cell_b->payload.integer.value;
+                    (cell_a->payload.integer.value ==
+                    cell_b->payload.integer.value) &&
+                  equal(cell_a->payload.integer.more, cell_b->payload.integer.more);
                 break;
             case REALTV:
                 {

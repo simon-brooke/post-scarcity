@@ -220,13 +220,13 @@ struct cons_pointer read_number( struct stack_frame *frame,
         result = make_real( rv );
     } else if ( dividend != 0 ) {
         result =
-            make_ratio( frame_pointer, make_integer( dividend ),
-                        make_integer( accumulator ) );
+            make_ratio( frame_pointer, make_integer( dividend, NIL ),
+                        make_integer( accumulator, NIL ) );
     } else {
         if ( negative ) {
             accumulator = 0 - accumulator;
         }
-        result = make_integer( accumulator );
+        result = make_integer( accumulator, NIL );
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );

@@ -150,6 +150,9 @@ void free_cell( struct cons_pointer pointer ) {
         case FUNCTIONTV:
             dec_ref( cell->payload.function.source );
             break;
+        case INTEGERTV:
+            dec_ref( cell->payload.integer.more);
+            break;
         case LAMBDATV:
         case NLAMBDATV:
             dec_ref( cell->payload.lambda.args );
