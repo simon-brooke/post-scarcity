@@ -222,14 +222,14 @@ void free_stack_frame( struct stack_frame *frame ) {
     /*
      * TODO: later, push it back on the stack-frame freelist
      */
-  debug_print(L"Entering free_stack_frame\n", DEBUG_ALLOC);
+    debug_print( L"Entering free_stack_frame\n", DEBUG_ALLOC );
     for ( int i = 0; i < args_in_frame; i++ ) {
         dec_ref( frame->arg[i] );
     }
     if ( !nilp( frame->more ) ) {
         dec_ref( frame->more );
     }
-  debug_print(L"Leaving free_stack_frame\n", DEBUG_ALLOC);
+    debug_print( L"Leaving free_stack_frame\n", DEBUG_ALLOC );
 }
 
 

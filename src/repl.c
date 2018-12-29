@@ -113,16 +113,16 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
             break;
         } else {
             struct cons_pointer val = repl_eval( input );
-            inc_ref(val);
+            inc_ref( val );
             repl_print( output_stream, val );
-            dec_ref(val);
+            dec_ref( val );
         }
 
         dec_ref( input );
     }
 
-    dec_ref(input_stream);
-    dec_ref(output_stream);
+    dec_ref( input_stream );
+    dec_ref( output_stream );
 
     debug_print( L"Leaving repl\n", DEBUG_REPL );
 }

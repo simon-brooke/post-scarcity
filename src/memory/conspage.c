@@ -151,7 +151,7 @@ void free_cell( struct cons_pointer pointer ) {
             dec_ref( cell->payload.function.source );
             break;
         case INTEGERTV:
-            dec_ref( cell->payload.integer.more);
+            dec_ref( cell->payload.integer.more );
             break;
         case LAMBDATV:
         case NLAMBDATV:
@@ -179,8 +179,8 @@ void free_cell( struct cons_pointer pointer ) {
 
             switch ( vso->header.tag.value ) {
                 case STACKFRAMETV:
-                free_stack_frame(get_stack_frame(pointer));
-                break;
+                    free_stack_frame( get_stack_frame( pointer ) );
+                    break;
             }
 
             free( ( void * ) cell->payload.vectorp.address );

@@ -131,8 +131,8 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     struct cons_pointer old = oblist;
 
     oblist = bind( key, value, oblist );
-    inc_ref(oblist);
-    dec_ref(old);
+    inc_ref( oblist );
+    dec_ref( old );
 
     debug_print( L"Leaving deep_bind\n", DEBUG_BIND );
 

@@ -18,8 +18,13 @@ long double numeric_value( struct cons_pointer pointer );
  */
 struct cons_pointer make_integer( int64_t value, struct cons_pointer more );
 
-struct cons_pointer add_integers( struct cons_pointer a, struct cons_pointer b);
+struct cons_pointer add_integers( struct cons_pointer a,
+                                  struct cons_pointer b );
 
-struct cons_pointer multiply_integers( struct cons_pointer a, struct cons_pointer b);
+struct cons_pointer multiply_integers( struct cons_pointer a,
+                                       struct cons_pointer b );
+
+struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
+                                       int base );
 
 #endif

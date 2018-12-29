@@ -195,7 +195,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     debug_print( L"eval_lambda called\n", DEBUG_LAMBDA );
-    debug_println(DEBUG_LAMBDA);
+    debug_println( DEBUG_LAMBDA );
 
     struct cons_pointer new_env = env;
     struct cons_pointer names = cell.payload.lambda.args;
@@ -213,7 +213,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
             names = c_cdr( names );
         }
-        inc_ref(new_env);
+        inc_ref( new_env );
 
         /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
@@ -233,7 +233,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         }
 
         new_env = bind( names, vals, new_env );
-        inc_ref(new_env);
+        inc_ref( new_env );
     }
 
     while ( !nilp( body ) ) {
@@ -241,21 +241,22 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         body = c_cdr( body );
 
         debug_print( L"In lambda: evaluating ", DEBUG_LAMBDA );
-        debug_print_object(sexpr, DEBUG_LAMBDA);
-        debug_println( DEBUG_LAMBDA);
+        debug_print_object( sexpr, DEBUG_LAMBDA );
+        debug_println( DEBUG_LAMBDA );
 
-      /* if a result is not the terminal result in the lambda, it's a
-       * side effect, and needs to be GCed */
-      if (!nilp(result)) dec_ref(result);
+        /* if a result is not the terminal result in the lambda, it's a
+         * side effect, and needs to be GCed */
+        if ( !nilp( result ) )
+            dec_ref( result );
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
     }
 
-    dec_ref(new_env);
+    dec_ref( new_env );
 
     debug_print( L"eval_lambda returning: \n", DEBUG_LAMBDA );
-    debug_print_object( result, DEBUG_LAMBDA);
-    debug_println(DEBUG_LAMBDA);
+    debug_print_object( result, DEBUG_LAMBDA );
+    debug_println( DEBUG_LAMBDA );
 
     return result;
 }
@@ -352,9 +353,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.special.
-                              executable ) ( get_stack_frame( next_pointer ),
-                                             next_pointer, env );
+                            ( *fn_cell.payload.
+                              special.executable ) ( get_stack_frame
+                                                     ( next_pointer ),
+                                                     next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );

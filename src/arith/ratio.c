@@ -61,18 +61,18 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
 
     if ( ratiop( arg ) ) {
         int64_t ddrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).payload.
-            integer.value, drrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).payload.
-            integer.value, gcd = greatest_common_divisor( ddrv, drrv );
+            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
+            payload.integer.value, drrv =
+            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
+            payload.integer.value, gcd = greatest_common_divisor( ddrv, drrv );
 
         if ( gcd > 1 ) {
             if ( drrv / gcd == 1 ) {
-                result = make_integer( ddrv / gcd , NIL);
+                result = make_integer( ddrv / gcd, NIL );
             } else {
                 result =
-                    make_ratio( frame_pointer, make_integer( ddrv / gcd , NIL),
-                                make_integer( drrv / gcd , NIL) );
+                    make_ratio( frame_pointer, make_integer( ddrv / gcd, NIL ),
+                                make_integer( drrv / gcd, NIL ) );
             }
         }
     } else {
@@ -106,7 +106,7 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
     if ( ratiop( arg1 ) && ratiop( arg2 ) ) {
         struct cons_space_object cell1 = pointer2cell( arg1 );
         struct cons_space_object cell2 = pointer2cell( arg2 );
-      // TODO: to be entirely reworked for bignums. All vars must be lisp integers.
+        // TODO: to be entirely reworked for bignums. All vars must be lisp integers.
         int64_t dd1v =
             pointer2cell( cell1.payload.ratio.dividend ).payload.integer.value,
             dd2v =
@@ -203,10 +203,10 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
     struct cons_pointer i = make_ratio( frame_pointer,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        divisor,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        dividend ), result =
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.divisor,
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.dividend ), result =
         multiply_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
@@ -245,7 +245,7 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
 
         struct cons_pointer unsimplified =
             make_ratio( frame_pointer, make_integer( ddrv, NIL ),
-                        make_integer( drrv , NIL) );
+                        make_integer( drrv, NIL ) );
         result = simplify_ratio( frame_pointer, unsimplified );
 
         if ( !eq( unsimplified, result ) ) {
@@ -272,7 +272,7 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
     struct cons_pointer result;
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
-        struct cons_pointer one = make_integer( 1, NIL),
+        struct cons_pointer one = make_integer( 1, NIL ),
             ratio = make_ratio( frame_pointer, intarg, one );
         result = multiply_ratio_ratio( frame_pointer, ratio, ratarg );
 

@@ -124,38 +124,42 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
         case FUNCTIONTV:
             fwprintf( output, L"(Function)" );
             break;
-        case INTEGERTV:
-            if ( print_use_colours ) {
-                fputws( L"\x1B[34m", output );
+        case INTEGERTV:{
+                struct cons_pointer s = integer_to_string( pointer, 10 );
+                inc_ref( s );
+                if ( print_use_colours ) {
+                    fputws( L"\x1B[34m", output );
+                }
+                print_string_contents( output, s );
+                dec_ref( s );
             }
-            fwprintf( output, L"%ld%", cell.payload.integer.value );
             break;
-      case LAMBDATV: {
-            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"lambda" ),
-                                      make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ));
-            inc_ref(to_print);
+        case LAMBDATV:{
+                struct cons_pointer to_print =
+                    make_cons( c_string_to_lisp_symbol( L"lambda" ),
+                               make_cons( cell.payload.lambda.args,
+                                          cell.payload.lambda.body ) );
+                inc_ref( to_print );
 
-            print( output, to_print );
+                print( output, to_print );
 
-            dec_ref(to_print);
-      }
+                dec_ref( to_print );
+            }
             break;
         case NILTV:
             fwprintf( output, L"nil" );
             break;
-      case NLAMBDATV: {
-            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
-                                      make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ));
-            inc_ref(to_print);
+        case NLAMBDATV:{
+                struct cons_pointer to_print =
+                    make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+                               make_cons( cell.payload.lambda.args,
+                                          cell.payload.lambda.body ) );
+                inc_ref( to_print );
 
-            print( output, to_print );
+                print( output, to_print );
 
-            dec_ref(to_print);
-      }
+                dec_ref( to_print );
+            }
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );
