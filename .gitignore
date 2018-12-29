@@ -30,3 +30,5 @@ log*
 \.settings/language\.settings\.xml
 
 utils_src/readprintwc/out
+
+*.dump

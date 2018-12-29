@@ -198,7 +198,6 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     debug_println(DEBUG_LAMBDA);
 
     struct cons_pointer new_env = env;
-    inc_ref(new_env);
     struct cons_pointer names = cell.payload.lambda.args;
     struct cons_pointer body = cell.payload.lambda.body;
 
@@ -214,6 +213,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
             names = c_cdr( names );
         }
+        inc_ref(new_env);
+
         /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
         /* if `names` is a symbol, rather than a list of symbols,
@@ -232,6 +233,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         }
 
         new_env = bind( names, vals, new_env );
+        inc_ref(new_env);
     }
 
     while ( !nilp( body ) ) {
@@ -241,6 +243,10 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         debug_print( L"In lambda: evaluating ", DEBUG_LAMBDA );
         debug_print_object(sexpr, DEBUG_LAMBDA);
         debug_println( DEBUG_LAMBDA);
+
+      /* if a result is not the terminal result in the lambda, it's a
+       * side effect, and needs to be GCed */
+      if (!nilp(result)) dec_ref(result);
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
     }

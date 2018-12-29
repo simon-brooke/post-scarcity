@@ -130,20 +130,32 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             }
             fwprintf( output, L"%ld%", cell.payload.integer.value );
             break;
-        case LAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol( L"lambda" ),
+      case LAMBDATV: {
+            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"lambda" ),
                                       make_cons( cell.payload.lambda.args,
                                                  cell.payload.
-                                                 lambda.body ) ) );
+                                                 lambda.body ));
+            inc_ref(to_print);
+
+            print( output, to_print );
+
+            dec_ref(to_print);
+      }
             break;
         case NILTV:
             fwprintf( output, L"nil" );
             break;
-        case NLAMBDATV:
-            print( output, make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+      case NLAMBDATV: {
+            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
                                       make_cons( cell.payload.lambda.args,
                                                  cell.payload.
-                                                 lambda.body ) ) );
+                                                 lambda.body ));
+            inc_ref(to_print);
+
+            print( output, to_print );
+
+            dec_ref(to_print);
+      }
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );

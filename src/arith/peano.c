@@ -567,6 +567,7 @@ struct cons_pointer lisp_divide( struct
                         struct cons_pointer one = make_integer( 1 );
                         struct cons_pointer ratio =
                             make_ratio( frame_pointer, frame->arg[0], one );
+                        inc_ref( ratio );
                         result =
                             divide_ratio_ratio( frame_pointer, ratio,
                                                 frame->arg[1] );

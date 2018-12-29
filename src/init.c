@@ -30,15 +30,35 @@
 void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
-    deep_bind( c_string_to_lisp_symbol( name ),
-               make_function( NIL, executable ) );
+  struct cons_pointer n = c_string_to_lisp_symbol( name );
+  inc_ref(n);
+
+  /* TODO: where a function is not compiled from source, we could cache
+   * the name on the source pointer. Would make stack frames potentially
+   * more readable and aid debugging generally. */
+    deep_bind( n, make_function( NIL, executable ) );
+
+  dec_ref(n);
 }
 
 void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
-    deep_bind( c_string_to_lisp_symbol( name ),
-               make_special( NIL, executable ) );
+  struct cons_pointer n = c_string_to_lisp_symbol( name );
+  inc_ref(n);
+
+  deep_bind( n, make_special( NIL, executable ) );
+
+  dec_ref(n);
+}
+
+void bind_value( wchar_t *name, struct cons_pointer value) {
+  struct cons_pointer n = c_string_to_lisp_symbol( name );
+  inc_ref(n);
+
+  deep_bind( n, value );
+
+  dec_ref(n);
 }
 
 int main( int argc, char *argv[] ) {
@@ -87,8 +107,8 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords)
      */
-    deep_bind( c_string_to_lisp_symbol( L"nil" ), NIL );
-    deep_bind( c_string_to_lisp_symbol( L"t" ), TRUE );
+    bind_value( L"nil" , NIL );
+    bind_value( L"t" , TRUE );
 
     /*
      * primitive function operations
@@ -139,8 +159,6 @@ int main( int argc, char *argv[] ) {
     repl( stdin, stdout, stderr, show_prompt );
 
   debug_print(L"Freeing oblist\n", DEBUG_BOOTSTRAP);
-  debug_printf(DEBUG_BOOTSTRAP, L"Oblist has %u references\n", pointer2cell(oblist).count);
-  debug_dump_object(oblist, DEBUG_BOOTSTRAP);
     dec_ref(oblist);
   debug_dump_object(oblist, DEBUG_BOOTSTRAP);
 
