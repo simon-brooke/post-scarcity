@@ -66,7 +66,8 @@ void make_cons_page(  ) {
                         cell->count = MAXREFERENCE;
                         cell->payload.free.car = NIL;
                         cell->payload.free.cdr = NIL;
-                        debug_printf( DEBUG_ALLOC, L"Allocated special cell NIL\n" );
+                        debug_printf( DEBUG_ALLOC,
+                                      L"Allocated special cell NIL\n" );
                         break;
                     case 1:
                         /*
@@ -80,7 +81,8 @@ void make_cons_page(  ) {
                         cell->payload.free.cdr = ( struct cons_pointer ) {
                             0, 1
                         };
-                        debug_printf( DEBUG_ALLOC, L"Allocated special cell T\n" );
+                        debug_printf( DEBUG_ALLOC,
+                                      L"Allocated special cell T\n" );
                         break;
                 }
             } else {
@@ -98,8 +100,8 @@ void make_cons_page(  ) {
         initialised_cons_pages++;
     } else {
         debug_printf( DEBUG_ALLOC,
-                  L"FATAL: Failed to allocate memory for cons page %d\n",
-                  initialised_cons_pages );
+                      L"FATAL: Failed to allocate memory for cons page %d\n",
+                      initialised_cons_pages );
         exit( 1 );
     }
 
@@ -164,8 +166,9 @@ void free_cell( struct cons_pointer pointer ) {
         case VECTORPOINTTV:
             /* for vector space pointers, free the actual vector-space
              * object. Dangerous! */
-            debug_printf( DEBUG_ALLOC, L"About to free vector-space object at %ld\n",
-                      cell->payload.vectorp.address );
+            debug_printf( DEBUG_ALLOC,
+                          L"About to free vector-space object at %ld\n",
+                          cell->payload.vectorp.address );
             //free( ( void * ) cell->payload.vectorp.address );
             break;
 
@@ -179,13 +182,13 @@ void free_cell( struct cons_pointer pointer ) {
             freelist = pointer;
         } else {
             debug_printf( DEBUG_ALLOC,
-                      L"ERROR: Attempt to free cell with %d dangling references at page %d, offset %d\n",
-                      cell->count, pointer.page, pointer.offset );
+                          L"ERROR: Attempt to free cell with %d dangling references at page %d, offset %d\n",
+                          cell->count, pointer.page, pointer.offset );
         }
     } else {
         debug_printf( DEBUG_ALLOC,
-                  L"ERROR: Attempt to free cell which is already FREE at page %d, offset %d\n",
-                  pointer.page, pointer.offset );
+                      L"ERROR: Attempt to free cell which is already FREE at page %d, offset %d\n",
+                      pointer.page, pointer.offset );
     }
 }
 
@@ -216,8 +219,8 @@ struct cons_pointer allocate_cell( char *tag ) {
             cell->payload.cons.cdr = NIL;
 
             debug_printf( DEBUG_ALLOC,
-                      L"Allocated cell of type '%s' at %d, %d \n", tag,
-                      result.page, result.offset );
+                          L"Allocated cell of type '%s' at %d, %d \n", tag,
+                          result.page, result.offset );
         } else {
             debug_printf( DEBUG_ALLOC, L"WARNING: Allocating non-free cell!" );
         }
@@ -239,6 +242,6 @@ void initialise_cons_pages(  ) {
         conspageinitihasbeencalled = true;
     } else {
         debug_printf( DEBUG_ALLOC,
-                  L"WARNING: initialise_cons_pages() called a second or subsequent time\n" );
+                      L"WARNING: initialise_cons_pages() called a second or subsequent time\n" );
     }
 }

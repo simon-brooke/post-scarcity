@@ -57,22 +57,22 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
             struct cons_space_object entry =
                 pointer2cell( pointer2cell( next ).payload.cons.car );
 
-            debug_print( L"Internedp: checking whether `",  DEBUG_BIND );
-            debug_print_object( key,  DEBUG_BIND );
-            debug_print( L"` equals `",  DEBUG_BIND );
-            debug_print_object( entry.payload.cons.car,  DEBUG_BIND );
-            debug_print( L"`\n",  DEBUG_BIND );
+            debug_print( L"Internedp: checking whether `", DEBUG_BIND );
+            debug_print_object( key, DEBUG_BIND );
+            debug_print( L"` equals `", DEBUG_BIND );
+            debug_print_object( entry.payload.cons.car, DEBUG_BIND );
+            debug_print( L"`\n", DEBUG_BIND );
 
             if ( equal( key, entry.payload.cons.car ) ) {
                 result = entry.payload.cons.car;
             }
         }
     } else {
-        debug_print( L"`",  DEBUG_BIND );
-        debug_print_object( key,  DEBUG_BIND );
-        debug_print( L"` is a ",  DEBUG_BIND );
-        debug_print_object( c_type( key ),  DEBUG_BIND );
-        debug_print( L", not a SYMB",  DEBUG_BIND );
+        debug_print( L"`", DEBUG_BIND );
+        debug_print_object( key, DEBUG_BIND );
+        debug_print( L"` is a ", DEBUG_BIND );
+        debug_print_object( c_type( key ), DEBUG_BIND );
+        debug_print( L", not a SYMB", DEBUG_BIND );
     }
 
     return result;
@@ -111,11 +111,11 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 struct cons_pointer
 bind( struct cons_pointer key, struct cons_pointer value,
       struct cons_pointer store ) {
-  debug_print(L"Binding ", DEBUG_BIND);
-  debug_print_object(key,  DEBUG_BIND);
-  debug_print(L" to ",  DEBUG_BIND);
-  debug_print_object(value,  DEBUG_BIND);
-  debug_println( DEBUG_BIND);
+    debug_print( L"Binding ", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L" to ", DEBUG_BIND );
+    debug_print_object( value, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return make_cons( make_cons( key, value ), store );
 }
@@ -127,11 +127,11 @@ bind( struct cons_pointer key, struct cons_pointer value,
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
-    debug_print( L"Entering deep_bind\n",  DEBUG_BIND );
+    debug_print( L"Entering deep_bind\n", DEBUG_BIND );
 
     oblist = bind( key, value, oblist );
 
-    debug_print( L"Leaving deep_bind\n",  DEBUG_BIND );
+    debug_print( L"Leaving deep_bind\n", DEBUG_BIND );
 
     return oblist;
 }

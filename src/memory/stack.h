@@ -41,7 +41,7 @@
  */
 //#define set_reg(frame,register,value){frame->arg[register]=value; inc_ref(value);}
 
-void set_reg(struct stack_frame * frame, int reg, struct cons_pointer value);
+void set_reg( struct stack_frame *frame, int reg, struct cons_pointer value );
 
 struct stack_frame *get_stack_frame( struct cons_pointer pointer );
 

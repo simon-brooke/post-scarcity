@@ -34,15 +34,18 @@
 struct cons_pointer repl_read( struct cons_pointer stream_pointer ) {
     struct cons_pointer result = NIL;
     debug_print( L"Entered repl_read\n", DEBUG_REPL );
-    struct cons_pointer frame_pointer = make_stack_frame( NIL, make_cons(stream_pointer, NIL), oblist );
-    debug_print( L"repl_read: got stack_frame pointer\n",  DEBUG_REPL );
+    struct cons_pointer frame_pointer =
+        make_stack_frame( NIL, make_cons( stream_pointer, NIL ), oblist );
+    debug_print( L"repl_read: got stack_frame pointer\n", DEBUG_REPL );
     debug_dump_object( frame_pointer, DEBUG_REPL );
     if ( !nilp( frame_pointer ) ) {
         inc_ref( frame_pointer );
-        result = lisp_read( get_stack_frame( frame_pointer ), frame_pointer, oblist );
+        result =
+            lisp_read( get_stack_frame( frame_pointer ), frame_pointer,
+                       oblist );
         dec_ref( frame_pointer );
     }
-    debug_print( L"repl_read: returning\n",  DEBUG_REPL );
+    debug_print( L"repl_read: returning\n", DEBUG_REPL );
     debug_dump_object( result, DEBUG_REPL );
 
     return result;
@@ -52,12 +55,12 @@ struct cons_pointer repl_read( struct cons_pointer stream_pointer ) {
  * Dummy up a Lisp eval call with its own stack frame.
  */
 struct cons_pointer repl_eval( struct cons_pointer input ) {
-    debug_print( L"Entered repl_eval\n",  DEBUG_REPL );
+    debug_print( L"Entered repl_eval\n", DEBUG_REPL );
     struct cons_pointer result = NIL;
 
     result = eval_form( NULL, NIL, input, oblist );
 
-    debug_print( L"repl_eval: returning\n",  DEBUG_REPL );
+    debug_print( L"repl_eval: returning\n", DEBUG_REPL );
     debug_dump_object( result, DEBUG_REPL );
 
     return result;
@@ -68,11 +71,11 @@ struct cons_pointer repl_eval( struct cons_pointer input ) {
  */
 struct cons_pointer repl_print( struct cons_pointer stream_pointer,
                                 struct cons_pointer value ) {
-    debug_print( L"Entered repl_print\n",  DEBUG_REPL );
+    debug_print( L"Entered repl_print\n", DEBUG_REPL );
     debug_dump_object( value, DEBUG_REPL );
     struct cons_pointer result =
-      print( pointer2cell( stream_pointer ).payload.stream.stream, value );
-    debug_print( L"repl_print: returning\n",  DEBUG_REPL );
+        print( pointer2cell( stream_pointer ).payload.stream.stream, value );
+    debug_print( L"repl_print: returning\n", DEBUG_REPL );
     debug_dump_object( result, DEBUG_REPL );
 
     return result;
@@ -88,7 +91,7 @@ struct cons_pointer repl_print( struct cons_pointer stream_pointer,
 void
 repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
       bool show_prompt ) {
-    debug_print( L"Entered repl\n",  DEBUG_REPL );
+    debug_print( L"Entered repl\n", DEBUG_REPL );
     struct cons_pointer input_stream = make_read_stream( in_stream );
     inc_ref( input_stream );
 
@@ -113,5 +116,5 @@ repl( FILE * in_stream, FILE * out_stream, FILE * error_stream,
         }
         dec_ref( input );
     }
-     debug_print( L"Leaving repl\n",  DEBUG_REPL );
+    debug_print( L"Leaving repl\n", DEBUG_REPL );
 }

@@ -93,45 +93,45 @@ int main( int argc, char *argv[] ) {
     /*
      * primitive function operations
      */
-     bind_function( L"add", &lisp_add );
-     bind_function( L"apply", &lisp_apply );
-     bind_function( L"assoc", &lisp_assoc );
-     bind_function( L"car", &lisp_car );
-     bind_function( L"cdr", &lisp_cdr );
-     bind_function( L"cons", &lisp_cons );
-     bind_function( L"divide", &lisp_divide );
-     bind_function( L"eq", &lisp_eq );
-     bind_function( L"equal", &lisp_equal );
-     bind_function( L"eval", &lisp_eval );
-     bind_function( L"exception", &lisp_exception );
-     bind_function( L"multiply", &lisp_multiply );
-     bind_function( L"read", &lisp_read );
-     bind_function( L"oblist", &lisp_oblist );
-     bind_function( L"print", &lisp_print );
-     bind_function( L"progn", &lisp_progn );
-     bind_function( L"reverse", &lisp_reverse );
-     bind_function( L"set", &lisp_set );
-     bind_function( L"subtract", &lisp_subtract );
-     bind_function( L"throw", &lisp_exception );
-     bind_function( L"type", &lisp_type );
+    bind_function( L"add", &lisp_add );
+    bind_function( L"apply", &lisp_apply );
+    bind_function( L"assoc", &lisp_assoc );
+    bind_function( L"car", &lisp_car );
+    bind_function( L"cdr", &lisp_cdr );
+    bind_function( L"cons", &lisp_cons );
+    bind_function( L"divide", &lisp_divide );
+    bind_function( L"eq", &lisp_eq );
+    bind_function( L"equal", &lisp_equal );
+    bind_function( L"eval", &lisp_eval );
+    bind_function( L"exception", &lisp_exception );
+    bind_function( L"multiply", &lisp_multiply );
+    bind_function( L"read", &lisp_read );
+    bind_function( L"oblist", &lisp_oblist );
+    bind_function( L"print", &lisp_print );
+    bind_function( L"progn", &lisp_progn );
+    bind_function( L"reverse", &lisp_reverse );
+    bind_function( L"set", &lisp_set );
+    bind_function( L"subtract", &lisp_subtract );
+    bind_function( L"throw", &lisp_exception );
+    bind_function( L"type", &lisp_type );
 
-     bind_function( L"+", &lisp_add );
-     bind_function( L"*", &lisp_multiply );
-     bind_function( L"-", &lisp_subtract );
-     bind_function( L"/", &lisp_divide );
-     bind_function( L"=", &lisp_equal );
+    bind_function( L"+", &lisp_add );
+    bind_function( L"*", &lisp_multiply );
+    bind_function( L"-", &lisp_subtract );
+    bind_function( L"/", &lisp_divide );
+    bind_function( L"=", &lisp_equal );
 
     /*
      * primitive special forms
      */
-     bind_special( L"cond", &lisp_cond );
-     bind_special( L"lambda", &lisp_lambda );
-     // bind_special( L"λ", &lisp_lambda );
-     bind_special( L"nlambda", &lisp_nlambda );
-     // bind_special( L"nλ", &lisp_nlambda );
-     bind_special( L"progn", &lisp_progn );
-     bind_special( L"quote", &lisp_quote );
-     bind_special( L"set!", &lisp_set_shriek );
+    bind_special( L"cond", &lisp_cond );
+    bind_special( L"lambda", &lisp_lambda );
+    // bind_special( L"λ", &lisp_lambda );
+    bind_special( L"nlambda", &lisp_nlambda );
+    // bind_special( L"nλ", &lisp_nlambda );
+    bind_special( L"progn", &lisp_progn );
+    bind_special( L"quote", &lisp_quote );
+    bind_special( L"set!", &lisp_set_shriek );
 
     repl( stdin, stdout, stderr, show_prompt );
 

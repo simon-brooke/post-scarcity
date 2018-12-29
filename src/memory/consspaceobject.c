@@ -183,10 +183,10 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
          * cell->payload.string.cdr = tsil */
         cell->payload.string.cdr.offset = tail.offset;
     } else {
-      // TODO: should throw an exception!
+        // TODO: should throw an exception!
         debug_printf( DEBUG_ALLOC,
-                  L"Warning: only NIL and %s can be prepended to %s\n",
-                  tag, tag );
+                      L"Warning: only NIL and %s can be prepended to %s\n",
+                      tag, tag );
     }
 
     return pointer;

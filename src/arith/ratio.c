@@ -61,10 +61,10 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
 
     if ( ratiop( arg ) ) {
         int64_t ddrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
-            payload.integer.value, drrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
-            payload.integer.value, gcd = greatest_common_divisor( ddrv, drrv );
+            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).payload.
+            integer.value, drrv =
+            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).payload.
+            integer.value, gcd = greatest_common_divisor( ddrv, drrv );
 
         if ( gcd > 1 ) {
             if ( drrv / gcd == 1 ) {
@@ -117,7 +117,8 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
             lcm = least_common_multiple( dr1v, dr2v ),
             m1 = lcm / dr1v, m2 = lcm / dr2v;
 
-        debug_printf( DEBUG_ARITH, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm, m1, m2 );
+        debug_printf( DEBUG_ARITH, L"); lcm = %ld; m1 = %ld; m2 = %ld", lcm,
+                      m1, m2 );
 
         if ( dr1v == dr2v ) {
             r = make_ratio( frame_pointer,
@@ -201,11 +202,10 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
     struct cons_pointer i = make_ratio( frame_pointer,
-                                        pointer2cell( arg2 ).payload.
-                                        ratio.divisor,
-                                        pointer2cell( arg2 ).payload.
-                                        ratio.dividend ),
-    result =
+                                        pointer2cell( arg2 ).payload.ratio.
+                                        divisor,
+                                        pointer2cell( arg2 ).payload.ratio.
+                                        dividend ), result =
         multiply_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );

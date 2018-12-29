@@ -36,11 +36,12 @@ struct cons_pointer make_vec_pointer( struct vector_space_object *address ) {
     struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
     debug_printf( DEBUG_ALLOC,
-              L"make_vec_pointer: tag written, about to set pointer address to %p\n",
-              address );
+                  L"make_vec_pointer: tag written, about to set pointer address to %p\n",
+                  address );
     cell->payload.vectorp.address = address;
-    debug_printf( DEBUG_ALLOC, L"make_vec_pointer: all good, returning pointer to %p\n",
-              cell->payload.vectorp.address );
+    debug_printf( DEBUG_ALLOC,
+                  L"make_vec_pointer: all good, returning pointer to %p\n",
+                  cell->payload.vectorp.address );
 
     debug_dump_object( pointer, DEBUG_ALLOC );
 
@@ -67,8 +68,8 @@ struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
 
     if ( vso != NULL ) {
         debug_printf( DEBUG_ALLOC,
-                  L"make_vso: about to write tag '%s' into vso at %p\n", tag,
-                  vso );
+                      L"make_vso: about to write tag '%s' into vso at %p\n",
+                      tag, vso );
         strncpy( &vso->header.tag.bytes[0], tag, TAGLENGTH );
         result = make_vec_pointer( vso );
         debug_dump_object( result, DEBUG_ALLOC );
@@ -79,18 +80,19 @@ struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
 
 #ifdef DEBUG
         debug_printf( DEBUG_ALLOC,
-                  L"Allocated vector-space object of type %4.4s, total size %ld, payload size %ld, at address %p, payload address %p\n",
-                  &vso->header.tag.bytes, total_size, vso->header.size, vso,
-                  &vso->payload );
+                      L"Allocated vector-space object of type %4.4s, total size %ld, payload size %ld, at address %p, payload address %p\n",
+                      &vso->header.tag.bytes, total_size, vso->header.size,
+                      vso, &vso->payload );
         if ( padded != total_size ) {
             debug_printf( DEBUG_ALLOC, L"\t\tPadded from %d to %d\n",
-                      total_size, padded );
+                          total_size, padded );
         }
 #endif
     }
 #ifdef DEBUG
-    debug_printf( DEBUG_ALLOC, L"make_vso: all good, returning pointer to %p\n",
-              pointer2cell( result ).payload.vectorp.address );
+    debug_printf( DEBUG_ALLOC,
+                  L"make_vso: all good, returning pointer to %p\n",
+                  pointer2cell( result ).payload.vectorp.address );
 #endif
 
     return result;

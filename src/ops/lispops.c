@@ -212,7 +212,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
             names = c_cdr( names );
         }
-      /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
+        /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
         /* if `names` is a symbol, rather than a list of symbols,
          * then bind a list of the values of args to that symbol. */
@@ -255,8 +255,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 struct cons_pointer
 c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
          struct cons_pointer env ) {
-  debug_print(L"Entering c_apply\n", DEBUG_EVAL);
-  struct cons_pointer result = NIL;
+    debug_print( L"Entering c_apply\n", DEBUG_EVAL );
+    struct cons_pointer result = NIL;
 
     struct cons_pointer fn_pointer =
         eval_form( frame, frame_pointer, c_car( frame->arg[0] ), env );
@@ -264,103 +264,107 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( exceptionp( fn_pointer ) ) {
         result = fn_pointer;
     } else {
-    struct cons_space_object fn_cell = pointer2cell( fn_pointer );
-    struct cons_pointer args = c_cdr( frame->arg[0] );
+        struct cons_space_object fn_cell = pointer2cell( fn_pointer );
+        struct cons_pointer args = c_cdr( frame->arg[0] );
 
-    switch ( fn_cell.tag.value ) {
-        case EXCEPTIONTV:
-            /* just pass exceptions straight back */
-            result = fn_pointer;
-            break;
-        case FUNCTIONTV:
-            {
-                struct cons_pointer exep = NIL;
-                struct cons_pointer next_pointer =
-                    make_stack_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next = get_stack_frame( next_pointer );
+        switch ( fn_cell.tag.value ) {
+            case EXCEPTIONTV:
+                /* just pass exceptions straight back */
+                result = fn_pointer;
+                break;
+            case FUNCTIONTV:
+                {
+                    struct cons_pointer exep = NIL;
+                    struct cons_pointer next_pointer =
+                        make_stack_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
 
-                    result =
-                        ( *fn_cell.payload.function.executable ) ( next,
-                                                                   next_pointer,
-                                                                   env );
-                    dec_ref( next_pointer );
-                }
-            }
-            break;
-        case LAMBDATV:
-            {
-                struct cons_pointer exep = NIL;
-                struct cons_pointer next_pointer =
-                    make_stack_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next = get_stack_frame( next_pointer );
-                    result = eval_lambda( fn_cell, next, next_pointer, env );
-                    if ( !exceptionp( result ) ) {
+                        result =
+                            ( *fn_cell.payload.function.executable ) ( next,
+                                                                       next_pointer,
+                                                                       env );
                         dec_ref( next_pointer );
                     }
                 }
-            }
-            break;
-        case NLAMBDATV:
-            {
-                struct cons_pointer next_pointer =
-                    make_special_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next =
-                        get_stack_frame( next_pointer );
-                    result = eval_lambda( fn_cell, next, next_pointer, env );
+                break;
+            case LAMBDATV:
+                {
+                    struct cons_pointer exep = NIL;
+                    struct cons_pointer next_pointer =
+                        make_stack_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
+                        result =
+                            eval_lambda( fn_cell, next, next_pointer, env );
+                        if ( !exceptionp( result ) ) {
+                            dec_ref( next_pointer );
+                        }
+                    }
+                }
+                break;
+            case NLAMBDATV:
+                {
+                    struct cons_pointer next_pointer =
+                        make_special_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
+                        result =
+                            eval_lambda( fn_cell, next, next_pointer, env );
                         dec_ref( next_pointer );
+                    }
                 }
-            }
-            break;
-        case SPECIALTV:
-            {
-                struct cons_pointer next_pointer =
-                    make_special_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    result =
-                        ( *fn_cell.payload.special.executable ) ( get_stack_frame( next_pointer ),
-                                                                  next_pointer,
-                                                                  env );
-                   debug_print(L"Special form returning: ", DEBUG_EVAL);
-                  debug_print_object(result, DEBUG_EVAL);
-                  debug_println(DEBUG_EVAL);
-                    dec_ref( next_pointer );
+                break;
+            case SPECIALTV:
+                {
+                    struct cons_pointer next_pointer =
+                        make_special_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        result =
+                            ( *fn_cell.payload.special.
+                              executable ) ( get_stack_frame( next_pointer ),
+                                             next_pointer, env );
+                        debug_print( L"Special form returning: ", DEBUG_EVAL );
+                        debug_print_object( result, DEBUG_EVAL );
+                        debug_println( DEBUG_EVAL );
+                        dec_ref( next_pointer );
+                    }
                 }
-            }
-            break;
-        default:
-            {
-              int bs = sizeof(wchar_t) * 1024;
-                wchar_t *buffer = malloc( bs );
-                memset( buffer, '\0', bs );
-                swprintf( buffer, bs,
-                         L"Unexpected cell with tag %d (%4.4s) in function position",
-                         fn_cell.tag.value, &fn_cell.tag.bytes[0] );
-                struct cons_pointer message =
-                    c_string_to_lisp_string( buffer );
-                free( buffer );
-                result = throw_exception( message, frame_pointer );
-            }
-    }
+                break;
+            default:
+                {
+                    int bs = sizeof( wchar_t ) * 1024;
+                    wchar_t *buffer = malloc( bs );
+                    memset( buffer, '\0', bs );
+                    swprintf( buffer, bs,
+                              L"Unexpected cell with tag %d (%4.4s) in function position",
+                              fn_cell.tag.value, &fn_cell.tag.bytes[0] );
+                    struct cons_pointer message =
+                        c_string_to_lisp_string( buffer );
+                    free( buffer );
+                    result = throw_exception( message, frame_pointer );
+                }
+        }
     }
 
-    debug_print(L"c_apply: returning: ", DEBUG_EVAL);
-    debug_print_object(result, DEBUG_EVAL);
-    debug_println(DEBUG_EVAL);
+    debug_print( L"c_apply: returning: ", DEBUG_EVAL );
+    debug_print_object( result, DEBUG_EVAL );
+    debug_println( DEBUG_EVAL );
 
     return result;
 }
@@ -375,9 +379,8 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( pointer );
 
-    for (int i = TAGLENGTH -1; i >= 0; i--)
-    {
-      result = make_string((wchar_t)cell.tag.bytes[i], result);
+    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
+        result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
     }
 
     return result;

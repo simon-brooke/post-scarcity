@@ -67,8 +67,8 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                       cell.payload.cons.car.offset,
                       cell.payload.cons.cdr.page,
                       cell.payload.cons.cdr.offset, cell.count );
-            print( output, pointer);
-            fputws( L"\n", output);
+            print( output, pointer );
+            fputws( L"\n", output );
             break;
         case EXCEPTIONTV:
             fwprintf( output, L"\t\tException cell: " );
@@ -89,7 +89,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
-            fputws( L"\n", output);
+            fputws( L"\n", output );
             break;
         case NILTV:
             break;
@@ -98,15 +98,15 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
-            fputws( L"\n", output);
+            fputws( L"\n", output );
             break;
         case RATIOTV:
             fwprintf( output,
                       L"\t\tRational cell: value %ld/%ld, count %u\n",
-                      pointer2cell( cell.payload.ratio.dividend ).
-                      payload.integer.value,
-                      pointer2cell( cell.payload.ratio.divisor ).
-                      payload.integer.value, cell.count );
+                      pointer2cell( cell.payload.ratio.dividend ).payload.
+                      integer.value,
+                      pointer2cell( cell.payload.ratio.divisor ).payload.
+                      integer.value, cell.count );
             break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );
@@ -130,10 +130,11 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
                 struct vector_space_object *vso = cell.payload.vectorp.address;
                 fwprintf( output,
                           L"\t\tVector space object of type %4.4s (%d), payload size %d bytes\n",
-                          &vso->header.tag.bytes, vso->header.tag.value, vso->header.size );
-          if (stackframep(vso)) {
-            dump_frame(output, pointer);
-          }
+                          &vso->header.tag.bytes, vso->header.tag.value,
+                          vso->header.size );
+                if ( stackframep( vso ) ) {
+                    dump_frame( output, pointer );
+                }
                 switch ( vso->header.tag.value ) {
                     case STACKFRAMETV:
                         dump_frame( output, pointer );

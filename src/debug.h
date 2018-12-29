@@ -27,7 +27,7 @@ extern int verbosity;
 
 void debug_print( wchar_t *message, int level );
 void debug_println( int level );
-void debug_printf( int level, wchar_t * format, ...);
+void debug_printf( int level, wchar_t *format, ... );
 void debug_print_object( struct cons_pointer pointer, int level );
 void debug_dump_object( struct cons_pointer pointer, int level );
 

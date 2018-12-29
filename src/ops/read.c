@@ -72,7 +72,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
     if ( feof( input ) ) {
         result =
             throw_exception( c_string_to_lisp_string
-                            ( L"End of file while reading" ), frame_pointer );
+                             ( L"End of file while reading" ), frame_pointer );
     } else {
         switch ( c ) {
             case ';':
@@ -137,9 +137,9 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 } else {
                     result =
                         throw_exception( make_cons( c_string_to_lisp_string
-                                                   ( L"Unrecognised start of input character" ),
-                                                   make_string( c, NIL ) ),
-                                        frame_pointer );
+                                                    ( L"Unrecognised start of input character" ),
+                                                    make_string( c, NIL ) ),
+                                         frame_pointer );
                 }
                 break;
         }
@@ -171,23 +171,24 @@ struct cons_pointer read_number( struct stack_frame *frame,
         initial = fgetwc( input );
     }
 
-    debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial, initial );
+    debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial,
+                  initial );
 
     for ( c = initial; iswdigit( c )
           || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
             if ( seen_period || dividend != 0 ) {
                 return throw_exception( c_string_to_lisp_string
-                                       ( L"Malformed number: too many periods" ),
-                                       frame_pointer );
+                                        ( L"Malformed number: too many periods" ),
+                                        frame_pointer );
             } else {
                 seen_period = true;
             }
         } else if ( c == btowc( '/' ) ) {
             if ( seen_period || dividend > 0 ) {
                 return throw_exception( c_string_to_lisp_string
-                                       ( L"Malformed number: dividend of rational must be integer" ),
-                                       frame_pointer );
+                                        ( L"Malformed number: dividend of rational must be integer" ),
+                                        frame_pointer );
             } else {
                 dividend = negative ? 0 - accumulator : accumulator;
 
@@ -197,8 +198,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
 
             debug_printf( DEBUG_IO,
-                      L"Added character %c, accumulator now %ld\n",
-                      c, accumulator );
+                          L"Added character %c, accumulator now %ld\n",
+                          c, accumulator );
 
             if ( seen_period ) {
                 places_of_decimals++;
@@ -244,7 +245,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
     struct cons_pointer result = NIL;
     if ( initial != ')' ) {
         debug_printf( DEBUG_IO,
-                  L"read_list starting '%C' (%d)\n", initial, initial );
+                      L"read_list starting '%C' (%d)\n", initial, initial );
         struct cons_pointer car =
             read_continuation( frame, frame_pointer, input,
                                initial );

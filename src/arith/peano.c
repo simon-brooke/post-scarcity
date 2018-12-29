@@ -412,8 +412,8 @@ struct cons_pointer inverse( struct cons_pointer frame,
         case RATIOTV:
             result = make_ratio( frame,
                                  make_integer( 0 -
-                                               to_long_int( cell.payload.
-                                                            ratio.dividend ) ),
+                                               to_long_int( cell.payload.ratio.
+                                                            dividend ) ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
