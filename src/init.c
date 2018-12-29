@@ -133,7 +133,17 @@ int main( int argc, char *argv[] ) {
     bind_special( L"quote", &lisp_quote );
     bind_special( L"set!", &lisp_set_shriek );
 
+  debug_print(L"Initialised oblist\n", DEBUG_BOOTSTRAP);
+  debug_dump_object(oblist, DEBUG_BOOTSTRAP);
+
     repl( stdin, stdout, stderr, show_prompt );
+
+  debug_print(L"Freeing oblist\n", DEBUG_BOOTSTRAP);
+  debug_printf(DEBUG_BOOTSTRAP, L"Oblist has %u references\n", pointer2cell(oblist).count);
+  debug_dump_object(oblist, DEBUG_BOOTSTRAP);
+    dec_ref(oblist);
+  debug_dump_object(oblist, DEBUG_BOOTSTRAP);
+
 
     if ( dump_at_end ) {
         dump_pages( stdout );

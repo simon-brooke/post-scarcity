@@ -169,7 +169,7 @@ void free_cell( struct cons_pointer pointer ) {
             /* for vector space pointers, free the actual vector-space
              * object. Dangerous! */
             debug_printf( DEBUG_ALLOC,
-                          L"About to free vector-space object at %ld\n",
+                          L"About to free vector-space object at 0x%lx\n",
                           cell->payload.vectorp.address );
             struct vector_space_object *vso = cell->payload.vectorp.address;
 
@@ -181,7 +181,7 @@ void free_cell( struct cons_pointer pointer ) {
 
             free( ( void * ) cell->payload.vectorp.address );
             debug_printf( DEBUG_ALLOC,
-                          L"Freed vector-space object at %ld\n",
+                          L"Freed vector-space object at 0x%lx\n",
                           cell->payload.vectorp.address );
             break;
 

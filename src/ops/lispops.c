@@ -194,9 +194,11 @@ struct cons_pointer
 eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    debug_print( L"eval_lambda called\n", DEBUG_EVAL );
+    debug_print( L"eval_lambda called\n", DEBUG_LAMBDA );
+    debug_println(DEBUG_LAMBDA);
 
     struct cons_pointer new_env = env;
+    inc_ref(new_env);
     struct cons_pointer names = cell.payload.lambda.args;
     struct cons_pointer body = cell.payload.lambda.body;
 
@@ -236,10 +238,18 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         struct cons_pointer sexpr = c_car( body );
         body = c_cdr( body );
 
-        debug_print( L"In lambda: ", DEBUG_LAMBDA );
+        debug_print( L"In lambda: evaluating ", DEBUG_LAMBDA );
+        debug_print_object(sexpr, DEBUG_LAMBDA);
+        debug_println( DEBUG_LAMBDA);
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
     }
+
+    dec_ref(new_env);
+
+    debug_print( L"eval_lambda returning: \n", DEBUG_LAMBDA );
+    debug_print_object( result, DEBUG_LAMBDA);
+    debug_println(DEBUG_LAMBDA);
 
     return result;
 }
