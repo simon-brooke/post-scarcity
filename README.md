@@ -2,7 +2,7 @@
 
 Very Nearly a Big Lisp Environment
 
-tl,dr: look at the [[wiki]].
+tl,dr: look at the [wiki](wiki).
 
 ## State of play
 
