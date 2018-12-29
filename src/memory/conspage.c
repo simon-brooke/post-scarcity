@@ -20,6 +20,8 @@
 #include "conspage.h"
 #include "debug.h"
 #include "dump.h"
+#include "stack.h"
+#include "vectorspace.h"
 
 /**
  * Flag indicating whether conspage initialisation has been done.
@@ -169,7 +171,18 @@ void free_cell( struct cons_pointer pointer ) {
             debug_printf( DEBUG_ALLOC,
                           L"About to free vector-space object at %ld\n",
                           cell->payload.vectorp.address );
-            //free( ( void * ) cell->payload.vectorp.address );
+            struct vector_space_object *vso = cell->payload.vectorp.address;
+
+            switch ( vso->header.tag.value ) {
+                case STACKFRAMETV:
+                free_stack_frame(get_stack_frame(pointer));
+                break;
+            }
+
+            free( ( void * ) cell->payload.vectorp.address );
+            debug_printf( DEBUG_ALLOC,
+                          L"Freed vector-space object at %ld\n",
+                          cell->payload.vectorp.address );
             break;
 
     }
