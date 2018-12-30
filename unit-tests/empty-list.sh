@@ -1,5 +1,5 @@
 #!/bin/bash
-# 
+#
 # File:   empty-list.sh.bash
 # Author: simon
 #
@@ -7,7 +7,7 @@
 #
 
 expected=nil
-actual=`echo "'()" | target/psse 2> /dev/null | head -2 | tail -1`
+actual=`echo "'()" | target/psse | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

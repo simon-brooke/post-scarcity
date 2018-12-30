@@ -224,3 +224,7 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
 
     return pointer;
 }
+
+void println( FILE * output ) {
+    fputws( L"\n", output );
+}

@@ -284,7 +284,9 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result = make_integer(cell1.payload.integer.value * cell2.payload.integer.value, NIL);
+                        result =
+                            make_integer( cell1.payload.integer.value *
+                                          cell2.payload.integer.value, NIL );
                         //result = multiply_integers( arg1, arg2 );
                         break;
                     case RATIOTV:
@@ -412,8 +414,9 @@ struct cons_pointer inverse( struct cons_pointer frame,
         case RATIOTV:
             result = make_ratio( frame,
                                  make_integer( 0 -
-                                               to_long_int( cell.payload.ratio.
-                                                            dividend ), NIL ),
+                                               to_long_int( cell.payload.
+                                                            ratio.dividend ),
+                                               NIL ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
@@ -453,7 +456,8 @@ struct cons_pointer lisp_subtract( struct
                     break;
                 case INTEGERTV:
                     result = make_integer( cell0.payload.integer.value
-                                           - cell1.payload.integer.value, NIL );
+                                           - cell1.payload.integer.value,
+                                           NIL );
                     break;
                 case RATIOTV:{
                         struct cons_pointer tmp =

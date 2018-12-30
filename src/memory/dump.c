@@ -83,9 +83,9 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output,
                       L"\t\tInteger cell: value %ld, count %u\n",
                       cell.payload.integer.value, cell.count );
-            if (!nilp(cell.payload.integer.more)) {
-                fputws( L"\t\tBIGNUM! More at\n:", output);
-                dump_object(output, cell.payload.integer.more);
+            if ( !nilp( cell.payload.integer.more ) ) {
+                fputws( L"\t\tBIGNUM! More at\n:", output );
+                dump_object( output, cell.payload.integer.more );
             }
             break;
         case LAMBDATV:
@@ -107,10 +107,10 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         case RATIOTV:
             fwprintf( output,
                       L"\t\tRational cell: value %ld/%ld, count %u\n",
-                      pointer2cell( cell.payload.ratio.dividend ).
-                      payload.integer.value,
-                      pointer2cell( cell.payload.ratio.divisor ).
-                      payload.integer.value, cell.count );
+                      pointer2cell( cell.payload.ratio.dividend ).payload.
+                      integer.value,
+                      pointer2cell( cell.payload.ratio.divisor ).payload.
+                      integer.value, cell.count );
             break;
         case READTV:
             fwprintf( output, L"\t\tInput stream\n" );

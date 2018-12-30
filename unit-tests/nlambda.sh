@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='a'
-actual=`echo "((nlambda (x) x) a)" | target/psse 2> /dev/null | head -2 | tail -1`
+actual=`echo "((nlambda (x) x) a)" | target/psse | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

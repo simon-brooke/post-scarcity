@@ -62,12 +62,6 @@ void bind_value( wchar_t *name, struct cons_pointer value ) {
 }
 
 int main( int argc, char *argv[] ) {
-    /*
-     * attempt to set wide character acceptance on all streams
-     */
-    fwide( stdin, 1 );
-    fwide( stdout, 1 );
-    fwide( stderr, 1 );
     int option;
     bool dump_at_end = false;
     bool show_prompt = false;
@@ -111,6 +105,26 @@ int main( int argc, char *argv[] ) {
     bind_value( L"t", TRUE );
 
     /*
+     * standard input, output, error and sink streams
+     * attempt to set wide character acceptance on all streams
+     */
+    FILE *sink = fopen( "/dev/null", "w" );
+    fwide( stdin, 1 );
+    fwide( stdout, 1 );
+    fwide( stderr, 1 );
+    fwide( sink, 1 );
+    bind_value( L"*in*", make_read_stream( stdin ) );
+    bind_value( L"*out*", make_write_stream( stdout ) );
+    bind_value( L"*log*", make_write_stream( stderr ) );
+    bind_value( L"*sink*", make_write_stream( sink ) );
+
+    /*
+     * the default prompt
+     */
+    bind_value( L"*prompt*",
+                show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL );
+
+    /*
      * primitive function operations
      */
     bind_function( L"add", &lisp_add );
@@ -126,6 +140,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"exception", &lisp_exception );
     bind_function( L"multiply", &lisp_multiply );
     bind_function( L"read", &lisp_read );
+    bind_function( L"repl", &lisp_repl );
     bind_function( L"oblist", &lisp_oblist );
     bind_function( L"print", &lisp_print );
     bind_function( L"progn", &lisp_progn );
@@ -156,7 +171,7 @@ int main( int argc, char *argv[] ) {
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 
-    repl( stdin, stdout, stderr, show_prompt );
+    repl( show_prompt );
 
     debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
     dec_ref( oblist );

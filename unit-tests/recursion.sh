@@ -1,7 +1,7 @@
 #!/bin/bash
 
-expected='nil3628800'
-actual=`target/psse 2>/dev/null <<EOF
+expected='nil 3628800'
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! fact
     (lambda (n)
@@ -10,6 +10,7 @@ actual=`target/psse 2>/dev/null <<EOF
   nil)
 (fact 10)
 EOF`
+actual=`echo $output | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
