@@ -197,3 +197,7 @@ struct cons_pointer throw_exception( struct cons_pointer message,
 struct cons_pointer
 lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env );
+
+struct cons_pointer lisp_source( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );

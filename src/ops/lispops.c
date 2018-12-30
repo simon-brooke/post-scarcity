@@ -1035,18 +1035,21 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
          * are not visible. So copy changes made in the oblist into the enviroment.
          * TODO: the whole process of resolving symbol values needs to be revisited
          * when we get onto namespaces. */
-        struct cons_pointer cursor = oblist;
-        while ( !nilp( cursor ) && !eq( cursor, old_oblist ) ) {
-            debug_print
-                ( L"lisp_repl: copying new oblist binding into REPL environment:\n",
-                  DEBUG_REPL );
-            debug_print_object( c_car( cursor ), DEBUG_REPL );
-            debug_println( DEBUG_REPL );
+        if ( !eq( oblist, old_oblist ) ) {
+            struct cons_pointer cursor = oblist;
 
-            new_env = make_cons( c_car( cursor ), new_env );
-            cursor = c_cdr( cursor );
+            while ( !nilp( cursor ) && !eq( cursor, old_oblist ) ) {
+                debug_print
+                    ( L"lisp_repl: copying new oblist binding into REPL environment:\n",
+                      DEBUG_REPL );
+                debug_print_object( c_car( cursor ), DEBUG_REPL );
+                debug_println( DEBUG_REPL );
+
+                new_env = make_cons( c_car( cursor ), new_env );
+                cursor = c_cdr( cursor );
+            }
+            old_oblist = oblist;
         }
-        old_oblist = oblist;
 
         println( os );
 
@@ -1078,4 +1081,41 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     dec_ref( new_env );
 
     return expr;
+}
+
+/**
+ * (source object)
+ *
+ * Function.
+ * Return the source code of the object, if it is an executable
+ * and has source code.
+ */
+struct cons_pointer lisp_source( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+
+    switch ( cell.tag.value ) {
+        case FUNCTIONTV:
+            result = cell.payload.function.source;
+            break;
+        case SPECIALTV:
+            result = cell.payload.special.source;
+            break;
+        case LAMBDATV:
+            result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
+                                make_cons( cell.payload.lambda.args,
+                                           cell.payload.lambda.body ) );
+            break;
+        case NLAMBDATV:
+            result = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+                                make_cons( cell.payload.lambda.args,
+                                           cell.payload.lambda.body ) );
+            break;
+    }
+    // TODO: suffers from premature GC, and I can't see why!
+    inc_ref( result );
+
+    return result;
 }

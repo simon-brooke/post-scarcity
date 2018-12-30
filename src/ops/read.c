@@ -275,6 +275,9 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
             result = make_string( initial, NIL );
             break;
         case '"':
+            /* making a string of the null character means we can have an empty
+             * string. Just returning NIL here would make an empty string
+             * impossible. */
             result = make_string( '\0', NIL );
             break;
         default:
@@ -302,9 +305,9 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
             break;
         case ')':
             /*
-             * unquoted strings may not include right-parenthesis
+             * symbols may not include right-parenthesis
              */
-            result = make_symbol( '\0', NIL );
+            result = NIL;
             /*
              * push back the character read
              */

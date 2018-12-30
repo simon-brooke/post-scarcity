@@ -15,10 +15,3 @@
 (set! true? (lambda (o) "True if o is the canonical true value." (= (type o) "TRUE") ) )
 (set! write? (lambda (o) "True if o is a write stream." (= (type o) "WRIT") ) )
 
-(set! or (lambda values
-                 "True if any of `values` are non-nil."
-                 (cond ((car values) t) (t (apply 'or (cdr values))))))
-
-(set! number?
-      (lambda (o)
-              "I don't yet have an `or` operator

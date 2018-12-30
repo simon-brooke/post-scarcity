@@ -146,6 +146,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"progn", &lisp_progn );
     bind_function( L"reverse", &lisp_reverse );
     bind_function( L"set", &lisp_set );
+    bind_function( L"source", &lisp_source );
     bind_function( L"subtract", &lisp_subtract );
     bind_function( L"throw", &lisp_exception );
     bind_function( L"type", &lisp_type );
