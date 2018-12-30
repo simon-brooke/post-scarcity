@@ -25,7 +25,7 @@
 /**
  * hexadecimal digits for printing numbers.
  */
-const wchar_t *hex_digits = L"0123456789ABCDEF";
+const wchar_t hex_digits[16] = L"0123456789ABCDEF";
 
 /*
  * Doctrine from here on in is that ALL integers are bignums, it's just
@@ -68,6 +68,7 @@ long double numeric_value( struct cons_pointer pointer ) {
  */
 struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result = NIL;
+    debug_print(L"Entering make_integer\n", DEBUG_ARITH);
 
     if ( integerp( more ) || nilp( more ) ) {
         result = allocate_cell( INTEGERTAG );
@@ -75,9 +76,10 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
         cell->payload.integer.value = value;
         cell->payload.integer.more = more;
 
-        debug_dump_object( result, DEBUG_ARITH );
     }
 
+    debug_print(L"make_integer: returning\n", DEBUG_ARITH);
+    debug_dump_object( result, DEBUG_ARITH );
     return result;
 }
 
@@ -87,11 +89,19 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
  */
 struct cons_pointer add_integers( struct cons_pointer a,
                                   struct cons_pointer b ) {
+    debug_print(L"Entering add_integers\n", DEBUG_ARITH);
+
     struct cons_pointer result = NIL;
     int64_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
-        while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
+       while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
+            debug_print(L"add_integers: ", DEBUG_ARITH);
+            debug_print_object(a, DEBUG_ARITH);
+            debug_print(L" x ", DEBUG_ARITH);
+            debug_print_object(b, DEBUG_ARITH);
+            debug_printf(DEBUG_ARITH, L"; carry = %ld\n", carry);
+
             int64_t av =
                 integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
             int64_t bv =
@@ -100,6 +110,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
             __int128_t rv = av + bv + carry;
 
             if ( rv > LONG_MAX || rv < LONG_MIN ) {
+                debug_printf( DEBUG_ARITH, L"add_integers: 64 bit overflow; setting carry to %ld\n", carry);
                 carry = llabs( rv / LONG_MAX );
                 rv = rv % LONG_MAX;
             } else {
@@ -111,6 +122,9 @@ struct cons_pointer add_integers( struct cons_pointer a,
             b = pointer2cell( b ).payload.integer.more;
         }
     }
+    debug_print(L"add_integers returning: ", DEBUG_ARITH);
+    debug_print_object(result, DEBUG_ARITH);
+    debug_println(DEBUG_ARITH);
 
     return result;
 }
@@ -178,11 +192,20 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
     bool is_negative = accumulator < 0;
     accumulator = llabs( accumulator );
 
+  if (accumulator == 0) {
+    result = c_string_to_lisp_string( L"0");
+  } else {
     while ( accumulator > 0 ) {
-        while ( accumulator > base ) {
-            result = make_string( hex_digits[accumulator % base], result );
+        debug_printf(DEBUG_ARITH, L"integer_to_string: accumulator is %ld\n:",
+                     accumulator);
+        do {
+            debug_printf(DEBUG_ARITH, L"integer_to_string: digit is %ld, hexadecimal is %lc\n:",
+                         accumulator % base, hex_digits[accumulator % base]);
+            wint_t digit = (wint_t)hex_digits[accumulator % base];
+
+            result = make_string( (wint_t)hex_digits[accumulator % base], result );
             accumulator = accumulator / base;
-        }
+        } while ( accumulator > base );
 
         if ( integerp( integer.payload.integer.more ) ) {
             integer = pointer2cell( integer.payload.integer.more );
@@ -190,7 +213,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
 
             /* TODO: I don't believe it's as simple as this! */
             accumulator += ( base * ( i % base ) );
-            result = make_string( hex_digits[accumulator % base], result );
+            result = make_string( (wint_t)hex_digits[accumulator % base], result );
             accumulator += ( base * ( i / base ) );
         }
     }
@@ -198,6 +221,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
     if ( is_negative ) {
         result = make_string( L'-', result );
     }
+  }
 
     return result;
 }
