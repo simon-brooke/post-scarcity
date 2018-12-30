@@ -125,6 +125,12 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
     int64_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
+        debug_print(L"multiply_integers: ", DEBUG_ARITH);
+        debug_print_object(a, DEBUG_ARITH);
+        debug_print(L" x ", DEBUG_ARITH);
+        debug_print_object(b, DEBUG_ARITH);
+        debug_println(DEBUG_ARITH);
+
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             int64_t av =
                 integerp( a ) ? pointer2cell( a ).payload.integer.value : 1;
@@ -134,6 +140,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
             __int128_t rv = ( av * bv ) + carry;
 
             if ( rv > LONG_MAX || rv < LONG_MIN ) {
+              debug_printf( DEBUG_ARITH, L"multiply_integers: 64 bit overflow; setting carry to %ld\n", carry);
                 carry = llabs( rv / LONG_MAX );
                 rv = rv % LONG_MAX;
             } else {
@@ -145,6 +152,9 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
             b = pointer2cell( b ).payload.integer.more;
         }
     }
+    debug_print(L"multiply_integers returning: ", DEBUG_ARITH);
+    debug_print_object(result, DEBUG_ARITH);
+    debug_println(DEBUG_ARITH);
 
     return result;
 }

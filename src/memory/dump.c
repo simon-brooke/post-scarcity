@@ -83,6 +83,10 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             fwprintf( output,
                       L"\t\tInteger cell: value %ld, count %u\n",
                       cell.payload.integer.value, cell.count );
+            if (!nilp(cell.payload.integer.more)) {
+                fputws( L"\t\tBIGNUM! More at\n:", output);
+                dump_object(output, cell.payload.integer.more);
+            }
             break;
         case LAMBDATV:
             fwprintf( output, L"\t\tLambda cell;\n\t\t args: " );
