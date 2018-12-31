@@ -251,6 +251,14 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                 accumulator += ( base * ( i / base ) );
             }
         }
+        
+        if (stringp(result) && pointer2cell(result).payload.string.character == L',') {
+          /* if the number of digits in the string is divisible by 3, there will be
+           * an unwanted comma on the front. */
+          struct cons_pointer tmp = result;
+          result = pointer2cell(result).payload.string.cdr;
+          dec_ref(tmp);
+        }
 
         if ( is_negative ) {
             result = make_string( L'-', result );
