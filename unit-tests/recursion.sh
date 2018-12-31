@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected='nil 3628800'
+expected='nil 3,628,800'
 output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! fact

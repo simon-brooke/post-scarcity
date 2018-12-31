@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected='(1 2 3 ("Fred") nil 77354)'
+expected='(1 2 3 ("Fred") nil 77,354)'
 actual=`echo "'(1 2 3 (\"Fred\") () 77354)" | target/psse | tail -1`
 
 if [ "${expected}" = "${actual}" ]

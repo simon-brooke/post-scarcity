@@ -11,7 +11,7 @@ else
     exit 1
 fi
 
-expected='(1024 512 256 128 64 32 16 8 4 2)'
+expected='(1,024 512 256 128 64 32 16 8 4 2)'
 actual=`echo "(reverse '(2 4 8 16 32 64 128 256 512 1024))" | target/psse | tail -1`
 
 if [ "${expected}" = "${actual}" ]
