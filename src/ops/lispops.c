@@ -1015,11 +1015,11 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
+    inc_ref(env);
 
     inc_ref( input );
     inc_ref( output );
     inc_ref( prompt_name );
-    inc_ref( new_env );
 
     /* TODO: this is subtly wrong. If we were evaluating
      *   (print (eval (read)))
@@ -1039,6 +1039,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
             struct cons_pointer cursor = oblist;
 
             while ( !nilp( cursor ) && !eq( cursor, old_oblist ) ) {
+                struct cons_pointer old_new_env = new_env;
                 debug_print
                     ( L"lisp_repl: copying new oblist binding into REPL environment:\n",
                       DEBUG_REPL );
@@ -1046,6 +1047,8 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
                 debug_println( DEBUG_REPL );
 
                 new_env = make_cons( c_car( cursor ), new_env );
+                inc_ref( new_env);
+                dec_ref( old_new_env);
                 cursor = c_cdr( cursor );
             }
             old_oblist = oblist;
@@ -1078,7 +1081,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     dec_ref( input );
     dec_ref( output );
     dec_ref( prompt_name );
-    dec_ref( new_env );
+    dec_ref( env );
 
     return expr;
 }
