@@ -625,6 +625,7 @@ lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
             break;
         case READTV:
             result = make_string( fgetwc( cell.payload.stream.stream ), NIL );
+            break;
         case STRINGTV:
             result = make_string( cell.payload.string.character, NIL );
             break;
