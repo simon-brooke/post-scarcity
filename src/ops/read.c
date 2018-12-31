@@ -175,7 +175,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                   initial );
 
     for ( c = initial; iswdigit( c )
-          || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
+          || c == L'.' || c == L'/' || c == L','; c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
             if ( seen_period || dividend != 0 ) {
                 return throw_exception( c_string_to_lisp_string
@@ -194,6 +194,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
 
                 accumulator = 0;
             }
+        } else if ( c == L',' ) {
+            // silently ignore it.
         } else {
             accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
 

@@ -12,6 +12,12 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+/* safe_iop, as available in the Ubuntu repository, is this one:
+ * https://code.google.com/archive/p/safe-iop/wikis/README.wiki
+ * which is installed as `libsafe-iop-dev`. There is an alternate
+ * implementation here: https://github.com/redpig/safe-iop/
+ * which shares the same version number but is not compatible. */
+#include <safe_iop.h>
 /*
  * wide characters
  */
@@ -107,16 +113,18 @@ struct cons_pointer add_integers( struct cons_pointer a,
             int64_t bv =
                 integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
 
-            __int128_t rv = av + bv + carry;
+            int64_t rv = 0;
 
-            if ( rv > LONG_MAX || rv < LONG_MIN ) {
+            if ( safe_add( &rv, av, bv ) ) {
+                carry = 0;
+            } else {
+                // TODO: we're correctly detecting overflow, but not yet correctly
+                // handling it.
                 debug_printf( DEBUG_ARITH,
                               L"add_integers: 64 bit overflow; setting carry to %ld\n",
                               carry );
                 carry = llabs( rv / LONG_MAX );
                 rv = rv % LONG_MAX;
-            } else {
-                carry = 0;
             }
 
             result = make_integer( rv, result );
@@ -153,16 +161,18 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
             int64_t bv =
                 integerp( b ) ? pointer2cell( b ).payload.integer.value : 1;
 
-            __int128_t rv = ( av * bv ) + carry;
+            int64_t rv = 0;
 
-            if ( rv > LONG_MAX || rv < LONG_MIN ) {
+            if ( safe_mul( &rv, av, bv ) ) {
+                carry = 0;
+            } else {
+                // TODO: we're correctly detecting overflow, but not yet correctly
+                // handling it.
                 debug_printf( DEBUG_ARITH,
                               L"multiply_integers: 64 bit overflow; setting carry to %ld\n",
                               carry );
                 carry = llabs( rv / LONG_MAX );
                 rv = rv % LONG_MAX;
-            } else {
-                carry = 0;
             }
 
             result = make_integer( rv, result );
@@ -175,6 +185,19 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
     debug_println( DEBUG_ARITH );
 
     return result;
+}
+
+/**
+ * don't use; private to integer_to_string, and somewaht dodgy.
+ */
+struct cons_pointer integer_to_string_add_digit( int digit, int digits,
+                                                 struct cons_pointer tail ) {
+    digits++;
+    wint_t character = ( wint_t ) hex_digits[digit];
+    return ( digits % 3 == 0 ) ?
+        make_string( L',', make_string( character,
+                                        tail ) ) :
+        make_string( character, tail );
 }
 
 /**
@@ -195,24 +218,24 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
     int64_t accumulator = integer.payload.integer.value;
     bool is_negative = accumulator < 0;
     accumulator = llabs( accumulator );
+    int digits = 0;
 
     if ( accumulator == 0 ) {
         result = c_string_to_lisp_string( L"0" );
     } else {
         while ( accumulator > 0 ) {
-            debug_printf( DEBUG_ARITH,
+            debug_printf( DEBUG_IO,
                           L"integer_to_string: accumulator is %ld\n:",
                           accumulator );
             do {
-                debug_printf( DEBUG_ARITH,
+                debug_printf( DEBUG_IO,
                               L"integer_to_string: digit is %ld, hexadecimal is %lc\n:",
                               accumulator % base,
                               hex_digits[accumulator % base] );
-                wint_t digit = ( wint_t ) hex_digits[accumulator % base];
 
                 result =
-                    make_string( ( wint_t ) hex_digits[accumulator % base],
-                                 result );
+                    integer_to_string_add_digit( accumulator % base, digits++,
+                                                 result );
                 accumulator = accumulator / base;
             } while ( accumulator > base );
 
@@ -223,8 +246,8 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                 /* TODO: I don't believe it's as simple as this! */
                 accumulator += ( base * ( i % base ) );
                 result =
-                    make_string( ( wint_t ) hex_digits[accumulator % base],
-                                 result );
+                    integer_to_string_add_digit( accumulator % base, digits++,
+                                                 result );
                 accumulator += ( base * ( i / base ) );
             }
         }

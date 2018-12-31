@@ -359,9 +359,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.special.
-                              executable ) ( get_stack_frame( next_pointer ),
-                                             next_pointer, env );
+                            ( *fn_cell.payload.
+                              special.executable ) ( get_stack_frame
+                                                     ( next_pointer ),
+                                                     next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -1015,7 +1016,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
-    inc_ref(env);
+    inc_ref( env );
 
     inc_ref( input );
     inc_ref( output );
@@ -1047,8 +1048,8 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
                 debug_println( DEBUG_REPL );
 
                 new_env = make_cons( c_car( cursor ), new_env );
-                inc_ref( new_env);
-                dec_ref( old_new_env);
+                inc_ref( new_env );
+                dec_ref( old_new_env );
                 cursor = c_cdr( cursor );
             }
             old_oblist = oblist;
