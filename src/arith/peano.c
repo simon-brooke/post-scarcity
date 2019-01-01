@@ -284,10 +284,10 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result =
-                            make_integer( cell1.payload.integer.value *
-                                          cell2.payload.integer.value, NIL );
-                        //result = multiply_integers( arg1, arg2 );
+//                        result =
+//                            make_integer( cell1.payload.integer.value *
+//                                          cell2.payload.integer.value, NIL );
+                        result = multiply_integers( arg1, arg2 );
                         break;
                     case RATIOTV:
                         result =
@@ -301,7 +301,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: not a number" ),
+                                                  ( L"Cannot multiply: argument 2 is not a number" ),
                                                   frame_pointer );
                         break;
                 }
@@ -327,7 +327,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     default:
                         result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: not a number" ),
+                                                  ( L"Cannot multiply: argument 1 is not a number" ),
                                                   frame_pointer );
                 }
                 break;

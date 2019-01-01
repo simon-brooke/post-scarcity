@@ -28,6 +28,11 @@
 #include "consspaceobject.h"
 #include "debug.h"
 
+/*
+ * The maximum value we will allow in an integer cell.
+ */
+#define MAX_INTEGER ((__int128_t)0xFFFFFFFFFFFFFFF)
+
 /**
  * hexadecimal digits for printing numbers.
  */
@@ -98,36 +103,48 @@ struct cons_pointer add_integers( struct cons_pointer a,
     debug_print( L"Entering add_integers\n", DEBUG_ARITH );
 
     struct cons_pointer result = NIL;
-    int64_t carry = 0;
+    struct cons_pointer cursor = NIL;
+    __int128_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
+        debug_print( L"add_integers: ", DEBUG_ARITH );
+        debug_print_object( a, DEBUG_ARITH );
+        debug_print( L" x ", DEBUG_ARITH );
+        debug_print_object( b, DEBUG_ARITH );
+        debug_printf( DEBUG_ARITH, L"; carry = %ld\n", carry );
+
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            debug_print( L"add_integers: ", DEBUG_ARITH );
-            debug_print_object( a, DEBUG_ARITH );
-            debug_print( L" x ", DEBUG_ARITH );
-            debug_print_object( b, DEBUG_ARITH );
-            debug_printf( DEBUG_ARITH, L"; carry = %ld\n", carry );
+            __int128_t av =
+                (__int128_t)integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
+            __int128_t bv =
+                (__int128_t)integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
 
-            int64_t av =
-                integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
-            int64_t bv =
-                integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
+            __int128_t rv = av + bv + carry;
 
-            int64_t rv = 0;
-
-            if ( safe_add( &rv, av, bv ) ) {
+            if ( MAX_INTEGER >= rv ) {
                 carry = 0;
             } else {
                 // TODO: we're correctly detecting overflow, but not yet correctly
                 // handling it.
+            	carry = rv >> 60;
                 debug_printf( DEBUG_ARITH,
                               L"add_integers: 64 bit overflow; setting carry to %ld\n",
-                              carry );
-                carry = llabs( rv / LONG_MAX );
-                rv = rv % LONG_MAX;
+                              (int64_t)carry );
+                rv = rv & MAX_INTEGER;
             }
 
-            result = make_integer( rv, result );
+            struct cons_pointer tail = make_integer( (int64_t)(rv << 64), NIL);
+
+            if (nilp(cursor)) {
+            	cursor = tail;
+            } else {
+				inc_ref(tail);
+				/* yes, this is a destructive change - but the integer has not yet been released
+				 * into the wild */
+				struct cons_space_object * c = &pointer2cell(cursor);
+				c->payload.integer.more = tail;
+            }
+
             a = pointer2cell( a ).payload.integer.more;
             b = pointer2cell( b ).payload.integer.more;
         }
@@ -146,7 +163,8 @@ struct cons_pointer add_integers( struct cons_pointer a,
 struct cons_pointer multiply_integers( struct cons_pointer a,
                                        struct cons_pointer b ) {
     struct cons_pointer result = NIL;
-    int64_t carry = 0;
+    struct cons_pointer cursor = NIL;
+    __int128_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
         debug_print( L"multiply_integers: ", DEBUG_ARITH );
@@ -156,30 +174,52 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
         debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            int64_t av =
-                integerp( a ) ? pointer2cell( a ).payload.integer.value : 1;
-            int64_t bv =
-                integerp( b ) ? pointer2cell( b ).payload.integer.value : 1;
+            __int128_t av =
+                (__int128_t)integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
+            __int128_t bv =
+                (__int128_t)integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
 
-            int64_t rv = 0;
+            /* slightly dodgy. `MAX_INTEGER` is substantially smaller than `LONG_MAX`, and
+             * `LONG_MAX * LONG_MAX` =~ the maximum value for `__int128_t`. So if the carry
+             * is very large (which I'm not certain whether it can be and am not
+             * intellectually up to proving it this morning) adding the carry might
+             * overflow `__int128_t`. Edge-case testing required.
+             */
+            __int128_t rv = (av * bv) + carry;
 
-            if ( safe_mul( &rv, av, bv ) ) {
+            if ( MAX_INTEGER >= rv  ) {
                 carry = 0;
             } else {
                 // TODO: we're correctly detecting overflow, but not yet correctly
                 // handling it.
+            	carry = rv >> 60;
                 debug_printf( DEBUG_ARITH,
                               L"multiply_integers: 64 bit overflow; setting carry to %ld\n",
-                              carry );
-                carry = llabs( rv / LONG_MAX );
-                rv = rv % LONG_MAX;
+                              (int64_t)carry );
+                rv = rv & MAX_INTEGER;
             }
 
-            result = make_integer( rv, result );
+            struct cons_pointer tail = make_integer( (int64_t)(rv << 64), NIL);
+
+            if (nilp(cursor)) {
+            	cursor = tail;
+            } else {
+				inc_ref(tail);
+				/* yes, this is a destructive change - but the integer has not yet been released
+				 * into the wild */
+				struct cons_space_object * c = &pointer2cell(cursor);
+				c->payload.integer.more = tail;
+           }
+
+            if ( nilp(result) ) {
+            	result = cursor;
+            }
+
             a = pointer2cell( a ).payload.integer.more;
             b = pointer2cell( b ).payload.integer.more;
         }
     }
+
     debug_print( L"multiply_integers returning: ", DEBUG_ARITH );
     debug_print_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );

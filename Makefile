@@ -18,6 +18,8 @@ INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g -DDEBUG
 LDFLAGS := -lm
 
+all: $(TARGET)
+
 $(TARGET): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
