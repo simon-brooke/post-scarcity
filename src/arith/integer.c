@@ -31,7 +31,7 @@
 /*
  * The maximum value we will allow in an integer cell.
  */
-#define MAX_INTEGER ((__int128_t)0xFFFFFFFFFFFFFFF)
+#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
 
 /**
  * hexadecimal digits for printing numbers.
@@ -109,9 +109,9 @@ struct cons_pointer add_integers( struct cons_pointer a,
     if ( integerp( a ) && integerp( b ) ) {
         debug_print( L"add_integers: ", DEBUG_ARITH );
         debug_print_object( a, DEBUG_ARITH );
-        debug_print( L" x ", DEBUG_ARITH );
+        debug_print( L" + ", DEBUG_ARITH );
         debug_print_object( b, DEBUG_ARITH );
-        debug_printf( DEBUG_ARITH, L"; carry = %ld\n", carry );
+        debug_println( DEBUG_ARITH);
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av =
@@ -133,16 +133,20 @@ struct cons_pointer add_integers( struct cons_pointer a,
                 rv = rv & MAX_INTEGER;
             }
 
-            struct cons_pointer tail = make_integer( (int64_t)(rv << 64), NIL);
+            struct cons_pointer tail = make_integer( (int64_t)rv, NIL);
 
             if (nilp(cursor)) {
             	cursor = tail;
             } else {
-				inc_ref(tail);
-				/* yes, this is a destructive change - but the integer has not yet been released
-				 * into the wild */
-				struct cons_space_object * c = &pointer2cell(cursor);
-				c->payload.integer.more = tail;
+              inc_ref(tail);
+              /* yes, this is a destructive change - but the integer has not yet been released
+               * into the wild */
+              struct cons_space_object * c = &pointer2cell(cursor);
+              c->payload.integer.more = tail;
+            }
+
+            if ( nilp(result) ) {
+            	result = cursor;
             }
 
             a = pointer2cell( a ).payload.integer.more;
@@ -150,7 +154,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
         }
     }
     debug_print( L"add_integers returning: ", DEBUG_ARITH );
-    debug_print_object( result, DEBUG_ARITH );
+    debug_dump_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
     return result;
@@ -167,10 +171,10 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
     __int128_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
-        debug_print( L"multiply_integers: ", DEBUG_ARITH );
-        debug_print_object( a, DEBUG_ARITH );
-        debug_print( L" x ", DEBUG_ARITH );
-        debug_print_object( b, DEBUG_ARITH );
+        debug_print( L"multiply_integers: \n", DEBUG_ARITH );
+        debug_dump_object( a, DEBUG_ARITH );
+        debug_print( L" x \n", DEBUG_ARITH );
+        debug_dump_object( b, DEBUG_ARITH );
         debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
@@ -196,19 +200,19 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
                 debug_printf( DEBUG_ARITH,
                               L"multiply_integers: 64 bit overflow; setting carry to %ld\n",
                               (int64_t)carry );
-                rv = rv & MAX_INTEGER;
+                rv &= MAX_INTEGER; // <<< PROBLEM IS HERE!
             }
 
-            struct cons_pointer tail = make_integer( (int64_t)(rv << 64), NIL);
+            struct cons_pointer tail = make_integer( (int64_t)rv, NIL);
 
             if (nilp(cursor)) {
             	cursor = tail;
             } else {
-				inc_ref(tail);
-				/* yes, this is a destructive change - but the integer has not yet been released
-				 * into the wild */
-				struct cons_space_object * c = &pointer2cell(cursor);
-				c->payload.integer.more = tail;
+              inc_ref(tail);
+              /* yes, this is a destructive change - but the integer has not yet been released
+               * into the wild */
+              struct cons_space_object * c = &pointer2cell(cursor);
+              c->payload.integer.more = tail;
            }
 
             if ( nilp(result) ) {
@@ -220,8 +224,8 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
         }
     }
 
-    debug_print( L"multiply_integers returning: ", DEBUG_ARITH );
-    debug_print_object( result, DEBUG_ARITH );
+    debug_print( L"multiply_integers returning:\n", DEBUG_ARITH );
+    debug_dump_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
     return result;
@@ -260,7 +264,11 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
     accumulator = llabs( accumulator );
     int digits = 0;
 
-    if ( accumulator == 0 ) {
+    if ( accumulator == 0 && !nilp(integer.payload.integer.more) ) {
+      accumulator = MAX_INTEGER;
+    }
+
+    if ( accumulator == 0) {
         result = c_string_to_lisp_string( L"0" );
     } else {
         while ( accumulator > 0 ) {
@@ -291,7 +299,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                 accumulator += ( base * ( i / base ) );
             }
         }
-        
+
         if (stringp(result) && pointer2cell(result).payload.string.character == L',') {
           /* if the number of digits in the string is divisible by 3, there will be
            * an unwanted comma on the front. */

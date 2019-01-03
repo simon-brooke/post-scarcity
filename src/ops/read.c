@@ -161,6 +161,9 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
     struct cons_pointer result = NIL;
+
+    /* TODO: accumulator and dividend cannot be `int64_t`s, otherwise we cannot
+     * read bignums. They will have to be Lisp integers. */
     int64_t accumulator = 0;
     int64_t dividend = 0;
     int places_of_decimals = 0;
