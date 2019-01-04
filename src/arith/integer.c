@@ -79,7 +79,7 @@ long double numeric_value( struct cons_pointer pointer ) {
  */
 struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result = NIL;
-    debug_print( L"Entering make_integer\n", DEBUG_ARITH );
+    debug_print( L"Entering make_integer\n", DEBUG_ALLOC );
 
     if ( integerp( more ) || nilp( more ) ) {
         result = allocate_cell( INTEGERTAG );
@@ -89,8 +89,8 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 
     }
 
-    debug_print( L"make_integer: returning\n", DEBUG_ARITH );
-    debug_dump_object( result, DEBUG_ARITH );
+    debug_print( L"make_integer: returning\n", DEBUG_ALLOC );
+    debug_dump_object( result, DEBUG_ALLOC );
     return result;
 }
 
