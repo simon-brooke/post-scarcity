@@ -9,7 +9,7 @@
  * to) is the maximum value of an unsigned 32 bit integer, which is to
  * say 4294967296. However, we'll start small.
  */
-#define CONSPAGESIZE 8
+#define CONSPAGESIZE 1024
 
 /**
  * the number of cons pages we will initially allow for. For
@@ -25,7 +25,7 @@
  * of addressable memory, which is only slightly more than the
  * number of atoms in the universe.
  */
-#define NCONSPAGES 8
+#define NCONSPAGES 64
 
 /**
  * a cons page is essentially just an array of cons space objects. It
