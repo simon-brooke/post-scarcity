@@ -17,16 +17,10 @@
 #include "equal.h"
 #include "integer.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 
-
-/*
- * declared in peano.c, can't include piano.h here because
- * circularity. TODO: refactor.
- */
-struct cons_pointer inverse( struct cons_pointer frame_pointer,
-                             struct cons_pointer arg );
 
 /**
  * return, as a int64_t, the greatest common divisor of `m` and `n`,
@@ -297,7 +291,7 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
 struct cons_pointer subtract_ratio_ratio( struct cons_pointer frame_pointer,
                                           struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
-    struct cons_pointer i = inverse( frame_pointer, arg2 ),
+    struct cons_pointer i = negative( frame_pointer, arg2 ),
         result = add_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );

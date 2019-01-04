@@ -111,13 +111,15 @@ struct cons_pointer add_integers( struct cons_pointer a,
         debug_print_object( a, DEBUG_ARITH );
         debug_print( L" + ", DEBUG_ARITH );
         debug_print_object( b, DEBUG_ARITH );
-        debug_println( DEBUG_ARITH);
+        debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av =
-                (__int128_t)integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
+                ( __int128_t ) integerp( a ) ? pointer2cell( a ).
+                payload.integer.value : 0;
             __int128_t bv =
-                (__int128_t)integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
+                ( __int128_t ) integerp( b ) ? pointer2cell( b ).
+                payload.integer.value : 0;
 
             __int128_t rv = av + bv + carry;
 
@@ -126,27 +128,27 @@ struct cons_pointer add_integers( struct cons_pointer a,
             } else {
                 // TODO: we're correctly detecting overflow, but not yet correctly
                 // handling it.
-            	carry = rv >> 60;
+                carry = rv >> 60;
                 debug_printf( DEBUG_ARITH,
                               L"add_integers: 64 bit overflow; setting carry to %ld\n",
-                              (int64_t)carry );
+                              ( int64_t ) carry );
                 rv = rv & MAX_INTEGER;
             }
 
-            struct cons_pointer tail = make_integer( (int64_t)rv, NIL);
+            struct cons_pointer tail = make_integer( ( int64_t ) rv, NIL );
 
-            if (nilp(cursor)) {
-            	cursor = tail;
+            if ( nilp( cursor ) ) {
+                cursor = tail;
             } else {
-              inc_ref(tail);
-              /* yes, this is a destructive change - but the integer has not yet been released
-               * into the wild */
-              struct cons_space_object * c = &pointer2cell(cursor);
-              c->payload.integer.more = tail;
+                inc_ref( tail );
+                /* yes, this is a destructive change - but the integer has not yet been released
+                 * into the wild */
+                struct cons_space_object *c = &pointer2cell( cursor );
+                c->payload.integer.more = tail;
             }
 
-            if ( nilp(result) ) {
-            	result = cursor;
+            if ( nilp( result ) ) {
+                result = cursor;
             }
 
             a = pointer2cell( a ).payload.integer.more;
@@ -179,9 +181,11 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av =
-                (__int128_t)integerp( a ) ? pointer2cell( a ).payload.integer.value : 0;
+                ( __int128_t ) integerp( a ) ? pointer2cell( a ).
+                payload.integer.value : 1;
             __int128_t bv =
-                (__int128_t)integerp( b ) ? pointer2cell( b ).payload.integer.value : 0;
+                ( __int128_t ) integerp( b ) ? pointer2cell( b ).
+                payload.integer.value : 1;
 
             /* slightly dodgy. `MAX_INTEGER` is substantially smaller than `LONG_MAX`, and
              * `LONG_MAX * LONG_MAX` =~ the maximum value for `__int128_t`. So if the carry
@@ -189,34 +193,34 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
              * intellectually up to proving it this morning) adding the carry might
              * overflow `__int128_t`. Edge-case testing required.
              */
-            __int128_t rv = (av * bv) + carry;
+            __int128_t rv = ( av * bv ) + carry;
 
-            if ( MAX_INTEGER >= rv  ) {
+            if ( MAX_INTEGER >= rv ) {
                 carry = 0;
             } else {
                 // TODO: we're correctly detecting overflow, but not yet correctly
                 // handling it.
-            	carry = rv >> 60;
+                carry = rv >> 60;
                 debug_printf( DEBUG_ARITH,
                               L"multiply_integers: 64 bit overflow; setting carry to %ld\n",
-                              (int64_t)carry );
-                rv &= MAX_INTEGER; // <<< PROBLEM IS HERE!
+                              ( int64_t ) carry );
+                rv &= MAX_INTEGER;
             }
 
-            struct cons_pointer tail = make_integer( (int64_t)rv, NIL);
+            struct cons_pointer tail = make_integer( ( int64_t ) rv, NIL );
 
-            if (nilp(cursor)) {
-            	cursor = tail;
+            if ( nilp( cursor ) ) {
+                cursor = tail;
             } else {
-              inc_ref(tail);
-              /* yes, this is a destructive change - but the integer has not yet been released
-               * into the wild */
-              struct cons_space_object * c = &pointer2cell(cursor);
-              c->payload.integer.more = tail;
-           }
+                inc_ref( tail );
+                /* yes, this is a destructive change - but the integer has not yet been released
+                 * into the wild */
+                struct cons_space_object *c = &pointer2cell( cursor );
+                c->payload.integer.more = tail;
+            }
 
-            if ( nilp(result) ) {
-            	result = cursor;
+            if ( nilp( result ) ) {
+                result = cursor;
             }
 
             a = pointer2cell( a ).payload.integer.more;
@@ -259,25 +263,27 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                                        int base ) {
     struct cons_pointer result = NIL;
     struct cons_space_object integer = pointer2cell( int_pointer );
-    int64_t accumulator = integer.payload.integer.value;
-    bool is_negative = accumulator < 0;
-    accumulator = llabs( accumulator );
+    __int128_t accumulator = llabs( integer.payload.integer.value );
+    bool is_negative = integer.payload.integer.value < 0;
     int digits = 0;
 
-    if ( accumulator == 0 && !nilp(integer.payload.integer.more) ) {
-      accumulator = MAX_INTEGER;
-    }
-
-    if ( accumulator == 0) {
+    if ( accumulator == 0 && nilp( integer.payload.integer.more ) ) {
         result = c_string_to_lisp_string( L"0" );
     } else {
-        while ( accumulator > 0 ) {
+        while ( accumulator > 0 || !nilp( integer.payload.integer.more ) ) {
+            if ( !nilp( integer.payload.integer.more ) ) {
+                integer = pointer2cell( integer.payload.integer.more );
+                accumulator +=
+                    ( llabs( integer.payload.integer.value ) *
+                      ( MAX_INTEGER + 1 ) );
+            }
+
             debug_printf( DEBUG_IO,
                           L"integer_to_string: accumulator is %ld\n:",
                           accumulator );
             do {
                 debug_printf( DEBUG_IO,
-                              L"integer_to_string: digit is %ld, hexadecimal is %lc\n:",
+                              L"integer_to_string: digit is %ld, hexadecimal is %c\n:",
                               accumulator % base,
                               hex_digits[accumulator % base] );
 
@@ -286,26 +292,15 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                                                  result );
                 accumulator = accumulator / base;
             } while ( accumulator > base );
-
-            if ( integerp( integer.payload.integer.more ) ) {
-                integer = pointer2cell( integer.payload.integer.more );
-                int64_t i = integer.payload.integer.value;
-
-                /* TODO: I don't believe it's as simple as this! */
-                accumulator += ( base * ( i % base ) );
-                result =
-                    integer_to_string_add_digit( accumulator % base, digits++,
-                                                 result );
-                accumulator += ( base * ( i / base ) );
-            }
         }
 
-        if (stringp(result) && pointer2cell(result).payload.string.character == L',') {
-          /* if the number of digits in the string is divisible by 3, there will be
-           * an unwanted comma on the front. */
-          struct cons_pointer tmp = result;
-          result = pointer2cell(result).payload.string.cdr;
-          dec_ref(tmp);
+        if ( stringp( result )
+             && pointer2cell( result ).payload.string.character == L',' ) {
+            /* if the number of digits in the string is divisible by 3, there will be
+             * an unwanted comma on the front. */
+            struct cons_pointer tmp = result;
+            result = pointer2cell( result ).payload.string.cdr;
+            dec_ref( tmp );
         }
 
         if ( is_negative ) {

@@ -23,6 +23,7 @@
 #include "integer.h"
 #include "intern.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 #include "read.h"
@@ -152,25 +153,25 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
 
 /**
  * read a number from this input stream, given this initial character.
- * TODO: to be able to read bignums, we need to read the number from the
- * input stream into a Lisp string, and then convert it to a number.
+ * TODO: Need to do a lot of inc_ref and dec_ref, to make sure the
+ * garbage is collected.
  */
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  FILE * input,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
-    struct cons_pointer result = NIL;
 
-    /* TODO: accumulator and dividend cannot be `int64_t`s, otherwise we cannot
-     * read bignums. They will have to be Lisp integers. */
-    int64_t accumulator = 0;
-    int64_t dividend = 0;
+    struct cons_pointer result = make_integer( 0, NIL );
+    /* TODO: we really need to be getting `base` from a privileged Lisp name -
+     * and it should be the same privileged name we use when writing numbers */
+    struct cons_pointer base = make_integer( 10, NIL );
+    struct cons_pointer dividend = NIL;
     int places_of_decimals = 0;
     wint_t c;
-    bool negative = initial == btowc( '-' );
+    bool neg = initial == btowc( '-' );
 
-    if ( negative ) {
+    if ( neg ) {
         initial = fgetwc( input );
     }
 
@@ -180,7 +181,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
     for ( c = initial; iswdigit( c )
           || c == L'.' || c == L'/' || c == L','; c = fgetwc( input ) ) {
         if ( c == btowc( '.' ) ) {
-            if ( seen_period || dividend != 0 ) {
+            if ( seen_period || !nilp( dividend ) ) {
                 return throw_exception( c_string_to_lisp_string
                                         ( L"Malformed number: too many periods" ),
                                         frame_pointer );
@@ -188,23 +189,24 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 seen_period = true;
             }
         } else if ( c == btowc( '/' ) ) {
-            if ( seen_period || dividend > 0 ) {
+            if ( seen_period || !nilp( dividend ) ) {
                 return throw_exception( c_string_to_lisp_string
                                         ( L"Malformed number: dividend of rational must be integer" ),
                                         frame_pointer );
             } else {
-                dividend = negative ? 0 - accumulator : accumulator;
+                dividend = result;
 
-                accumulator = 0;
+                result = make_integer( 0, NIL );
             }
         } else if ( c == L',' ) {
             // silently ignore it.
         } else {
-            accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
+            result = add_integers( multiply_integers( result, base ),
+                                   make_integer( ( int ) c - ( int ) '0',
+                                                 NIL ) );
 
             debug_printf( DEBUG_IO,
-                          L"Added character %c, accumulator now %ld\n",
-                          c, accumulator );
+                          L"Added character %c, result now %ld\n", c, result );
 
             if ( seen_period ) {
                 places_of_decimals++;
@@ -217,21 +219,23 @@ struct cons_pointer read_number( struct stack_frame *frame,
      */
     ungetwc( c, input );
     if ( seen_period ) {
-        long double rv = ( long double )
-            ( accumulator / pow( 10, places_of_decimals ) );
-        if ( negative ) {
-            rv = 0 - rv;
-        }
-        result = make_real( rv );
-    } else if ( dividend != 0 ) {
-        result =
-            make_ratio( frame_pointer, make_integer( dividend, NIL ),
-                        make_integer( accumulator, NIL ) );
-    } else {
-        if ( negative ) {
-            accumulator = 0 - accumulator;
-        }
-        result = make_integer( accumulator, NIL );
+        struct cons_pointer div = make_ratio( frame_pointer, result,
+                                              make_integer( powl
+                                                            ( to_long_double
+                                                              ( base ),
+                                                              places_of_decimals ),
+                                                            NIL ) );
+        inc_ref( div );
+
+        result = make_real( to_long_double( div ) );
+
+        dec_ref( div );
+    } else if ( integerp( dividend ) ) {
+        result = make_ratio( frame_pointer, dividend, result );
+    }
+
+    if ( neg ) {
+        result = negative( frame_pointer, result );
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );
