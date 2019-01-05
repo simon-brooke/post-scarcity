@@ -138,6 +138,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"equal", &lisp_equal );
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
+    bind_function( L"inspect", &lisp_inspect );
     bind_function( L"multiply", &lisp_multiply );
     bind_function( L"read", &lisp_read );
     bind_function( L"repl", &lisp_repl );

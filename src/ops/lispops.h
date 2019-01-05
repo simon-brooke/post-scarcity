@@ -201,3 +201,6 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
 struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env );
+
+struct cons_pointer lisp_inspect( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env );

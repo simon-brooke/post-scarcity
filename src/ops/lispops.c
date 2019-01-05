@@ -744,7 +744,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
         frame->arg[0] : get_default_stream( true, env );
 
     if ( readp( in_stream ) ) {
-        debug_print( L"lisp_print: setting input stream\n", DEBUG_IO );
+        debug_print( L"lisp_read: setting input stream\n", DEBUG_IO );
         debug_dump_object( in_stream, DEBUG_IO );
         input = pointer2cell( in_stream ).payload.stream.stream;
         inc_ref( in_stream );
@@ -1121,6 +1121,34 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
     }
     // TODO: suffers from premature GC, and I can't see why!
     inc_ref( result );
+
+    return result;
+}
+
+
+/**
+ * Print the internal representation of the object indicated by `frame->arg[0]` to the
+ * (optional, defaults to `stdout`) stream indicated by `frame->arg[1]`.
+ */
+struct cons_pointer lisp_inspect( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    debug_print( L"Entering print\n", DEBUG_IO );
+    struct cons_pointer result = frame->arg[0];
+    FILE *output = stdout;
+    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+        frame->arg[1] : get_default_stream( false, env );
+
+    if ( writep( out_stream ) ) {
+        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
+        debug_dump_object( out_stream, DEBUG_IO );
+        output = pointer2cell( out_stream ).payload.stream.stream;
+        inc_ref( out_stream );
+    }
+    dump_object( output, frame->arg[0] );
+
+    if ( writep( out_stream ) ) {
+        dec_ref( out_stream );
+    }
 
     return result;
 }

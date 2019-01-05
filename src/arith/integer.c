@@ -94,72 +94,101 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     return result;
 }
 
-/**
- * Return the sum of the integers pointed to by `a` and `b`. If either isn't
- * an integer, will return nil.
- */
-struct cons_pointer add_integers( struct cons_pointer a,
-                                  struct cons_pointer b ) {
-    debug_print( L"Entering add_integers\n", DEBUG_ARITH );
 
+/**
+ * internal workings of both `add_integers` and `multiply_integers` (and
+ * possibly, later, other operations. Apply the operator `op` to the
+ * integer arguments `a` and `b`, and return a pointer to the result. If
+ * either `a` or `b` is not an integer, returns `NIL`.
+ */
+struct cons_pointer operate_on_integers( struct cons_pointer a,
+                                       struct cons_pointer b,
+                                        char op) {
     struct cons_pointer result = NIL;
     struct cons_pointer cursor = NIL;
     __int128_t carry = 0;
 
     if ( integerp( a ) && integerp( b ) ) {
-        debug_print( L"add_integers: ", DEBUG_ARITH );
-        debug_print_object( a, DEBUG_ARITH );
-        debug_print( L" + ", DEBUG_ARITH );
-        debug_print_object( b, DEBUG_ARITH );
+        debug_print( L"operate_on_integers: \n", DEBUG_ARITH );
+        debug_dump_object( a, DEBUG_ARITH );
+        debug_printf( DEBUG_ARITH, L" %c \n", op);
+        debug_dump_object( b, DEBUG_ARITH );
         debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av =
                 ( __int128_t ) integerp( a ) ? pointer2cell( a ).
-                payload.integer.value : 0;
+                payload.integer.value : op == '*' ? 1 : 0;
             __int128_t bv =
                 ( __int128_t ) integerp( b ) ? pointer2cell( b ).
-                payload.integer.value : 0;
+                payload.integer.value : op == '*' ? 1 : 0;
 
-            __int128_t rv = av + bv + carry;
+            /* slightly dodgy. `MAX_INTEGER` is substantially smaller than `LONG_MAX`, and
+             * `LONG_MAX * LONG_MAX` =~ the maximum value for `__int128_t`. So if the carry
+             * is very large (which I'm not certain whether it can be and am not
+             * intellectually up to proving it this morning) adding the carry might
+             * overflow `__int128_t`. Edge-case testing required.
+             */
+            __int128_t rv = NAN;
+
+          switch (op) {
+            case '*':
+          rv = ( av * bv ) + carry;
+            break;
+            case '+':
+            rv = av + bv + carry;
+            break;
+          }
 
             if ( MAX_INTEGER >= rv ) {
-                carry = 0;
+              carry = 0;
             } else {
-                // TODO: we're correctly detecting overflow, but not yet correctly
-                // handling it.
-                carry = rv >> 60;
-                debug_printf( DEBUG_ARITH,
-                              L"add_integers: 64 bit overflow; setting carry to %ld\n",
-                              ( int64_t ) carry );
-                rv = rv & MAX_INTEGER;
+              // TODO: we're correctly detecting overflow, but not yet correctly
+              // handling it.
+              carry = rv >> 60;
+              debug_printf( DEBUG_ARITH,
+                           L"operate_on_integers: 64 bit overflow; setting carry to %ld\n",
+                           ( int64_t ) carry );
+              rv &= MAX_INTEGER;
             }
 
             struct cons_pointer tail = make_integer( ( int64_t ) rv, NIL );
 
             if ( nilp( cursor ) ) {
-                cursor = tail;
+              cursor = tail;
             } else {
-                inc_ref( tail );
-                /* yes, this is a destructive change - but the integer has not yet been released
-                 * into the wild */
-                struct cons_space_object *c = &pointer2cell( cursor );
-                c->payload.integer.more = tail;
+              inc_ref( tail );
+              /* yes, this is a destructive change - but the integer has not yet been released
+                       * into the wild */
+              struct cons_space_object *c = &pointer2cell( cursor );
+              c->payload.integer.more = tail;
+              cursor = tail;
             }
 
             if ( nilp( result ) ) {
-                result = cursor;
+              result = cursor;
             }
 
             a = pointer2cell( a ).payload.integer.more;
             b = pointer2cell( b ).payload.integer.more;
         }
     }
-    debug_print( L"add_integers returning: ", DEBUG_ARITH );
+
+    debug_print( L"operate_on_integers returning:\n", DEBUG_ARITH );
     debug_dump_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
     return result;
+}
+
+/**
+ * Return the sum of the integers pointed to by `a` and `b`. If either isn't
+ * an integer, will return nil.
+ */
+struct cons_pointer add_integers( struct cons_pointer a,
+                                  struct cons_pointer b ) {
+
+  return operate_on_integers(a, b, '+');
 }
 
 /**
@@ -168,71 +197,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
  */
 struct cons_pointer multiply_integers( struct cons_pointer a,
                                        struct cons_pointer b ) {
-    struct cons_pointer result = NIL;
-    struct cons_pointer cursor = NIL;
-    __int128_t carry = 0;
-
-    if ( integerp( a ) && integerp( b ) ) {
-        debug_print( L"multiply_integers: \n", DEBUG_ARITH );
-        debug_dump_object( a, DEBUG_ARITH );
-        debug_print( L" x \n", DEBUG_ARITH );
-        debug_dump_object( b, DEBUG_ARITH );
-        debug_println( DEBUG_ARITH );
-
-        while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            __int128_t av =
-                ( __int128_t ) integerp( a ) ? pointer2cell( a ).
-                payload.integer.value : 1;
-            __int128_t bv =
-                ( __int128_t ) integerp( b ) ? pointer2cell( b ).
-                payload.integer.value : 1;
-
-            /* slightly dodgy. `MAX_INTEGER` is substantially smaller than `LONG_MAX`, and
-             * `LONG_MAX * LONG_MAX` =~ the maximum value for `__int128_t`. So if the carry
-             * is very large (which I'm not certain whether it can be and am not
-             * intellectually up to proving it this morning) adding the carry might
-             * overflow `__int128_t`. Edge-case testing required.
-             */
-            __int128_t rv = ( av * bv ) + carry;
-
-            if ( MAX_INTEGER >= rv ) {
-                carry = 0;
-            } else {
-                // TODO: we're correctly detecting overflow, but not yet correctly
-                // handling it.
-                carry = rv >> 60;
-                debug_printf( DEBUG_ARITH,
-                              L"multiply_integers: 64 bit overflow; setting carry to %ld\n",
-                              ( int64_t ) carry );
-                rv &= MAX_INTEGER;
-            }
-
-            struct cons_pointer tail = make_integer( ( int64_t ) rv, NIL );
-
-            if ( nilp( cursor ) ) {
-                cursor = tail;
-            } else {
-                inc_ref( tail );
-                /* yes, this is a destructive change - but the integer has not yet been released
-                 * into the wild */
-                struct cons_space_object *c = &pointer2cell( cursor );
-                c->payload.integer.more = tail;
-            }
-
-            if ( nilp( result ) ) {
-                result = cursor;
-            }
-
-            a = pointer2cell( a ).payload.integer.more;
-            b = pointer2cell( b ).payload.integer.more;
-        }
-    }
-
-    debug_print( L"multiply_integers returning:\n", DEBUG_ARITH );
-    debug_dump_object( result, DEBUG_ARITH );
-    debug_println( DEBUG_ARITH );
-
-    return result;
+    return operate_on_integers( a, b, '*');
 }
 
 /**
@@ -283,9 +248,9 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                           accumulator );
             do {
                 debug_printf( DEBUG_IO,
-                              L"integer_to_string: digit is %ld, hexadecimal is %c\n:",
+                              L"integer_to_string: digit is %ld, hexadecimal is %C\n:",
                               accumulator % base,
-                              hex_digits[accumulator % base] );
+                              btowc(hex_digits[accumulator % base] ));
 
                 result =
                     integer_to_string_add_digit( accumulator % base, digits++,
