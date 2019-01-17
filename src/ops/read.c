@@ -157,91 +157,104 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
  * garbage is collected.
  */
 struct cons_pointer read_number( struct stack_frame *frame,
-                                 struct cons_pointer frame_pointer,
-                                 FILE * input,
-                                 wint_t initial, bool seen_period ) {
-    debug_print( L"entering read_number\n", DEBUG_IO );
+                                struct cons_pointer frame_pointer,
+                                FILE * input,
+                                wint_t initial, bool seen_period ) {
+  debug_print( L"entering read_number\n", DEBUG_IO );
 
-    struct cons_pointer result = make_integer( 0, NIL );
-    /* TODO: we really need to be getting `base` from a privileged Lisp name -
+  struct cons_pointer result = make_integer( 0, NIL );
+  /* TODO: we really need to be getting `base` from a privileged Lisp name -
      * and it should be the same privileged name we use when writing numbers */
-    struct cons_pointer base = make_integer( 10, NIL );
-    struct cons_pointer dividend = NIL;
-    int places_of_decimals = 0;
-    wint_t c;
-    bool neg = initial == btowc( '-' );
+  struct cons_pointer base = make_integer( 10, NIL );
+  struct cons_pointer dividend = NIL;
+  int places_of_decimals = 0;
+  wint_t c;
+  bool neg = initial == btowc( '-' );
 
-    if ( neg ) {
-        initial = fgetwc( input );
+  if ( neg ) {
+    initial = fgetwc( input );
+  }
+
+  debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial,
+               initial );
+
+  for ( c = initial; iswdigit( c )
+       || c == L'.' || c == L'/' || c == L','; c = fgetwc( input ) ) {
+    switch (c) {
+      case L'.':
+      if ( seen_period || !nilp( dividend ) ) {
+        return throw_exception( c_string_to_lisp_string
+                               ( L"Malformed number: too many periods" ),
+                               frame_pointer );
+      } else {
+        debug_print(L"read_number: decimal point seen\n", DEBUG_IO);
+        seen_period = true;
+      }
+      break;
+      case L'/':
+      if ( seen_period || !nilp( dividend ) ) {
+        return throw_exception( c_string_to_lisp_string
+                               ( L"Malformed number: dividend of rational must be integer" ),
+                               frame_pointer );
+      } else {
+        debug_print(L"read_number: ratio slash seen\n", DEBUG_IO);
+        dividend = result;
+
+        result = make_integer( 0, NIL );
+      }
+      break;
+      case L',' :
+      // silently ignore it.
+      break;
+      default:
+      result = add_integers( multiply_integers( result, base ),
+                            make_integer( ( int ) c - ( int ) '0',
+                                         NIL ) );
+
+      debug_printf( DEBUG_IO,
+                   L"read_number: added character %c, result now ", c );
+      debug_print_object( result, DEBUG_IO);
+      debug_print( L"\n", DEBUG_IO);
+
+      if ( seen_period ) {
+        places_of_decimals++;
+      }
     }
+  }
 
-    debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial,
-                  initial );
-
-    for ( c = initial; iswdigit( c )
-          || c == L'.' || c == L'/' || c == L','; c = fgetwc( input ) ) {
-        if ( c == btowc( '.' ) ) {
-            if ( seen_period || !nilp( dividend ) ) {
-                return throw_exception( c_string_to_lisp_string
-                                        ( L"Malformed number: too many periods" ),
-                                        frame_pointer );
-            } else {
-                seen_period = true;
-            }
-        } else if ( c == btowc( '/' ) ) {
-            if ( seen_period || !nilp( dividend ) ) {
-                return throw_exception( c_string_to_lisp_string
-                                        ( L"Malformed number: dividend of rational must be integer" ),
-                                        frame_pointer );
-            } else {
-                dividend = result;
-
-                result = make_integer( 0, NIL );
-            }
-        } else if ( c == L',' ) {
-            // silently ignore it.
-        } else {
-            result = add_integers( multiply_integers( result, base ),
-                                   make_integer( ( int ) c - ( int ) '0',
-                                                 NIL ) );
-
-            debug_printf( DEBUG_IO,
-                          L"Added character %c, result now %ld\n", c, result );
-
-            if ( seen_period ) {
-                places_of_decimals++;
-            }
-        }
-    }
-
-    /*
+  /*
      * push back the character read which was not a digit
      */
-    ungetwc( c, input );
-    if ( seen_period ) {
-        struct cons_pointer div = make_ratio( frame_pointer, result,
-                                              make_integer( powl
-                                                            ( to_long_double
-                                                              ( base ),
-                                                              places_of_decimals ),
-                                                            NIL ) );
-        inc_ref( div );
+  ungetwc( c, input );
 
-        result = make_real( to_long_double( div ) );
+  if ( seen_period ) {
+    debug_print(L"read_number: converting result to real\n", DEBUG_IO);
+    struct cons_pointer div = make_ratio( frame_pointer, result,
+                                         make_integer( powl
+                                                      ( to_long_double
+                                                       ( base ),
+                                                       places_of_decimals ),
+                                                      NIL ) );
+    inc_ref( div );
 
-        dec_ref( div );
-    } else if ( integerp( dividend ) ) {
-        result = make_ratio( frame_pointer, dividend, result );
-    }
+    result = make_real( to_long_double( div ) );
 
-    if ( neg ) {
-        result = negative( frame_pointer, result );
-    }
+    dec_ref( div );
+  } else if ( integerp( dividend ) ) {
+    debug_print(L"read_number: converting result to ratio\n", DEBUG_IO);
+    result = make_ratio( frame_pointer, dividend, result );
+  }
 
-    debug_print( L"read_number returning\n", DEBUG_IO );
-    debug_dump_object( result, DEBUG_IO );
+  if ( neg ) {
+    debug_print(L"read_number: converting result to negative\n", DEBUG_IO);
 
-    return result;
+    result = negative( frame_pointer, result );
+  }
+
+  debug_print( L"read_number returning\n", DEBUG_IO );
+  debug_dump_object( result, DEBUG_IO );
+
+  return result;
 }
 
 /**

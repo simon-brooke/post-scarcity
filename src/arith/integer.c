@@ -36,7 +36,7 @@
 /**
  * hexadecimal digits for printing numbers.
  */
-const wchar_t hex_digits[16] = L"0123456789ABCDEF";
+const char * hex_digits = "0123456789ABCDEF";
 
 /*
  * Doctrine from here on in is that ALL integers are bignums, it's just
@@ -133,12 +133,23 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
 
           switch (op) {
             case '*':
-          rv = ( av * bv ) + carry;
+            rv = av * bv * ((carry == 0) ? 1 : carry);
             break;
             case '+':
             rv = av + bv + carry;
             break;
           }
+
+          debug_printf( DEBUG_ARITH, L"operate_on_integers: op = '%c'; av = ", op);
+          debug_print_128bit( av, DEBUG_ARITH);
+          debug_print( L"; bv = ",  DEBUG_ARITH);
+          debug_print_128bit( bv, DEBUG_ARITH);
+          debug_print( L"; carry = ",  DEBUG_ARITH);
+          debug_print_128bit( carry, DEBUG_ARITH);
+          debug_print( L"; rv = ",  DEBUG_ARITH);
+          debug_print_128bit( rv, DEBUG_ARITH);
+          debug_print( L"\n",  DEBUG_ARITH);
+
 
             if ( MAX_INTEGER >= rv ) {
               carry = 0;
@@ -206,7 +217,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
     digits++;
-    wint_t character = ( wint_t ) hex_digits[digit];
+    wint_t character = btowc(hex_digits[digit]);
     return ( digits % 3 == 0 ) ?
         make_string( L',', make_string( character,
                                         tail ) ) :
@@ -247,13 +258,14 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                           L"integer_to_string: accumulator is %ld\n:",
                           accumulator );
             do {
+              int offset = (int)(accumulator % base);
                 debug_printf( DEBUG_IO,
-                              L"integer_to_string: digit is %ld, hexadecimal is %C\n:",
-                              accumulator % base,
-                              btowc(hex_digits[accumulator % base] ));
+                              L"integer_to_string: digit is %ld, hexadecimal is %c\n:",
+                              offset,
+                              hex_digits[offset] );
 
                 result =
-                    integer_to_string_add_digit( accumulator % base, digits++,
+                    integer_to_string_add_digit( offset, digits++,
                                                  result );
                 accumulator = accumulator / base;
             } while ( accumulator > base );

@@ -1133,7 +1133,6 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
 struct cons_pointer lisp_inspect( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
-    struct cons_pointer result = frame->arg[0];
     FILE *output = stdout;
     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
         frame->arg[1] : get_default_stream( false, env );
@@ -1150,5 +1149,5 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame, struct cons_pointer
         dec_ref( out_stream );
     }
 
-    return result;
+    return frame->arg[0];
 }

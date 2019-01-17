@@ -41,7 +41,8 @@ bool zerop( struct cons_pointer arg ) {
 
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            result = cell.payload.integer.value == 0;
+            result = cell.payload.integer.value == 0 &&
+              nilp(cell.payload.integer.more);
             break;
         case RATIOTV:
             result = zerop( cell.payload.ratio.dividend );
@@ -134,9 +135,9 @@ struct cons_pointer add_2( struct stack_frame *frame,
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
     debug_print( L"add_2( arg1 = ", DEBUG_ARITH );
-    debug_print_object( arg1, DEBUG_ARITH );
+    debug_dump_object( arg1, DEBUG_ARITH );
     debug_print( L"; arg2 = ", DEBUG_ARITH );
-    debug_print_object( arg2, DEBUG_ARITH );
+    debug_dump_object( arg2, DEBUG_ARITH );
     debug_print( L"\n", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
