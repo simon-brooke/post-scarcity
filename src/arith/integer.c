@@ -101,6 +101,10 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
  * integer arguments `a` and `b`, and return a pointer to the result. If
  * either `a` or `b` is not an integer, returns `NIL`.
  */
+/* TODO: there is a significant bug here, which manifests in multiply but
+ * may not manifest in add. The value in the least significant cell ends
+ * up significantly WRONG, but the value in the more significant cell
+ * ends up correct. */
 struct cons_pointer operate_on_integers( struct cons_pointer a,
                                        struct cons_pointer b,
                                         char op) {
