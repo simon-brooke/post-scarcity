@@ -38,7 +38,7 @@ fi
 
 #####################################################################
 # definitely a bignum
-expected='2305843009213693952'
+expected='1329227995784915872903807060280344577'
 output=`echo "(progn (print $expected) nil)" | target/psse`
 
 actual=`echo $output |\

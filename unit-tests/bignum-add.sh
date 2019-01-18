@@ -153,3 +153,36 @@ else
     echo "Fail"
     exit 1
 fi
+
+#####################################################################
+# add a smallnum and a two-cell bignum to produce a three-cell bignum
+# (just over the boundary)
+a=1
+b=1329227995784915872903807060280344576
+expected='1329227995784915872903807060280344577'
+output=`echo "(+ $a $b)" | target/psse -v 2 2>psse.log`
+
+actual=`echo $output |\
+  tail -1 |\
+  sed 's/\,//g'`
+
+echo -n "adding $a to $b: "
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+else
+    echo "Fail: expected '${expected}', got '${actual}'"
+    exit 1
+fi
+
+echo -n "checking a bignum was created: "
+grep 'BIGNUM!' psse.log > /dev/null
+if [ $? -eq "0" ]
+then
+    echo "OK"
+else
+    echo "Fail"
+    exit 1
+fi
+
+1329227995784915872903807060280344576
