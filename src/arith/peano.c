@@ -42,7 +42,7 @@ bool zerop( struct cons_pointer arg ) {
     switch ( cell.tag.value ) {
         case INTEGERTV:
             result = cell.payload.integer.value == 0 &&
-              nilp(cell.payload.integer.more);
+                nilp( cell.payload.integer.more );
             break;
         case RATIOTV:
             result = zerop( cell.payload.ratio.dividend );

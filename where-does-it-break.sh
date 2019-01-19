@@ -3,9 +3,9 @@
 # Not really a unit test, but a check to see where bignum addition breaks
 
 broken=0
-i=1152921506900200000
+i=11529215046068469750
 # we've already proven we can successfullu get up to here
-increment=10000
+increment=1
 
 while [ $broken -eq "0" ]
 do
