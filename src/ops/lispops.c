@@ -136,7 +136,12 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
 /**
  * Return the object list (root namespace).
  *
- * (oblist)
+ * * (oblist)
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the root namespace.
  */
 struct cons_pointer
 lisp_oblist( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -165,12 +170,15 @@ struct cons_pointer compose_body( struct stack_frame *frame ) {
 }
 
 /**
- * Construct an interpretable function.
+ * Construct an interpretable function. *NOTE* that if `args` is a single symbol
+ * rather than a list, a varargs function will be created.
  *
  * (lambda args body)
  *
  * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
  * @param env the environment in which it is to be intepreted.
+ * @return an interpretable function with these `args` and this `body`.
  */
 struct cons_pointer
 lisp_lambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -179,12 +187,15 @@ lisp_lambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * Construct an interpretable special form.
+ * Construct an interpretable special form. *NOTE* that if `args` is a single symbol
+ * rather than a list, a varargs special form will be created.
  *
  * (nlambda args body)
  *
  * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
  * @param env the environment in which it is to be intepreted.
+ * @return an interpretable special form with these `args` and this `body`.
  */
 struct cons_pointer
 lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -613,6 +624,16 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
+ * @return true if `arg` represents an end of string, else false.
+ * \todo candidate for moving to a memory/string.c file
+ */
+bool end_of_stringp(struct cons_pointer arg) {
+  return nilp(arg) ||
+    ( stringp( arg ) &&
+     pointer2cell(arg).payload.string.character == (wint_t)'\0');
+}
+
+/**
  * Function;
  * returns a cell constructed from a and b. If a is of type string but its
  * cdr is nill, and b is of type string, then returns a new string cell;
@@ -634,7 +655,8 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( nilp( car ) && nilp( cdr ) ) {
         return NIL;
-    } else if ( stringp( car ) && stringp( cdr )) {
+    } else if ( stringp( car ) && stringp( cdr ) &&
+                end_of_stringp( c_cdr( car)) ) {
       // \todo check that car is of length 1
         result =
             make_string( pointer2cell( car ).payload.string.character, cdr );
@@ -1084,7 +1106,7 @@ throw_exception( struct cons_pointer message,
  * normally return. A function which detects a problem it cannot resolve
  * *should* return an exception.
  *
- * * (exception <message> <frame>)
+ * * (exception message frame)
  *
  * @param frame my stack frame.
  * @param frame_pointer a pointer to my stack_frame.

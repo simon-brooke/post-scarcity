@@ -45,4 +45,4 @@
 (inspect (set! z (+ y y y y y y y y y y)))
 
 "This blows up: 10^37, which is a three cell bignum."
-(inspect (+ z z z z z z z z z z))
+(inspect (set! final (+ z z z z z z z z z z)))

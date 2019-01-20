@@ -81,4 +81,5 @@
 (inspect
  (set! z (+ y y y y y y y y)))
 
-(inspect (+ z z z z z z z z))
+(inspect
+ (set! final (+ z z z z z z z z)))
