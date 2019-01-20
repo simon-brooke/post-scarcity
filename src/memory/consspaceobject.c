@@ -25,9 +25,9 @@
 #include "stack.h"
 
 /**
- * Check that the tag on the cell at this pointer is this tag
+ * True if the tag on the cell at this `pointer` is this `tag`, else false.
  */
-int check_tag( struct cons_pointer pointer, char *tag ) {
+bool check_tag( struct cons_pointer pointer, char *tag ) {
     struct cons_space_object cell = pointer2cell( pointer );
     return strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
 }
@@ -178,12 +178,12 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         inc_ref( tail );
         cell->payload.string.character = c;
         cell->payload.string.cdr.page = tail.page;
-        /* TODO: There's a problem here. Sometimes the offsets on
+        /* \todo There's a problem here. Sometimes the offsets on
          * strings are quite massively off. Fix is probably
          * cell->payload.string.cdr = tsil */
         cell->payload.string.cdr.offset = tail.offset;
     } else {
-        // TODO: should throw an exception!
+        // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,
                       L"Warning: only NIL and %s can be prepended to %s\n",
                       tag, tag );
@@ -193,17 +193,23 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
 }
 
 /**
- * Construct a string from this character and
- * this tail. A string is implemented as a flat list of cells each of which
- * has one character and a pointer to the next; in the last cell the
- * pointer to next is NIL.
+ * Construct a string from the character `c` and this `tail`. A string is
+ * implemented as a flat list of cells each of which has one character and a
+ * pointer to the next; in the last cell the pointer to next is NIL.
+ *
+ * @param c the character to add (prepend);
+ * @param tail the string which is being built.
  */
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
     return make_string_like_thing( c, tail, STRINGTAG );
 }
 
 /**
- * Construct a symbol from this character and this tail.
+ * Construct a symbol from the character `c` and this `tail`. A symbol is
+ * internally identical to a string except for having a different tag.
+ *
+ * @param c the character to add (prepend);
+ * @param tail the symbol which is being built.
  */
 struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
     return make_string_like_thing( c, tail, SYMBOLTAG );
@@ -239,7 +245,7 @@ struct cons_pointer make_read_stream( FILE * input ) {
 }
 
 /**
- * Construct a cell which points to a stream open for writeing.
+ * Construct a cell which points to a stream open for writing.
  * @param output the C stream to wrap.
  */
 struct cons_pointer make_write_stream( FILE * output ) {

@@ -27,20 +27,28 @@
 
 // extern char *optarg; /* defined in unistd.h */
 
+/**
+ * Bind this compiled `executable` function, as a Lisp function, to
+ * this name in the `oblist`.
+ * \todo where a function is not compiled from source, we could cache
+ * the name on the source pointer. Would make stack frames potentially
+ * more readable and aid debugging generally.
+ */
 void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
     inc_ref( n );
 
-    /* TODO: where a function is not compiled from source, we could cache
-     * the name on the source pointer. Would make stack frames potentially
-     * more readable and aid debugging generally. */
     deep_bind( n, make_function( NIL, executable ) );
 
     dec_ref( n );
 }
 
+/**
+ * Bind this compiled `executable` function, as a Lisp special form, to
+ * this `name` in the `oblist`.
+ */
 void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
@@ -52,6 +60,9 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
     dec_ref( n );
 }
 
+/**
+ * Bind this `value` to this `name` in the `oblist`.
+ */
 void bind_value( wchar_t *name, struct cons_pointer value ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
     inc_ref( n );
@@ -61,6 +72,10 @@ void bind_value( wchar_t *name, struct cons_pointer value ) {
     dec_ref( n );
 }
 
+/**
+ * main entry point; parse command line arguments, initialise the environment,
+ * and enter the read-eval-print loop.
+ */
 int main( int argc, char *argv[] ) {
     int option;
     bool dump_at_end = false;
@@ -178,7 +193,6 @@ int main( int argc, char *argv[] ) {
     debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
     dec_ref( oblist );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
-
 
     if ( dump_at_end ) {
         dump_pages( stdout );

@@ -151,4 +151,3 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             break;
     }
 }
-

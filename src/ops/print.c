@@ -25,7 +25,7 @@
 
 /**
  * Whether or not we colorise output.
- * TODO: this should be a Lisp symbol binding, not a C variable.
+ * \todo this should be a Lisp symbol binding, not a C variable.
  */
 int print_use_colours = 0;
 
@@ -122,7 +122,7 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
-            fwprintf( output, L"(Function)" );
+            fwprintf( output, L"<Function>" );
             break;
         case INTEGERTV:{
                 struct cons_pointer s = integer_to_string( pointer, 10 );
@@ -167,10 +167,10 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             print( output, cell.payload.ratio.divisor );
             break;
         case READTV:
-            fwprintf( output, L"(Input stream)" );
+            fwprintf( output, L"<Input stream>" );
             break;
         case REALTV:
-            /* TODO: using the C heap is a bad plan because it will fragment.
+            /* \todo using the C heap is a bad plan because it will fragment.
              * As soon as I have working vector space I'll use a special purpose
              * vector space object */
             buffer = ( char * ) malloc( 24 );
@@ -201,13 +201,13 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
-            fwprintf( output, L"(Special form)" );
+            fwprintf( output, L"<Special form>" );
             break;
         case TRUETV:
             fwprintf( output, L"t" );
             break;
         case WRITETV:
-            fwprintf( output, L"(Output stream)" );
+            fwprintf( output, L"<Output stream>" );
             break;
         default:
             fwprintf( stderr,

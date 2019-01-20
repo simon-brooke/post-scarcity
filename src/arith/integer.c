@@ -41,13 +41,12 @@ const char *hex_digits = "0123456789ABCDEF";
 /*
  * Doctrine from here on in is that ALL integers are bignums, it's just
  * that integers less than 65 bits are bignums of one cell only.
- *
- * TODO: I have no idea at all how I'm going to print bignums!
  */
 
 /**
- * return the numeric value of this cell, as a C primitive double, not
- * as a cons-space object. Cell may in principle be any kind of number.
+ * return the numeric value of the cell indicated by this `pointer`, as a C
+ * primitive double, not as a cons_space_object. The indicated cell may in
+ * principle be any kind of number; if it is not a number, will return `NAN`.
  */
 long double numeric_value( struct cons_pointer pointer ) {
     long double result = NAN;
@@ -75,7 +74,10 @@ long double numeric_value( struct cons_pointer pointer ) {
 }
 
 /**
- * Allocate an integer cell representing this value and return a cons pointer to it.
+ * Allocate an integer cell representing this `value` and return a cons_pointer to it.
+ * @param value an integer value;
+ * @param more `NIL`, or a pointer to the more significant cell(s) of this number.
+ * *NOTE* that if `more` is not `NIL`, `value` *must not* exceed `MAX_INTEGER`.
  */
 struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result = NIL;
@@ -94,7 +96,13 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     return result;
 }
 
-
+/**
+ * Internal to `operate_on_integers`, do not use.
+ * @param c a pointer to a cell, assumed to be an integer cell;
+ * @param op a character representing the operation: expectedto be either
+ * '+' or '*'; behaviour with other values is undefined.
+ * \see operate_on_integers
+ */
 __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
     long int val = nilp( c ) ? 0 : pointer2cell( c ).payload.integer.value;
     long int carry = is_first_cell ? 0 : ( MAX_INTEGER + 1 );
@@ -115,8 +123,15 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
  * possibly, later, other operations. Apply the operator `op` to the
  * integer arguments `a` and `b`, and return a pointer to the result. If
  * either `a` or `b` is not an integer, returns `NIL`.
+ *
+ * @param a a pointer to a cell, assumed to be an integer cell;
+ * @param b a pointer to a cell, assumed to be an integer cell;
+ * @param op a character representing the operation: expected to be either
+ * '+' or '*'; behaviour with other values is undefined.
+ * \see add_integers
+ * \see multiply_integers
  */
-/* TODO: there is a significant bug here, which manifests in multiply but
+/* \todo there is a significant bug here, which manifests in multiply but
  * may not manifest in add. The value in the least significant cell ends
  * up significantly WRONG, but the value in the more significant cell
  * ends up correct. */
@@ -148,7 +163,7 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
 
             switch ( op ) {
                 case '*':
-                    rv = av * bv * ( ( carry == 0 ) ? 1 : carry );
+                    rv = av * ( bv + carry );
                     break;
                 case '+':
                     rv = av + bv + carry;
@@ -170,7 +185,7 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
             if ( MAX_INTEGER >= rv ) {
                 carry = 0;
             } else {
-                // TODO: we're correctly detecting overflow, but not yet correctly
+                // \todo we're correctly detecting overflow, but not yet correctly
                 // handling it.
                 carry = rv >> 60;
                 debug_printf( DEBUG_ARITH,
@@ -210,8 +225,8 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
 }
 
 /**
- * Return the sum of the integers pointed to by `a` and `b`. If either isn't
- * an integer, will return nil.
+ * Return a pointer to an integer representing the sum of the integers
+ * pointed to by `a` and `b`. If either isn't an integer, will return nil.
  */
 struct cons_pointer add_integers( struct cons_pointer a,
                                   struct cons_pointer b ) {
@@ -220,8 +235,8 @@ struct cons_pointer add_integers( struct cons_pointer a,
 }
 
 /**
- * Return the product of the integers pointed to by `a` and `b`. If either isn't
- * an integer, will return nil.
+ * Return a pointer to an integer representing the product of the integers
+ * pointed to by `a` and `b`. If either isn't an integer, will return nil.
  */
 struct cons_pointer multiply_integers( struct cons_pointer a,
                                        struct cons_pointer b ) {
@@ -253,7 +268,7 @@ struct cons_pointer integer_to_string_add_digit( int digit, int digits,
  * to be looking to the next. H'mmmm.
  */
 /*
- * TODO: this blows up when printing three-cell integers, but works fine
+ * \todo this blows up when printing three-cell integers, but works fine
  * for two-cell. What's happening is that when we cross the barrier we
  * SHOULD print 2^120, but what we actually print is 2^117. H'mmm.
  */

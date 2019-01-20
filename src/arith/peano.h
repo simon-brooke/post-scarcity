@@ -1,4 +1,4 @@
-/**
+/*
  * peano.h
  *
  * Basic peano arithmetic
@@ -18,7 +18,7 @@ struct cons_pointer negative( struct cons_pointer frame,
                               struct cons_pointer arg );
 
 /**
- * TODO: cannot throw an exception out of here, which is a problem
+ * \todo cannot throw an exception out of here, which is a problem.
  * if a ratio may legally have zero as a divisor, or something which is
  * not a number is passed in.
  */
@@ -35,7 +35,7 @@ lisp_add( struct stack_frame *frame, struct cons_pointer frame_pointer,
           struct cons_pointer env );
 
 /**
- * Multiply an indefinite number of numbers together
+ * Multiply an indefinite number of numbers together.
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
  * @return a pointer to an integer or real.

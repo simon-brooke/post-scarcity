@@ -1,4 +1,4 @@
-/**
+/*
  *  dump.h
  *
  *  Dump representations of both cons space and vector space objects.
@@ -20,9 +20,6 @@
 #define __dump_h
 
 
-/**
- * dump the object at this cons_pointer to this output stream.
- */
 void dump_object( FILE * output, struct cons_pointer pointer );
 
 #endif

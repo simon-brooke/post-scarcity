@@ -37,42 +37,16 @@ struct cons_page {
     struct cons_space_object cell[CONSPAGESIZE];
 };
 
-/**
- * The (global) pointer to the (global) freelist. Not sure whether this ultimately
- * belongs in this file.
- */
 extern struct cons_pointer freelist;
 
-/**
- * An array of pointers to cons pages.
- */
 extern struct cons_page *conspages[NCONSPAGES];
 
-/**
- * Frees the cell at the specified pointer. Dangerous, primitive, low
- * level.
- *
- * @pointer the cell to free
- */
 void free_cell( struct cons_pointer pointer );
 
-/**
- * Allocates a cell with the specified tag. Dangerous, primitive, low
- * level.
- *
- * @param tag the tag of the cell to allocate - must be a valid cons space tag.
- * @return the cons pointer which refers to the cell allocated.
- */
 struct cons_pointer allocate_cell( char *tag );
 
-/**
- * initialise the cons page system; to be called exactly once during startup.
- */
 void initialise_cons_pages(  );
 
-/**
- * dump the allocated pages to this output stream.
- */
 void dump_pages( FILE * output );
 
 #endif

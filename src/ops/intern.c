@@ -27,7 +27,8 @@
 #include "print.h"
 
 /**
- * The object list. What is added to this during system setup is 'global', that is,
+ * The global object list/or, to put it differently, the root namespace.
+ * What is added to this during system setup is 'global', that is,
  * visible to all sessions/threads. What is added during a session/thread is local to
  * that session/thread (because shallow binding). There must be some way for a user to
  * make the contents of their own environment persistent between threads but I don't

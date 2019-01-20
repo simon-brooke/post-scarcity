@@ -35,12 +35,6 @@
  */
 #define stackframep(vso)(((struct vector_space_object *)vso)->header.tag.value == STACKFRAMETV)
 
-/**
- * set a register in a stack frame. Alwaye use this macro to do so,
- • because that way we can be sure the inc_ref happens!
- */
-//#define set_reg(frame,register,value){frame->arg[register]=value; inc_ref(value);}
-
 void set_reg( struct stack_frame *frame, int reg, struct cons_pointer value );
 
 struct stack_frame *get_stack_frame( struct cons_pointer pointer );
@@ -65,7 +59,7 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
 
 /*
  * struct stack_frame is defined in consspaceobject.h to break circularity
- * TODO: refactor.
+ * \todo refactor.
  */
 
 #endif

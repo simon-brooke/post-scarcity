@@ -119,7 +119,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                             read_number( frame, frame_pointer, input, c,
                                          true );
                     } else if ( iswblank( next ) ) {
-                        /* dotted pair. TODO: this isn't right, we
+                        /* dotted pair. \todo this isn't right, we
                          * really need to backtrack up a level. */
                         result =
                             read_continuation( frame, frame_pointer, input,
@@ -153,7 +153,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
 
 /**
  * read a number from this input stream, given this initial character.
- * TODO: Need to do a lot of inc_ref and dec_ref, to make sure the
+ * \todo Need to do a lot of inc_ref and dec_ref, to make sure the
  * garbage is collected.
  */
 struct cons_pointer read_number( struct stack_frame *frame,
@@ -163,7 +163,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
     debug_print( L"entering read_number\n", DEBUG_IO );
 
     struct cons_pointer result = make_integer( 0, NIL );
-    /* TODO: we really need to be getting `base` from a privileged Lisp name -
+    /* \todo we really need to be getting `base` from a privileged Lisp name -
      * and it should be the same privileged name we use when writing numbers */
     struct cons_pointer base = make_integer( 10, NIL );
     struct cons_pointer dividend = NIL;
@@ -298,7 +298,7 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
     struct cons_pointer result;
     switch ( initial ) {
         case '\0':
-            result = make_string( initial, NIL );
+            result = NIL;
             break;
         case '"':
             /* making a string of the null character means we can have an empty

@@ -34,7 +34,9 @@ struct cons_pointer add_2( struct stack_frame *frame,
                            struct cons_pointer arg1,
                            struct cons_pointer arg2 );
 
-
+/**
+ * return true if this `arg` points to a number whose value is zero.
+ */
 bool zerop( struct cons_pointer arg ) {
     bool result = false;
     struct cons_space_object cell = pointer2cell( arg );
@@ -56,7 +58,13 @@ bool zerop( struct cons_pointer arg ) {
 }
 
 /**
- * TODO: cannot throw an exception out of here, which is a problem
+ * Return the closest possible `binary64` representation to the value of
+ * this `arg`, expected to be an integer, ratio or real, or `NAN` if `arg`
+ * is not any of these.
+ *
+ * @arg a pointer to an integer, ratio or real.
+ *
+ * \todo cannot throw an exception out of here, which is a problem
  * if a ratio may legally have zero as a divisor, or something which is
  * not a number is passed in.
  */
@@ -97,7 +105,13 @@ long double to_long_double( struct cons_pointer arg ) {
 
 
 /**
- * TODO: cannot throw an exception out of here, which is a problem
+ * Return the closest possible `int64_t` representation to the value of
+ * this `arg`, expected to be an integer, ratio or real, or `NAN` if `arg`
+ * is not any of these.
+ *
+ * @arg a pointer to an integer, ratio or real.
+ *
+ * \todo cannot throw an exception out of here, which is a problem
  * if a ratio may legally have zero as a divisor, or something which is
  * not a number (or is a big number) is passed in.
  */
@@ -106,7 +120,7 @@ int64_t to_long_int( struct cons_pointer arg ) {
     struct cons_space_object cell = pointer2cell( arg );
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            /* TODO: if (integerp(cell.payload.integer.more)) {
+            /* \todo if (integerp(cell.payload.integer.more)) {
              *     throw an exception!
              * } */
             result = cell.payload.integer.value;
@@ -123,9 +137,9 @@ int64_t to_long_int( struct cons_pointer arg ) {
 
 
 /**
-* return a cons_pointer indicating a number which is the sum of
-* the numbers indicated by `arg1` and `arg2`.
-*/
+ * return a cons_pointer indicating a number which is the sum of
+ * the numbers indicated by `arg1` and `arg2`.
+ */
 struct cons_pointer add_2( struct stack_frame *frame,
                            struct cons_pointer frame_pointer,
                            struct cons_pointer arg1,
@@ -222,7 +236,8 @@ struct cons_pointer add_2( struct stack_frame *frame,
  * Add an indefinite number of numbers together
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if any argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_add( struct stack_frame
                               *frame, struct cons_pointer frame_pointer, struct
@@ -356,7 +371,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
  * Multiply an indefinite number of numbers together
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if any argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_multiply( struct
                                    stack_frame
@@ -431,7 +447,7 @@ struct cons_pointer negative( struct cons_pointer frame,
 
 /**
  * return a cons_pointer indicating a number which is the result of
- * subtracting the numbers indicated by `arg2` from that indicated by `arg1`,
+ * subtracting the number indicated by `arg2` from that indicated by `arg1`,
  * in the context of this `frame`.
  */
 struct cons_pointer subtract_2( struct stack_frame *frame,
@@ -526,10 +542,12 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
 }
 
 /**
- * Subtract one number from another.
+ * Subtract one number from another. If more than two arguments are passed
+ * in the frame, the additional arguments are ignored.
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if either argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_subtract( struct
                                    stack_frame
@@ -539,10 +557,12 @@ struct cons_pointer lisp_subtract( struct
 }
 
 /**
- * Divide one number by another.
+ * Divide one number by another. If more than two arguments are passed
+ * in the frame, the additional arguments are ignored.
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
  * @return a pointer to an integer or real.
+ * @exception if either argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_divide( struct
                                  stack_frame
