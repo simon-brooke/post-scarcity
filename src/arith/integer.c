@@ -27,7 +27,9 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
+#include "equal.h"
 #include "lispops.h"
+#include "peano.h"
 
 /*
  * The maximum value we will allow in an integer cell.
@@ -100,11 +102,11 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 /**
  * Internal to `operate_on_integers`, do not use.
  * @param c a pointer to a cell, assumed to be an integer cell;
- * @param op a character representing the operation: expectedto be either
- * '+' or '*'; behaviour with other values is undefined.
+ * @param is_first_cell true if this is the first cell in a bignum
+ * chain, else false.
  * \see operate_on_integers
  */
-__int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
+__int128_t cell_value( struct cons_pointer c, bool is_first_cell ) {
     long int val = nilp( c ) ?
       0 :
       pointer2cell( c ).payload.integer.value;
@@ -117,8 +119,8 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
           val :
          0;
     debug_printf( DEBUG_ARITH,
-                  L"cell_value: raw value is %ld, op = '%c', is_first_cell = %s; %4.4s; returning ",
-                  val, op, is_first_cell ? "true" : "false", pointer2cell(c).tag.bytes);
+                  L"cell_value: raw value is %ld, is_first_cell = %s; %4.4s; returning ",
+                  val, is_first_cell ? "true" : "false", pointer2cell(c).tag.bytes);
     debug_print_128bit( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
@@ -126,60 +128,77 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
 }
 
 /**
- * internal workings of both `add_integers` and `multiply_integers` (and
- * possibly, later, other operations. Apply the operator `op` to the
- * integer arguments `a` and `b`, and return a pointer to the result. If
- * either `a` or `b` is not an integer, returns `NIL`.
+ * Overwrite the value field of the integer indicated by `new` with
+ * the least significant 60 bits of `val`, and return the more significant
+ * bits (if any) right-shifted by 60 places. Destructive, primitive, do not
+ * use in any context except primitive operations on integers.
  *
- * @param a a pointer to a cell, assumed to be an integer cell;
- * @param b a pointer to a cell, assumed to be an integer cell;
- * @param op a character representing the operation: expected to be either
- * '+' or '*'; behaviour with other values is undefined.
- * \see add_integers
- * \see multiply_integers
+ * @param val the value to represent;
+ * @param less_significant the less significant words of this bignum, if any,
+ * else NIL;
+ * @param new a newly created integer, which will be destructively changed.
+ * @return carry, if any, else 0.
  */
-/* \todo there is a significant bug here, which manifests in multiply but
- * may not manifest in add. The value in the least significant cell ends
- * up significantly WRONG, but the value in the more significant cell
- * ends up correct. */
-struct cons_pointer operate_on_integers( struct cons_pointer a,
-                                         struct cons_pointer b, char op ) {
+__int128_t int128_to_integer( __int128_t val,
+                                      struct cons_pointer less_significant,
+                                      struct cons_pointer new)
+{
+    struct cons_pointer cursor = NIL;
+    __int128_t carry = 0;
+
+    if ( MAX_INTEGER >= val ) {
+        carry = 0;
+    } else {
+        carry = val >> 60;
+        debug_printf( DEBUG_ARITH,
+                     L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
+                     ( int64_t ) carry );
+        val &= MAX_INTEGER;
+    }
+
+    struct cons_space_object * newc = &pointer2cell( new);
+    newc->payload.integer.value = val;
+
+    if ( integerp( less_significant ) ) {
+        struct cons_space_object *lsc = &pointer2cell( less_significant );
+        inc_ref( new );
+        lsc->payload.integer.more = new;
+    }
+
+    return carry;
+}
+
+/**
+ * Return a pointer to an integer representing the sum of the integers
+ * pointed to by `a` and `b`. If either isn't an integer, will return nil.
+ */
+struct cons_pointer add_integers( struct cons_pointer a,
+                                  struct cons_pointer b ) {
     struct cons_pointer result = NIL;
     struct cons_pointer cursor = NIL;
+
+    debug_print( L"add_integers: a = ", DEBUG_ARITH );
+    debug_print_object(a, DEBUG_ARITH);
+    debug_print( L"; b = ", DEBUG_ARITH );
+    debug_print_object(b, DEBUG_ARITH);
+    debug_println(DEBUG_ARITH);
 
     __int128_t carry = 0;
     bool is_first_cell = true;
 
     if ( integerp( a ) && integerp( b ) ) {
-        debug_print( L"operate_on_integers: \n", DEBUG_ARITH );
+        debug_print( L"add_integers: \n", DEBUG_ARITH );
         debug_dump_object( a, DEBUG_ARITH );
-        debug_printf( DEBUG_ARITH, L" %c \n", op );
+        debug_print( L" plus \n", DEBUG_ARITH );
         debug_dump_object( b, DEBUG_ARITH );
         debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            __int128_t av = cell_value( a, op, is_first_cell );
-            __int128_t bv = cell_value( b, op, is_first_cell );
+            __int128_t av = cell_value( a, is_first_cell );
+            __int128_t bv = cell_value( b, is_first_cell );
+            __int128_t rv = av + bv + carry;
 
-            /* slightly dodgy. `MAX_INTEGER` is substantially smaller than `LONG_MAX`, and
-             * `LONG_MAX * LONG_MAX` =~ the maximum value for `__int128_t`. So if the carry
-             * is very large (which I'm not certain whether it can be and am not
-             * intellectually up to proving it this morning) adding the carry might
-             * overflow `__int128_t`. Edge-case testing required.
-             */
-            __int128_t rv = NAN;
-
-            switch ( op ) {
-                case '*':
-                    rv = (av * bv) + carry;
-                    break;
-                case '+':
-                    rv = av + bv + carry;
-                    break;
-            }
-
-            debug_printf( DEBUG_ARITH,
-                          L"operate_on_integers: op = '%c'; av = ", op );
+            debug_print( L"add_integers: av = ", DEBUG_ARITH );
             debug_print_128bit( av, DEBUG_ARITH );
             debug_print( L"; bv = ", DEBUG_ARITH );
             debug_print_128bit( bv, DEBUG_ARITH );
@@ -189,31 +208,9 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
             debug_print_128bit( rv, DEBUG_ARITH );
             debug_print( L"\n", DEBUG_ARITH );
 
-
-            if ( MAX_INTEGER >= rv ) {
-                carry = 0;
-            } else {
-                // \todo we're correctly detecting overflow, but not yet correctly
-                // handling it.
-                carry = rv >> 60;
-                debug_printf( DEBUG_ARITH,
-                              L"operate_on_integers: 64 bit overflow; setting carry to %ld\n",
-                              ( int64_t ) carry );
-                rv &= MAX_INTEGER;
-            }
-
-            struct cons_pointer tail = make_integer( ( int64_t ) rv, NIL );
-
-            if ( nilp( cursor ) ) {
-                cursor = tail;
-            } else {
-                inc_ref( tail );
-                /* yes, this is a destructive change - but the integer has not yet been released
-                 * into the wild */
-                struct cons_space_object *c = &pointer2cell( cursor );
-                c->payload.integer.more = tail;
-                cursor = tail;
-            }
+            struct cons_pointer new = make_integer( 0, NIL);
+            carry = int128_to_integer(rv, cursor, new);
+            cursor = new;
 
             if ( nilp( result ) ) {
                 result = cursor;
@@ -225,30 +222,111 @@ struct cons_pointer operate_on_integers( struct cons_pointer a,
         }
     }
 
-    debug_print( L"operate_on_integers returning:\n", DEBUG_ARITH );
-    debug_dump_object( result, DEBUG_ARITH );
+    debug_print( L"add_integers returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
     return result;
 }
 
-/**
- * Return a pointer to an integer representing the sum of the integers
- * pointed to by `a` and `b`. If either isn't an integer, will return nil.
- */
-struct cons_pointer add_integers( struct cons_pointer a,
-                                  struct cons_pointer b ) {
+struct cons_pointer base_partial(int depth) {
+  struct cons_pointer result = NIL;
 
-    return operate_on_integers( a, b, '+' );
+  for (int i = 0; i < depth; i++) {
+    result = make_integer(0, result);
+  }
+
+  return result;
 }
 
 /**
  * Return a pointer to an integer representing the product of the integers
  * pointed to by `a` and `b`. If either isn't an integer, will return nil.
+ * \todo it is MUCH more complicated than this!
+ *
+ * @param a an integer;
+ * @param b an integer.
  */
 struct cons_pointer multiply_integers( struct cons_pointer a,
                                        struct cons_pointer b ) {
-    return operate_on_integers( a, b, '*' );
+    struct cons_pointer result = NIL;
+    bool neg = is_negative(a) != is_negative(b);
+    bool is_first_b = true;
+    int oom = 0;
+
+    debug_print( L"multiply_integers: a = ", DEBUG_ARITH );
+    debug_print_object(a, DEBUG_ARITH);
+    debug_print( L"; b = ", DEBUG_ARITH );
+    debug_print_object(b, DEBUG_ARITH);
+    debug_println(DEBUG_ARITH);
+
+    if ( integerp( a ) && integerp( b ) ) {
+        while ( !nilp( b ) ) {
+          bool is_first_d = true;
+          struct cons_pointer d = a;
+          struct cons_pointer partial = base_partial(oom++);
+          __int128_t carry = 0;
+
+          while ( !nilp(d) || carry != 0) {
+            struct cons_pointer old_partial = partial;
+            struct cons_pointer new = make_integer( 0, NIL);
+            __int128_t dv = cell_value( d, is_first_d );
+            __int128_t bv = cell_value( b, is_first_b );
+
+            __int128_t rv = (dv * bv) + carry;
+
+            debug_print( L"multiply_integers: d = ", DEBUG_ARITH);
+            debug_print_object( d, DEBUG_ARITH);
+            debug_print( L"; dv = ", DEBUG_ARITH );
+            debug_print_128bit( dv, DEBUG_ARITH );
+            debug_print( L"; bv = ", DEBUG_ARITH );
+            debug_print_128bit( bv, DEBUG_ARITH );
+            debug_print( L"; carry = ", DEBUG_ARITH );
+            debug_print_128bit( carry, DEBUG_ARITH );
+            debug_print( L"; rv = ", DEBUG_ARITH );
+            debug_print_128bit( rv, DEBUG_ARITH );
+            debug_print( L"; acc = ", DEBUG_ARITH );
+            debug_print_object( result, DEBUG_ARITH);
+            debug_print( L"; partial = ", DEBUG_ARITH );
+            debug_print_object( partial, DEBUG_ARITH);
+            debug_print( L"\n", DEBUG_ARITH );
+
+            inc_ref(new);
+            carry = int128_to_integer(rv, NIL, new);
+
+            if (nilp(d) && carry != 0) debug_print(L"THIS SHOULD NEVER HAPPEN!\n", DEBUG_ARITH);
+
+            if (nilp(partial) || zerop(partial)) {
+              partial = new;
+            } else {
+              partial = add_integers(partial, new);
+              inc_ref(partial);
+              //dec_ref(new);
+            }
+
+            //dec_ref(old_partial);
+            d = integerp(d) ? pointer2cell( d ).payload.integer.more : NIL;
+            is_first_d = false;
+          }
+
+          if (nilp(result) || zerop(result)) {
+            result = partial;
+          } else {
+            struct cons_pointer old = result;
+            result = add_integers(partial, result);
+            //if (!eq(result, old)) dec_ref(old);
+            //if (!eq(result, partial)) dec_ref(partial);
+          }
+          b = pointer2cell( b ).payload.integer.more;
+          is_first_b = false;
+        }
+    }
+
+    debug_print( L"multiply_integers returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
+    debug_println( DEBUG_ARITH );
+
+    return result;
 }
 
 /**
@@ -325,7 +403,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
              * an unwanted comma on the front. */
             struct cons_pointer tmp = result;
             result = pointer2cell( result ).payload.string.cdr;
-            dec_ref( tmp );
+            //dec_ref( tmp );
         }
 
         if ( is_negative ) {

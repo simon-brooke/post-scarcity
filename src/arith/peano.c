@@ -58,6 +58,51 @@ bool zerop( struct cons_pointer arg ) {
 }
 
 /**
+ * does this `arg` point to a negative number?
+ */
+bool is_negative( struct cons_pointer arg) {
+    bool result = false;
+    struct cons_space_object cell = pointer2cell( arg );
+
+    switch ( cell.tag.value ) {
+        case INTEGERTV:
+            result = cell.payload.integer.value < 0;
+            break;
+        case RATIOTV:
+            result = is_negative( cell.payload.ratio.dividend );
+            break;
+        case REALTV:
+            result = ( cell.payload.real.value < 0 );
+            break;
+    }
+
+    return result;
+}
+
+struct cons_pointer absolute( struct cons_pointer frame_pointer, struct cons_pointer arg) {
+  struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( arg );
+
+  if ( is_negative( arg)) {
+    switch ( cell.tag.value ) {
+        case INTEGERTV:
+            result = make_integer(llabs(cell.payload.integer.value), cell.payload.integer.more);
+            break;
+        case RATIOTV:
+            result = make_ratio(frame_pointer,
+                                absolute(frame_pointer, cell.payload.ratio.dividend),
+                                cell.payload.ratio.divisor);
+            break;
+        case REALTV:
+            result = make_real( 0 - cell.payload.real.value );
+            break;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Return the closest possible `binary64` representation to the value of
  * this `arg`, expected to be an integer, ratio or real, or `NAN` if `arg`
  * is not any of these.
@@ -135,6 +180,22 @@ int64_t to_long_int( struct cons_pointer arg ) {
     return result;
 }
 
+
+/**
+ * Function: calculate the absolute value of a number.
+ *
+ * (absolute arg)
+ *
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return the absolute value of the number represented by the first
+ * argument, or NIL if it was not a number.
+ */
+struct cons_pointer lisp_absolute( struct stack_frame
+                              *frame, struct cons_pointer frame_pointer, struct
+                              cons_pointer env ) {
+  return absolute( frame_pointer, frame->arg[0]);
+}
 
 /**
  * return a cons_pointer indicating a number which is the sum of
@@ -286,7 +347,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
     debug_print_object( arg1, DEBUG_ARITH );
     debug_print( L"; arg2 = ", DEBUG_ARITH );
     debug_print_object( arg2, DEBUG_ARITH );
-    debug_print( L")", DEBUG_ARITH );
+    debug_print( L")\n", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
         result = arg2;
@@ -316,9 +377,10 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: argument 2 is not a number" ),
-                                                  frame_pointer );
+                        result = throw_exception( make_cons(
+                          c_string_to_lisp_string( L"Cannot multiply: argument 2 is not a number: " ),
+                          c_type(arg2)),
+                          frame_pointer );
                         break;
                 }
                 break;
@@ -342,8 +404,10 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: argument 1 is not a number" ),
+                        result = throw_exception(
+                          make_cons(c_string_to_lisp_string
+                                                  ( L"Cannot multiply: argument 2 is not a number" ),
+                                    c_type(arg2)),
                                                   frame_pointer );
                 }
                 break;
@@ -353,19 +417,23 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                to_long_double( arg2 ) );
                 break;
             default:
-                result = throw_exception( c_string_to_lisp_string
-                                          ( L"Cannot multiply: not a number" ),
-                                          frame_pointer );
+                        result = throw_exception(
+                          make_cons(c_string_to_lisp_string
+                                                  ( L"Cannot multiply: argument 1 is not a number" ),
+                                    c_type(arg1)),
+                                                  frame_pointer );
                 break;
         }
     }
 
-    debug_print( L" => ", DEBUG_ARITH );
-    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L"multiply_2 returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
     debug_print( L"\n", DEBUG_ARITH );
 
     return result;
 }
+
+#define multiply_one_arg(arg) {if (exceptionp(arg)){result=arg;}else{tmp = result; result = multiply_2( frame, frame_pointer, result, arg ); if ( !eq( tmp, result ) ) dec_ref( tmp );}}
 
 /**
  * Multiply an indefinite number of numbers together
@@ -381,28 +449,30 @@ struct cons_pointer lisp_multiply( struct
     struct cons_pointer result = make_integer( 1, NIL );
     struct cons_pointer tmp;
 
-    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] )
-          && !exceptionp( result ); i++ ) {
-        tmp = result;
-        result = multiply_2( frame, frame_pointer, result, frame->arg[i] );
+    for ( int i = 0;
+         i < args_in_frame
+           && !nilp( frame->arg[i] )
+           && !exceptionp( result );
+         i++ ) {
+      debug_print( L"lisp_multiply: accumulator = ",DEBUG_ARITH);
+      debug_print_object(result, DEBUG_ARITH);
+      debug_print( L"; arg = ", DEBUG_ARITH);
+      debug_print_object(frame->arg[i], DEBUG_ARITH);
+      debug_println( DEBUG_ARITH);
 
-        if ( !eq( tmp, result ) ) {
-            dec_ref( tmp );
-        }
+      multiply_one_arg(frame->arg[i]);
     }
 
     struct cons_pointer more = frame->more;
     while ( consp( more )
             && !exceptionp( result ) ) {
-        tmp = result;
-        result = multiply_2( frame, frame_pointer, result, c_car( more ) );
-
-        if ( !eq( tmp, result ) ) {
-            dec_ref( tmp );
-        }
-
+      multiply_one_arg(c_car( more ));
         more = c_cdr( more );
     }
+
+  debug_print( L"lisp_multiply returning: ",DEBUG_ARITH);
+      debug_print_object(result, DEBUG_ARITH);
+  debug_println(DEBUG_ARITH);
 
     return result;
 }
@@ -444,6 +514,24 @@ struct cons_pointer negative( struct cons_pointer frame,
 
     return result;
 }
+
+
+/**
+ * Function: is this number negative?
+ *
+ * * (negative? arg)
+ *
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return T if the first argument was a negative number, or NIL if it
+ * was not.
+ */
+struct cons_pointer lisp_is_negative( struct stack_frame
+                              *frame, struct cons_pointer frame_pointer, struct
+                              cons_pointer env ) {
+  return is_negative(frame->arg[0]) ? TRUE : NIL;
+}
+
 
 /**
  * return a cons_pointer indicating a number which is the result of

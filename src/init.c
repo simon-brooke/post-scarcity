@@ -142,6 +142,7 @@ int main( int argc, char *argv[] ) {
     /*
      * primitive function operations
      */
+    bind_function( L"absolute", &lisp_absolute );
     bind_function( L"add", &lisp_add );
     bind_function( L"apply", &lisp_apply );
     bind_function( L"assoc", &lisp_assoc );
@@ -155,6 +156,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"multiply", &lisp_multiply );
+    bind_function( L"negative?", &lisp_is_negative);
     bind_function( L"read", &lisp_read );
     bind_function( L"repl", &lisp_repl );
     bind_function( L"oblist", &lisp_oblist );
