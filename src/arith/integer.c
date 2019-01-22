@@ -31,11 +31,6 @@
 #include "lispops.h"
 #include "peano.h"
 
-/*
- * The maximum value we will allow in an integer cell.
- */
-#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
-
 /**
  * hexadecimal digits for printing numbers.
  */
@@ -45,36 +40,6 @@ const char *hex_digits = "0123456789ABCDEF";
  * Doctrine from here on in is that ALL integers are bignums, it's just
  * that integers less than 65 bits are bignums of one cell only.
  */
-
-/**
- * return the numeric value of the cell indicated by this `pointer`, as a C
- * primitive double, not as a cons_space_object. The indicated cell may in
- * principle be any kind of number; if it is not a number, will return `NAN`.
- */
-long double numeric_value( struct cons_pointer pointer ) {
-    long double result = NAN;
-    struct cons_space_object *cell = &pointer2cell( pointer );
-
-    switch ( cell->tag.value ) {
-        case INTEGERTV:
-            result = 1.0;
-            while ( cell->tag.value == INTEGERTV ) {
-                result = ( result * LONG_MAX * cell->payload.integer.value );
-                cell = &pointer2cell( cell->payload.integer.more );
-            }
-            break;
-        case RATIOTV:
-            result = numeric_value( cell->payload.ratio.dividend ) /
-                numeric_value( cell->payload.ratio.divisor );
-            break;
-        case REALTV:
-            result = cell->payload.real.value;
-            break;
-            // default is NAN
-    }
-
-    return result;
-}
 
 /**
  * Allocate an integer cell representing this `value` and return a cons_pointer to it.
@@ -100,13 +65,17 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 }
 
 /**
- * Internal to `operate_on_integers`, do not use.
+ * Low level integer arithmetic, do not use elsewhere.
+ *
  * @param c a pointer to a cell, assumed to be an integer cell;
+ * @param op a character representing the operation: expectedto be either
+ * '+' or '*'; behaviour with other values is undefined.
  * @param is_first_cell true if this is the first cell in a bignum
  * chain, else false.
- * \see operate_on_integers
+ * \see multiply_integers
+ * \see add_integers
  */
-__int128_t cell_value( struct cons_pointer c, bool is_first_cell ) {
+__int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
     long int val = nilp( c ) ?
       0 :
       pointer2cell( c ).payload.integer.value;
@@ -117,7 +86,7 @@ __int128_t cell_value( struct cons_pointer c, bool is_first_cell ) {
         ( val == 0 ) ?
           carry :
           val :
-         0;
+         op == '*' ? 1 : 0;
     debug_printf( DEBUG_ARITH,
                   L"cell_value: raw value is %ld, is_first_cell = %s; %4.4s; returning ",
                   val, is_first_cell ? "true" : "false", pointer2cell(c).tag.bytes);
@@ -194,8 +163,8 @@ struct cons_pointer add_integers( struct cons_pointer a,
         debug_println( DEBUG_ARITH );
 
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            __int128_t av = cell_value( a, is_first_cell );
-            __int128_t bv = cell_value( b, is_first_cell );
+            __int128_t av = cell_value( a, '+', is_first_cell );
+            __int128_t bv = cell_value( b, '+', is_first_cell );
             __int128_t rv = av + bv + carry;
 
             debug_print( L"add_integers: av = ", DEBUG_ARITH );
@@ -268,10 +237,10 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
           __int128_t carry = 0;
 
           while ( !nilp(d) || carry != 0) {
-            struct cons_pointer old_partial = partial;
+            partial = make_integer(0, partial);
             struct cons_pointer new = make_integer( 0, NIL);
-            __int128_t dv = cell_value( d, is_first_d );
-            __int128_t bv = cell_value( b, is_first_b );
+            __int128_t dv = cell_value( d, '*', is_first_d );
+            __int128_t bv = cell_value( b, '*', is_first_b );
 
             __int128_t rv = (dv * bv) + carry;
 
@@ -304,7 +273,6 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
               //dec_ref(new);
             }
 
-            //dec_ref(old_partial);
             d = integerp(d) ? pointer2cell( d ).payload.integer.more : NIL;
             is_first_d = false;
           }

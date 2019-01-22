@@ -59,7 +59,7 @@ void dec_ref( struct cons_pointer pointer ) {
         cell->count--;
 
         if ( cell->count == 0 ) {
-            free_cell( pointer );
+            // free_cell( pointer );
         }
     }
 }

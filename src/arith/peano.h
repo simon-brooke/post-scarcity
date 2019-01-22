@@ -12,6 +12,11 @@
 #ifndef PEANO_H
 #define PEANO_H
 
+/**
+ * The maximum value we will allow in an integer cell.
+ */
+#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
+
 bool zerop( struct cons_pointer arg );
 
 struct cons_pointer negative( struct cons_pointer frame,

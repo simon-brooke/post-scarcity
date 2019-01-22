@@ -21,6 +21,7 @@
 #include "integer.h"
 #include "intern.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 #include "read.h"
@@ -119,19 +120,15 @@ long double to_long_double( struct cons_pointer arg ) {
 
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            result = ( double ) cell.payload.integer.value;
+            result = 1.0;
+            while ( cell.tag.value == INTEGERTV ) {
+                result = ( result * (MAX_INTEGER + 1) * cell.payload.integer.value );
+                cell = pointer2cell( cell.payload.integer.more );
+            }
             break;
         case RATIOTV:
-            {
-                struct cons_space_object dividend =
-                    pointer2cell( cell.payload.ratio.dividend );
-                struct cons_space_object divisor =
-                    pointer2cell( cell.payload.ratio.divisor );
-
-                result =
-                    ( long double ) dividend.payload.integer.value /
-                    divisor.payload.integer.value;
-            }
+            result = to_long_double(cell.payload.ratio.dividend) /
+              to_long_double(cell.payload.ratio.divisor);
             break;
         case REALTV:
             result = cell.payload.real.value;
