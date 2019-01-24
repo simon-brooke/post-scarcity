@@ -43,9 +43,14 @@ bool zerop( struct cons_pointer arg ) {
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
-        case INTEGERTV:
-            result = cell.payload.integer.value == 0 &&
-                nilp( cell.payload.integer.more );
+        case INTEGERTV: {
+                do {
+                    debug_print(L"zerop: ", DEBUG_ARITH);
+                    debug_dump_object(arg, DEBUG_ARITH);
+                    result = (pointer2cell( arg ).payload.integer.value == 0);
+                    arg = pointer2cell(arg).payload.integer.more;
+                } while (result && integerp(arg));
+            }
             break;
         case RATIOTV:
             result = zerop( cell.payload.ratio.dividend );
@@ -115,16 +120,25 @@ struct cons_pointer absolute( struct cons_pointer frame_pointer, struct cons_poi
  * not a number is passed in.
  */
 long double to_long_double( struct cons_pointer arg ) {
-    long double result = 0;     /* not a number, as a long double */
+    long double result = 0;
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            result = 1.0;
-            while ( cell.tag.value == INTEGERTV ) {
-                result = ( result * (MAX_INTEGER + 1) * cell.payload.integer.value );
-                cell = pointer2cell( cell.payload.integer.more );
-            }
+            // obviously, this doesn't work for bignums
+            result = (long double)cell.payload.integer.value;
+            // sadly, this doesn't work at all.
+//            result += 1.0;
+//            for (bool is_first = false; integerp(arg); is_first = true) {
+//                debug_printf(DEBUG_ARITH, L"to_long_double: accumulator = %lf, arg = ", result);
+//                debug_dump_object(arg, DEBUG_ARITH);
+//                if (!is_first) {
+//                    result *= (long double)(MAX_INTEGER + 1);
+//                }
+//                result *= (long double)(cell.payload.integer.value);
+//                arg = cell.payload.integer.more;
+//                cell = pointer2cell( arg );
+//            }
             break;
         case RATIOTV:
             result = to_long_double(cell.payload.ratio.dividend) /

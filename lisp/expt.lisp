@@ -5,5 +5,4 @@
               ((= x 1) n)
               (t (* n (expt n (- x 1)))))))
 
-(inspect expt)
-(expt 2 59)
+(inspect (expt 2 60))

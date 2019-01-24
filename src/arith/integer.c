@@ -137,6 +137,23 @@ __int128_t int128_to_integer( __int128_t val,
     return carry;
 }
 
+struct cons_pointer make_integer_128(__int128_t val,
+                                     struct cons_pointer less_significant) {
+    struct cons_pointer result = NIL;
+
+    do {
+        if ( MAX_INTEGER >= val ) {
+            result = make_integer( (long int) val, less_significant);
+        } else {
+            less_significant = make_integer( (long int)val & MAX_INTEGER, less_significant);
+            val = val >> 60;
+        }
+
+    } while (nilp(result));
+
+    return result;
+}
+
 /**
  * Return a pointer to an integer representing the sum of the integers
  * pointed to by `a` and `b`. If either isn't an integer, will return nil.
@@ -221,7 +238,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
     struct cons_pointer result = NIL;
     bool neg = is_negative(a) != is_negative(b);
     bool is_first_b = true;
-    int oom = 0;
+    int oom = -1;
 
     debug_print( L"multiply_integers: a = ", DEBUG_ARITH );
     debug_print_object(a, DEBUG_ARITH);
@@ -233,14 +250,14 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
         while ( !nilp( b ) ) {
           bool is_first_d = true;
           struct cons_pointer d = a;
-          struct cons_pointer partial = base_partial(oom++);
+          struct cons_pointer partial = base_partial(++oom);
           __int128_t carry = 0;
 
           while ( !nilp(d) || carry != 0) {
             partial = make_integer(0, partial);
-            struct cons_pointer new = make_integer( 0, NIL);
-            __int128_t dv = cell_value( d, '*', is_first_d );
-            __int128_t bv = cell_value( b, '*', is_first_b );
+            struct cons_pointer new = NIL;
+            __int128_t dv = cell_value( d, '+', is_first_d );
+            __int128_t bv = cell_value( b, '+', is_first_b );
 
             __int128_t rv = (dv * bv) + carry;
 
@@ -260,17 +277,12 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
             debug_print_object( partial, DEBUG_ARITH);
             debug_print( L"\n", DEBUG_ARITH );
 
-            inc_ref(new);
-            carry = int128_to_integer(rv, NIL, new);
+            new = make_integer_128(rv, base_partial(oom));
 
-            if (nilp(d) && carry != 0) debug_print(L"THIS SHOULD NEVER HAPPEN!\n", DEBUG_ARITH);
-
-            if (nilp(partial) || zerop(partial)) {
+            if ( zerop(partial)) {
               partial = new;
             } else {
               partial = add_integers(partial, new);
-              inc_ref(partial);
-              //dec_ref(new);
             }
 
             d = integerp(d) ? pointer2cell( d ).payload.integer.more : NIL;
