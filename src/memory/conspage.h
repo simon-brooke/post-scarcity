@@ -47,6 +47,6 @@ struct cons_pointer allocate_cell( char *tag );
 
 void initialise_cons_pages(  );
 
-void dump_pages( FILE * output );
+void dump_pages( URL_FILE * output );
 
 #endif

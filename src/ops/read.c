@@ -38,13 +38,13 @@
 
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
-                                 FILE * input, wint_t initial,
+                                 URL_FILE * input, wint_t initial,
                                  bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer, FILE * input,
+                               struct cons_pointer frame_pointer, URL_FILE * input,
                                wint_t initial );
-struct cons_pointer read_string( FILE * input, wint_t initial );
-struct cons_pointer read_symbol( FILE * input, wint_t initial );
+struct cons_pointer read_string( URL_FILE * input, wint_t initial );
+struct cons_pointer read_symbol( URL_FILE * input, wint_t initial );
 
 /**
  * quote reader macro in C (!)
@@ -61,7 +61,7 @@ struct cons_pointer c_quote( struct cons_pointer arg ) {
  */
 struct cons_pointer read_continuation( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
-                                       FILE * input, wint_t initial ) {
+                                       URL_FILE * input, wint_t initial ) {
     debug_print( L"entering read_continuation\n", DEBUG_IO );
     struct cons_pointer result = NIL;
 
@@ -129,6 +129,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     }
                 }
                 break;
+          //case ':': reserved for keywords and paths
             default:
                 if ( iswdigit( c ) ) {
                     result =
@@ -158,7 +159,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
  */
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
-                                 FILE * input,
+                                 URL_FILE * input,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
 
@@ -267,7 +268,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
  */
 struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
-                               FILE * input, wint_t initial ) {
+                               URL_FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     if ( initial != ')' ) {
         debug_printf( DEBUG_IO,
@@ -293,7 +294,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
  * so delimited in which case it may not contain whitespace (unless escaped)
  * but may contain a double quote character (probably not a good idea!)
  */
-struct cons_pointer read_string( FILE * input, wint_t initial ) {
+struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
@@ -315,7 +316,7 @@ struct cons_pointer read_string( FILE * input, wint_t initial ) {
     return result;
 }
 
-struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
+struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
@@ -331,7 +332,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
             break;
         case ')':
             /*
-             * symbols may not include right-parenthesis
+             * symbols may not include right-parenthesis;
              */
             result = NIL;
             /*
@@ -367,6 +368,6 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
 struct cons_pointer read( struct
                           stack_frame
                           *frame, struct cons_pointer frame_pointer,
-                          FILE * input ) {
+                          URL_FILE * input ) {
     return read_continuation( frame, frame_pointer, input, fgetwc( input ) );
 }

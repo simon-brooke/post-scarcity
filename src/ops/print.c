@@ -34,7 +34,7 @@ int print_use_colours = 0;
  * onto this `output`; if `pointer` does not indicate a string or symbol,
  * don't print anything but just return.
  */
-void print_string_contents( FILE * output, struct cons_pointer pointer ) {
+void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
     while ( stringp( pointer ) || symbolp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wchar_t c = cell->payload.string.character;
@@ -51,7 +51,7 @@ void print_string_contents( FILE * output, struct cons_pointer pointer ) {
  * the stream at this `output`, prepending and appending double quote
  * characters.
  */
-void print_string( FILE * output, struct cons_pointer pointer ) {
+void print_string( URL_FILE * output, struct cons_pointer pointer ) {
     fputwc( btowc( '"' ), output );
     print_string_contents( output, pointer );
     fputwc( btowc( '"' ), output );
@@ -63,7 +63,7 @@ void print_string( FILE * output, struct cons_pointer pointer ) {
  * a space character.
  */
 void
-print_list_contents( FILE * output, struct cons_pointer pointer,
+print_list_contents( URL_FILE * output, struct cons_pointer pointer,
                      bool initial_space ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -84,7 +84,7 @@ print_list_contents( FILE * output, struct cons_pointer pointer,
     }
 }
 
-void print_list( FILE * output, struct cons_pointer pointer ) {
+void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     if ( print_use_colours ) {
         fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
     } else {
@@ -104,7 +104,7 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
  * Print the cons-space object indicated by `pointer` to the stream indicated
  * by `output`.
  */
-struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
+struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     char *buffer;
 
@@ -225,6 +225,6 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
     return pointer;
 }
 
-void println( FILE * output ) {
+void println( URL_FILE * output ) {
     fputws( L"\n", output );
 }

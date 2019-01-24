@@ -95,8 +95,6 @@ struct cons_pointer make_exception( struct cons_pointer message,
     struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
-//    inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
-
     inc_ref( message );
     inc_ref( frame_pointer );
     cell->payload.exception.message = message;
@@ -235,7 +233,7 @@ make_special( struct cons_pointer src, struct cons_pointer ( *executable )
  * Construct a cell which points to a stream open for reading.
  * @param input the C stream to wrap.
  */
-struct cons_pointer make_read_stream( FILE * input ) {
+struct cons_pointer make_read_stream( URL_FILE * input ) {
     struct cons_pointer pointer = allocate_cell( READTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -248,7 +246,7 @@ struct cons_pointer make_read_stream( FILE * input ) {
  * Construct a cell which points to a stream open for writing.
  * @param output the C stream to wrap.
  */
-struct cons_pointer make_write_stream( FILE * output ) {
+struct cons_pointer make_write_stream( URL_FILE * output ) {
     struct cons_pointer pointer = allocate_cell( WRITETAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 

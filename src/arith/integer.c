@@ -314,7 +314,6 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
  */
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
-    digits++;
     wint_t character = btowc( hex_digits[digit] );
     return ( digits % 3 == 0 ) ?
         make_string( L',', make_string( character,
@@ -352,10 +351,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
         while ( accumulator > 0 || !nilp( integer.payload.integer.more ) ) {
             if ( !nilp( integer.payload.integer.more ) ) {
                 integer = pointer2cell( integer.payload.integer.more );
-                accumulator += integer.payload.integer.value == 0 ?
-                    MAX_INTEGER :
-                    ( llabs( integer.payload.integer.value ) *
-                      ( MAX_INTEGER + 1 ) );
+                accumulator += integer.payload.integer.value;
                 debug_print
                     ( L"integer_to_string: crossing cell boundary, accumulator is: ",
                       DEBUG_IO );
@@ -369,10 +365,12 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                               L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
                               offset, hex_digits[offset] );
                 debug_print_128bit( accumulator, DEBUG_IO );
+                debug_print( L"; result is: ", DEBUG_IO);
+                debug_print_object( result, DEBUG_IO);
                 debug_println( DEBUG_IO );
 
                 result =
-                    integer_to_string_add_digit( offset, digits++, result );
+                    integer_to_string_add_digit( offset, ++digits, result );
                 accumulator = accumulator / base;
             } while ( accumulator > base );
         }

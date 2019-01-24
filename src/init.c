@@ -9,6 +9,7 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,8 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
+    setlocale(LC_ALL, "");
+
     while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
         switch ( option ) {
             case 'c':
@@ -123,14 +126,14 @@ int main( int argc, char *argv[] ) {
      * standard input, output, error and sink streams
      * attempt to set wide character acceptance on all streams
      */
-    FILE *sink = fopen( "/dev/null", "w" );
+    URL_FILE *sink = url_fopen( "/dev/null", "w" );
     fwide( stdin, 1 );
     fwide( stdout, 1 );
     fwide( stderr, 1 );
     fwide( sink, 1 );
-    bind_value( L"*in*", make_read_stream( stdin ) );
-    bind_value( L"*out*", make_write_stream( stdout ) );
-    bind_value( L"*log*", make_write_stream( stderr ) );
+    bind_value( L"*in*", make_read_stream( file_to_url_file(stdin) ) );
+    bind_value( L"*out*", make_write_stream( file_to_url_file(stdout) ) );
+    bind_value( L"*log*", make_write_stream( file_to_url_file(stderr) ) );
     bind_value( L"*sink*", make_write_stream( sink ) );
 
     /*
@@ -180,9 +183,9 @@ int main( int argc, char *argv[] ) {
      */
     bind_special( L"cond", &lisp_cond );
     bind_special( L"lambda", &lisp_lambda );
-    // bind_special( L"λ", &lisp_lambda );
+    bind_special( L"\u03bb", &lisp_lambda ); // λ
     bind_special( L"nlambda", &lisp_nlambda );
-    // bind_special( L"nλ", &lisp_nlambda );
+    bind_special( L"n\u03bb", &lisp_nlambda );
     bind_special( L"progn", &lisp_progn );
     bind_special( L"quote", &lisp_quote );
     bind_special( L"set!", &lisp_set_shriek );

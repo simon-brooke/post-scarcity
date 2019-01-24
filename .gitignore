@@ -32,3 +32,5 @@ log*
 utils_src/readprintwc/out
 
 *.dump
+
+*.bak

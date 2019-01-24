@@ -47,9 +47,9 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
 
 void free_stack_frame( struct stack_frame *frame );
 
-void dump_frame( FILE * output, struct cons_pointer pointer );
+void dump_frame( URL_FILE * output, struct cons_pointer pointer );
 
-void dump_stack_trace( FILE * output, struct cons_pointer frame_pointer );
+void dump_stack_trace( URL_FILE * output, struct cons_pointer frame_pointer );
 
 struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int n );
 

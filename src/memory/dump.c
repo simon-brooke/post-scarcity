@@ -26,7 +26,7 @@
 #include "vectorspace.h"
 
 
-void dump_string_cell( FILE * output, wchar_t *prefix,
+void dump_string_cell( URL_FILE * output, wchar_t *prefix,
                        struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     if ( cell.payload.string.character == 0 ) {
@@ -52,7 +52,7 @@ void dump_string_cell( FILE * output, wchar_t *prefix,
 /**
  * dump the object at this cons_pointer to this output stream.
  */
-void dump_object( FILE * output, struct cons_pointer pointer ) {
+void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     fwprintf( output,
               L"\t%4.4s (%d) at page %d, offset %d count %u\n",
@@ -89,7 +89,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
             }
             break;
         case LAMBDATV:
-            fwprintf( output, L"\t\tLambda cell;\n\t\t args: " );
+            fwprintf( output, L"\t\t\u03bb cell;\n\t\t args: " );
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );
@@ -98,7 +98,7 @@ void dump_object( FILE * output, struct cons_pointer pointer ) {
         case NILTV:
             break;
         case NLAMBDATV:
-            fwprintf( output, L"\t\tNlambda cell; \n\t\targs: " );
+            fwprintf( output, L"\t\tn\u03bb cell; \n\t\targs: " );
             print( output, cell.payload.lambda.args );
             fwprintf( output, L";\n\t\t\tbody: " );
             print( output, cell.payload.lambda.body );

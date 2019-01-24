@@ -18,17 +18,6 @@ else
     exit 1
 fi
 
-echo -n "checking no bignum was created: "
-grep -v 'BIGNUM!' psse.log > /dev/null
-if [ $? -eq "0" ]
-then
-    echo "OK"
-else
-    echo "Fail"
-    exit 1
-fi
-
-
 
 #####################################################################
 # right on the boundary
@@ -47,17 +36,6 @@ else
     echo "Fail: expected '${expected}', got '${actual}'"
     exit 1
 fi
-
-echo -n "checking no bignum was created: "
-grep -v 'BIGNUM!' psse.log > /dev/null
-if [ $? -eq "0" ]
-then
-    echo "OK"
-else
-    echo "Fail"
-    exit 1
-fi
-
 
 
 #####################################################################
@@ -79,16 +57,10 @@ else
 fi
 
 
-echo -n "checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
-if [ $? -eq "0" ]
-then
-    echo "OK"
-else
-    echo "Fail"
-    exit 1
-fi
-
+# Currently failing from here on, but it's failing in read because of
+# the multiply bug. We know printing blows up at the 3 cell boundary
+# because `lisp/scratchpad2.lisp` constructs a 3 cell bignum by
+# repeated addition.
 #####################################################################
 # Just on the three cell boundary
 expected='1329227995784915872903807060280344576'
@@ -103,7 +75,7 @@ if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
-    echo "Fail: expected '${expected}', got '${actual}'"
+    echo "Fail: expected '${expected}', \n           got '${actual}'"
     exit 1
 fi
 

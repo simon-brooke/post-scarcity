@@ -839,7 +839,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
 #ifdef DEBUG
     debug_print( L"entering lisp_read\n", DEBUG_IO );
 #endif
-    FILE *input = stdin;
+    URL_FILE *input = stdin;
     struct cons_pointer in_stream = readp( frame->arg[0] ) ?
         frame->arg[0] : get_default_stream( true, env );
 
@@ -922,7 +922,7 @@ lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
     struct cons_pointer result = NIL;
-    FILE *output = stdout;
+    URL_FILE *output = stdout;
     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
         frame->arg[1] : get_default_stream( false, env );
 
@@ -1148,7 +1148,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
-    FILE *os = pointer2cell( output ).payload.stream.stream;
+    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
     struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
@@ -1282,7 +1282,7 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
-    FILE *output = stdout;
+    URL_FILE *output = stdout;
     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
         frame->arg[1] : get_default_stream( false, env );
 

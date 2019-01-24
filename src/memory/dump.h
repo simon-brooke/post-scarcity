@@ -20,6 +20,6 @@
 #define __dump_h
 
 
-void dump_object( FILE * output, struct cons_pointer pointer );
+void dump_object( URL_FILE * output, struct cons_pointer pointer );
 
 #endif

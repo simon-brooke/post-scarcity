@@ -16,6 +16,9 @@
  */
 #include <wchar.h>
 #include <wctype.h>
+#include <curl/curl.h>
+
+#include "fopen.h"
 
 #ifndef __consspaceobject_h
 #define __consspaceobject_h
@@ -488,7 +491,7 @@ struct special_payload {
  */
 struct stream_payload {
     /** the stream to read from or write to. */
-    FILE *stream;
+    URL_FILE *stream;
 };
 
 /**
@@ -636,9 +639,9 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 
 struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail );
 
-struct cons_pointer make_read_stream( FILE * input );
+struct cons_pointer make_read_stream( URL_FILE * input );
 
-struct cons_pointer make_write_stream( FILE * output );
+struct cons_pointer make_write_stream( URL_FILE * output );
 
 struct cons_pointer c_string_to_lisp_string( wchar_t *string );
 

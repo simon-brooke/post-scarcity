@@ -241,7 +241,7 @@ void free_stack_frame( struct stack_frame *frame ) {
  * @param output the stream
  * @param frame_pointer the pointer to the frame
  */
-void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
+void dump_frame( URL_FILE * output, struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
@@ -265,7 +265,7 @@ void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
     }
 }
 
-void dump_stack_trace( FILE * output, struct cons_pointer pointer ) {
+void dump_stack_trace( URL_FILE * output, struct cons_pointer pointer ) {
     if ( exceptionp( pointer ) ) {
         print( output, pointer2cell( pointer ).payload.exception.message );
         fputws( L"\n", output );

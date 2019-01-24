@@ -115,7 +115,7 @@ void make_cons_page(  ) {
 /**
  * dump the allocated pages to this `output` stream.
  */
-void dump_pages( FILE * output ) {
+void dump_pages( URL_FILE * output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
         fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
