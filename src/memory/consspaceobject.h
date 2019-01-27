@@ -16,7 +16,6 @@
  */
 #include <wchar.h>
 #include <wctype.h>
-#include <curl/curl.h>
 
 #include "fopen.h"
 

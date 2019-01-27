@@ -3,8 +3,12 @@
  *
  * adapted from https://curl.haxx.se/libcurl/c/fopen.html.
  *
+ *
+ * Modifications to read/write wide character streams by
+ * Simon Brooke.
+ *
  * Copyright (c) 2003, 2017 Simtec Electronics
- * Some portions (c) 2017 Simon Brooke <simon@journeyman.cc>
+ * Some portions (c) 2019 Simon Brooke <simon@journeyman.cc>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,6 +37,12 @@
 
 #ifndef __fopen_h
 #define __fopen_h
+#include <curl/curl.h>
+/*
+ * wide characters
+ */
+#include <wchar.h>
+#include <wctype.h>
 
 enum fcurl_type_e {
   CFTYPE_NONE = 0,
@@ -49,8 +59,10 @@ struct fcurl_data
   } handle;                   /* handle */
 
   char *buffer;               /* buffer to store cached data*/
-  size_t buffer_len;          /* currently allocated buffers length */
+  wchar_t *wide_buffer;       /* wide character buffer */
+  size_t buffer_len;          /* currently allocated buffer's length */
   size_t buffer_pos;          /* end of data in buffer*/
+  size_t wide_cursor;         /* cursor into the wide buffer */
   int still_running;          /* Is background url fetch still in progress */
 };
 

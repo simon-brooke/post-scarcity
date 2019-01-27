@@ -130,7 +130,7 @@ int main( int argc, char *argv[] ) {
     fwide( stdin, 1 );
     fwide( stdout, 1 );
     fwide( stderr, 1 );
-    fwide( sink, 1 );
+    fwide( sink->handle.file, 1 );
     bind_value( L"*in*", make_read_stream( file_to_url_file(stdin) ) );
     bind_value( L"*out*", make_write_stream( file_to_url_file(stdout) ) );
     bind_value( L"*log*", make_write_stream( file_to_url_file(stderr) ) );
@@ -200,7 +200,7 @@ int main( int argc, char *argv[] ) {
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 
     if ( dump_at_end ) {
-        dump_pages( stdout );
+        dump_pages( file_to_url_file(stdout) );
     }
 
     return ( 0 );

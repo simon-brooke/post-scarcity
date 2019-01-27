@@ -3,8 +3,11 @@
  *
  * adapted from https://curl.haxx.se/libcurl/c/fopen.html.
  *
+ * Modifications to read/write wide character streams by
+ * Simon Brooke.
+ *
  * Copyright (c) 2003, 2017 Simtec Electronics
- * Some portions (c) 2017 Simon Brooke <simon@journeyman.cc>
+ * Some portions (c) 2019 Simon Brooke <simon@journeyman.cc>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,11 +44,6 @@
 #include <errno.h>
 
 #include <curl/curl.h>
-/*
- * wide characters
- */
-#include <wchar.h>
-#include <wctype.h>
 
 #include "fopen.h"
 
@@ -177,8 +175,11 @@ static int use_buffer(URL_FILE *file, size_t want)
     /* ditch buffer - write will recreate */
     free(file->buffer);
     file->buffer = NULL;
+    free(file->wide_buffer);
+    file->wide_buffer = NULL;
     file->buffer_pos = 0;
     file->buffer_len = 0;
+    file->wide_cursor = 0;
   }
   else {
     /* move rest down make it available for later */
@@ -187,6 +188,7 @@ static int use_buffer(URL_FILE *file, size_t want)
             (file->buffer_pos - want));
 
     file->buffer_pos -= want;
+    // TODO: something to adjust the wide_cursor
   }
   return 0;
 }
@@ -424,18 +426,40 @@ URL_FILE * file_to_url_file( FILE* f) {
   return result;
 }
 
-
-wint_t url_fgetwc(URL_FILE *file) {
+/**
+ * get one wide character from the buffer.
+ *
+ * @param file the stream to read from;
+ * @return the next wide character on the stream, or zero if no more.
+ */
+wint_t url_fgetwc(URL_FILE *input) {
   wint_t result = 0;
 
-  switch(file->type) {
+  switch(input->type) {
   case CFTYPE_FILE:
-    fwide( file->handle.file, 1 ); /* wide characters */
-    result = fgetc(file->handle.file); /* passthrough */
+    fwide( input->handle.file, 1 ); /* wide characters */
+    result = fgetc(input->handle.file); /* passthrough */
     break;
 
   case CFTYPE_CURL:
-    url_fread(&result, sizeof(wint_t), 1, file);
+    if (input.buffer_len != 0) {
+      if ( input.wide_buffer == NULL) {
+        /* not initialised */
+        input.wide_buffer = calloc( input.buffer_len, sizeof(wint_t));
+      }
+
+      size_t len = wcslen(input.wide_buffer);
+      if (input.still_running ||
+          len == 0 ||
+          len >= input.wide_cursor) {
+        /* refresh the wide buffer */
+        mbstowcs(input.wide_buffer, input.buffer, input.buffer_pos);
+      }
+
+      result = input.wide_buffer[input.wide_cursor] ++;
+
+      /* do something to fread (advance) one utf character */
+    }
     break;
   }
 
