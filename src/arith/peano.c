@@ -43,13 +43,14 @@ bool zerop( struct cons_pointer arg ) {
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
-        case INTEGERTV: {
+        case INTEGERTV:{
                 do {
-                    debug_print(L"zerop: ", DEBUG_ARITH);
-                    debug_dump_object(arg, DEBUG_ARITH);
-                    result = (pointer2cell( arg ).payload.integer.value == 0);
-                    arg = pointer2cell(arg).payload.integer.more;
-                } while (result && integerp(arg));
+                    debug_print( L"zerop: ", DEBUG_ARITH );
+                    debug_dump_object( arg, DEBUG_ARITH );
+                    result =
+                        ( pointer2cell( arg ).payload.integer.value == 0 );
+                    arg = pointer2cell( arg ).payload.integer.more;
+                } while ( result && integerp( arg ) );
             }
             break;
         case RATIOTV:
@@ -66,7 +67,7 @@ bool zerop( struct cons_pointer arg ) {
 /**
  * does this `arg` point to a negative number?
  */
-bool is_negative( struct cons_pointer arg) {
+bool is_negative( struct cons_pointer arg ) {
     bool result = false;
     struct cons_space_object cell = pointer2cell( arg );
 
@@ -85,27 +86,31 @@ bool is_negative( struct cons_pointer arg) {
     return result;
 }
 
-struct cons_pointer absolute( struct cons_pointer frame_pointer, struct cons_pointer arg) {
-  struct cons_pointer result = NIL;
+struct cons_pointer absolute( struct cons_pointer frame_pointer,
+                              struct cons_pointer arg ) {
+    struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
-  if ( is_negative( arg)) {
-    switch ( cell.tag.value ) {
-        case INTEGERTV:
-            result = make_integer(llabs(cell.payload.integer.value), cell.payload.integer.more);
-            break;
-        case RATIOTV:
-            result = make_ratio(frame_pointer,
-                                absolute(frame_pointer, cell.payload.ratio.dividend),
-                                cell.payload.ratio.divisor);
-            break;
-        case REALTV:
-            result = make_real( 0 - cell.payload.real.value );
-            break;
+    if ( is_negative( arg ) ) {
+        switch ( cell.tag.value ) {
+            case INTEGERTV:
+                result =
+                    make_integer( llabs( cell.payload.integer.value ),
+                                  cell.payload.integer.more );
+                break;
+            case RATIOTV:
+                result = make_ratio( frame_pointer,
+                                     absolute( frame_pointer,
+                                               cell.payload.ratio.dividend ),
+                                     cell.payload.ratio.divisor );
+                break;
+            case REALTV:
+                result = make_real( 0 - cell.payload.real.value );
+                break;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 /**
@@ -126,7 +131,7 @@ long double to_long_double( struct cons_pointer arg ) {
     switch ( cell.tag.value ) {
         case INTEGERTV:
             // obviously, this doesn't work for bignums
-            result = (long double)cell.payload.integer.value;
+            result = ( long double ) cell.payload.integer.value;
             // sadly, this doesn't work at all.
 //            result += 1.0;
 //            for (bool is_first = false; integerp(arg); is_first = true) {
@@ -141,8 +146,8 @@ long double to_long_double( struct cons_pointer arg ) {
 //            }
             break;
         case RATIOTV:
-            result = to_long_double(cell.payload.ratio.dividend) /
-              to_long_double(cell.payload.ratio.divisor);
+            result = to_long_double( cell.payload.ratio.dividend ) /
+                to_long_double( cell.payload.ratio.divisor );
             break;
         case REALTV:
             result = cell.payload.real.value;
@@ -203,9 +208,9 @@ int64_t to_long_int( struct cons_pointer arg ) {
  * argument, or NIL if it was not a number.
  */
 struct cons_pointer lisp_absolute( struct stack_frame
-                              *frame, struct cons_pointer frame_pointer, struct
-                              cons_pointer env ) {
-  return absolute( frame_pointer, frame->arg[0]);
+                                   *frame, struct cons_pointer frame_pointer, struct
+                                   cons_pointer env ) {
+    return absolute( frame_pointer, frame->arg[0] );
 }
 
 /**
@@ -388,10 +393,12 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( make_cons(
-                          c_string_to_lisp_string( L"Cannot multiply: argument 2 is not a number: " ),
-                          c_type(arg2)),
-                          frame_pointer );
+                        result =
+                            throw_exception( make_cons
+                                             ( c_string_to_lisp_string
+                                               ( L"Cannot multiply: argument 2 is not a number: " ),
+                                               c_type( arg2 ) ),
+                                             frame_pointer );
                         break;
                 }
                 break;
@@ -415,11 +422,12 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception(
-                          make_cons(c_string_to_lisp_string
-                                                  ( L"Cannot multiply: argument 2 is not a number" ),
-                                    c_type(arg2)),
-                                                  frame_pointer );
+                        result =
+                            throw_exception( make_cons
+                                             ( c_string_to_lisp_string
+                                               ( L"Cannot multiply: argument 2 is not a number" ),
+                                               c_type( arg2 ) ),
+                                             frame_pointer );
                 }
                 break;
             case REALTV:
@@ -428,11 +436,10 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                to_long_double( arg2 ) );
                 break;
             default:
-                        result = throw_exception(
-                          make_cons(c_string_to_lisp_string
-                                                  ( L"Cannot multiply: argument 1 is not a number" ),
-                                    c_type(arg1)),
-                                                  frame_pointer );
+                result = throw_exception( make_cons( c_string_to_lisp_string
+                                                     ( L"Cannot multiply: argument 1 is not a number" ),
+                                                     c_type( arg1 ) ),
+                                          frame_pointer );
                 break;
         }
     }
@@ -460,30 +467,27 @@ struct cons_pointer lisp_multiply( struct
     struct cons_pointer result = make_integer( 1, NIL );
     struct cons_pointer tmp;
 
-    for ( int i = 0;
-         i < args_in_frame
-           && !nilp( frame->arg[i] )
-           && !exceptionp( result );
-         i++ ) {
-      debug_print( L"lisp_multiply: accumulator = ",DEBUG_ARITH);
-      debug_print_object(result, DEBUG_ARITH);
-      debug_print( L"; arg = ", DEBUG_ARITH);
-      debug_print_object(frame->arg[i], DEBUG_ARITH);
-      debug_println( DEBUG_ARITH);
+    for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] )
+          && !exceptionp( result ); i++ ) {
+        debug_print( L"lisp_multiply: accumulator = ", DEBUG_ARITH );
+        debug_print_object( result, DEBUG_ARITH );
+        debug_print( L"; arg = ", DEBUG_ARITH );
+        debug_print_object( frame->arg[i], DEBUG_ARITH );
+        debug_println( DEBUG_ARITH );
 
-      multiply_one_arg(frame->arg[i]);
+        multiply_one_arg( frame->arg[i] );
     }
 
     struct cons_pointer more = frame->more;
     while ( consp( more )
             && !exceptionp( result ) ) {
-      multiply_one_arg(c_car( more ));
+        multiply_one_arg( c_car( more ) );
         more = c_cdr( more );
     }
 
-  debug_print( L"lisp_multiply returning: ",DEBUG_ARITH);
-      debug_print_object(result, DEBUG_ARITH);
-  debug_println(DEBUG_ARITH);
+    debug_print( L"lisp_multiply returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
+    debug_println( DEBUG_ARITH );
 
     return result;
 }
@@ -538,9 +542,10 @@ struct cons_pointer negative( struct cons_pointer frame,
  * was not.
  */
 struct cons_pointer lisp_is_negative( struct stack_frame
-                              *frame, struct cons_pointer frame_pointer, struct
-                              cons_pointer env ) {
-  return is_negative(frame->arg[0]) ? TRUE : NIL;
+                                      *frame,
+                                      struct cons_pointer frame_pointer, struct
+                                      cons_pointer env ) {
+    return is_negative( frame->arg[0] ) ? TRUE : NIL;
 }
 
 

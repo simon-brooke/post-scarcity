@@ -117,7 +117,7 @@ void make_cons_page(  ) {
  */
 void dump_pages( URL_FILE * output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
-        fwprintf( output, L"\nDUMPING PAGE %d\n", i );
+        url_fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {

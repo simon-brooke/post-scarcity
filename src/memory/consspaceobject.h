@@ -491,6 +491,10 @@ struct special_payload {
 struct stream_payload {
     /** the stream to read from or write to. */
     URL_FILE *stream;
+    /** metadata on the stream (e.g. its file attributes if a file, its HTTP
+     * headers if a URL, etc). Expected to be an association, or nil. Not yet
+     * implemented. */
+    struct cons_pointer meta;
 };
 
 /**

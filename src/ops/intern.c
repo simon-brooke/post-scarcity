@@ -110,8 +110,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
  * with this key/value pair added to the front.
  */
 struct cons_pointer
-bind( struct cons_pointer key, struct cons_pointer value,
-      struct cons_pointer store ) {
+set( struct cons_pointer key, struct cons_pointer value,
+     struct cons_pointer store ) {
     debug_print( L"Binding ", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
     debug_print( L" to ", DEBUG_BIND );
@@ -131,7 +131,7 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     debug_print( L"Entering deep_bind\n", DEBUG_BIND );
     struct cons_pointer old = oblist;
 
-    oblist = bind( key, value, oblist );
+    oblist = set( key, value, oblist );
     inc_ref( oblist );
     dec_ref( old );
 
@@ -153,7 +153,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
         /*
          * not currently bound
          */
-        result = bind( key, NIL, environment );
+        result = set( key, NIL, environment );
     }
 
     return result;

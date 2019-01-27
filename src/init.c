@@ -21,6 +21,7 @@
 #include "consspaceobject.h"
 #include "debug.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
 #include "peano.h"
 #include "print.h"
@@ -82,7 +83,7 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    setlocale(LC_ALL, "");
+    setlocale( LC_ALL, "" );
 
     while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
         switch ( option ) {
@@ -131,9 +132,9 @@ int main( int argc, char *argv[] ) {
     fwide( stdout, 1 );
     fwide( stderr, 1 );
     fwide( sink->handle.file, 1 );
-    bind_value( L"*in*", make_read_stream( file_to_url_file(stdin) ) );
-    bind_value( L"*out*", make_write_stream( file_to_url_file(stdout) ) );
-    bind_value( L"*log*", make_write_stream( file_to_url_file(stderr) ) );
+    bind_value( L"*in*", make_read_stream( file_to_url_file( stdin ) ) );
+    bind_value( L"*out*", make_write_stream( file_to_url_file( stdout ) ) );
+    bind_value( L"*log*", make_write_stream( file_to_url_file( stderr ) ) );
     bind_value( L"*sink*", make_write_stream( sink ) );
 
     /*
@@ -151,6 +152,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"assoc", &lisp_assoc );
     bind_function( L"car", &lisp_car );
     bind_function( L"cdr", &lisp_cdr );
+    bind_function( L"close", &lisp_close );
     bind_function( L"cons", &lisp_cons );
     bind_function( L"divide", &lisp_divide );
     bind_function( L"eq", &lisp_eq );
@@ -159,12 +161,15 @@ int main( int argc, char *argv[] ) {
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"multiply", &lisp_multiply );
-    bind_function( L"negative?", &lisp_is_negative);
+    bind_function( L"negative?", &lisp_is_negative );
     bind_function( L"read", &lisp_read );
     bind_function( L"repl", &lisp_repl );
     bind_function( L"oblist", &lisp_oblist );
+    bind_function( L"open", &lisp_open );
     bind_function( L"print", &lisp_print );
     bind_function( L"progn", &lisp_progn );
+    bind_function( L"read", &lisp_read );
+    bind_function( L"read_char", &lisp_read_char );
     bind_function( L"reverse", &lisp_reverse );
     bind_function( L"set", &lisp_set );
     bind_function( L"source", &lisp_source );
@@ -183,7 +188,7 @@ int main( int argc, char *argv[] ) {
      */
     bind_special( L"cond", &lisp_cond );
     bind_special( L"lambda", &lisp_lambda );
-    bind_special( L"\u03bb", &lisp_lambda ); // λ
+    bind_special( L"\u03bb", &lisp_lambda );  // λ
     bind_special( L"nlambda", &lisp_nlambda );
     bind_special( L"n\u03bb", &lisp_nlambda );
     bind_special( L"progn", &lisp_progn );
@@ -200,7 +205,7 @@ int main( int argc, char *argv[] ) {
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 
     if ( dump_at_end ) {
-        dump_pages( file_to_url_file(stdout) );
+        dump_pages( file_to_url_file( stdout ) );
     }
 
     return ( 0 );

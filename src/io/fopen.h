@@ -7,6 +7,9 @@
  * Modifications to read/write wide character streams by
  * Simon Brooke.
  *
+ * NOTE THAT: for my purposes, I'm only interested in wide characters,
+ * and I always read them one character at a time.
+ *
  * Copyright (c) 2003, 2017 Simtec Electronics
  * Some portions (c) 2019 Simon Brooke <simon@journeyman.cc>
  *
@@ -44,41 +47,41 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#define url_fwprintf(f, ...) ((f->type = CFTYPE_FILE) ? fwprintf( f->handle.file, __VA_ARGS__) : -1)
+#define url_fputws(ws, f) ((f->type = CFTYPE_FILE) ?  fputws(ws, f->handle.file) : 0)
+#define url_fputwc(wc, f) ((f->type = CFTYPE_FILE) ?  fputwc(wc, f->handle.file) : 0)
+
 enum fcurl_type_e {
-  CFTYPE_NONE = 0,
-  CFTYPE_FILE = 1,
-  CFTYPE_CURL = 2
+    CFTYPE_NONE = 0,
+    CFTYPE_FILE = 1,
+    CFTYPE_CURL = 2
 };
 
-struct fcurl_data
-{
-  enum fcurl_type_e type;     /* type of handle */
-  union {
-    CURL *curl;
-    FILE *file;
-  } handle;                   /* handle */
+struct fcurl_data {
+    enum fcurl_type_e type;     /* type of handle */
+    union {
+        CURL *curl;
+        FILE *file;
+    } handle;                   /* handle */
 
-  char *buffer;               /* buffer to store cached data*/
-  wchar_t *wide_buffer;       /* wide character buffer */
-  size_t buffer_len;          /* currently allocated buffer's length */
-  size_t buffer_pos;          /* end of data in buffer*/
-  size_t wide_cursor;         /* cursor into the wide buffer */
-  int still_running;          /* Is background url fetch still in progress */
+    char *buffer;               /* buffer to store cached data */
+    size_t buffer_len;          /* currently allocated buffer's length */
+    size_t buffer_pos;          /* cursor into in buffer */
+    int still_running;          /* Is background url fetch still in progress */
 };
 
 typedef struct fcurl_data URL_FILE;
 
 /* exported functions */
-URL_FILE *url_fopen(const char *url, const char *operation);
-int url_fclose(URL_FILE *file);
-int url_feof(URL_FILE *file);
-size_t url_fread(void *ptr, size_t size, size_t nmemb, URL_FILE *file);
-char *url_fgets(char *ptr, size_t size, URL_FILE *file);
-void url_rewind(URL_FILE *file);
+URL_FILE *url_fopen( const char *url, const char *operation );
+int url_fclose( URL_FILE * file );
+int url_feof( URL_FILE * file );
+size_t url_fread( void *ptr, size_t size, size_t nmemb, URL_FILE * file );
+char *url_fgets( char *ptr, size_t size, URL_FILE * file );
+void url_rewind( URL_FILE * file );
 
-wint_t url_fgetwc(URL_FILE *file);
-URL_FILE * file_to_url_file( FILE* f);
-
-
+wint_t url_fgetwc( URL_FILE * file );
+wint_t url_ungetwc( wint_t wc, URL_FILE * input );
+URL_FILE *file_to_url_file( FILE * f );
 
 #endif

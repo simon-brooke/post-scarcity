@@ -41,8 +41,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  URL_FILE * input, wint_t initial,
                                  bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer, URL_FILE * input,
-                               wint_t initial );
+                               struct cons_pointer frame_pointer,
+                               URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
 struct cons_pointer read_symbol( URL_FILE * input, wint_t initial );
 
@@ -68,16 +68,18 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
     wint_t c;
 
     for ( c = initial;
-          c == '\0' || iswblank( c ) || iswcntrl( c ); c = fgetwc( input ) );
+          c == '\0' || iswblank( c ) || iswcntrl( c );
+          c = url_fgetwc( input ) );
 
-    if ( feof( input ) ) {
+    if ( url_feof( input ) ) {
         result =
             throw_exception( c_string_to_lisp_string
                              ( L"End of file while reading" ), frame_pointer );
     } else {
         switch ( c ) {
             case ';':
-                for ( c = fgetwc( input ); c != '\n'; c = fgetwc( input ) );
+                for ( c = url_fgetwc( input ); c != '\n';
+                      c = url_fgetwc( input ) );
                 /* skip all characters from semi-colon to the end of the line */
                 break;
             case EOF:
@@ -89,18 +91,19 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 result =
                     c_quote( read_continuation
                              ( frame, frame_pointer, input,
-                               fgetwc( input ) ) );
+                               url_fgetwc( input ) ) );
                 break;
             case '(':
                 result =
-                    read_list( frame, frame_pointer, input, fgetwc( input ) );
+                    read_list( frame, frame_pointer, input,
+                               url_fgetwc( input ) );
                 break;
             case '"':
-                result = read_string( input, fgetwc( input ) );
+                result = read_string( input, url_fgetwc( input ) );
                 break;
             case '-':{
-                    wint_t next = fgetwc( input );
-                    ungetwc( next, input );
+                    wint_t next = url_fgetwc( input );
+                    url_ungetwc( next, input );
                     if ( iswdigit( next ) ) {
                         result =
                             read_number( frame, frame_pointer, input, c,
@@ -112,9 +115,9 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 break;
             case '.':
                 {
-                    wint_t next = fgetwc( input );
+                    wint_t next = url_fgetwc( input );
                     if ( iswdigit( next ) ) {
-                        ungetwc( next, input );
+                        url_ungetwc( next, input );
                         result =
                             read_number( frame, frame_pointer, input, c,
                                          true );
@@ -123,13 +126,13 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                          * really need to backtrack up a level. */
                         result =
                             read_continuation( frame, frame_pointer, input,
-                                               fgetwc( input ) );
+                                               url_fgetwc( input ) );
                     } else {
                         read_symbol( input, c );
                     }
                 }
                 break;
-          //case ':': reserved for keywords and paths
+                //case ':': reserved for keywords and paths
             default:
                 if ( iswdigit( c ) ) {
                     result =
@@ -173,14 +176,14 @@ struct cons_pointer read_number( struct stack_frame *frame,
     bool neg = initial == btowc( '-' );
 
     if ( neg ) {
-        initial = fgetwc( input );
+        initial = url_fgetwc( input );
     }
 
     debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial,
                   initial );
 
     for ( c = initial; iswdigit( c )
-          || c == L'.' || c == L'/' || c == L','; c = fgetwc( input ) ) {
+          || c == L'.' || c == L'/' || c == L','; c = url_fgetwc( input ) ) {
         switch ( c ) {
             case L'.':
                 if ( seen_period || !nilp( dividend ) ) {
@@ -229,7 +232,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
     /*
      * push back the character read which was not a digit
      */
-    ungetwc( c, input );
+    url_ungetwc( c, input );
 
     if ( seen_period ) {
         debug_print( L"read_number: converting result to real\n", DEBUG_IO );
@@ -279,7 +282,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
         result =
             make_cons( car,
                        read_list( frame, frame_pointer, input,
-                                  fgetwc( input ) ) );
+                                  url_fgetwc( input ) ) );
     } else {
         debug_print( L"End of list detected\n", DEBUG_IO );
     }
@@ -309,7 +312,8 @@ struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
             break;
         default:
             result =
-                make_string( initial, read_string( input, fgetwc( input ) ) );
+                make_string( initial,
+                             read_string( input, url_fgetwc( input ) ) );
             break;
     }
 
@@ -328,7 +332,8 @@ struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
              * THIS IS NOT A GOOD IDEA, but is legal
              */
             result =
-                make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
+                make_symbol( initial,
+                             read_symbol( input, url_fgetwc( input ) ) );
             break;
         case ')':
             /*
@@ -338,20 +343,20 @@ struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
             /*
              * push back the character read
              */
-            ungetwc( initial, input );
+            url_ungetwc( initial, input );
             break;
         default:
             if ( iswprint( initial )
                  && !iswblank( initial ) ) {
                 result =
                     make_symbol( initial,
-                                 read_symbol( input, fgetwc( input ) ) );
+                                 read_symbol( input, url_fgetwc( input ) ) );
             } else {
                 result = NIL;
                 /*
                  * push back the character read
                  */
-                ungetwc( initial, input );
+                url_ungetwc( initial, input );
             }
             break;
     }
@@ -369,5 +374,6 @@ struct cons_pointer read( struct
                           stack_frame
                           *frame, struct cons_pointer frame_pointer,
                           URL_FILE * input ) {
-    return read_continuation( frame, frame_pointer, input, fgetwc( input ) );
+    return read_continuation( frame, frame_pointer, input,
+                              url_fgetwc( input ) );
 }

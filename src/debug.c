@@ -19,6 +19,7 @@
 #include <wctype.h>
 
 #include "consspaceobject.h"
+#include "fopen.h"
 #include "debug.h"
 #include "dump.h"
 #include "print.h"
@@ -104,8 +105,10 @@ void debug_printf( int level, wchar_t *format, ... ) {
 void debug_print_object( struct cons_pointer pointer, int level ) {
 #ifdef DEBUG
     if ( level & verbosity ) {
+        URL_FILE *ustderr = file_to_url_file( stderr );
         fwide( stderr, 1 );
-        print( stderr, pointer );
+        print( ustderr, pointer );
+        free( ustderr );
     }
 #endif
 }
@@ -116,8 +119,10 @@ void debug_print_object( struct cons_pointer pointer, int level ) {
 void debug_dump_object( struct cons_pointer pointer, int level ) {
 #ifdef DEBUG
     if ( level & verbosity ) {
+        URL_FILE *ustderr = file_to_url_file( stderr );
         fwide( stderr, 1 );
-        dump_object( stderr, pointer );
+        dump_object( ustderr, pointer );
+        free( ustderr );
     }
 #endif
 }

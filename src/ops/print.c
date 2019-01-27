@@ -40,7 +40,7 @@ void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
         wchar_t c = cell->payload.string.character;
 
         if ( c != '\0' ) {
-            fputwc( c, output );
+            url_fputwc( c, output );
         }
         pointer = cell->payload.string.cdr;
     }
@@ -52,9 +52,9 @@ void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
  * characters.
  */
 void print_string( URL_FILE * output, struct cons_pointer pointer ) {
-    fputwc( btowc( '"' ), output );
+    url_fputwc( btowc( '"' ), output );
     print_string_contents( output, pointer );
-    fputwc( btowc( '"' ), output );
+    url_fputwc( btowc( '"' ), output );
 }
 
 /**
@@ -70,7 +70,7 @@ print_list_contents( URL_FILE * output, struct cons_pointer pointer,
     switch ( cell->tag.value ) {
         case CONSTV:
             if ( initial_space ) {
-                fputwc( btowc( ' ' ), output );
+                url_fputwc( btowc( ' ' ), output );
             }
             print( output, cell->payload.cons.car );
 
@@ -79,23 +79,23 @@ print_list_contents( URL_FILE * output, struct cons_pointer pointer,
         case NILTV:
             break;
         default:
-            fwprintf( output, L" . " );
+            url_fwprintf( output, L" . " );
             print( output, pointer );
     }
 }
 
 void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     if ( print_use_colours ) {
-        fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
+        url_fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
     } else {
-        fputws( L"(", output );
+        url_fputws( L"(", output );
     };
 
     print_list_contents( output, pointer, false );
     if ( print_use_colours ) {
-        fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
+        url_fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
     } else {
-        fputws( L")", output );
+        url_fputws( L")", output );
     }
 
 }
@@ -117,18 +117,18 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_list( output, pointer );
             break;
         case EXCEPTIONTV:
-            fwprintf( output, L"\n%sException: ",
-                      print_use_colours ? "\x1B[31m" : "" );
+            url_fwprintf( output, L"\n%sException: ",
+                          print_use_colours ? "\x1B[31m" : "" );
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
-            fwprintf( output, L"<Function>" );
+            url_fwprintf( output, L"<Function>" );
             break;
         case INTEGERTV:{
                 struct cons_pointer s = integer_to_string( pointer, 10 );
                 inc_ref( s );
                 if ( print_use_colours ) {
-                    fputws( L"\x1B[34m", output );
+                    url_fputws( L"\x1B[34m", output );
                 }
                 print_string_contents( output, s );
                 dec_ref( s );
@@ -147,7 +147,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             }
             break;
         case NILTV:
-            fwprintf( output, L"nil" );
+            url_fwprintf( output, L"nil" );
             break;
         case NLAMBDATV:{
                 struct cons_pointer to_print =
@@ -163,11 +163,11 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );
-            fputws( L"/", output );
+            url_fputws( L"/", output );
             print( output, cell.payload.ratio.divisor );
             break;
         case READTV:
-            fwprintf( output, L"<Input stream>" );
+            url_fwprintf( output, L"<Input stream>" );
             break;
         case REALTV:
             /* \todo using the C heap is a bad plan because it will fragment.
@@ -183,31 +183,31 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 }
             }
             if ( print_use_colours ) {
-                fputws( L"\x1B[34m", output );
+                url_fputws( L"\x1B[34m", output );
             }
-            fwprintf( output, L"%s", buffer );
+            url_fwprintf( output, L"%s", buffer );
             free( buffer );
             break;
         case STRINGTV:
             if ( print_use_colours ) {
-                fputws( L"\x1B[36m", output );
+                url_fputws( L"\x1B[36m", output );
             }
             print_string( output, pointer );
             break;
         case SYMBOLTV:
             if ( print_use_colours ) {
-                fputws( L"\x1B[1;33m", output );
+                url_fputws( L"\x1B[1;33m", output );
             }
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
-            fwprintf( output, L"<Special form>" );
+            url_fwprintf( output, L"<Special form>" );
             break;
         case TRUETV:
-            fwprintf( output, L"t" );
+            url_fwprintf( output, L"t" );
             break;
         case WRITETV:
-            fwprintf( output, L"<Output stream>" );
+            url_fwprintf( output, L"<Output stream>" );
             break;
         default:
             fwprintf( stderr,
@@ -219,12 +219,12 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
     }
 
     if ( print_use_colours ) {
-        fputws( L"\x1B[39m", output );
+        url_fputws( L"\x1B[39m", output );
     }
 
     return pointer;
 }
 
 void println( URL_FILE * output ) {
-    fputws( L"\n", output );
+    url_fputws( L"\n", output );
 }
