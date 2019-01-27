@@ -47,6 +47,7 @@
 
 #include <curl/curl.h>
 
+#include "debug.h"
 #include "fopen.h"
 
 /* we use a global one for convenience */
@@ -474,6 +475,7 @@ wint_t url_fgetwc( URL_FILE * input ) {
             break;
     }
 
+    debug_printf( DEBUG_IO, L"url_fgetwc returning %d (%C)\n", result, result);
     return result;
 }
 
@@ -483,7 +485,7 @@ wint_t url_ungetwc( wint_t wc, URL_FILE * input ) {
     switch ( input->type ) {
         case CFTYPE_FILE:
             fwide( input->handle.file, 1 ); /* wide characters */
-            result = fgetwc( input->handle.file );  /* passthrough */
+            result = ungetwc( wc, input->handle.file );  /* passthrough */
             break;
 
         case CFTYPE_CURL:{
