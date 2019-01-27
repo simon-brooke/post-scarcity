@@ -31,7 +31,7 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
         int len = 0;
 
         for ( struct cons_pointer c = s; !nilp( c );
-              c = pointer2cell( c ).payload.string.cdr ) {
+            c = pointer2cell( c ).payload.string.cdr ) {
             len++;
         }
 
@@ -48,6 +48,10 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
         wcstombs( result, buffer, len );
         free( buffer );
     }
+
+    debug_print(L"lisp_string_to_c_string( ", DEBUG_IO);
+    debug_print_object( s, DEBUG_IO);
+    debug_printf( DEBUG_IO, L") => '%s'\n", result);
 
     return result;
 }
@@ -110,6 +114,10 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
         }
 
         free( url );
+
+        if ( pointer2cell(result).payload.stream.stream == NULL) {
+            result = NIL;
+        }
     }
 
     return result;
@@ -158,18 +166,23 @@ struct cons_pointer
 lisp_slurp( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer cdr = NIL;
 
     if ( readp( frame->arg[0] ) ) {
         URL_FILE *stream = pointer2cell( frame->arg[0] ).payload.stream.stream;
+        struct cons_pointer cursor = make_string( url_fgetwc( stream ), NIL);
+        result = cursor;
 
-        for ( wint_t c = url_fgetwc( stream ); c != -1;
+        for ( wint_t c = url_fgetwc( stream ); !url_feof(stream);
               c = url_fgetwc( stream ) ) {
-            cdr = make_string( ( ( wchar_t ) c ), cdr );
+            debug_print(L"slurp: cursor is: ", DEBUG_IO);
+            debug_dump_object( cursor, DEBUG_IO);
+            debug_print(L"; result is: ", DEBUG_IO);
+            debug_dump_object( result, DEBUG_IO);
+            debug_println( DEBUG_IO);
 
-            if ( nilp( result ) ) {
-                result = cdr;
-            }
+            struct cons_space_object * cell = &pointer2cell(cursor);
+            cursor = make_string( ( wchar_t ) c , NIL);
+            cell->payload.string.cdr = cursor;
         }
     }
 
