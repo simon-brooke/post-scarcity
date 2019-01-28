@@ -460,14 +460,11 @@ wint_t url_fgetwc( URL_FILE * input ) {
 
         case CFTYPE_CURL:{
                 wchar_t *wbuff = calloc( 2, sizeof( wchar_t ) );
-                char *cbuff = calloc( 5, sizeof( char ) );
 
-                url_fread( cbuff, sizeof( char ), 4, input );
-                mbstowcs( wbuff, cbuff, 1 );
+                mbstowcs( wbuff, (char *)&input->buffer[input->buffer_pos], 1 );
                 result = wbuff[0];
                 use_one_wide( input );
 
-                free( cbuff );
                 free( wbuff );
             }
             break;
