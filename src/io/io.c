@@ -31,7 +31,7 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
         int len = 0;
 
         for ( struct cons_pointer c = s; !nilp( c );
-            c = pointer2cell( c ).payload.string.cdr ) {
+              c = pointer2cell( c ).payload.string.cdr ) {
             len++;
         }
 
@@ -49,9 +49,9 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
         free( buffer );
     }
 
-    debug_print(L"lisp_string_to_c_string( ", DEBUG_IO);
-    debug_print_object( s, DEBUG_IO);
-    debug_printf( DEBUG_IO, L") => '%s'\n", result);
+    debug_print( L"lisp_string_to_c_string( ", DEBUG_IO );
+    debug_print_object( s, DEBUG_IO );
+    debug_printf( DEBUG_IO, L") => '%s'\n", result );
 
     return result;
 }
@@ -115,7 +115,7 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         free( url );
 
-        if ( pointer2cell(result).payload.stream.stream == NULL) {
+        if ( pointer2cell( result ).payload.stream.stream == NULL ) {
             result = NIL;
         }
     }
@@ -169,19 +169,19 @@ lisp_slurp( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( readp( frame->arg[0] ) ) {
         URL_FILE *stream = pointer2cell( frame->arg[0] ).payload.stream.stream;
-        struct cons_pointer cursor = make_string( url_fgetwc( stream ), NIL);
+        struct cons_pointer cursor = make_string( url_fgetwc( stream ), NIL );
         result = cursor;
 
-        for ( wint_t c = url_fgetwc( stream ); !url_feof(stream);
+        for ( wint_t c = url_fgetwc( stream ); !url_feof( stream );
               c = url_fgetwc( stream ) ) {
-            debug_print(L"slurp: cursor is: ", DEBUG_IO);
-            debug_dump_object( cursor, DEBUG_IO);
-            debug_print(L"; result is: ", DEBUG_IO);
-            debug_dump_object( result, DEBUG_IO);
-            debug_println( DEBUG_IO);
+            debug_print( L"slurp: cursor is: ", DEBUG_IO );
+            debug_dump_object( cursor, DEBUG_IO );
+            debug_print( L"; result is: ", DEBUG_IO );
+            debug_dump_object( result, DEBUG_IO );
+            debug_println( DEBUG_IO );
 
-            struct cons_space_object * cell = &pointer2cell(cursor);
-            cursor = make_string( ( wchar_t ) c , NIL);
+            struct cons_space_object *cell = &pointer2cell( cursor );
+            cursor = make_string( ( wchar_t ) c, NIL );
             cell->payload.string.cdr = cursor;
         }
     }

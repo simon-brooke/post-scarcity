@@ -87,7 +87,7 @@ int main( int argc, char *argv[] ) {
     bool show_prompt = false;
 
     setlocale( LC_ALL, "" );
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl_global_init( CURL_GLOBAL_DEFAULT );
 
     while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
         switch ( option ) {
