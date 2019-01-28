@@ -20,13 +20,8 @@ extern "C" {
 
 /**
  * The read/eval/print loop
- * @param in_stream the stream to read from;
- * @param out_stream the stream to write to;
- * @param err_stream the stream to send errors to;
- * @param show_prompt true if prompts should be shown.
  */
-    void repl( FILE * in_stream, FILE * out_stream,
-               FILE * error_stream, bool show_prompt );
+    void repl(  );
 
 #ifdef __cplusplus
 }

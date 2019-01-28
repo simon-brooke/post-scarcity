@@ -26,19 +26,29 @@
 
 
 /**
- * make a cons-space object which points to the vector space object
+ * Make a cons_space_object which points to the vector_space_object
  * with this `tag` at this `address`.
- * NOTE that `tag` should be the vector-space tag of the particular type of
- * vector-space object, NOT `VECTORPOINTTAG`.
+ *
+ * @address the address of the vector_space_object to point to.
+ * @tag the vector-space tag of the particular type of vector-space object,
+ * NOT `VECTORPOINTTAG`.
+ *
+ * @return a cons_pointer to the object, or NIL if the object could not be
+ * allocated due to memory exhaustion.
  */
-struct cons_pointer make_vec_pointer( struct vector_space_object *address ) {
+struct cons_pointer make_vec_pointer( struct vector_space_object *address,
+                                      char *tag ) {
     debug_print( L"Entered make_vec_pointer\n", DEBUG_ALLOC );
     struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
+
     debug_printf( DEBUG_ALLOC,
                   L"make_vec_pointer: tag written, about to set pointer address to %p\n",
                   address );
+
     cell->payload.vectorp.address = address;
+    strncpy( &cell->payload.vectorp.tag.bytes[0], tag, TAGLENGTH );
+
     debug_printf( DEBUG_ALLOC,
                   L"make_vec_pointer: all good, returning pointer to %p\n",
                   cell->payload.vectorp.address );
@@ -49,11 +59,15 @@ struct cons_pointer make_vec_pointer( struct vector_space_object *address ) {
 }
 
 /**
- * allocate a vector space object with this `payload_size` and `tag`,
+ * Allocate a vector space object with this `payload_size` and `tag`,
  * and return a `cons_pointer` which points to an object whigh points to it.
- * NOTE that `tag` should be the vector-space tag of the particular type of
- * vector-space object, NOT `VECTORPOINTTAG`.
- * Returns NIL if the vector could not be allocated due to memory exhaustion.
+ *
+ * @tag the vector-space tag of the particular type of vector-space object,
+ * NOT `VECTORPOINTTAG`.
+ * @payload_size the size of the payload required, in bytes.
+ *
+ * @return a cons_pointer to the object, or NIL if the object could not be
+ * allocated due to memory exhaustion.
  */
 struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
     debug_print( L"Entered make_vso\n", DEBUG_ALLOC );
@@ -67,12 +81,12 @@ struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
     struct vector_space_object *vso = malloc( padded );
 
     if ( vso != NULL ) {
-        memset(vso, 0, padded);
+        memset( vso, 0, padded );
         debug_printf( DEBUG_ALLOC,
                       L"make_vso: about to write tag '%s' into vso at %p\n",
                       tag, vso );
         strncpy( &vso->header.tag.bytes[0], tag, TAGLENGTH );
-        result = make_vec_pointer( vso );
+        result = make_vec_pointer( vso, tag );
         debug_dump_object( result, DEBUG_ALLOC );
         vso->header.vecp = result;
         // memcpy(vso->header.vecp, result, sizeof(struct cons_pointer));

@@ -17,16 +17,10 @@
 #include "equal.h"
 #include "integer.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 
-
-/*
- * declared in peano.c, can't include piano.h here because
- * circularity. TODO: refactor.
- */
-struct cons_pointer inverse( struct cons_pointer frame_pointer,
-                             struct cons_pointer arg );
 
 /**
  * return, as a int64_t, the greatest common divisor of `m` and `n`,
@@ -52,8 +46,8 @@ int64_t least_common_multiple( int64_t m, int64_t n ) {
 /**
  * return a cons_pointer indicating a number which is of the
  * same value as the ratio indicated by `arg`, but which may
- * be in a simplified representation. If `arg` isn't a ratio,
- * will throw exception.
+ * be in a simplified representation.
+ * @exception If `arg` isn't a ratio, will return an exception.
  */
 struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
                                     struct cons_pointer arg ) {
@@ -61,18 +55,18 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
 
     if ( ratiop( arg ) ) {
         int64_t ddrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).payload.
-            integer.value, drrv =
-            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).payload.
-            integer.value, gcd = greatest_common_divisor( ddrv, drrv );
+            pointer2cell( pointer2cell( arg ).payload.ratio.dividend ).
+            payload.integer.value, drrv =
+            pointer2cell( pointer2cell( arg ).payload.ratio.divisor ).
+            payload.integer.value, gcd = greatest_common_divisor( ddrv, drrv );
 
         if ( gcd > 1 ) {
             if ( drrv / gcd == 1 ) {
-                result = make_integer( ddrv / gcd );
+                result = make_integer( ddrv / gcd, NIL );
             } else {
                 result =
-                    make_ratio( frame_pointer, make_integer( ddrv / gcd ),
-                                make_integer( drrv / gcd ) );
+                    make_ratio( frame_pointer, make_integer( ddrv / gcd, NIL ),
+                                make_integer( drrv / gcd, NIL ) );
             }
         }
     } else {
@@ -89,8 +83,9 @@ struct cons_pointer simplify_ratio( struct cons_pointer frame_pointer,
 
 /**
  * return a cons_pointer indicating a number which is the sum of
- * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
- * this is going to break horribly.
+ * the ratios indicated by `arg1` and `arg2`.
+ * @exception will return an exception if either `arg1` or `arg2` is not a
+ * rational number.
  */
 struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
                                      struct cons_pointer arg1,
@@ -122,13 +117,13 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
 
         if ( dr1v == dr2v ) {
             r = make_ratio( frame_pointer,
-                            make_integer( dd1v + dd2v ),
+                            make_integer( dd1v + dd2v, NIL ),
                             cell1.payload.ratio.divisor );
         } else {
-            struct cons_pointer dd1vm = make_integer( dd1v * m1 ),
-                dr1vm = make_integer( dr1v * m1 ),
-                dd2vm = make_integer( dd2v * m2 ),
-                dr2vm = make_integer( dr2v * m2 ),
+            struct cons_pointer dd1vm = make_integer( dd1v * m1, NIL ),
+                dr1vm = make_integer( dr1v * m1, NIL ),
+                dd2vm = make_integer( dd2v * m2, NIL ),
+                dr2vm = make_integer( dr2v * m2, NIL ),
                 r1 = make_ratio( frame_pointer, dd1vm, dr1vm ),
                 r2 = make_ratio( frame_pointer, dd2vm, dr2vm );
 
@@ -165,7 +160,8 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer frame_pointer,
 /**
  * return a cons_pointer indicating a number which is the sum of
  * the intger indicated by `intarg` and the ratio indicated by
- * `ratarg`. If you pass other types, this is going to break horribly.
+ * `ratarg`.
+ * @exception if either `intarg` or `ratarg` is not of the expected type.
  */
 struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
                                        struct cons_pointer intarg,
@@ -173,7 +169,7 @@ struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
     struct cons_pointer result;
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
-        struct cons_pointer one = make_integer( 1 ),
+        struct cons_pointer one = make_integer( 1, NIL ),
             ratio = make_ratio( frame_pointer, intarg, one );
 
         result = add_ratio_ratio( frame_pointer, ratio, ratarg );
@@ -195,17 +191,18 @@ struct cons_pointer add_integer_ratio( struct cons_pointer frame_pointer,
 
 /**
  * return a cons_pointer to a ratio which represents the value of the ratio
- * indicated by `arg1` divided by the ratio indicated by `arg2`. If either
- * of these aren't RTIO cells, something horrid will happen and it is YOUR FAULT.
+ * indicated by `arg1` divided by the ratio indicated by `arg2`.
+ * @exception will return an exception if either `arg1` or `arg2` is not a
+ * rational number.
  */
 struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
                                         struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
     struct cons_pointer i = make_ratio( frame_pointer,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        divisor,
-                                        pointer2cell( arg2 ).payload.ratio.
-                                        dividend ), result =
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.divisor,
+                                        pointer2cell( arg2 ).payload.
+                                        ratio.dividend ), result =
         multiply_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
@@ -215,8 +212,9 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer frame_pointer,
 
 /**
  * return a cons_pointer indicating a number which is the product of
- * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
- * this is going to break horribly.
+ * the ratios indicated by `arg1` and `arg2`.
+ * @exception will return an exception if either `arg1` or `arg2` is not a
+ * rational number.
  */
 struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, struct
                                           cons_pointer arg1, struct
@@ -243,8 +241,8 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
             ddrv = dd1v * dd2v, drrv = dr1v * dr2v;
 
         struct cons_pointer unsimplified =
-            make_ratio( frame_pointer, make_integer( ddrv ),
-                        make_integer( drrv ) );
+            make_ratio( frame_pointer, make_integer( ddrv, NIL ),
+                        make_integer( drrv, NIL ) );
         result = simplify_ratio( frame_pointer, unsimplified );
 
         if ( !eq( unsimplified, result ) ) {
@@ -263,7 +261,8 @@ struct cons_pointer multiply_ratio_ratio( struct cons_pointer frame_pointer, str
 /**
  * return a cons_pointer indicating a number which is the product of
  * the intger indicated by `intarg` and the ratio indicated by
- * `ratarg`. If you pass other types, this is going to break horribly.
+ * `ratarg`.
+ * @exception if either `intarg` or `ratarg` is not of the expected type.
  */
 struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
                                             struct cons_pointer intarg,
@@ -271,7 +270,7 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
     struct cons_pointer result;
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
-        struct cons_pointer one = make_integer( 1 ),
+        struct cons_pointer one = make_integer( 1, NIL ),
             ratio = make_ratio( frame_pointer, intarg, one );
         result = multiply_ratio_ratio( frame_pointer, ratio, ratarg );
 
@@ -290,13 +289,14 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer frame_pointer,
 
 /**
  * return a cons_pointer indicating a number which is the difference of
- * the ratios indicated by `arg1` and `arg2`. If you pass non-ratios,
- * this is going to break horribly.
+ * the ratios indicated by `arg1` and `arg2`.
+ * @exception will return an exception if either `arg1` or `arg2` is not a
+ * rational number.
  */
 struct cons_pointer subtract_ratio_ratio( struct cons_pointer frame_pointer,
                                           struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
-    struct cons_pointer i = inverse( frame_pointer, arg2 ),
+    struct cons_pointer i = negative( frame_pointer, arg2 ),
         result = add_ratio_ratio( frame_pointer, arg1, i );
 
     dec_ref( i );
@@ -306,8 +306,10 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer frame_pointer,
 
 
 /**
- * Construct a ratio frame from these two pointers, expected to be integers
- * or (later) bignums, in the context of this stack_frame.
+ * Construct a ratio frame from this `dividend` and `divisor`, expected to
+ * be integers, in the context of the stack_frame indicated by this
+ * `frame_pointer`.
+ * @exception if either `dividend` or `divisor` is not an integer.
  */
 struct cons_pointer make_ratio( struct cons_pointer frame_pointer,
                                 struct cons_pointer dividend,

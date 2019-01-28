@@ -31,6 +31,7 @@
 #include "equal.h"
 #include "integer.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
 #include "print.h"
 #include "read.h"
@@ -39,9 +40,9 @@
 /*
  * also to create in this section:
  * struct cons_pointer lisp_let( struct cons_pointer args, struct cons_pointer env,
- struct stack_frame* frame);
+ * struct stack_frame* frame);
  * struct cons_pointer lisp_mapcar( struct cons_pointer args, struct cons_pointer env,
- struct stack_frame* frame);
+ * struct stack_frame* frame);
  *
  * and others I haven't thought of yet.
  */
@@ -109,25 +110,39 @@ struct cons_pointer eval_form( struct stack_frame *parent,
 }
 
 /**
- * eval all the forms in this `list` in the context of this stack `frame`
+ * Evaluate all the forms in this `list` in the context of this stack `frame`
  * and this `env`, and return a list of their values. If the arg passed as
- * `list` is not in fact a list, return nil.
+ * `list` is not in fact a list, return NIL.
+ * @param frame the stack frame.
+ * @param list the list of forms to be evaluated.
+ * @param env the evaluation environment.
+ * @return a list of the the results of evaluating the forms.
  */
 struct cons_pointer eval_forms( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,
                                 struct cons_pointer list,
                                 struct cons_pointer env ) {
-    /* TODO: refactor. This runs up the C stack. */
-    return consp( list ) ?
-        make_cons( eval_form( frame, frame_pointer, c_car( list ), env ),
-                   eval_forms( frame, frame_pointer, c_cdr( list ),
-                               env ) ) : NIL;
+    struct cons_pointer result = NIL;
+
+    while ( consp( list ) ) {
+        result =
+            make_cons( eval_form( frame, frame_pointer, c_car( list ), env ),
+                       result );
+        list = c_cdr( list );
+    }
+
+    return result;
 }
 
 /**
  * Return the object list (root namespace).
  *
- * (oblist)
+ * * (oblist)
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the root namespace.
  */
 struct cons_pointer
 lisp_oblist( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -135,9 +150,8 @@ lisp_oblist( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return oblist;
 }
 
-
 /**
- * used to construct the body for `lambda` and `nlambda` expressions.
+ * Used to construct the body for `lambda` and `nlambda` expressions.
  */
 struct cons_pointer compose_body( struct stack_frame *frame ) {
     struct cons_pointer body = frame->more;
@@ -157,10 +171,15 @@ struct cons_pointer compose_body( struct stack_frame *frame ) {
 }
 
 /**
- * Construct an interpretable function.
+ * Construct an interpretable function. *NOTE* that if `args` is a single symbol
+ * rather than a list, a varargs function will be created.
+ *
+ * (lambda args body)
  *
  * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
  * @param env the environment in which it is to be intepreted.
+ * @return an interpretable function with these `args` and this `body`.
  */
 struct cons_pointer
 lisp_lambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -169,10 +188,15 @@ lisp_lambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * Construct an interpretable special form.
+ * Construct an interpretable special form. *NOTE* that if `args` is a single symbol
+ * rather than a list, a varargs special form will be created.
+ *
+ * (nlambda args body)
  *
  * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
  * @param env the environment in which it is to be intepreted.
+ * @return an interpretable special form with these `args` and this `body`.
  */
 struct cons_pointer
 lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -195,7 +219,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     debug_print( L"eval_lambda called\n", DEBUG_LAMBDA );
-    debug_println(DEBUG_LAMBDA);
+    debug_println( DEBUG_LAMBDA );
 
     struct cons_pointer new_env = env;
     struct cons_pointer names = cell.payload.lambda.args;
@@ -208,19 +232,20 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
             struct cons_pointer name = c_car( names );
             struct cons_pointer val = frame->arg[i];
 
-            new_env = bind( name, val, new_env );
+            new_env = set( name, val, new_env );
             log_binding( name, val );
 
             names = c_cdr( names );
         }
-        inc_ref(new_env);
+        inc_ref( new_env );
 
-        /* TODO: if there's more than `args_in_frame` arguments, bind those too. */
+        /* \todo if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
         /* if `names` is a symbol, rather than a list of symbols,
          * then bind a list of the values of args to that symbol. */
-        /* TODO: eval all the things in frame->more */
-        struct cons_pointer vals = frame->more;
+        /* \todo eval all the things in frame->more */
+        struct cons_pointer vals =
+            eval_forms( frame, frame_pointer, frame->more, env );
 
         for ( int i = args_in_frame - 1; i >= 0; i-- ) {
             struct cons_pointer val =
@@ -232,8 +257,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
             }
         }
 
-        new_env = bind( names, vals, new_env );
-        inc_ref(new_env);
+        new_env = set( names, vals, new_env );
+        inc_ref( new_env );
     }
 
     while ( !nilp( body ) ) {
@@ -241,21 +266,22 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         body = c_cdr( body );
 
         debug_print( L"In lambda: evaluating ", DEBUG_LAMBDA );
-        debug_print_object(sexpr, DEBUG_LAMBDA);
-        debug_println( DEBUG_LAMBDA);
+        debug_print_object( sexpr, DEBUG_LAMBDA );
+        debug_println( DEBUG_LAMBDA );
 
-      /* if a result is not the terminal result in the lambda, it's a
-       * side effect, and needs to be GCed */
-      if (!nilp(result)) dec_ref(result);
+        /* if a result is not the terminal result in the lambda, it's a
+         * side effect, and needs to be GCed */
+        if ( !nilp( result ) )
+            dec_ref( result );
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
     }
 
-    dec_ref(new_env);
+    dec_ref( new_env );
 
     debug_print( L"eval_lambda returning: \n", DEBUG_LAMBDA );
-    debug_print_object( result, DEBUG_LAMBDA);
-    debug_println(DEBUG_LAMBDA);
+    debug_print_object( result, DEBUG_LAMBDA );
+    debug_println( DEBUG_LAMBDA );
 
     return result;
 }
@@ -404,17 +430,24 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
 
 
 /**
- * (eval s_expr)
+ * Function; evaluate the expression which is the first argument in the frame;
+ * further arguments are ignored.
  *
- * function.
- * If s_expr is a number, NIL, or T, returns s_expr.
- * If s_expr is an unprotected string, returns the value that s_expr is bound
- * to in the evaluation environment (env).
- * If s_expr is a list, expects the car to be something that evaluates to a
- * function or special form.
- * If a function, evaluates all the other top level elements in s_expr and
- * passes them in a stack frame as arguments to the function.
- * If a special form, passes the cdr of s_expr to the special form as argument.
+ * * (eval expression)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment.
+ * @return
+ * * If `expression` is a number, string, `nil`, or `t`, returns `expression`.
+ * * If `expression` is a symbol, returns the value that expression is bound
+ * to in the evaluation environment (`env`).
+ * * If `expression` is a list, expects the car to be something that evaluates to a
+ * function or special form:
+ *   * If a function, evaluates all the other top level elements in `expression` and
+ * passes them in a stack frame as arguments to the function;
+ *   * If a special form, passes the cdr of expression to the special form as argument.
+ * @exception if `expression` is a symbol which is not bound in `env`.
  */
 struct cons_pointer
 lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -449,12 +482,9 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
             }
             break;
             /*
-             * TODO:
+             * \todo
              * the Clojure practice of having a map serve in the function place of
-             * an s-expression is a good one and I should adopt it; also if the
-             * object is a consp it could be interpretable source code but in the
-             * long run I don't want an interpreter, and if I can get away without
-             * so much the better.
+             * an s-expression is a good one and I should adopt it;
              */
         default:
             result = frame->arg[0];
@@ -469,19 +499,23 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
 
 /**
- * (apply fn args)
- *
- * function. Apply the function which is the result of evaluating the
- * first argoment to the list of arguments which is the result of evaluating
+ * Function; apply the function which is the result of evaluating the
+ * first argument to the list of values which is the result of evaluating
  * the second argument
+ *
+ * * (apply fn args)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment.
+ * @return the result of applying `fn` to `args`.
  */
 struct cons_pointer
 lisp_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-#ifdef DEBUG
     debug_print( L"Apply: ", DEBUG_EVAL );
-    dump_frame( stderr, frame_pointer );
-#endif
+    debug_dump_object( frame_pointer, DEBUG_EVAL );
+
     set_reg( frame, 0, make_cons( frame->arg[0], frame->arg[1] ) );
     set_reg( frame, 1, NIL );
 
@@ -495,11 +529,16 @@ lisp_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
 
 /**
- * (quote a)
- *
- * Special form
- * Returns its argument (strictly first argument - only one is expected but
+ * Special form;
+ * returns its argument (strictly first argument - only one is expected but
  * this isn't at this stage checked) unevaluated.
+ *
+ * * (quote a)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return `a`, unevaluated,
  */
 struct cons_pointer
 lisp_quote( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -509,13 +548,19 @@ lisp_quote( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
 
 /**
- * (set name value)
- * (set name value namespace)
- *
- * Function.
+ * Function;
+ * binds the value of `name` in the `namespace` to value of `value`, altering
+ * the namespace in so doing. Retuns `value`.
  * `namespace` defaults to the oblist.
- * Binds the value of `name` in the `namespace` to value of `value`, altering
- * the namespace in so doing. `namespace` defaults to the value of `oblist`.
+ * \todo doesn't actually work yet for namespaces which are not the oblist.
+ *
+ * * (set name value)
+ * * (set name value namespace)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return `value`
  */
 struct cons_pointer
 lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -541,20 +586,25 @@ lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
 
 /**
- * (set! symbol value)
- * (set! symbol value namespace)
+ * Special form;
+ * binds `symbol` in the `namespace` to value of `value`, altering
+ * the namespace in so doing, and returns value. `namespace` defaults to
+ * the value of `oblist`.
+ * \todo doesn't actually work yet for namespaces which are not the oblist.
  *
- * Special form.
- * `namespace` defaults to the oblist.
- * Binds `symbol` in the `namespace` to value of `value`, altering
- * the namespace in so doing. `namespace` defaults to the value of `oblist`.
+ * * (set! symbol value)
+ * * (set! symbol value namespace)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return `value`
  */
 struct cons_pointer
 lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer namespace =
-        nilp( frame->arg[2] ) ? oblist : frame->arg[2];
+    struct cons_pointer namespace = frame->arg[2];
 
     if ( symbolp( frame->arg[0] ) ) {
         struct cons_pointer val =
@@ -574,12 +624,27 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * (cons a b)
- *
- * Function.
- * Returns a cell constructed from a and b. If a is of type string but its
+ * @return true if `arg` represents an end of string, else false.
+ * \todo candidate for moving to a memory/string.c file
+ */
+bool end_of_stringp( struct cons_pointer arg ) {
+    return nilp( arg ) ||
+        ( stringp( arg ) &&
+          pointer2cell( arg ).payload.string.character == ( wint_t ) '\0' );
+}
+
+/**
+ * Function;
+ * returns a cell constructed from a and b. If a is of type string but its
  * cdr is nill, and b is of type string, then returns a new string cell;
  * otherwise returns a new cons cell.
+ *
+ * * (cons a b)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return a new cons cell whose `car` is `a` and whose `cdr` is `b`.
  */
 struct cons_pointer
 lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -591,7 +656,8 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( nilp( car ) && nilp( cdr ) ) {
         return NIL;
     } else if ( stringp( car ) && stringp( cdr ) &&
-                nilp( pointer2cell( car ).payload.string.cdr ) ) {
+                end_of_stringp( c_cdr( car ) ) ) {
+        // \todo check that car is of length 1
         result =
             make_string( pointer2cell( car ).payload.string.character, cdr );
     } else {
@@ -602,58 +668,100 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * (car s_expr)
- * Returns the first item (head) of a sequence. Valid for cons cells,
- * strings, and TODO read streams and other things which can be considered as sequences.
+ * Function;
+ * returns the first item (head) of a sequence. Valid for cons cells,
+ * strings, read streams and TODO other things which can be considered as sequences.
+ *
+ * * (car expression)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the first item (head) of `expression`.
+ * @exception if `expression` is not a sequence.
  */
 struct cons_pointer
 lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
           struct cons_pointer env ) {
     struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
-    if ( consp( frame->arg[0] ) ) {
-        struct cons_space_object cell = pointer2cell( frame->arg[0] );
-        result = cell.payload.cons.car;
-    } else if ( stringp( frame->arg[0] ) ) {
-        struct cons_space_object cell = pointer2cell( frame->arg[0] );
-        result = make_string( cell.payload.string.character, NIL );
-    } else {
-        struct cons_pointer message =
-            c_string_to_lisp_string( L"Attempt to take CAR of non sequence" );
-        result = throw_exception( message, frame_pointer );
+    switch ( cell.tag.value ) {
+        case CONSTV:
+            result = cell.payload.cons.car;
+            break;
+        case READTV:
+            result =
+                make_string( url_fgetwc( cell.payload.stream.stream ), NIL );
+            break;
+        case NILTV:
+            break;
+        case STRINGTV:
+            result = make_string( cell.payload.string.character, NIL );
+            break;
+        default:
+            result =
+                throw_exception( c_string_to_lisp_string
+                                 ( L"Attempt to take CAR of non sequence" ),
+                                 frame_pointer );
     }
 
     return result;
 }
 
 /**
- * (cdr s_expr)
- * Returns the remainder of a sequence when the head is removed. Valid for cons cells,
- * strings, and TODO read streams and other things which can be considered as sequences.
+ * Function;
+ * returns the remainder of a sequence when the head is removed. Valid for cons cells,
+ * strings, read streams and TODO other things which can be considered as sequences.
+ * *NOTE* that if the argument is an input stream, the first character is removed AND
+ * DISCARDED.
+ *
+ * * (cdr expression)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the remainder of `expression` when the head is removed.
+ * @exception if `expression` is not a sequence.
  */
 struct cons_pointer
 lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
           struct cons_pointer env ) {
     struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
-    if ( consp( frame->arg[0] ) ) {
-        struct cons_space_object cell = pointer2cell( frame->arg[0] );
-        result = cell.payload.cons.cdr;
-    } else if ( stringp( frame->arg[0] ) ) {
-        struct cons_space_object cell = pointer2cell( frame->arg[0] );
-        result = cell.payload.string.cdr;
-    } else {
-        struct cons_pointer message =
-            c_string_to_lisp_string( L"Attempt to take CDR of non sequence" );
-        result = throw_exception( message, frame_pointer );
+    switch ( cell.tag.value ) {
+        case CONSTV:
+            result = cell.payload.cons.cdr;
+            break;
+        case READTV:
+            url_fgetwc( cell.payload.stream.stream );
+            result = frame->arg[0];
+            break;
+        case STRINGTV:
+            result = cell.payload.string.cdr;
+            break;
+        case NILTV:
+            break;
+        default:
+            result =
+                throw_exception( c_string_to_lisp_string
+                                 ( L"Attempt to take CDR of non sequence" ),
+                                 frame_pointer );
     }
 
     return result;
 }
 
 /**
- * (assoc key store)
- * Returns the value associated with key in store, or NIL if not found.
+ * Function; look up the value of a `key` in a `store`.
+ *
+ * * (assoc key store)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the value associated with `key` in `store`, or `nil` if not found.
  */
 struct cons_pointer
 lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -662,8 +770,14 @@ lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * (eq a b)
- * Returns T if a and b are pointers to the same object, else NIL
+ * Function; are these two objects the same object? Shallow, cheap equality.
+ *
+ * * (eq a b)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return `t` if `a` and `b` are pointers to the same object, else `nil`;
  */
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
@@ -672,8 +786,14 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
 }
 
 /**
- * (eq a b)
- * Returns T if a and b are pointers to structurally identical objects, else NIL
+ * Function; are these two arguments identical? Deep, expensive equality.
+ *
+ * * (equal a b)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return `t` if `a` and `b` are recursively identical, else `nil`.
  */
 struct cons_pointer
 lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -681,11 +801,38 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
 
+
 /**
- * (read)
- * (read read-stream)
- * Read one complete lisp form and return it. If read-stream is specified and
- * is a read stream, then read from that stream, else stdin.
+ * Resutn the current default input, or of `inputp` is false, output stream from
+ * this `env`ironment.
+ */
+struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer stream_name =
+        c_string_to_lisp_symbol( inputp ? L"*in*" : L"*out*" );
+
+    inc_ref( stream_name );
+
+    result = c_assoc( stream_name, env );
+
+    dec_ref( stream_name );
+
+    return result;
+}
+
+
+/**
+ * Function; read one complete lisp form and return it. If read-stream is specified and
+ * is a read stream, then read from that stream, else the stream which is the value of
+ * `*in*` in the environment.
+ *
+ * * (read)
+ * * (read read-stream)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment.
+ * @return the expression read.
  */
 struct cons_pointer
 lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -693,15 +840,30 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
 #ifdef DEBUG
     debug_print( L"entering lisp_read\n", DEBUG_IO );
 #endif
-    FILE *input = stdin;
+    URL_FILE *input;
 
-    if ( readp( frame->arg[0] ) ) {
-        input = pointer2cell( frame->arg[0] ).payload.stream.stream;
+    struct cons_pointer in_stream = readp( frame->arg[0] ) ?
+        frame->arg[0] : get_default_stream( true, env );
+
+    if ( readp( in_stream ) ) {
+        debug_print( L"lisp_read: setting input stream\n", DEBUG_IO );
+        debug_dump_object( in_stream, DEBUG_IO );
+        input = pointer2cell( in_stream ).payload.stream.stream;
+        inc_ref( in_stream );
+    } else {
+        input = file_to_url_file( stdin );
     }
 
     struct cons_pointer result = read( frame, frame_pointer, input );
     debug_print( L"lisp_read returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
+
+    if ( readp( in_stream ) ) {
+        dec_ref( in_stream );
+    } else {
+        free( input );
+    }
+
 
     return result;
 }
@@ -733,8 +895,14 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
 
 
 /**
- * (reverse sequence)
- * Return a sequence like this sequence but with the members in the reverse order.
+ * Function; reverse the order of members in s sequence.
+ *
+ * * (reverse sequence)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return a sequence like this `sequence` but with the members in the reverse order.
  */
 struct cons_pointer lisp_reverse( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
@@ -744,23 +912,36 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
 
 
 /**
- * (print expr)
- * (print expr write-stream)
- * Print one complete lisp form and return NIL. If write-stream is specified and
- * is a write stream, then print to that stream, else stdout.
+ * Function; print one complete lisp expression and return NIL. If write-stream is specified and
+ * is a write stream, then print to that stream, else  the stream which is the value of
+ * `*out*` in the environment.
+ *
+ * * (print expr)
+ * * (print expr write-stream)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the value of `expr`.
  */
 struct cons_pointer
 lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
     struct cons_pointer result = NIL;
-    FILE *output = stdout;
+    URL_FILE *output;
+    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+        frame->arg[1] : get_default_stream( false, env );
 
-    if ( writep( frame->arg[1] ) ) {
+    if ( writep( out_stream ) ) {
         debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
-        debug_dump_object( frame->arg[1], DEBUG_IO );
-        output = pointer2cell( frame->arg[1] ).payload.stream.stream;
+        debug_dump_object( out_stream, DEBUG_IO );
+        output = pointer2cell( out_stream ).payload.stream.stream;
+        inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stderr );
     }
+
     debug_print( L"lisp_print: about to print\n", DEBUG_IO );
     debug_dump_object( frame->arg[0], DEBUG_IO );
 
@@ -769,15 +950,25 @@ lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
     debug_print( L"lisp_print returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
 
+    if ( writep( out_stream ) ) {
+        dec_ref( out_stream );
+    } else {
+        free( output );
+    }
+
     return result;
 }
 
 
 /**
- * Function: Get the Lisp type of the single argument.
- * @param frame My stack frame.
- * @param env My environment (ignored).
- * @return As a Lisp string, the tag of the object which is the argument.
+ * Function: get the Lisp type of the single argument.
+ *
+ * * (type expression)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return As a Lisp string, the tag of `expression`.
  */
 struct cons_pointer
 lisp_type( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -785,46 +976,74 @@ lisp_type( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return c_type( frame->arg[0] );
 }
 
+/**
+ * Evaluate each of these expressions in this `env`ironment over this `frame`,
+ * returning only the value of the last.
+ */
+struct cons_pointer
+c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
+         struct cons_pointer expressions, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+
+    while ( consp( expressions ) ) {
+        struct cons_pointer r = result;
+        inc_ref( r );
+        result = eval_form( frame, frame_pointer, c_car( expressions ), env );
+        dec_ref( r );
+
+        expressions = c_cdr( expressions );
+    }
+
+    return result;
+}
+
 
 /**
- * (progn forms...)
- *
- * Special form; evaluate the forms which are listed in my arguments
+ * Special form; evaluate the expressions which are listed in my arguments
  * sequentially and return the value of the last. This function is called 'do'
  * in some dialects of Lisp.
  *
- * @param frame My stack frame.
- * @param env My environment (ignored).
- * @return the value of the last form on the sequence which is my single
+ * * (progn expressions...)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment in which expressions are evaluated.
+ * @return the value of the last `expression` of the sequence which is my single
  * argument.
  */
 struct cons_pointer
 lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    struct cons_pointer remaining = frame->more;
     struct cons_pointer result = NIL;
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
+        struct cons_pointer r = result;
+        inc_ref( r );
+
         result = eval_form( frame, frame_pointer, frame->arg[i], env );
+
+        dec_ref( r );
     }
 
-    while ( consp( remaining ) ) {
-        result = eval_form( frame, frame_pointer, c_car( remaining ), env );
-
-        remaining = c_cdr( remaining );
+    if ( consp( frame->more ) ) {
+        result = c_progn( frame, frame_pointer, frame->more, env );
     }
 
     return result;
 }
 
 /**
- * Special form: conditional. Each arg is expected to be a list; if the first
+ * Special form: conditional. Each `clause` is expected to be a list; if the first
  * item in such a list evaluates to non-NIL, the remaining items in that list
- * are evaluated in turn and the value of the last returned. If no arg (clause)
+ * are evaluated in turn and the value of the last returned. If no arg `clause`
  * has a first element which evaluates to non NIL, then NIL is returned.
- * @param frame My stack frame.
- * @param env My environment (ignored).
- * @return the value of the last form of the first successful clause.
+ *
+ * * (cond clauses...)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment in which arguments will be evaluated.
+ * @return the value of the last expression of the first successful `clause`.
  */
 struct cons_pointer
 lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -844,15 +1063,9 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
                            env );
 
             if ( !nilp( result ) ) {
-                struct cons_pointer vals =
-                    eval_forms( frame, frame_pointer, c_cdr( clause_pointer ),
-                                env );
-
-                while ( consp( vals ) ) {
-                    result = c_car( vals );
-                    vals = c_cdr( vals );
-                }
-
+                result =
+                    c_progn( frame, frame_pointer, c_cdr( clause_pointer ),
+                             env );
                 done = true;
             }
         } else if ( nilp( clause_pointer ) ) {
@@ -863,7 +1076,7 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
                                       frame_pointer );
         }
     }
-    /* TODO: if there are more than 8 clauses we need to continue into the
+    /* \todo if there are more than 8 clauses we need to continue into the
      * remainder */
 
     return result;
@@ -898,9 +1111,18 @@ throw_exception( struct cons_pointer message,
 }
 
 /**
- * (exception <message>)
+ * Function; create an exception. Exceptions are special in as much as if an
+ * exception is created in the binding of the arguments of any function, the
+ * function will return the exception rather than whatever else it would
+ * normally return. A function which detects a problem it cannot resolve
+ * *should* return an exception.
  *
- * Function. Returns an exception whose message is this `message`, and whose
+ * * (exception message frame)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment in which arguments will be evaluated.
+ * @return areturns an exception whose message is this `message`, and whose
  * stack frame is the parent stack frame when the function is invoked.
  * `message` does not have to be a string but should be something intelligible
  * which can be read.
@@ -912,4 +1134,185 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
     struct cons_pointer message = frame->arg[0];
     return exceptionp( message ) ? message : make_exception( message,
                                                              frame->previous );
+}
+
+/**
+ * Function: the read/eval/print loop.
+ *
+ * * (repl)
+ * * (repl prompt)
+ * * (repl prompt input_stream output_stream)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment in which epressions will be evaluated.
+ * @return the value of the last expression read.
+ */
+struct cons_pointer lisp_repl( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+    struct cons_pointer expr = NIL;
+
+    /* \todo bind *prompt*, *input*, *output* in the environment to the values
+     * of arguments 0, 1, and 2 respectively, but in each case only if the
+     * argument is not nil */
+
+    struct cons_pointer input = get_default_stream( true, env );
+    struct cons_pointer output = get_default_stream( false, env );
+    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
+    struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
+    struct cons_pointer old_oblist = oblist;
+    struct cons_pointer new_env = env;
+    inc_ref( env );
+
+    inc_ref( input );
+    inc_ref( output );
+    inc_ref( prompt_name );
+
+    /* \todo this is subtly wrong. If we were evaluating
+     *   (print (eval (read)))
+     * then the stack frame for read would have the stack frame for
+     * eval as parent, and it in turn would have the stack frame for
+     * print as parent.
+     */
+    while ( readp( input ) && writep( output )
+            && !url_feof( pointer2cell( input ).payload.stream.stream ) ) {
+        /* OK, here's a really subtle problem: because lists are immutable, anything
+         * bound in the oblist subsequent to this function being invoked isn't in the
+         * environment. So, for example, changes to *prompt* or *log* made in the oblist
+         * are not visible. So copy changes made in the oblist into the enviroment.
+         * \todo the whole process of resolving symbol values needs to be revisited
+         * when we get onto namespaces. */
+        if ( !eq( oblist, old_oblist ) ) {
+            struct cons_pointer cursor = oblist;
+
+            while ( !nilp( cursor ) && !eq( cursor, old_oblist ) ) {
+                struct cons_pointer old_new_env = new_env;
+                debug_print
+                    ( L"lisp_repl: copying new oblist binding into REPL environment:\n",
+                      DEBUG_REPL );
+                debug_print_object( c_car( cursor ), DEBUG_REPL );
+                debug_println( DEBUG_REPL );
+
+                new_env = make_cons( c_car( cursor ), new_env );
+                inc_ref( new_env );
+                dec_ref( old_new_env );
+                cursor = c_cdr( cursor );
+            }
+            old_oblist = oblist;
+        }
+
+        println( os );
+
+        struct cons_pointer prompt = c_assoc( prompt_name, new_env );
+        if ( !nilp( prompt ) ) {
+            print( os, prompt );
+        }
+
+        expr = lisp_read( get_stack_frame( frame_pointer ), frame_pointer,
+                          new_env );
+        inc_ref( expr );
+
+        if ( exceptionp( expr )
+             && url_feof( pointer2cell( input ).payload.stream.stream ) ) {
+            /* suppress printing end of stream exception */
+            break;
+        }
+
+        println( os );
+
+        print( os, eval_form( frame, frame_pointer, expr, new_env ) );
+
+        dec_ref( expr );
+    }
+
+    dec_ref( input );
+    dec_ref( output );
+    dec_ref( prompt_name );
+    dec_ref( env );
+
+    return expr;
+}
+
+/**
+ * Function. return the source code of the object which is its first argument,
+ * if it is an executable and has source code.
+ *
+ * * (source object)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment (ignored).
+ * @return the source of the `object` indicated, if it is a function, a lambda,
+ * an nlambda, or a spcial form; else `nil`.
+ */
+struct cons_pointer lisp_source( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+
+    switch ( cell.tag.value ) {
+        case FUNCTIONTV:
+            result = cell.payload.function.source;
+            break;
+        case SPECIALTV:
+            result = cell.payload.special.source;
+            break;
+        case LAMBDATV:
+            result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
+                                make_cons( cell.payload.lambda.args,
+                                           cell.payload.lambda.body ) );
+            break;
+        case NLAMBDATV:
+            result = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+                                make_cons( cell.payload.lambda.args,
+                                           cell.payload.lambda.body ) );
+            break;
+    }
+    // \todo suffers from premature GC, and I can't see why!
+    inc_ref( result );
+
+    return result;
+}
+
+
+/**
+ * Function; print the internal representation of the object indicated by `frame->arg[0]` to the
+ * (optional, defaults to the value of `*out*` in the environment) stream indicated by `frame->arg[1]`.
+ *
+ * * (inspect expression)
+ * * (inspect expression <write-stream>)
+ *
+ * @param frame my stack frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment.
+ * @return the value of the first argument - `expression`.
+ */
+struct cons_pointer lisp_inspect( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env ) {
+    debug_print( L"Entering print\n", DEBUG_IO );
+    URL_FILE *output;
+    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+        frame->arg[1] : get_default_stream( false, env );
+
+    if ( writep( out_stream ) ) {
+        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
+        debug_dump_object( out_stream, DEBUG_IO );
+        output = pointer2cell( out_stream ).payload.stream.stream;
+        inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stdout );
+    }
+
+    dump_object( output, frame->arg[0] );
+
+    if ( writep( out_stream ) ) {
+        dec_ref( out_stream );
+    } else {
+        free( output );
+    }
+
+    return frame->arg[0];
 }

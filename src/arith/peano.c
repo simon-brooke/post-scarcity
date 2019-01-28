@@ -21,6 +21,7 @@
 #include "integer.h"
 #include "intern.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 #include "read.h"
@@ -34,14 +35,23 @@ struct cons_pointer add_2( struct stack_frame *frame,
                            struct cons_pointer arg1,
                            struct cons_pointer arg2 );
 
-
+/**
+ * return true if this `arg` points to a number whose value is zero.
+ */
 bool zerop( struct cons_pointer arg ) {
     bool result = false;
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
-        case INTEGERTV:
-            result = cell.payload.integer.value == 0;
+        case INTEGERTV:{
+                do {
+                    debug_print( L"zerop: ", DEBUG_ARITH );
+                    debug_dump_object( arg, DEBUG_ARITH );
+                    result =
+                        ( pointer2cell( arg ).payload.integer.value == 0 );
+                    arg = pointer2cell( arg ).payload.integer.more;
+                } while ( result && integerp( arg ) );
+            }
             break;
         case RATIOTV:
             result = zerop( cell.payload.ratio.dividend );
@@ -55,29 +65,89 @@ bool zerop( struct cons_pointer arg ) {
 }
 
 /**
- * TODO: cannot throw an exception out of here, which is a problem
- * if a ratio may legally have zero as a divisor, or something which is
- * not a number is passed in.
+ * does this `arg` point to a negative number?
  */
-long double to_long_double( struct cons_pointer arg ) {
-    long double result = 0;     /* not a number, as a long double */
+bool is_negative( struct cons_pointer arg ) {
+    bool result = false;
     struct cons_space_object cell = pointer2cell( arg );
 
     switch ( cell.tag.value ) {
         case INTEGERTV:
-            result = ( double ) cell.payload.integer.value;
+            result = cell.payload.integer.value < 0;
             break;
         case RATIOTV:
-            {
-                struct cons_space_object dividend =
-                    pointer2cell( cell.payload.ratio.dividend );
-                struct cons_space_object divisor =
-                    pointer2cell( cell.payload.ratio.divisor );
+            result = is_negative( cell.payload.ratio.dividend );
+            break;
+        case REALTV:
+            result = ( cell.payload.real.value < 0 );
+            break;
+    }
 
+    return result;
+}
+
+struct cons_pointer absolute( struct cons_pointer frame_pointer,
+                              struct cons_pointer arg ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( arg );
+
+    if ( is_negative( arg ) ) {
+        switch ( cell.tag.value ) {
+            case INTEGERTV:
                 result =
-                    ( long double ) dividend.payload.integer.value /
-                    divisor.payload.integer.value;
-            }
+                    make_integer( llabs( cell.payload.integer.value ),
+                                  cell.payload.integer.more );
+                break;
+            case RATIOTV:
+                result = make_ratio( frame_pointer,
+                                     absolute( frame_pointer,
+                                               cell.payload.ratio.dividend ),
+                                     cell.payload.ratio.divisor );
+                break;
+            case REALTV:
+                result = make_real( 0 - cell.payload.real.value );
+                break;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Return the closest possible `binary64` representation to the value of
+ * this `arg`, expected to be an integer, ratio or real, or `NAN` if `arg`
+ * is not any of these.
+ *
+ * @arg a pointer to an integer, ratio or real.
+ *
+ * \todo cannot throw an exception out of here, which is a problem
+ * if a ratio may legally have zero as a divisor, or something which is
+ * not a number is passed in.
+ */
+long double to_long_double( struct cons_pointer arg ) {
+    long double result = 0;
+    struct cons_space_object cell = pointer2cell( arg );
+
+    switch ( cell.tag.value ) {
+        case INTEGERTV:
+            // obviously, this doesn't work for bignums
+            result = ( long double ) cell.payload.integer.value;
+            // sadly, this doesn't work at all.
+//            result += 1.0;
+//            for (bool is_first = false; integerp(arg); is_first = true) {
+//                debug_printf(DEBUG_ARITH, L"to_long_double: accumulator = %lf, arg = ", result);
+//                debug_dump_object(arg, DEBUG_ARITH);
+//                if (!is_first) {
+//                    result *= (long double)(MAX_INTEGER + 1);
+//                }
+//                result *= (long double)(cell.payload.integer.value);
+//                arg = cell.payload.integer.more;
+//                cell = pointer2cell( arg );
+//            }
+            break;
+        case RATIOTV:
+            result = to_long_double( cell.payload.ratio.dividend ) /
+                to_long_double( cell.payload.ratio.divisor );
             break;
         case REALTV:
             result = cell.payload.real.value;
@@ -96,7 +166,13 @@ long double to_long_double( struct cons_pointer arg ) {
 
 
 /**
- * TODO: cannot throw an exception out of here, which is a problem
+ * Return the closest possible `int64_t` representation to the value of
+ * this `arg`, expected to be an integer, ratio or real, or `NAN` if `arg`
+ * is not any of these.
+ *
+ * @arg a pointer to an integer, ratio or real.
+ *
+ * \todo cannot throw an exception out of here, which is a problem
  * if a ratio may legally have zero as a divisor, or something which is
  * not a number (or is a big number) is passed in.
  */
@@ -105,6 +181,9 @@ int64_t to_long_int( struct cons_pointer arg ) {
     struct cons_space_object cell = pointer2cell( arg );
     switch ( cell.tag.value ) {
         case INTEGERTV:
+            /* \todo if (integerp(cell.payload.integer.more)) {
+             *     throw an exception!
+             * } */
             result = cell.payload.integer.value;
             break;
         case RATIOTV:
@@ -119,9 +198,25 @@ int64_t to_long_int( struct cons_pointer arg ) {
 
 
 /**
-* return a cons_pointer indicating a number which is the sum of
-* the numbers indicated by `arg1` and `arg2`.
-*/
+ * Function: calculate the absolute value of a number.
+ *
+ * (absolute arg)
+ *
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return the absolute value of the number represented by the first
+ * argument, or NIL if it was not a number.
+ */
+struct cons_pointer lisp_absolute( struct stack_frame
+                                   *frame, struct cons_pointer frame_pointer, struct
+                                   cons_pointer env ) {
+    return absolute( frame_pointer, frame->arg[0] );
+}
+
+/**
+ * return a cons_pointer indicating a number which is the sum of
+ * the numbers indicated by `arg1` and `arg2`.
+ */
 struct cons_pointer add_2( struct stack_frame *frame,
                            struct cons_pointer frame_pointer,
                            struct cons_pointer arg1,
@@ -131,9 +226,9 @@ struct cons_pointer add_2( struct stack_frame *frame,
     struct cons_space_object cell2 = pointer2cell( arg2 );
 
     debug_print( L"add_2( arg1 = ", DEBUG_ARITH );
-    debug_print_object( arg1, DEBUG_ARITH );
+    debug_dump_object( arg1, DEBUG_ARITH );
     debug_print( L"; arg2 = ", DEBUG_ARITH );
-    debug_print_object( arg2, DEBUG_ARITH );
+    debug_dump_object( arg2, DEBUG_ARITH );
     debug_print( L"\n", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
@@ -152,8 +247,7 @@ struct cons_pointer add_2( struct stack_frame *frame,
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result = make_integer( cell1.payload.integer.value +
-                                               cell2.payload.integer.value );
+                        result = add_integers( arg1, arg2 );
                         break;
                     case RATIOTV:
                         result =
@@ -219,12 +313,13 @@ struct cons_pointer add_2( struct stack_frame *frame,
  * Add an indefinite number of numbers together
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if any argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_add( struct stack_frame
                               *frame, struct cons_pointer frame_pointer, struct
                               cons_pointer env ) {
-    struct cons_pointer result = make_integer( 0 );
+    struct cons_pointer result = make_integer( 0, NIL );
     struct cons_pointer tmp;
 
     for ( int i = 0;
@@ -253,9 +348,9 @@ struct cons_pointer lisp_add( struct stack_frame
 
 
 /**
-* return a cons_pointer indicating a number which is the product of
-* the numbers indicated by `arg1` and `arg2`.
-*/
+ * return a cons_pointer indicating a number which is the product of
+ * the numbers indicated by `arg1` and `arg2`.
+ */
 struct cons_pointer multiply_2( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,
                                 struct cons_pointer arg1,
@@ -268,7 +363,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
     debug_print_object( arg1, DEBUG_ARITH );
     debug_print( L"; arg2 = ", DEBUG_ARITH );
     debug_print_object( arg2, DEBUG_ARITH );
-    debug_print( L")", DEBUG_ARITH );
+    debug_print( L")\n", DEBUG_ARITH );
 
     if ( zerop( arg1 ) ) {
         result = arg2;
@@ -285,8 +380,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         result = arg2;
                         break;
                     case INTEGERTV:
-                        result = make_integer( cell1.payload.integer.value *
-                                               cell2.payload.integer.value );
+                        result = multiply_integers( arg1, arg2 );
                         break;
                     case RATIOTV:
                         result =
@@ -299,9 +393,12 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: not a number" ),
-                                                  frame_pointer );
+                        result =
+                            throw_exception( make_cons
+                                             ( c_string_to_lisp_string
+                                               ( L"Cannot multiply: argument 2 is not a number: " ),
+                                               c_type( arg2 ) ),
+                                             frame_pointer );
                         break;
                 }
                 break;
@@ -325,9 +422,12 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_string
-                                                  ( L"Cannot multiply: not a number" ),
-                                                  frame_pointer );
+                        result =
+                            throw_exception( make_cons
+                                             ( c_string_to_lisp_string
+                                               ( L"Cannot multiply: argument 2 is not a number" ),
+                                               c_type( arg2 ) ),
+                                             frame_pointer );
                 }
                 break;
             case REALTV:
@@ -336,66 +436,68 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                to_long_double( arg2 ) );
                 break;
             default:
-                result = throw_exception( c_string_to_lisp_string
-                                          ( L"Cannot multiply: not a number" ),
+                result = throw_exception( make_cons( c_string_to_lisp_string
+                                                     ( L"Cannot multiply: argument 1 is not a number" ),
+                                                     c_type( arg1 ) ),
                                           frame_pointer );
                 break;
         }
     }
 
-    debug_print( L" => ", DEBUG_ARITH );
-    debug_print_object( arg2, DEBUG_ARITH );
+    debug_print( L"multiply_2 returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
     debug_print( L"\n", DEBUG_ARITH );
 
     return result;
 }
 
+#define multiply_one_arg(arg) {if (exceptionp(arg)){result=arg;}else{tmp = result; result = multiply_2( frame, frame_pointer, result, arg ); if ( !eq( tmp, result ) ) dec_ref( tmp );}}
 
 /**
  * Multiply an indefinite number of numbers together
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if any argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_multiply( struct
                                    stack_frame
                                    *frame, struct cons_pointer frame_pointer, struct
                                    cons_pointer env ) {
-    struct cons_pointer result = make_integer( 1 );
+    struct cons_pointer result = make_integer( 1, NIL );
     struct cons_pointer tmp;
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] )
           && !exceptionp( result ); i++ ) {
-        tmp = result;
-        result = multiply_2( frame, frame_pointer, result, frame->arg[i] );
+        debug_print( L"lisp_multiply: accumulator = ", DEBUG_ARITH );
+        debug_print_object( result, DEBUG_ARITH );
+        debug_print( L"; arg = ", DEBUG_ARITH );
+        debug_print_object( frame->arg[i], DEBUG_ARITH );
+        debug_println( DEBUG_ARITH );
 
-        if ( !eq( tmp, result ) ) {
-            dec_ref( tmp );
-        }
+        multiply_one_arg( frame->arg[i] );
     }
 
     struct cons_pointer more = frame->more;
     while ( consp( more )
             && !exceptionp( result ) ) {
-        tmp = result;
-        result = multiply_2( frame, frame_pointer, result, c_car( more ) );
-
-        if ( !eq( tmp, result ) ) {
-            dec_ref( tmp );
-        }
-
+        multiply_one_arg( c_car( more ) );
         more = c_cdr( more );
     }
+
+    debug_print( L"lisp_multiply returning: ", DEBUG_ARITH );
+    debug_print_object( result, DEBUG_ARITH );
+    debug_println( DEBUG_ARITH );
 
     return result;
 }
 
 /**
  * return a cons_pointer indicating a number which is the
- * inverse of the number indicated by `arg`.
+ * 0 - the number indicated by `arg`.
  */
-struct cons_pointer inverse( struct cons_pointer frame,
-                             struct cons_pointer arg ) {
+struct cons_pointer negative( struct cons_pointer frame,
+                              struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
@@ -404,16 +506,17 @@ struct cons_pointer inverse( struct cons_pointer frame,
             result = arg;
             break;
         case INTEGERTV:
-            result = make_integer( 0 - to_long_int( arg ) );
+            result =
+                make_integer( 0 - cell.payload.integer.value,
+                              cell.payload.integer.more );
             break;
         case NILTV:
             result = TRUE;
             break;
         case RATIOTV:
             result = make_ratio( frame,
-                                 make_integer( 0 -
-                                               to_long_int( cell.payload.ratio.
-                                                            dividend ) ),
+                                 negative( frame,
+                                           cell.payload.ratio.dividend ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
@@ -429,47 +532,65 @@ struct cons_pointer inverse( struct cons_pointer frame,
 
 
 /**
- * Subtract one number from another.
+ * Function: is this number negative?
+ *
+ * * (negative? arg)
+ *
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * @return T if the first argument was a negative number, or NIL if it
+ * was not.
  */
-struct cons_pointer lisp_subtract( struct
-                                   stack_frame
-                                   *frame, struct cons_pointer frame_pointer, struct
-                                   cons_pointer env ) {
-    struct cons_pointer result = NIL;
-    struct cons_space_object cell0 = pointer2cell( frame->arg[0] );
-    struct cons_space_object cell1 = pointer2cell( frame->arg[1] );
+struct cons_pointer lisp_is_negative( struct stack_frame
+                                      *frame,
+                                      struct cons_pointer frame_pointer, struct
+                                      cons_pointer env ) {
+    return is_negative( frame->arg[0] ) ? TRUE : NIL;
+}
 
-    switch ( cell0.tag.value ) {
+
+/**
+ * return a cons_pointer indicating a number which is the result of
+ * subtracting the number indicated by `arg2` from that indicated by `arg1`,
+ * in the context of this `frame`.
+ */
+struct cons_pointer subtract_2( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+                                struct cons_pointer arg1,
+                                struct cons_pointer arg2 ) {
+    struct cons_pointer result = NIL;
+
+    switch ( pointer2cell( arg1 ).tag.value ) {
         case EXCEPTIONTV:
-            result = frame->arg[0];
+            result = arg1;
             break;
         case INTEGERTV:
-            switch ( cell1.tag.value ) {
+            switch ( pointer2cell( arg2 ).tag.value ) {
                 case EXCEPTIONTV:
-                    result = frame->arg[1];
+                    result = arg2;
                     break;
-                case INTEGERTV:
-                    result = make_integer( cell0.payload.integer.value
-                                           - cell1.payload.integer.value );
+                case INTEGERTV:{
+                        struct cons_pointer i =
+                            negative( frame_pointer, arg2 );
+                        inc_ref( i );
+                        result = add_integers( arg1, i );
+                        dec_ref( i );
+                    }
                     break;
                 case RATIOTV:{
                         struct cons_pointer tmp =
-                            make_ratio( frame_pointer, frame->arg[0],
-                                        make_integer( 1 ) );
+                            make_ratio( frame_pointer, arg1,
+                                        make_integer( 1, NIL ) );
                         inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, tmp,
-                                                  frame->arg[1] );
+                            subtract_ratio_ratio( frame_pointer, tmp, arg2 );
                         dec_ref( tmp );
                     }
                     break;
                 case REALTV:
                     result =
-                        make_real( to_long_double( frame->arg[0] ) -
-                                   to_long_double( frame->arg[1] ) );
+                        make_real( to_long_double( arg1 ) -
+                                   to_long_double( arg2 ) );
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
@@ -479,30 +600,27 @@ struct cons_pointer lisp_subtract( struct
             }
             break;
         case RATIOTV:
-            switch ( cell1.tag.value ) {
+            switch ( pointer2cell( arg2 ).tag.value ) {
                 case EXCEPTIONTV:
-                    result = frame->arg[1];
+                    result = arg2;
                     break;
                 case INTEGERTV:{
                         struct cons_pointer tmp =
-                            make_ratio( frame_pointer, frame->arg[1],
-                                        make_integer( 1 ) );
+                            make_ratio( frame_pointer, arg2,
+                                        make_integer( 1, NIL ) );
                         inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, frame->arg[0],
-                                                  tmp );
+                            subtract_ratio_ratio( frame_pointer, arg1, tmp );
                         dec_ref( tmp );
                     }
                     break;
                 case RATIOTV:
-                    result =
-                        subtract_ratio_ratio( frame_pointer, frame->arg[0],
-                                              frame->arg[1] );
+                    result = subtract_ratio_ratio( frame_pointer, arg1, arg2 );
                     break;
                 case REALTV:
                     result =
-                        make_real( to_long_double( frame->arg[0] ) -
-                                   to_long_double( frame->arg[1] ) );
+                        make_real( to_long_double( arg1 ) -
+                                   to_long_double( arg2 ) );
                     break;
                 default:
                     result = throw_exception( c_string_to_lisp_string
@@ -512,9 +630,8 @@ struct cons_pointer lisp_subtract( struct
             }
             break;
         case REALTV:
-            result = exceptionp( frame->arg[1] ) ? frame->arg[1] :
-                make_real( to_long_double( frame->arg[0] ) -
-                           to_long_double( frame->arg[1] ) );
+            result = exceptionp( arg2 ) ? arg2 :
+                make_real( to_long_double( arg1 ) - to_long_double( arg2 ) );
             break;
         default:
             result = throw_exception( c_string_to_lisp_string
@@ -529,10 +646,27 @@ struct cons_pointer lisp_subtract( struct
 }
 
 /**
- * Divide one number by another.
+ * Subtract one number from another. If more than two arguments are passed
+ * in the frame, the additional arguments are ignored.
+ * @param env the evaluation environment - ignored;
+ * @param frame the stack frame.
+ * @return a pointer to an integer, ratio or real.
+ * @exception if either argument is not a number, returns an exception.
+ */
+struct cons_pointer lisp_subtract( struct
+                                   stack_frame
+                                   *frame, struct cons_pointer frame_pointer, struct
+                                   cons_pointer env ) {
+    return subtract_2( frame, frame_pointer, frame->arg[0], frame->arg[1] );
+}
+
+/**
+ * Divide one number by another. If more than two arguments are passed
+ * in the frame, the additional arguments are ignored.
  * @param env the evaluation environment - ignored;
  * @param frame the stack frame.
  * @return a pointer to an integer or real.
+ * @exception if either argument is not a number, returns an exception.
  */
 struct cons_pointer lisp_divide( struct
                                  stack_frame
@@ -564,7 +698,7 @@ struct cons_pointer lisp_divide( struct
                     }
                     break;
                 case RATIOTV:{
-                        struct cons_pointer one = make_integer( 1 );
+                        struct cons_pointer one = make_integer( 1, NIL );
                         struct cons_pointer ratio =
                             make_ratio( frame_pointer, frame->arg[0], one );
                         inc_ref( ratio );
@@ -592,7 +726,7 @@ struct cons_pointer lisp_divide( struct
                     result = frame->arg[1];
                     break;
                 case INTEGERTV:{
-                        struct cons_pointer one = make_integer( 1 );
+                        struct cons_pointer one = make_integer( 1, NIL );
                         inc_ref( one );
                         struct cons_pointer ratio =
                             make_ratio( frame_pointer, frame->arg[1], one );

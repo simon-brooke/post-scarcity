@@ -22,7 +22,9 @@
 #include "dump.h"
 #include "integer.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
+#include "peano.h"
 #include "print.h"
 #include "ratio.h"
 #include "read.h"
@@ -37,13 +39,13 @@
 
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
-                                 FILE * input, wint_t initial,
+                                 URL_FILE * input, wint_t initial,
                                  bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer, FILE * input,
-                               wint_t initial );
-struct cons_pointer read_string( FILE * input, wint_t initial );
-struct cons_pointer read_symbol( FILE * input, wint_t initial );
+                               struct cons_pointer frame_pointer,
+                               URL_FILE * input, wint_t initial );
+struct cons_pointer read_string( URL_FILE * input, wint_t initial );
+struct cons_pointer read_symbol( URL_FILE * input, wint_t initial );
 
 /**
  * quote reader macro in C (!)
@@ -60,23 +62,25 @@ struct cons_pointer c_quote( struct cons_pointer arg ) {
  */
 struct cons_pointer read_continuation( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
-                                       FILE * input, wint_t initial ) {
+                                       URL_FILE * input, wint_t initial ) {
     debug_print( L"entering read_continuation\n", DEBUG_IO );
     struct cons_pointer result = NIL;
 
     wint_t c;
 
     for ( c = initial;
-          c == '\0' || iswblank( c ) || iswcntrl( c ); c = fgetwc( input ) );
+          c == '\0' || iswblank( c ) || iswcntrl( c );
+          c = url_fgetwc( input ) );
 
-    if ( feof( input ) ) {
+    if ( url_feof( input ) ) {
         result =
             throw_exception( c_string_to_lisp_string
                              ( L"End of file while reading" ), frame_pointer );
     } else {
         switch ( c ) {
             case ';':
-                for ( c = fgetwc( input ); c != '\n'; c = fgetwc( input ) );
+                for ( c = url_fgetwc( input ); c != '\n';
+                      c = url_fgetwc( input ) );
                 /* skip all characters from semi-colon to the end of the line */
                 break;
             case EOF:
@@ -88,18 +92,19 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 result =
                     c_quote( read_continuation
                              ( frame, frame_pointer, input,
-                               fgetwc( input ) ) );
+                               url_fgetwc( input ) ) );
                 break;
             case '(':
                 result =
-                    read_list( frame, frame_pointer, input, fgetwc( input ) );
+                    read_list( frame, frame_pointer, input,
+                               url_fgetwc( input ) );
                 break;
             case '"':
-                result = read_string( input, fgetwc( input ) );
+                result = read_string( input, url_fgetwc( input ) );
                 break;
             case '-':{
-                    wint_t next = fgetwc( input );
-                    ungetwc( next, input );
+                    wint_t next = url_fgetwc( input );
+                    url_ungetwc( next, input );
                     if ( iswdigit( next ) ) {
                         result =
                             read_number( frame, frame_pointer, input, c,
@@ -111,23 +116,24 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 break;
             case '.':
                 {
-                    wint_t next = fgetwc( input );
+                    wint_t next = url_fgetwc( input );
                     if ( iswdigit( next ) ) {
-                        ungetwc( next, input );
+                        url_ungetwc( next, input );
                         result =
                             read_number( frame, frame_pointer, input, c,
                                          true );
                     } else if ( iswblank( next ) ) {
-                        /* dotted pair. TODO: this isn't right, we
+                        /* dotted pair. \todo this isn't right, we
                          * really need to backtrack up a level. */
                         result =
                             read_continuation( frame, frame_pointer, input,
-                                               fgetwc( input ) );
+                                               url_fgetwc( input ) );
                     } else {
                         read_symbol( input, c );
                     }
                 }
                 break;
+                //case ':': reserved for keywords and paths
             default:
                 if ( iswdigit( c ) ) {
                     result =
@@ -152,81 +158,106 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
 
 /**
  * read a number from this input stream, given this initial character.
- * TODO: to be able to read bignums, we need to read the number from the
- * input stream into a Lisp string, and then convert it to a number.
+ * \todo Need to do a lot of inc_ref and dec_ref, to make sure the
+ * garbage is collected.
  */
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
-                                 FILE * input,
+                                 URL_FILE * input,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
-    struct cons_pointer result = NIL;
-    int64_t accumulator = 0;
-    int64_t dividend = 0;
+
+    struct cons_pointer result = make_integer( 0, NIL );
+    /* \todo we really need to be getting `base` from a privileged Lisp name -
+     * and it should be the same privileged name we use when writing numbers */
+    struct cons_pointer base = make_integer( 10, NIL );
+    struct cons_pointer dividend = NIL;
     int places_of_decimals = 0;
     wint_t c;
-    bool negative = initial == btowc( '-' );
+    bool neg = initial == btowc( '-' );
 
-    if ( negative ) {
-        initial = fgetwc( input );
+    if ( neg ) {
+        initial = url_fgetwc( input );
     }
 
     debug_printf( DEBUG_IO, L"read_number starting '%c' (%d)\n", initial,
                   initial );
 
     for ( c = initial; iswdigit( c )
-          || c == btowc( '.' ) || c == btowc( '/' ); c = fgetwc( input ) ) {
-        if ( c == btowc( '.' ) ) {
-            if ( seen_period || dividend != 0 ) {
-                return throw_exception( c_string_to_lisp_string
-                                        ( L"Malformed number: too many periods" ),
-                                        frame_pointer );
-            } else {
-                seen_period = true;
-            }
-        } else if ( c == btowc( '/' ) ) {
-            if ( seen_period || dividend > 0 ) {
-                return throw_exception( c_string_to_lisp_string
-                                        ( L"Malformed number: dividend of rational must be integer" ),
-                                        frame_pointer );
-            } else {
-                dividend = negative ? 0 - accumulator : accumulator;
+          || c == L'.' || c == L'/' || c == L','; c = url_fgetwc( input ) ) {
+        switch ( c ) {
+            case L'.':
+                if ( seen_period || !nilp( dividend ) ) {
+                    return throw_exception( c_string_to_lisp_string
+                                            ( L"Malformed number: too many periods" ),
+                                            frame_pointer );
+                } else {
+                    debug_print( L"read_number: decimal point seen\n",
+                                 DEBUG_IO );
+                    seen_period = true;
+                }
+                break;
+            case L'/':
+                if ( seen_period || !nilp( dividend ) ) {
+                    return throw_exception( c_string_to_lisp_string
+                                            ( L"Malformed number: dividend of rational must be integer" ),
+                                            frame_pointer );
+                } else {
+                    debug_print( L"read_number: ratio slash seen\n",
+                                 DEBUG_IO );
+                    dividend = result;
 
-                accumulator = 0;
-            }
-        } else {
-            accumulator = accumulator * 10 + ( ( int ) c - ( int ) '0' );
+                    result = make_integer( 0, NIL );
+                }
+                break;
+            case L',':
+                // silently ignore it.
+                break;
+            default:
+                result = add_integers( multiply_integers( result, base ),
+                                       make_integer( ( int ) c - ( int ) '0',
+                                                     NIL ) );
 
-            debug_printf( DEBUG_IO,
-                          L"Added character %c, accumulator now %ld\n",
-                          c, accumulator );
+                debug_printf( DEBUG_IO,
+                              L"read_number: added character %c, result now ",
+                              c );
+                debug_print_object( result, DEBUG_IO );
+                debug_print( L"\n", DEBUG_IO );
 
-            if ( seen_period ) {
-                places_of_decimals++;
-            }
+                if ( seen_period ) {
+                    places_of_decimals++;
+                }
         }
     }
 
     /*
      * push back the character read which was not a digit
      */
-    ungetwc( c, input );
+    url_ungetwc( c, input );
+
     if ( seen_period ) {
-        long double rv = ( long double )
-            ( accumulator / pow( 10, places_of_decimals ) );
-        if ( negative ) {
-            rv = 0 - rv;
-        }
-        result = make_real( rv );
-    } else if ( dividend != 0 ) {
-        result =
-            make_ratio( frame_pointer, make_integer( dividend ),
-                        make_integer( accumulator ) );
-    } else {
-        if ( negative ) {
-            accumulator = 0 - accumulator;
-        }
-        result = make_integer( accumulator );
+        debug_print( L"read_number: converting result to real\n", DEBUG_IO );
+        struct cons_pointer div = make_ratio( frame_pointer, result,
+                                              make_integer( powl
+                                                            ( to_long_double
+                                                              ( base ),
+                                                              places_of_decimals ),
+                                                            NIL ) );
+        inc_ref( div );
+
+        result = make_real( to_long_double( div ) );
+
+        dec_ref( div );
+    } else if ( integerp( dividend ) ) {
+        debug_print( L"read_number: converting result to ratio\n", DEBUG_IO );
+        result = make_ratio( frame_pointer, dividend, result );
+    }
+
+    if ( neg ) {
+        debug_print( L"read_number: converting result to negative\n",
+                     DEBUG_IO );
+
+        result = negative( frame_pointer, result );
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );
@@ -241,7 +272,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
  */
 struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
-                               FILE * input, wint_t initial ) {
+                               URL_FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     if ( initial != ')' ) {
         debug_printf( DEBUG_IO,
@@ -252,7 +283,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
         result =
             make_cons( car,
                        read_list( frame, frame_pointer, input,
-                                  fgetwc( input ) ) );
+                                  url_fgetwc( input ) ) );
     } else {
         debug_print( L"End of list detected\n", DEBUG_IO );
     }
@@ -267,26 +298,30 @@ struct cons_pointer read_list( struct stack_frame *frame,
  * so delimited in which case it may not contain whitespace (unless escaped)
  * but may contain a double quote character (probably not a good idea!)
  */
-struct cons_pointer read_string( FILE * input, wint_t initial ) {
+struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
         case '\0':
-            result = make_string( initial, NIL );
+            result = NIL;
             break;
         case '"':
+            /* making a string of the null character means we can have an empty
+             * string. Just returning NIL here would make an empty string
+             * impossible. */
             result = make_string( '\0', NIL );
             break;
         default:
             result =
-                make_string( initial, read_string( input, fgetwc( input ) ) );
+                make_string( initial,
+                             read_string( input, url_fgetwc( input ) ) );
             break;
     }
 
     return result;
 }
 
-struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
+struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
@@ -298,30 +333,31 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
              * THIS IS NOT A GOOD IDEA, but is legal
              */
             result =
-                make_symbol( initial, read_symbol( input, fgetwc( input ) ) );
+                make_symbol( initial,
+                             read_symbol( input, url_fgetwc( input ) ) );
             break;
         case ')':
             /*
-             * unquoted strings may not include right-parenthesis
+             * symbols may not include right-parenthesis;
              */
-            result = make_symbol( '\0', NIL );
+            result = NIL;
             /*
              * push back the character read
              */
-            ungetwc( initial, input );
+            url_ungetwc( initial, input );
             break;
         default:
             if ( iswprint( initial )
                  && !iswblank( initial ) ) {
                 result =
                     make_symbol( initial,
-                                 read_symbol( input, fgetwc( input ) ) );
+                                 read_symbol( input, url_fgetwc( input ) ) );
             } else {
                 result = NIL;
                 /*
                  * push back the character read
                  */
-                ungetwc( initial, input );
+                url_ungetwc( initial, input );
             }
             break;
     }
@@ -338,6 +374,7 @@ struct cons_pointer read_symbol( FILE * input, wint_t initial ) {
 struct cons_pointer read( struct
                           stack_frame
                           *frame, struct cons_pointer frame_pointer,
-                          FILE * input ) {
-    return read_continuation( frame, frame_pointer, input, fgetwc( input ) );
+                          URL_FILE * input ) {
+    return read_continuation( frame, frame_pointer, input,
+                              url_fgetwc( input ) );
 }

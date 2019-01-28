@@ -1,8 +1,8 @@
 #!/bin/bash
 
 value=354
-expected="Integer cell: value ${value}"
-echo ${value} | target/psse -v4 2>&1 | grep "${expected}" > /dev/null
+expected="Integer cell: value ${value},"
+echo ${value} | target/psse -v5 2>&1 | grep "${expected}" > /dev/null
 
 if [ $? -eq 0 ]
 then

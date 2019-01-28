@@ -12,7 +12,7 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
-#include "integer.h"
+#include "peano.h"
 
 /**
  * Shallow, and thus cheap, equality: true if these two objects are
@@ -80,18 +80,20 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     && ( equal( cell_a->payload.string.cdr,
                                 cell_b->payload.string.cdr )
                          || ( end_of_string( cell_a->payload.string.cdr )
-                              && end_of_string( cell_b->payload.string.
-                                                cdr ) ) );
+                              && end_of_string( cell_b->payload.
+                                                string.cdr ) ) );
                 break;
             case INTEGERTV:
                 result =
-                    cell_a->payload.integer.value ==
-                    cell_b->payload.integer.value;
+                    ( cell_a->payload.integer.value ==
+                      cell_b->payload.integer.value ) &&
+                    equal( cell_a->payload.integer.more,
+                           cell_b->payload.integer.more );
                 break;
             case REALTV:
                 {
-                    double num_a = numeric_value( a );
-                    double num_b = numeric_value( b );
+                    double num_a = to_long_double( a );
+                    double num_b = to_long_double( b );
                     double max =
                         fabs( num_a ) >
                         fabs( num_b ) ? fabs( num_a ) : fabs( num_b );

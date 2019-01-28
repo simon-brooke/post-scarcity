@@ -140,9 +140,13 @@ struct cons_pointer lisp_print( struct stack_frame *frame,
 struct cons_pointer lisp_read( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env );
+struct cons_pointer lisp_repl( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
 struct cons_pointer lisp_reverse( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env );
+
 /**
  * Function: Get the Lisp type of the single argument.
  * @param frame My stack frame.
@@ -193,3 +197,11 @@ struct cons_pointer throw_exception( struct cons_pointer message,
 struct cons_pointer
 lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env );
+
+struct cons_pointer lisp_source( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );
+
+struct cons_pointer lisp_inspect( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env );

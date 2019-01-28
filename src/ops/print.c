@@ -25,7 +25,7 @@
 
 /**
  * Whether or not we colorise output.
- * TODO: this should be a Lisp symbol binding, not a C variable.
+ * \todo this should be a Lisp symbol binding, not a C variable.
  */
 int print_use_colours = 0;
 
@@ -34,13 +34,13 @@ int print_use_colours = 0;
  * onto this `output`; if `pointer` does not indicate a string or symbol,
  * don't print anything but just return.
  */
-void print_string_contents( FILE * output, struct cons_pointer pointer ) {
+void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
     while ( stringp( pointer ) || symbolp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wchar_t c = cell->payload.string.character;
 
         if ( c != '\0' ) {
-            fputwc( c, output );
+            url_fputwc( c, output );
         }
         pointer = cell->payload.string.cdr;
     }
@@ -51,10 +51,10 @@ void print_string_contents( FILE * output, struct cons_pointer pointer ) {
  * the stream at this `output`, prepending and appending double quote
  * characters.
  */
-void print_string( FILE * output, struct cons_pointer pointer ) {
-    fputwc( btowc( '"' ), output );
+void print_string( URL_FILE * output, struct cons_pointer pointer ) {
+    url_fputwc( btowc( '"' ), output );
     print_string_contents( output, pointer );
-    fputwc( btowc( '"' ), output );
+    url_fputwc( btowc( '"' ), output );
 }
 
 /**
@@ -63,14 +63,14 @@ void print_string( FILE * output, struct cons_pointer pointer ) {
  * a space character.
  */
 void
-print_list_contents( FILE * output, struct cons_pointer pointer,
+print_list_contents( URL_FILE * output, struct cons_pointer pointer,
                      bool initial_space ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     switch ( cell->tag.value ) {
         case CONSTV:
             if ( initial_space ) {
-                fputwc( btowc( ' ' ), output );
+                url_fputwc( btowc( ' ' ), output );
             }
             print( output, cell->payload.cons.car );
 
@@ -79,23 +79,23 @@ print_list_contents( FILE * output, struct cons_pointer pointer,
         case NILTV:
             break;
         default:
-            fwprintf( output, L" . " );
+            url_fwprintf( output, L" . " );
             print( output, pointer );
     }
 }
 
-void print_list( FILE * output, struct cons_pointer pointer ) {
+void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     if ( print_use_colours ) {
-        fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
+        url_fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
     } else {
-        fputws( L"(", output );
+        url_fputws( L"(", output );
     };
 
     print_list_contents( output, pointer, false );
     if ( print_use_colours ) {
-        fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
+        url_fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
     } else {
-        fputws( L")", output );
+        url_fputws( L")", output );
     }
 
 }
@@ -104,7 +104,7 @@ void print_list( FILE * output, struct cons_pointer pointer ) {
  * Print the cons-space object indicated by `pointer` to the stream indicated
  * by `output`.
  */
-struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
+struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     char *buffer;
 
@@ -117,56 +117,60 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
             print_list( output, pointer );
             break;
         case EXCEPTIONTV:
-            fwprintf( output, L"\n%sException: ",
-                      print_use_colours ? "\x1B[31m" : "" );
+            url_fwprintf( output, L"\n%sException: ",
+                          print_use_colours ? "\x1B[31m" : "" );
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
-            fwprintf( output, L"(Function)" );
+            url_fwprintf( output, L"<Function>" );
             break;
-        case INTEGERTV:
-            if ( print_use_colours ) {
-                fputws( L"\x1B[34m", output );
+        case INTEGERTV:{
+                struct cons_pointer s = integer_to_string( pointer, 10 );
+                inc_ref( s );
+                if ( print_use_colours ) {
+                    url_fputws( L"\x1B[34m", output );
+                }
+                print_string_contents( output, s );
+                dec_ref( s );
             }
-            fwprintf( output, L"%ld%", cell.payload.integer.value );
             break;
-      case LAMBDATV: {
-            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"lambda" ),
-                                      make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ));
-            inc_ref(to_print);
+        case LAMBDATV:{
+                struct cons_pointer to_print =
+                    make_cons( c_string_to_lisp_symbol( L"lambda" ),
+                               make_cons( cell.payload.lambda.args,
+                                          cell.payload.lambda.body ) );
+                inc_ref( to_print );
 
-            print( output, to_print );
+                print( output, to_print );
 
-            dec_ref(to_print);
-      }
+                dec_ref( to_print );
+            }
             break;
         case NILTV:
-            fwprintf( output, L"nil" );
+            url_fwprintf( output, L"nil" );
             break;
-      case NLAMBDATV: {
-            struct cons_pointer to_print = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
-                                      make_cons( cell.payload.lambda.args,
-                                                 cell.payload.
-                                                 lambda.body ));
-            inc_ref(to_print);
+        case NLAMBDATV:{
+                struct cons_pointer to_print =
+                    make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+                               make_cons( cell.payload.lambda.args,
+                                          cell.payload.lambda.body ) );
+                inc_ref( to_print );
 
-            print( output, to_print );
+                print( output, to_print );
 
-            dec_ref(to_print);
-      }
+                dec_ref( to_print );
+            }
             break;
         case RATIOTV:
             print( output, cell.payload.ratio.dividend );
-            fputws( L"/", output );
+            url_fputws( L"/", output );
             print( output, cell.payload.ratio.divisor );
             break;
         case READTV:
-            fwprintf( output, L"(Input stream)" );
+            url_fwprintf( output, L"<Input stream>" );
             break;
         case REALTV:
-            /* TODO: using the C heap is a bad plan because it will fragment.
+            /* \todo using the C heap is a bad plan because it will fragment.
              * As soon as I have working vector space I'll use a special purpose
              * vector space object */
             buffer = ( char * ) malloc( 24 );
@@ -179,31 +183,31 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
                 }
             }
             if ( print_use_colours ) {
-                fputws( L"\x1B[34m", output );
+                url_fputws( L"\x1B[34m", output );
             }
-            fwprintf( output, L"%s", buffer );
+            url_fwprintf( output, L"%s", buffer );
             free( buffer );
             break;
         case STRINGTV:
             if ( print_use_colours ) {
-                fputws( L"\x1B[36m", output );
+                url_fputws( L"\x1B[36m", output );
             }
             print_string( output, pointer );
             break;
         case SYMBOLTV:
             if ( print_use_colours ) {
-                fputws( L"\x1B[1;33m", output );
+                url_fputws( L"\x1B[1;33m", output );
             }
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
-            fwprintf( output, L"(Special form)" );
+            url_fwprintf( output, L"<Special form>" );
             break;
         case TRUETV:
-            fwprintf( output, L"t" );
+            url_fwprintf( output, L"t" );
             break;
         case WRITETV:
-            fwprintf( output, L"(Output stream)" );
+            url_fwprintf( output, L"<Output stream>" );
             break;
         default:
             fwprintf( stderr,
@@ -215,8 +219,12 @@ struct cons_pointer print( FILE * output, struct cons_pointer pointer ) {
     }
 
     if ( print_use_colours ) {
-        fputws( L"\x1B[39m", output );
+        url_fputws( L"\x1B[39m", output );
     }
 
     return pointer;
+}
+
+void println( URL_FILE * output ) {
+    url_fputws( L"\n", output );
 }

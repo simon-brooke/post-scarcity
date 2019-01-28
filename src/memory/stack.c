@@ -26,14 +26,22 @@
 #include "stack.h"
 #include "vectorspace.h"
 
+/**
+ * set a register in a stack frame. Alwaye use this to do so,
+ * because that way we can be sure the inc_ref happens!
+ */
 void set_reg( struct stack_frame *frame, int reg, struct cons_pointer value ) {
     debug_printf( DEBUG_STACK, L"Setting register %d to ", reg );
     debug_print_object( value, DEBUG_STACK );
     debug_println( DEBUG_STACK );
-    frame->arg[reg++] = value;
+    dec_ref( frame->arg[reg] ); /* if there was anything in that slot
+                                 * previously other than NIL, we need to decrement it;
+                                 * NIL won't be decremented as it is locked. */
+    frame->arg[reg] = value;
     inc_ref( value );
-    if ( reg > frame->args ) {
-        frame->args = reg;
+
+    if ( reg == frame->args ) {
+        frame->args++;
     }
 }
 
@@ -71,15 +79,10 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
 
     debug_dump_object( result, DEBUG_ALLOC );
 
-//    debug_printf( DEBUG_STACK,
-//              L"make_empty_frame: got vector_space_object with size %lu, tag %4.4s\n",
-//              pointer_to_vso( result )->header.size,
-//              &pointer_to_vso( result )->header.tag.bytes );
-
     if ( !nilp( result ) ) {
         struct stack_frame *frame = get_stack_frame( result );
         /*
-         * TODO: later, pop a frame off a free-list of stack frames
+         * \todo later, pop a frame off a free-list of stack frames
          */
 
         frame->previous = previous;
@@ -131,7 +134,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
             struct cons_space_object cell = pointer2cell( args );
 
             /*
-             * TODO: if we were running on real massively parallel hardware,
+             * \todo if we were running on real massively parallel hardware,
              * each arg except the first should be handed off to another
              * processor to be evaled in parallel; but see notes here:
              * https://github.com/simon-brooke/post-scarcity/wiki/parallelism
@@ -220,16 +223,16 @@ struct cons_pointer make_special_frame( struct cons_pointer previous,
  */
 void free_stack_frame( struct stack_frame *frame ) {
     /*
-     * TODO: later, push it back on the stack-frame freelist
+     * \todo later, push it back on the stack-frame freelist
      */
-  debug_print(L"Entering free_stack_frame\n", DEBUG_ALLOC);
+    debug_print( L"Entering free_stack_frame\n", DEBUG_ALLOC );
     for ( int i = 0; i < args_in_frame; i++ ) {
         dec_ref( frame->arg[i] );
     }
     if ( !nilp( frame->more ) ) {
         dec_ref( frame->more );
     }
-  debug_print(L"Leaving free_stack_frame\n", DEBUG_ALLOC);
+    debug_print( L"Leaving free_stack_frame\n", DEBUG_ALLOC );
 }
 
 
@@ -238,34 +241,34 @@ void free_stack_frame( struct stack_frame *frame ) {
  * @param output the stream
  * @param frame_pointer the pointer to the frame
  */
-void dump_frame( FILE * output, struct cons_pointer frame_pointer ) {
+void dump_frame( URL_FILE * output, struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
-        fwprintf( output, L"Stack frame with %d arguments:\n", frame->args );
+        url_fwprintf( output, L"Stack frame with %d arguments:\n",
+                      frame->args );
         for ( int arg = 0; arg < frame->args; arg++ ) {
             struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-            fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ", arg,
-                      cell.tag.bytes[0],
-                      cell.tag.bytes[1], cell.tag.bytes[2], cell.tag.bytes[3],
-                      cell.count );
+            url_fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ",
+                          arg, cell.tag.bytes[0], cell.tag.bytes[1],
+                          cell.tag.bytes[2], cell.tag.bytes[3], cell.count );
 
             print( output, frame->arg[arg] );
-            fputws( L"\n", output );
+            url_fputws( L"\n", output );
         }
         if ( !nilp( frame->more ) ) {
-            fputws( L"More: \t", output );
+            url_fputws( L"More: \t", output );
             print( output, frame->more );
-            fputws( L"\n", output );
+            url_fputws( L"\n", output );
         }
     }
 }
 
-void dump_stack_trace( FILE * output, struct cons_pointer pointer ) {
+void dump_stack_trace( URL_FILE * output, struct cons_pointer pointer ) {
     if ( exceptionp( pointer ) ) {
         print( output, pointer2cell( pointer ).payload.exception.message );
-        fputws( L"\n", output );
+        url_fputws( L"\n", output );
         dump_stack_trace( output,
                           pointer2cell( pointer ).payload.exception.frame );
     } else {

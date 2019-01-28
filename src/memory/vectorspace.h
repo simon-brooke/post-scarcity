@@ -40,32 +40,48 @@
 #define VECTORTAG "VECT"
 #define VECTORTV 0
 
+/**
+ * given a pointer to a vector space object, return the object.
+ */
 #define pointer_to_vso(pointer)((vectorpointp(pointer)? (struct vector_space_object *) pointer2cell(pointer).payload.vectorp.address : (struct vector_space_object *) NULL))
-#define vso_get_vecp(vso)((vso->header.vecp))
+
+/**
+ * given a vector space object, return its canonical pointer.
+ */
+#define vso_get_vecp(vso)((((vector_space_object)vso)->header.vecp))
 
 struct cons_pointer make_vso( char *tag, uint64_t payload_size );
 
+/**
+ * the header which forms the start of every vector space object.
+ */
 struct vector_space_header {
+    /** the tag (type) of this vector-space object. */
     union {
-        char bytes[TAGLENGTH];  /* the tag (type) of the
-                                 * vector-space object this cell
-                                 * points to, considered as bytes.
-                                 * NOTE that the vector space object
-                                 * should itself have the identical
-                                 * tag. */
-        uint32_t value;         /* the tag considered as a number */
+        /** the tag considered as bytes. */
+        char bytes[TAGLENGTH];
+        /** the tag considered as a number */
+        uint32_t value;
     } tag;
-    struct cons_pointer vecp;   /* back pointer to the vector pointer
-                                 * which uniquely points to this vso */
-    uint64_t size;              /* the size of my payload, in bytes */
+    /** back pointer to the vector pointer which uniquely points to this vso */
+    struct cons_pointer vecp;
+    /** the size of my payload, in bytes */
+    uint64_t size;
 };
 
+/** a vector_space_object is just a vector_space_header followed by a
+ * lump of bytes; what we deem to be in there is a function of the tag,
+ * and at this stage we don't have a good picture of what these may be.
+ *
+ * \see stack_frame for an example payload;
+ * \see make_empty_frame for an example of how to initialise and use one.
+ */
 struct vector_space_object {
+    /** the header of this object */
     struct vector_space_header header;
-    char payload;               /* we'll malloc `size` bytes for payload,
-                                 * `payload` is just the first of these.
-                                 * TODO: this is almost certainly not
-                                 * idiomatic C. */
+    /** we'll malloc `size` bytes for payload, `payload` is just the first of these.
+     * \todo this is almost certainly not idiomatic C. */
+    char payload;
 };
 
 #endif

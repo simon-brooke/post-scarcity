@@ -45,9 +45,12 @@ struct cons_pointer freelist = NIL;
 struct cons_page *conspages[NCONSPAGES];
 
 /**
- * Make a cons page whose serial number (i.e. index in the conspages directory) is pageno.
- * Initialise all cells and prepend each to the freelist; if pageno is zero, do not prepend
- * cells 0 and 1 to the freelist but initialise them as NIL and T respectively.
+ * Make a cons page. Initialise all cells and prepend each to the freelist;
+ * if `initialised_cons_pages` is zero, do not prepend cells 0 and 1 to the
+ * freelist but initialise them as NIL and T respectively.
+ * \todo we ought to handle cons space exhaustion more gracefully than just
+ * crashing; should probably return an exception instead, although obviously
+ * that exception would have to have been pre-built.
  */
 void make_cons_page(  ) {
     struct cons_page *result = malloc( sizeof( struct cons_page ) );
@@ -110,11 +113,11 @@ void make_cons_page(  ) {
 }
 
 /**
- * dump the allocated pages to this output stream.
+ * dump the allocated pages to this `output` stream.
  */
-void dump_pages( FILE * output ) {
+void dump_pages( URL_FILE * output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
-        fwprintf( output, L"\nDUMPING PAGE %d\n", i );
+        url_fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {
@@ -125,8 +128,9 @@ void dump_pages( FILE * output ) {
 }
 
 /**
- * Frees the cell at the specified pointer. Dangerous, primitive, low
- * level.
+ * Frees the cell at the specified `pointer`; for all the types of cons-space
+ * object which point to other cons-space objects, cascade the decrement.
+ * Dangerous, primitive, low level.
  *
  * @pointer the cell to free
  */
@@ -136,60 +140,66 @@ void free_cell( struct cons_pointer pointer ) {
     debug_printf( DEBUG_ALLOC, L"Freeing cell " );
     debug_dump_object( pointer, DEBUG_ALLOC );
 
-    switch ( cell->tag.value ) {
-            /* for all the types of cons-space object which point to other
-             * cons-space objects, cascade the decrement. */
-        case CONSTV:
-            dec_ref( cell->payload.cons.car );
-            dec_ref( cell->payload.cons.cdr );
-            break;
-        case EXCEPTIONTV:
-            dec_ref( cell->payload.exception.message );
-            dec_ref( cell->payload.exception.frame );
-            break;
-        case FUNCTIONTV:
-            dec_ref( cell->payload.function.source );
-            break;
-        case LAMBDATV:
-        case NLAMBDATV:
-            dec_ref( cell->payload.lambda.args );
-            dec_ref( cell->payload.lambda.body );
-            break;
-        case RATIOTV:
-            dec_ref( cell->payload.ratio.dividend );
-            dec_ref( cell->payload.ratio.divisor );
-            break;
-        case SPECIALTV:
-            dec_ref( cell->payload.special.source );
-            break;
-        case STRINGTV:
-        case SYMBOLTV:
-            dec_ref( cell->payload.string.cdr );
-            break;
-        case VECTORPOINTTV:
-            /* for vector space pointers, free the actual vector-space
-             * object. Dangerous! */
-            debug_printf( DEBUG_ALLOC,
-                          L"About to free vector-space object at 0x%lx\n",
-                          cell->payload.vectorp.address );
-            struct vector_space_object *vso = cell->payload.vectorp.address;
-
-            switch ( vso->header.tag.value ) {
-                case STACKFRAMETV:
-                free_stack_frame(get_stack_frame(pointer));
-                break;
-            }
-
-            free( ( void * ) cell->payload.vectorp.address );
-            debug_printf( DEBUG_ALLOC,
-                          L"Freed vector-space object at 0x%lx\n",
-                          cell->payload.vectorp.address );
-            break;
-
-    }
-
     if ( !check_tag( pointer, FREETAG ) ) {
         if ( cell->count == 0 ) {
+            switch ( cell->tag.value ) {
+                case CONSTV:
+                    dec_ref( cell->payload.cons.car );
+                    dec_ref( cell->payload.cons.cdr );
+                    break;
+                case EXCEPTIONTV:
+                    dec_ref( cell->payload.exception.message );
+                    dec_ref( cell->payload.exception.frame );
+                    break;
+                case FUNCTIONTV:
+                    dec_ref( cell->payload.function.source );
+                    break;
+                case INTEGERTV:
+                    dec_ref( cell->payload.integer.more );
+                    break;
+                case LAMBDATV:
+                case NLAMBDATV:
+                    dec_ref( cell->payload.lambda.args );
+                    dec_ref( cell->payload.lambda.body );
+                    break;
+                case RATIOTV:
+                    dec_ref( cell->payload.ratio.dividend );
+                    dec_ref( cell->payload.ratio.divisor );
+                    break;
+                case READTV:
+                case WRITETV:
+                    url_fclose( cell->payload.stream.stream);
+                    break;
+                case SPECIALTV:
+                    dec_ref( cell->payload.special.source );
+                    break;
+                case STRINGTV:
+                case SYMBOLTV:
+                    dec_ref( cell->payload.string.cdr );
+                    break;
+                case VECTORPOINTTV:
+                    /* for vector space pointers, free the actual vector-space
+                     * object. Dangerous! */
+                    debug_printf( DEBUG_ALLOC,
+                                  L"About to free vector-space object at 0x%lx\n",
+                                  cell->payload.vectorp.address );
+                    struct vector_space_object *vso =
+                        cell->payload.vectorp.address;
+
+                    switch ( vso->header.tag.value ) {
+                        case STACKFRAMETV:
+                            free_stack_frame( get_stack_frame( pointer ) );
+                            break;
+                    }
+
+                    free( ( void * ) cell->payload.vectorp.address );
+                    debug_printf( DEBUG_ALLOC,
+                                  L"Freed vector-space object at 0x%lx\n",
+                                  cell->payload.vectorp.address );
+                    break;
+
+            }
+
             strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
@@ -207,11 +217,14 @@ void free_cell( struct cons_pointer pointer ) {
 }
 
 /**
- * Allocates a cell with the specified tag. Dangerous, primitive, low
+ * Allocates a cell with the specified `tag`. Dangerous, primitive, low
  * level.
  *
  * @param tag the tag of the cell to allocate - must be a valid cons space tag.
  * @return the cons pointer which refers to the cell allocated.
+ * \todo handle the case where another cons_page cannot be allocated;
+ * return an exception. Which, as we cannot create such an exception when
+ * cons space is exhausted, means we must construct it at init time.
  */
 struct cons_pointer allocate_cell( char *tag ) {
     struct cons_pointer result = freelist;

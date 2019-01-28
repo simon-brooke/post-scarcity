@@ -15,13 +15,13 @@ INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 -d0 -di1 -nfc1 -i4 -ip0 -l75 -lp -npcs \
 -npsl -nsc -nsob -nss -nut -prs -l79 -ts2
 
-VERSION := "0.0.2"
-
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g -DDEBUG
-LDFLAGS := -lm
+LDFLAGS := -lm -lcurl
+
+all: $(TARGET)
 
 $(TARGET): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS) -DVERSION=$(VERSION) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 doc: $(SRCS) Makefile Doxyfile
 	doxygen

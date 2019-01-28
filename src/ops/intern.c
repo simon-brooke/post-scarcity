@@ -27,7 +27,8 @@
 #include "print.h"
 
 /**
- * The object list. What is added to this during system setup is 'global', that is,
+ * The global object list/or, to put it differently, the root namespace.
+ * What is added to this during system setup is 'global', that is,
  * visible to all sessions/threads. What is added during a session/thread is local to
  * that session/thread (because shallow binding). There must be some way for a user to
  * make the contents of their own environment persistent between threads but I don't
@@ -109,8 +110,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
  * with this key/value pair added to the front.
  */
 struct cons_pointer
-bind( struct cons_pointer key, struct cons_pointer value,
-      struct cons_pointer store ) {
+set( struct cons_pointer key, struct cons_pointer value,
+     struct cons_pointer store ) {
     debug_print( L"Binding ", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
     debug_print( L" to ", DEBUG_BIND );
@@ -130,9 +131,9 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     debug_print( L"Entering deep_bind\n", DEBUG_BIND );
     struct cons_pointer old = oblist;
 
-    oblist = bind( key, value, oblist );
-    inc_ref(oblist);
-    dec_ref(old);
+    oblist = set( key, value, oblist );
+    inc_ref( oblist );
+    dec_ref( old );
 
     debug_print( L"Leaving deep_bind\n", DEBUG_BIND );
 
@@ -152,7 +153,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
         /*
          * not currently bound
          */
-        result = bind( key, NIL, environment );
+        result = set( key, NIL, environment );
     }
 
     return result;
