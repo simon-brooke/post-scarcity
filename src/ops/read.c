@@ -22,6 +22,7 @@
 #include "dump.h"
 #include "integer.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
 #include "peano.h"
 #include "print.h"

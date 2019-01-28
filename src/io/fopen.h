@@ -80,8 +80,4 @@ size_t url_fread( void *ptr, size_t size, size_t nmemb, URL_FILE * file );
 char *url_fgets( char *ptr, size_t size, URL_FILE * file );
 void url_rewind( URL_FILE * file );
 
-wint_t url_fgetwc( URL_FILE * file );
-wint_t url_ungetwc( wint_t wc, URL_FILE * input );
-URL_FILE *file_to_url_file( FILE * f );
-
 #endif

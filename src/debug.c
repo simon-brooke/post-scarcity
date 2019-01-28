@@ -19,9 +19,9 @@
 #include <wctype.h>
 
 #include "consspaceobject.h"
-#include "fopen.h"
 #include "debug.h"
 #include "dump.h"
+#include "io.h"
 #include "print.h"
 
 /**

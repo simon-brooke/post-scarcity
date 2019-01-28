@@ -16,6 +16,12 @@
 #include "lispops.h"
 
 /**
+ * Allow a one-character unget facility. This may not be enough - we may need
+ * to allocate a buffer.
+ */
+wint_t ungotten = 0;
+
+/**
  * Convert this lisp string-like-thing (also works for symbols, and, later
  * keywords) into a UTF-8 string. NOTE that the returned value has been
  * malloced and must be freed. TODO: candidate to moving into a utilities
@@ -55,6 +61,129 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
 
     return result;
 }
+
+
+/**
+ * given this file handle f, return a new url_file handle wrapping it.
+ *
+ * @param f the file to be wrapped;
+ * @return the new handle, or null if no such handle could be allocated.
+ */
+URL_FILE *file_to_url_file( FILE * f ) {
+    URL_FILE *result = ( URL_FILE * ) malloc( sizeof( URL_FILE ) );
+
+    if ( result != NULL ) {
+        result->type = CFTYPE_FILE, result->handle.file = f;
+    }
+
+    return result;
+}
+
+
+/**
+ * get one wide character from the buffer.
+ *
+ * @param file the stream to read from;
+ * @return the next wide character on the stream, or zero if no more.
+ */
+wint_t url_fgetwc( URL_FILE * input ) {
+    wint_t result = -1;
+
+    if ( ungotten != 0 ) {
+        /* TODO: not thread safe */
+        result = ungotten;
+        ungotten = 0;
+    } else {
+        switch ( input->type ) {
+            case CFTYPE_FILE:
+                fwide( input->handle.file, 1 ); /* wide characters */
+                result = fgetwc( input->handle.file );  /* passthrough */
+                break;
+
+            case CFTYPE_CURL:{
+                    char *cbuff =
+                        calloc( sizeof( wchar_t ) + 2, sizeof( char ) );
+                    wchar_t *wbuff = calloc( 2, sizeof( wchar_t ) );
+
+                    size_t count = 0;
+
+                    debug_print( L"url_fgetwc: about to call url_fgets\n", DEBUG_IO );
+                    url_fgets( cbuff, 2, input );
+                    debug_print( L"url_fgetwc: back from url_fgets\n", DEBUG_IO );
+                    int c = ( int ) cbuff[0];
+                    debug_printf( DEBUG_IO,
+                                 L"url_fgetwc: cbuff is '%s'; (first) character = %d (%c)\n",
+                                 cbuff, c, c & 0xf7 );
+                    /* The value of each individual byte indicates its UTF-8 function, as follows:
+                     *
+                     * 00 to 7F hex (0 to 127): first and only byte of a sequence.
+                     * 80 to BF hex (128 to 191): continuing byte in a multi-byte sequence.
+                     * C2 to DF hex (194 to 223): first byte of a two-byte sequence.
+                     * E0 to EF hex (224 to 239): first byte of a three-byte sequence.
+                     * F0 to FF hex (240 to 255): first byte of a four-byte sequence.
+                     */
+                    if ( c <= 0x07 ) {
+                        count = 1;
+                    } else if ( c >= '0xc2' && c <= '0xdf' ) {
+                        count = 2;
+                    } else if ( c >= '0xe0' && c <= '0xef' ) {
+                        count = 3;
+                    } else if ( c >= '0xf0' && c <= '0xff' ) {
+                        count = 4;
+                    }
+
+                    if ( count > 1 ) {
+                        url_fgets( (char *)&cbuff[1], count, input );
+                    }
+                    mbstowcs( wbuff, cbuff, 1 );  //(char *)(&input->buffer[input->buffer_pos]), 1 );
+                    result = wbuff[0];
+
+                    free( wbuff );
+                    free( cbuff );
+                }
+                break;
+            case CFTYPE_NONE:
+                break;
+        }
+    }
+
+    debug_printf( DEBUG_IO, L"url_fgetwc returning %d (%C)\n", result,
+                  result );
+    return result;
+}
+
+wint_t url_ungetwc( wint_t wc, URL_FILE * input ) {
+    wint_t result = -1;
+
+    switch ( input->type ) {
+        case CFTYPE_FILE:
+            fwide( input->handle.file, 1 ); /* wide characters */
+            result = ungetwc( wc, input->handle.file ); /* passthrough */
+            break;
+
+        case CFTYPE_CURL:{
+                ungotten = wc;
+//                wchar_t *wbuff = calloc( 2, sizeof( wchar_t ) );
+//                char *cbuff = calloc( 5, sizeof( char ) );
+//
+//                wbuff[0] = wc;
+//                result = wcstombs( cbuff, wbuff, 1 );
+//
+//                input->buffer_pos -= strlen( cbuff );
+//
+//                free( cbuff );
+//                free( wbuff );
+//
+//                result = result > 0 ? wc : result;
+                break;
+        case CFTYPE_NONE:
+                break;
+            }
+    }
+
+    return result;
+}
+
 
 /**
  * Function, sort-of: close the file indicated by my first arg, and return
@@ -172,7 +301,7 @@ lisp_slurp( struct stack_frame *frame, struct cons_pointer frame_pointer,
         struct cons_pointer cursor = make_string( url_fgetwc( stream ), NIL );
         result = cursor;
 
-        for ( wint_t c = url_fgetwc( stream ); !url_feof( stream );
+        for ( wint_t c = url_fgetwc( stream ); !url_feof( stream ) && c != 0;
               c = url_fgetwc( stream ) ) {
             debug_print( L"slurp: cursor is: ", DEBUG_IO );
             debug_dump_object( cursor, DEBUG_IO );
