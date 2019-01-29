@@ -35,7 +35,7 @@ int print_use_colours = 0;
  * don't print anything but just return.
  */
 void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
-    while ( stringp( pointer ) || symbolp( pointer ) ) {
+    while ( stringp( pointer ) || symbolp( pointer ) || keywordp(pointer)) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wchar_t c = cell->payload.string.character;
 
@@ -133,6 +133,13 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 print_string_contents( output, s );
                 dec_ref( s );
             }
+            break;
+        case KEYTV:
+            if ( print_use_colours ) {
+                url_fputws( L"\x1B[1;33m", output );
+            }
+            url_fputws( L":", output );
+            print_string_contents( output, pointer );
             break;
         case LAMBDATV:{
                 struct cons_pointer to_print =

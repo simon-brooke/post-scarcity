@@ -152,7 +152,7 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.exception.frame );
                     break;
                 case FUNCTIONTV:
-                    dec_ref( cell->payload.function.source );
+                    dec_ref( cell->payload.function.meta );
                     break;
                 case INTEGERTV:
                     dec_ref( cell->payload.integer.more );
@@ -168,10 +168,11 @@ void free_cell( struct cons_pointer pointer ) {
                     break;
                 case READTV:
                 case WRITETV:
-                    url_fclose( cell->payload.stream.stream);
+                    dec_ref(cell->payload.stream.meta);
+                    url_fclose( cell->payload.stream.stream );
                     break;
                 case SPECIALTV:
-                    dec_ref( cell->payload.special.source );
+                    dec_ref( cell->payload.special.meta );
                     break;
                 case STRINGTV:
                 case SYMBOLTV:

@@ -8,6 +8,17 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+/*
+ * wide characters
+ */
+#include <wchar.h>
+#include <wctype.h>
+
+#include <curl/curl.h>
 
 #include "conspage.h"
 #include "consspaceobject.h"
@@ -16,10 +27,40 @@
 #include "lispops.h"
 
 /**
+ * The sharing hub for all connections. TODO: Ultimately this probably doesn't
+ * work for a multi-user environment and we will need one sharing hub for each
+ * user, or else we will need to not share at least cookies and ssl sessions.
+ */
+CURLSH *io_share;
+
+/**
  * Allow a one-character unget facility. This may not be enough - we may need
  * to allocate a buffer.
  */
 wint_t ungotten = 0;
+
+/**
+ * Initialise the I/O subsystem.
+ *
+ * @return 0 on success; any other value means failure.
+ */
+int io_init() {
+  CURL *curl;
+  CURLcode res;
+  int result = curl_global_init( CURL_GLOBAL_SSL );
+
+  io_share = curl_share_init();
+
+  if (result == 0) {
+      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
+      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE );
+      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS );
+      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION );
+      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_PSL );
+  }
+
+  return result;
+}
 
 /**
  * Convert this lisp string-like-thing (also works for symbols, and, later
@@ -107,13 +148,15 @@ wint_t url_fgetwc( URL_FILE * input ) {
 
                     size_t count = 0;
 
-                    debug_print( L"url_fgetwc: about to call url_fgets\n", DEBUG_IO );
+                    debug_print( L"url_fgetwc: about to call url_fgets\n",
+                                 DEBUG_IO );
                     url_fgets( cbuff, 2, input );
-                    debug_print( L"url_fgetwc: back from url_fgets\n", DEBUG_IO );
+                    debug_print( L"url_fgetwc: back from url_fgets\n",
+                                 DEBUG_IO );
                     int c = ( int ) cbuff[0];
                     debug_printf( DEBUG_IO,
-                                 L"url_fgetwc: cbuff is '%s'; (first) character = %d (%c)\n",
-                                 cbuff, c, c & 0xf7 );
+                                  L"url_fgetwc: cbuff is '%s'; (first) character = %d (%c)\n",
+                                  cbuff, c, c & 0xf7 );
                     /* The value of each individual byte indicates its UTF-8 function, as follows:
                      *
                      * 00 to 7F hex (0 to 127): first and only byte of a sequence.
@@ -133,7 +176,7 @@ wint_t url_fgetwc( URL_FILE * input ) {
                     }
 
                     if ( count > 1 ) {
-                        url_fgets( (char *)&cbuff[1], count, input );
+                        url_fgets( ( char * ) &cbuff[1], count, input );
                     }
                     mbstowcs( wbuff, cbuff, 1 );  //(char *)(&input->buffer[input->buffer_pos]), 1 );
                     result = wbuff[0];
@@ -163,18 +206,6 @@ wint_t url_ungetwc( wint_t wc, URL_FILE * input ) {
 
         case CFTYPE_CURL:{
                 ungotten = wc;
-//                wchar_t *wbuff = calloc( 2, sizeof( wchar_t ) );
-//                char *cbuff = calloc( 5, sizeof( char ) );
-//
-//                wbuff[0] = wc;
-//                result = wcstombs( cbuff, wbuff, 1 );
-//
-//                input->buffer_pos -= strlen( cbuff );
-//
-//                free( cbuff );
-//                free( wbuff );
-//
-//                result = result > 0 ? wc : result;
                 break;
         case CFTYPE_NONE:
                 break;
@@ -212,6 +243,85 @@ lisp_close( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return result;
 }
 
+int index_of( char c, char * s) {
+  int i;
+
+  for (i = 0; s[i] != c && s[i] != 0; i++);
+
+  return s[i] == c ? i : -1;
+}
+
+char * trim(char *s) {
+  int i;
+
+  for (i = strlen(s); (isblank(s[i]) || iscntrl(s[i])) && i > -1; i--) {
+    s[i] = (char) 0;
+  }
+  for (i = 0; isblank(s[i]) && s[i] != 0; i++);
+
+  return (char *)&s[i];
+}
+
+/**
+ * Callback to assemble metadata for a URL stream. This is naughty because
+ * it modifies data, but it's really the only way to create metadata.
+ */
+static size_t write_meta_callback(void *ptr, size_t size, size_t nmemb, struct cons_pointer stream)
+{
+  struct cons_space_object * cell = &pointer2cell(stream);
+
+  if (strncmp(&cell->tag.bytes[0], READTAG, 4) ||
+      strncmp(&cell->tag.bytes[0], WRITETAG, 4)) {
+    char * s = (char *)ptr;
+    int offset = index_of (':', ptr);
+
+    if (offset != -1) {
+      s[offset] = (char)0;
+      char * name = s;
+      char * value = trim( &s[++offset]);
+      wchar_t * wname = calloc(strlen(name), sizeof(wchar_t));
+      wchar_t * wvalue = calloc(strlen(value), sizeof(wchar_t));
+
+      mbstowcs(wname, name, strlen(name));
+      mbstowcs(wvalue, value, strlen(value));
+
+      cell->payload.stream.meta = make_cons(
+        make_cons(
+          c_string_to_lisp_keyword( wname),
+          c_string_to_lisp_string(wvalue)),
+        cell->payload.stream.meta);
+
+      debug_printf( DEBUG_IO, L"write_meta_callback: added header '%s': value '%s'\n", name, value);
+    }
+  } else {
+    debug_print( L"Pointer passed to write_meta_callback did not point to a stream: ", DEBUG_IO);
+    debug_dump_object(stream, DEBUG_IO);
+  }
+
+  return nmemb;
+}
+
+
+void collect_meta( struct cons_pointer stream, struct cons_pointer url ) {
+    URL_FILE * s = pointer2cell(stream).payload.stream.stream;
+
+    switch ( s->type ) {
+        case CFTYPE_NONE:
+            break;
+        case CFTYPE_FILE:
+            /* don't know whether you can get metadata on an open stream in C,
+             * although we could of course get it from the URL */
+            break;
+        case CFTYPE_CURL:
+            curl_easy_setopt( s->handle.curl, CURLOPT_VERBOSE, 1L );
+            curl_easy_setopt( s->handle.curl, CURLOPT_HEADER, 1L );
+            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERFUNCTION, write_meta_callback);
+            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream);
+            break;
+    }
+}
+
+
 /**
  * Function: return a stream open on the URL indicated by the first argument;
  * if a second argument is present and is non-nil, open it for reading. At
@@ -228,28 +338,38 @@ lisp_close( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * on my stream, if any, else NIL.
  */
 struct cons_pointer
-lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
-           struct cons_pointer env ) {
-    struct cons_pointer result = NIL;
+  lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+  struct cons_pointer result = NIL;
 
-    if ( stringp( frame->arg[0] ) ) {
-        char *url = lisp_string_to_c_string( frame->arg[0] );
+  if ( stringp( frame->arg[0] ) ) {
+    struct cons_pointer meta =
+      make_cons( make_cons(
+        c_string_to_lisp_keyword( L"url" ),
+        frame->arg[0] ),
+                NIL );
 
-        if ( nilp( frame->arg[1] ) ) {
-            result = make_read_stream( url_fopen( url, "r" ) );
-        } else {
-            // TODO: anything more complex is a problem for another day.
-            result = make_write_stream( url_fopen( url, "w" ) );
-        }
+    char *url = lisp_string_to_c_string( frame->arg[0] );
 
-        free( url );
-
-        if ( pointer2cell( result ).payload.stream.stream == NULL ) {
-            result = NIL;
-        }
+    if ( nilp( frame->arg[1] ) ) {
+      URL_FILE *stream = url_fopen( url, "r" );
+      result = make_read_stream( stream, meta );
+    } else {
+      // TODO: anything more complex is a problem for another day.
+      URL_FILE *stream = url_fopen( url, "w" );
+      result = make_write_stream( stream, meta);
     }
 
-    return result;
+    free( url );
+
+    if ( pointer2cell( result ).payload.stream.stream == NULL ) {
+      result = NIL;
+    } else {
+      collect_meta( result, frame->arg[0]);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -272,8 +392,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.stream.
-                           stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.
+                           stream.stream ), NIL );
     }
 
     return result;

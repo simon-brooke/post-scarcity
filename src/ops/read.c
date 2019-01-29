@@ -45,7 +45,8 @@ struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
-struct cons_pointer read_symbol( URL_FILE * input, wint_t initial );
+struct cons_pointer read_symbol_or_key( URL_FILE * input, char *tag,
+                                        wint_t initial );
 
 /**
  * quote reader macro in C (!)
@@ -110,7 +111,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                             read_number( frame, frame_pointer, input, c,
                                          false );
                     } else {
-                        result = read_symbol( input, c );
+                        result = read_symbol_or_key( input, SYMBOLTAG, c );
                     }
                 }
                 break;
@@ -129,17 +130,20 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                             read_continuation( frame, frame_pointer, input,
                                                url_fgetwc( input ) );
                     } else {
-                        read_symbol( input, c );
+                        read_symbol_or_key( input, SYMBOLTAG, c );
                     }
                 }
                 break;
-                //case ':': reserved for keywords and paths
+            case ':':
+                result =
+                    read_symbol_or_key( input, KEYTAG, url_fgetwc( input ) );
+                break;
             default:
                 if ( iswdigit( c ) ) {
                     result =
                         read_number( frame, frame_pointer, input, c, false );
                 } else if ( iswprint( c ) ) {
-                    result = read_symbol( input, c );
+                    result = read_symbol_or_key( input, SYMBOLTAG, c );
                 } else {
                     result =
                         throw_exception( make_cons( c_string_to_lisp_string
@@ -321,24 +325,22 @@ struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
     return result;
 }
 
-struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
+struct cons_pointer read_symbol_or_key( URL_FILE * input, char *tag,
+                                        wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
         case '\0':
-            result = make_symbol( initial, NIL );
+            result = make_symbol_or_key( initial, NIL, tag );
             break;
         case '"':
-            /*
-             * THIS IS NOT A GOOD IDEA, but is legal
-             */
-            result =
-                make_symbol( initial,
-                             read_symbol( input, url_fgetwc( input ) ) );
-            break;
+        case '\'':
+            /* unwise to allow embedded quotation marks in symbols */
         case ')':
+        case ':':
             /*
-             * symbols may not include right-parenthesis;
+             * symbols and keywords may not include right-parenthesis
+             * or colons.
              */
             result = NIL;
             /*
@@ -350,8 +352,11 @@ struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
             if ( iswprint( initial )
                  && !iswblank( initial ) ) {
                 result =
-                    make_symbol( initial,
-                                 read_symbol( input, url_fgetwc( input ) ) );
+                    make_symbol_or_key( initial,
+                                        read_symbol_or_key( input,
+                                                            tag,
+                                                            url_fgetwc( input ) ),
+                                        tag );
             } else {
                 result = NIL;
                 /*
@@ -362,7 +367,7 @@ struct cons_pointer read_symbol( URL_FILE * input, wint_t initial ) {
             break;
     }
 
-    debug_print( L"read_symbol returning\n", DEBUG_IO );
+    debug_print( L"read_symbol_or_key returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
 
     return result;
