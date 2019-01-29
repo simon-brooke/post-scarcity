@@ -19,26 +19,13 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#ifndef __psse_lispops_h
+#define __psse_lispops_h
+
 /*
  * utilities
  */
 
-/**
- * Get the Lisp type of the single argument.
- * @param pointer a pointer to the object whose type is requested.
- * @return As a Lisp string, the tag of the object which is at that pointer.
- */
-struct cons_pointer c_type( struct cons_pointer pointer );
-
-/**
- * Implementation of car in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_car( struct cons_pointer arg );
-
-/**
- * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_cdr( struct cons_pointer arg );
 
 struct cons_pointer c_reverse( struct cons_pointer arg );
 
@@ -205,3 +192,5 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
 struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env );
+
+#endif

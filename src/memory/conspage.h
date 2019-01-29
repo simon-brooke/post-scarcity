@@ -1,7 +1,19 @@
-#include "consspaceobject.h"
+/*
+ * conspage.h
+ *
+ * Setup and tear down cons pages, and (FOR NOW) do primitive
+ * allocation/deallocation of cells.
+ * NOTE THAT before we go multi-threaded, these functions must be
+ * aggressively
+ * thread safe.
+ *
+ * (c) 2017 Simon Brooke <simon@journeyman.cc>
+ * Licensed under GPL version 2.0, or, at your option, any later version.
+ */
+#ifndef __psse_conspage_h
+#define __psse_conspage_h
 
-#ifndef __conspage_h
-#define __conspage_h
+#include "consspaceobject.h"
 
 /**
  * the number of cons cells on a cons page. The maximum value this can

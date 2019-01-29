@@ -26,6 +26,7 @@
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
+#include "meta.h"
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
@@ -43,11 +44,13 @@ void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    inc_ref( n );
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
-    deep_bind( n, make_function( NIL, executable ) );
-
-    dec_ref( n );
+    deep_bind( n, make_function( meta, executable ) );
 }
 
 /**
@@ -58,11 +61,13 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    inc_ref( n );
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
     deep_bind( n, make_special( NIL, executable ) );
-
-    dec_ref( n );
 }
 
 /**
@@ -87,7 +92,10 @@ int main( int argc, char *argv[] ) {
     bool show_prompt = false;
 
     setlocale( LC_ALL, "" );
-    curl_global_init( CURL_GLOBAL_DEFAULT );
+    if ( io_init(  ) != 0 ) {
+        fputs( "Failed to initialise I/O subsystem\n", stderr );
+        exit( 1 );
+    }
 
     while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
         switch ( option ) {
@@ -136,17 +144,40 @@ int main( int argc, char *argv[] ) {
     fwide( stdout, 1 );
     fwide( stderr, 1 );
     fwide( sink->handle.file, 1 );
-    bind_value( L"*in*", make_read_stream( file_to_url_file( stdin ) ) );
-    bind_value( L"*out*", make_write_stream( file_to_url_file( stdout ) ) );
-    bind_value( L"*log*", make_write_stream( file_to_url_file( stderr ) ) );
-    bind_value( L"*sink*", make_write_stream( sink ) );
-
+    bind_value( L"*in*", make_read_stream( file_to_url_file( stdin ),
+                                           make_cons( make_cons
+                                                      ( c_string_to_lisp_keyword
+                                                        ( L"url" ),
+                                                        c_string_to_lisp_string
+                                                        ( L"system:standard input" ) ),
+                                                      NIL ) ) );
+    bind_value( L"*out*",
+                make_write_stream( file_to_url_file( stdout ),
+                                   make_cons( make_cons
+                                              ( c_string_to_lisp_keyword
+                                                ( L"url" ),
+                                                c_string_to_lisp_string
+                                                ( L"system:standard output]" ) ),
+                                              NIL ) ) );
+    bind_value( L"*log*", make_write_stream( file_to_url_file( stderr ),
+                                             make_cons( make_cons
+                                                        ( c_string_to_lisp_keyword
+                                                          ( L"url" ),
+                                                          c_string_to_lisp_string
+                                                          ( L"system:standard log" ) ),
+                                                        NIL ) ) );
+    bind_value( L"*sink*", make_write_stream( sink,
+                                              make_cons( make_cons
+                                                         ( c_string_to_lisp_keyword
+                                                           ( L"url" ),
+                                                           c_string_to_lisp_string
+                                                           ( L"system:standard sink" ) ),
+                                                         NIL ) ) );
     /*
      * the default prompt
      */
     bind_value( L"*prompt*",
                 show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL );
-
     /*
      * primitive function operations
      */
@@ -164,6 +195,8 @@ int main( int argc, char *argv[] ) {
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
+    bind_function( L"meta", &lisp_metadata );
+    bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
     bind_function( L"negative?", &lisp_is_negative );
     bind_function( L"oblist", &lisp_oblist );
@@ -180,13 +213,11 @@ int main( int argc, char *argv[] ) {
     bind_function( L"subtract", &lisp_subtract );
     bind_function( L"throw", &lisp_exception );
     bind_function( L"type", &lisp_type );
-
     bind_function( L"+", &lisp_add );
     bind_function( L"*", &lisp_multiply );
     bind_function( L"-", &lisp_subtract );
     bind_function( L"/", &lisp_divide );
     bind_function( L"=", &lisp_equal );
-
     /*
      * primitive special forms
      */
@@ -198,19 +229,16 @@ int main( int argc, char *argv[] ) {
     bind_special( L"progn", &lisp_progn );
     bind_special( L"quote", &lisp_quote );
     bind_special( L"set!", &lisp_set_shriek );
-
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
-
     repl( show_prompt );
-
     debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
     dec_ref( oblist );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
-
     if ( dump_at_end ) {
         dump_pages( file_to_url_file( stdout ) );
     }
 
+    curl_global_cleanup(  );
     return ( 0 );
 }

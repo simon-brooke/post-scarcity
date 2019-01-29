@@ -21,6 +21,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
+#include "intern.h"
 #include "print.h"
 #include "stack.h"
 
@@ -66,6 +67,48 @@ void dec_ref( struct cons_pointer pointer ) {
 
 
 /**
+ * Get the Lisp type of the single argument.
+ * @param pointer a pointer to the object whose type is requested.
+ * @return As a Lisp string, the tag of the object which is at that pointer.
+ */
+struct cons_pointer c_type( struct cons_pointer pointer ) {
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( pointer );
+
+    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
+        result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
+    }
+
+    return result;
+}
+
+/**
+ * Implementation of car in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_car( struct cons_pointer arg ) {
+    struct cons_pointer result = NIL;
+
+    if ( consp( arg ) ) {
+        result = pointer2cell( arg ).payload.cons.car;
+    }
+
+    return result;
+}
+
+/**
+ * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
+ */
+struct cons_pointer c_cdr( struct cons_pointer arg ) {
+    struct cons_pointer result = NIL;
+
+    if ( consp( arg ) || stringp( arg ) || symbolp( arg ) ) {
+        result = pointer2cell( arg ).payload.cons.cdr;
+    }
+
+    return result;
+}
+
+/**
  * Construct a cons cell from this pair of pointers.
  */
 struct cons_pointer make_cons( struct cons_pointer car,
@@ -107,16 +150,17 @@ struct cons_pointer make_exception( struct cons_pointer message,
 
 
 /**
- * Construct a cell which points to an executable Lisp special form.
+ * Construct a cell which points to an executable Lisp function.
  */
 struct cons_pointer
-make_function( struct cons_pointer src, struct cons_pointer ( *executable )
+make_function( struct cons_pointer meta, struct cons_pointer ( *executable )
                 ( struct stack_frame *,
                   struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer pointer = allocate_cell( FUNCTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
+    inc_ref( meta );
 
-    cell->payload.function.source = src;
+    cell->payload.function.meta = meta;
     cell->payload.function.executable = executable;
 
     return pointer;
@@ -203,27 +247,42 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
 }
 
 /**
- * Construct a symbol from the character `c` and this `tail`. A symbol is
- * internally identical to a string except for having a different tag.
+ * Construct a symbol or keyword from the character `c` and this `tail`.
+ * Each is internally identical to a string except for having a different tag.
  *
  * @param c the character to add (prepend);
  * @param tail the symbol which is being built.
+ * @param tag the tag to use: expected to be "SYMB" or "KEYW"
  */
-struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail ) {
-    return make_string_like_thing( c, tail, SYMBOLTAG );
+struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
+                                        char *tag ) {
+    struct cons_pointer result = make_string_like_thing( c, tail, tag );
+
+    if ( strncmp( tag, KEYTAG, 4 ) == 0 ) {
+        struct cons_pointer r = internedp( result, oblist );
+
+        if ( nilp( r ) ) {
+            intern( result, oblist );
+        } else {
+            result = r;
+        }
+    }
+
+    return result;
 }
 
 /**
  * Construct a cell which points to an executable Lisp special form.
  */
 struct cons_pointer
-make_special( struct cons_pointer src, struct cons_pointer ( *executable )
+make_special( struct cons_pointer meta, struct cons_pointer ( *executable )
                ( struct stack_frame * frame,
                  struct cons_pointer, struct cons_pointer env ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
+    inc_ref( meta );
 
-    cell->payload.special.source = src;
+    cell->payload.special.meta = meta;
     cell->payload.special.executable = executable;
 
     return pointer;
@@ -232,12 +291,16 @@ make_special( struct cons_pointer src, struct cons_pointer ( *executable )
 /**
  * Construct a cell which points to a stream open for reading.
  * @param input the C stream to wrap.
+ * @param metadata a pointer to an associaton containing metadata on the stream.
+ * @return a pointer to the new read stream.
  */
-struct cons_pointer make_read_stream( URL_FILE * input ) {
+struct cons_pointer make_read_stream( URL_FILE * input,
+                                      struct cons_pointer metadata ) {
     struct cons_pointer pointer = allocate_cell( READTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     cell->payload.stream.stream = input;
+    cell->payload.stream.meta = metadata;
 
     return pointer;
 }
@@ -245,14 +308,31 @@ struct cons_pointer make_read_stream( URL_FILE * input ) {
 /**
  * Construct a cell which points to a stream open for writing.
  * @param output the C stream to wrap.
+ * @param metadata a pointer to an associaton containing metadata on the stream.
+ * @return a pointer to the new read stream.
  */
-struct cons_pointer make_write_stream( URL_FILE * output ) {
+struct cons_pointer make_write_stream( URL_FILE * output,
+                                       struct cons_pointer metadata ) {
     struct cons_pointer pointer = allocate_cell( WRITETAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     cell->payload.stream.stream = output;
+    cell->payload.stream.meta = metadata;
 
     return pointer;
+}
+
+/**
+ * Return a lisp keyword representation of this wide character string.
+ */
+struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol ) {
+    struct cons_pointer result = NIL;
+
+    for ( int i = wcslen( symbol ); i > 0; i-- ) {
+        result = make_keyword( symbol[i - 1], result );
+    }
+
+    return result;
 }
 
 /**

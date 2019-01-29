@@ -47,32 +47,6 @@
  * and others I haven't thought of yet.
  */
 
-/**
- * Implementation of car in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_car( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
-
-    if ( consp( arg ) ) {
-        result = pointer2cell( arg ).payload.cons.car;
-    }
-
-    return result;
-}
-
-/**
- * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_cdr( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
-
-    if ( consp( arg ) || stringp( arg ) || symbolp( arg ) ) {
-        result = pointer2cell( arg ).payload.cons.cdr;
-    }
-
-    return result;
-}
-
 
 /**
  * Useful building block; evaluate this single form in the context of this
@@ -410,24 +384,6 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     return result;
 }
-
-
-/**
- * Get the Lisp type of the single argument.
- * @param pointer a pointer to the object whose type is requested.
- * @return As a Lisp string, the tag of the object which is at that pointer.
- */
-struct cons_pointer c_type( struct cons_pointer pointer ) {
-    struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( pointer );
-
-    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-        result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
-    }
-
-    return result;
-}
-
 
 /**
  * Function; evaluate the expression which is the first argument in the frame;
@@ -885,7 +841,9 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
                 result = make_string( o.payload.string.character, result );
                 break;
             case SYMBOLTV:
-                result = make_symbol( o.payload.string.character, result );
+                result =
+                    make_symbol_or_key( o.payload.string.character, result,
+                                        SYMBOLTAG );
                 break;
         }
     }
@@ -1251,13 +1209,13 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
-
+    struct cons_pointer source_key = c_string_to_lisp_keyword( L"source" );
     switch ( cell.tag.value ) {
         case FUNCTIONTV:
-            result = cell.payload.function.source;
+            result = c_assoc( source_key, cell.payload.function.meta );
             break;
         case SPECIALTV:
-            result = cell.payload.special.source;
+            result = c_assoc( source_key, cell.payload.special.meta );
             break;
         case LAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
