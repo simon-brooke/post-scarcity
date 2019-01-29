@@ -11,7 +11,8 @@
 #define __psse_meta_h
 
 
-struct cons_pointer lisp_metadata( struct stack_frame *frame, struct cons_pointer frame_pointer,
-                                  struct cons_pointer env ) ;
+struct cons_pointer lisp_metadata( struct stack_frame *frame,
+                                   struct cons_pointer frame_pointer,
+                                   struct cons_pointer env );
 
 #endif

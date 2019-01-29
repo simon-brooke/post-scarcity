@@ -41,17 +41,16 @@
  * more readable and aid debugging generally.
  */
 void bind_function( wchar_t *name, struct cons_pointer ( *executable )
-                   ( struct stack_frame *,
-                    struct cons_pointer, struct cons_pointer ) ) {
-  struct cons_pointer n = c_string_to_lisp_symbol( name );
-  struct cons_pointer meta = make_cons(
-    make_cons(c_string_to_lisp_keyword(L"primitive"), TRUE),
-              make_cons( make_cons(
-                c_string_to_lisp_keyword(L"name"),
-                n),
-              NIL));
+                     ( struct stack_frame *,
+                       struct cons_pointer, struct cons_pointer ) ) {
+    struct cons_pointer n = c_string_to_lisp_symbol( name );
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
-  deep_bind( n, make_function( meta, executable ) );
+    deep_bind( n, make_function( meta, executable ) );
 }
 
 /**
@@ -62,12 +61,11 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    struct cons_pointer meta = make_cons(
-      make_cons(c_string_to_lisp_keyword(L"primitive"), TRUE),
-                make_cons( make_cons(
-                  c_string_to_lisp_keyword(L"name"),
-                  n),
-                NIL));
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
     deep_bind( n, make_special( NIL, executable ) );
 }
@@ -94,9 +92,9 @@ int main( int argc, char *argv[] ) {
     bool show_prompt = false;
 
     setlocale( LC_ALL, "" );
-    if (io_init() != 0) {
-      fputs("Failed to initialise I/O subsystem\n", stderr);
-      exit(1);
+    if ( io_init(  ) != 0 ) {
+        fputs( "Failed to initialise I/O subsystem\n", stderr );
+        exit( 1 );
     }
 
     while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {

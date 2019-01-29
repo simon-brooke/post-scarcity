@@ -168,7 +168,7 @@ void free_cell( struct cons_pointer pointer ) {
                     break;
                 case READTV:
                 case WRITETV:
-                    dec_ref(cell->payload.stream.meta);
+                    dec_ref( cell->payload.stream.meta );
                     url_fclose( cell->payload.stream.stream );
                     break;
                 case SPECIALTV:

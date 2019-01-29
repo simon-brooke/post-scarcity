@@ -17,31 +17,29 @@
  *
  * @return a pointer to the metadata of my first argument, or nil if none.
  */
-struct cons_pointer lisp_metadata( struct stack_frame *frame, struct cons_pointer frame_pointer,
-                                  struct cons_pointer env ) {
-  debug_print(L"lisp_metadata: entered\n", DEBUG_EVAL);
-  debug_dump_object(frame->arg[0], DEBUG_EVAL);
-  struct cons_pointer result = NIL;
-  struct cons_space_object cell = pointer2cell(frame->arg[0]);
+struct cons_pointer lisp_metadata( struct stack_frame *frame,
+                                   struct cons_pointer frame_pointer,
+                                   struct cons_pointer env ) {
+    debug_print( L"lisp_metadata: entered\n", DEBUG_EVAL );
+    debug_dump_object( frame->arg[0], DEBUG_EVAL );
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( frame->arg[0] );
 
-  switch( cell.tag.value) {
-    case FUNCTIONTV:
-    result = cell.payload.function.meta;
-    break;
-    case SPECIALTV:
-    result = cell.payload.special.meta;
-    break;
-    case READTV:
-    case WRITETV:
-    result = cell.payload.special.meta;
-    break;
-  }
+    switch ( cell.tag.value ) {
+        case FUNCTIONTV:
+            result = cell.payload.function.meta;
+            break;
+        case SPECIALTV:
+            result = cell.payload.special.meta;
+            break;
+        case READTV:
+        case WRITETV:
+            result = cell.payload.stream.meta;
+            break;
+    }
 
-  return make_cons(
-    make_cons(
-      c_string_to_lisp_keyword( L"type"),
-      c_type(frame->arg[0])),
-    result);
+    return make_cons( make_cons( c_string_to_lisp_keyword( L"type" ),
+                                 c_type( frame->arg[0] ) ), result );
 
 //  return result;
 }

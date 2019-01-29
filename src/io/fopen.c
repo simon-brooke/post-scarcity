@@ -223,7 +223,7 @@ URL_FILE *url_fopen( const char *url, const char *operation ) {
         curl_easy_setopt( file->handle.curl, CURLOPT_WRITEFUNCTION,
                           write_callback );
         /* use the share object */
-        curl_easy_setopt(file->handle.curl, CURLOPT_SHARE, io_share);
+        curl_easy_setopt( file->handle.curl, CURLOPT_SHARE, io_share );
 
 
         if ( !multi_handle )

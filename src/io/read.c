@@ -355,8 +355,8 @@ struct cons_pointer read_symbol_or_key( URL_FILE * input, char *tag,
                     make_symbol_or_key( initial,
                                         read_symbol_or_key( input,
                                                             tag,
-                                                            url_fgetwc( input ) ),
-                                        tag );
+                                                            url_fgetwc
+                                                            ( input ) ), tag );
             } else {
                 result = NIL;
                 /*

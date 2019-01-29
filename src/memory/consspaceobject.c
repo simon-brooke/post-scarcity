@@ -158,7 +158,7 @@ make_function( struct cons_pointer meta, struct cons_pointer ( *executable )
                   struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer pointer = allocate_cell( FUNCTIONTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
-    inc_ref( meta);
+    inc_ref( meta );
 
     cell->payload.function.meta = meta;
     cell->payload.function.executable = executable;
@@ -261,11 +261,11 @@ struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
     if ( strncmp( tag, KEYTAG, 4 ) == 0 ) {
         struct cons_pointer r = internedp( result, oblist );
 
-      if ( nilp(r)) {
-        intern(result, oblist);
-      } else {
-        result = r;
-      }
+        if ( nilp( r ) ) {
+            intern( result, oblist );
+        } else {
+            result = r;
+        }
     }
 
     return result;
@@ -280,7 +280,7 @@ make_special( struct cons_pointer meta, struct cons_pointer ( *executable )
                  struct cons_pointer, struct cons_pointer env ) ) {
     struct cons_pointer pointer = allocate_cell( SPECIALTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
-    inc_ref( meta);
+    inc_ref( meta );
 
     cell->payload.special.meta = meta;
     cell->payload.special.executable = executable;

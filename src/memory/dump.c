@@ -108,14 +108,14 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
         case RATIOTV:
             url_fwprintf( output,
                           L"\t\tRational cell: value %ld/%ld, count %u\n",
-                          pointer2cell( cell.payload.ratio.dividend ).payload.
-                          integer.value,
-                          pointer2cell( cell.payload.ratio.divisor ).payload.
-                          integer.value, cell.count );
+                          pointer2cell( cell.payload.ratio.dividend ).
+                          payload.integer.value,
+                          pointer2cell( cell.payload.ratio.divisor ).
+                          payload.integer.value, cell.count );
             break;
         case READTV:
-            url_fputws(  L"\t\tInput stream; metadata: ", output );
-            print(output, cell.payload.stream.meta);
+            url_fputws( L"\t\tInput stream; metadata: ", output );
+            print( output, cell.payload.stream.meta );
             url_fputws( L"\n", output );
             break;
         case REALTV:
@@ -150,8 +150,8 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
             }
             break;
         case WRITETV:
-            url_fputws(  L"\t\tOutput stream; metadata: ", output );
-            print(output, cell.payload.stream.meta);
+            url_fputws( L"\t\tOutput stream; metadata: ", output );
+            print( output, cell.payload.stream.meta );
             url_fputws( L"\n", output );
             break;
     }

@@ -352,10 +352,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.
-                              special.executable ) ( get_stack_frame
-                                                     ( next_pointer ),
-                                                     next_pointer, env );
+                            ( *fn_cell.payload.special.
+                              executable ) ( get_stack_frame( next_pointer ),
+                                             next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -842,7 +841,9 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
                 result = make_string( o.payload.string.character, result );
                 break;
             case SYMBOLTV:
-                result = make_symbol_or_key( o.payload.string.character, result, SYMBOLTAG );
+                result =
+                    make_symbol_or_key( o.payload.string.character, result,
+                                        SYMBOLTAG );
                 break;
         }
     }
@@ -1208,13 +1209,13 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
-    struct cons_pointer source_key = c_string_to_lisp_keyword(L"source");
+    struct cons_pointer source_key = c_string_to_lisp_keyword( L"source" );
     switch ( cell.tag.value ) {
         case FUNCTIONTV:
-            result = c_assoc( source_key, cell.payload.function.meta);
+            result = c_assoc( source_key, cell.payload.function.meta );
             break;
         case SPECIALTV:
-            result = c_assoc( source_key, cell.payload.special.meta);
+            result = c_assoc( source_key, cell.payload.special.meta );
             break;
         case LAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),

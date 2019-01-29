@@ -15,7 +15,7 @@
 
 extern CURLSH *io_share;
 
-int io_init();
+int io_init(  );
 
 URL_FILE *file_to_url_file( FILE * f );
 wint_t url_fgetwc( URL_FILE * input );

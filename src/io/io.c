@@ -44,22 +44,23 @@ wint_t ungotten = 0;
  *
  * @return 0 on success; any other value means failure.
  */
-int io_init() {
-  CURL *curl;
-  CURLcode res;
-  int result = curl_global_init( CURL_GLOBAL_SSL );
+int io_init(  ) {
+    CURL *curl;
+    CURLcode res;
+    int result = curl_global_init( CURL_GLOBAL_SSL );
 
-  io_share = curl_share_init();
+    io_share = curl_share_init(  );
 
-  if (result == 0) {
-      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT);
-      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE );
-      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS );
-      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION );
-      curl_share_setopt(io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_PSL );
-  }
+    if ( result == 0 ) {
+        curl_share_setopt( io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_CONNECT );
+        curl_share_setopt( io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE );
+        curl_share_setopt( io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS );
+        curl_share_setopt( io_share, CURLSHOPT_SHARE,
+                           CURL_LOCK_DATA_SSL_SESSION );
+        curl_share_setopt( io_share, CURLSHOPT_SHARE, CURL_LOCK_DATA_PSL );
+    }
 
-  return result;
+    return result;
 }
 
 /**
@@ -243,67 +244,72 @@ lisp_close( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return result;
 }
 
-int index_of( char c, char * s) {
-  int i;
+int index_of( char c, char *s ) {
+    int i;
 
-  for (i = 0; s[i] != c && s[i] != 0; i++);
+    for ( i = 0; s[i] != c && s[i] != 0; i++ );
 
-  return s[i] == c ? i : -1;
+    return s[i] == c ? i : -1;
 }
 
-char * trim(char *s) {
-  int i;
+char *trim( char *s ) {
+    int i;
 
-  for (i = strlen(s); (isblank(s[i]) || iscntrl(s[i])) && i > -1; i--) {
-    s[i] = (char) 0;
-  }
-  for (i = 0; isblank(s[i]) && s[i] != 0; i++);
+    for ( i = strlen( s ); ( isblank( s[i] ) || iscntrl( s[i] ) ) && i > -1;
+          i-- ) {
+        s[i] = ( char ) 0;
+    }
+    for ( i = 0; isblank( s[i] ) && s[i] != 0; i++ );
 
-  return (char *)&s[i];
+    return ( char * ) &s[i];
 }
 
 /**
  * Callback to assemble metadata for a URL stream. This is naughty because
  * it modifies data, but it's really the only way to create metadata.
  */
-static size_t write_meta_callback(void *ptr, size_t size, size_t nmemb, struct cons_pointer stream)
-{
-  struct cons_space_object * cell = &pointer2cell(stream);
+static size_t write_meta_callback( void *ptr, size_t size, size_t nmemb,
+                                   struct cons_pointer stream ) {
+    struct cons_space_object *cell = &pointer2cell( stream );
 
-  if (strncmp(&cell->tag.bytes[0], READTAG, 4) ||
-      strncmp(&cell->tag.bytes[0], WRITETAG, 4)) {
-    char * s = (char *)ptr;
-    int offset = index_of (':', ptr);
+    if ( strncmp( &cell->tag.bytes[0], READTAG, 4 ) ||
+         strncmp( &cell->tag.bytes[0], WRITETAG, 4 ) ) {
+        char *s = ( char * ) ptr;
+        int offset = index_of( ':', ptr );
 
-    if (offset != -1) {
-      s[offset] = (char)0;
-      char * name = s;
-      char * value = trim( &s[++offset]);
-      wchar_t * wname = calloc(strlen(name), sizeof(wchar_t));
-      wchar_t * wvalue = calloc(strlen(value), sizeof(wchar_t));
+        if ( offset != -1 ) {
+            s[offset] = ( char ) 0;
+            char *name = s;
+            char *value = trim( &s[++offset] );
+            wchar_t *wname = calloc( strlen( name ), sizeof( wchar_t ) );
+            wchar_t *wvalue = calloc( strlen( value ), sizeof( wchar_t ) );
 
-      mbstowcs(wname, name, strlen(name));
-      mbstowcs(wvalue, value, strlen(value));
+            mbstowcs( wname, name, strlen( name ) );
+            mbstowcs( wvalue, value, strlen( value ) );
 
-      cell->payload.stream.meta = make_cons(
-        make_cons(
-          c_string_to_lisp_keyword( wname),
-          c_string_to_lisp_string(wvalue)),
-        cell->payload.stream.meta);
+            cell->payload.stream.meta =
+                make_cons( make_cons
+                           ( c_string_to_lisp_keyword( wname ),
+                             c_string_to_lisp_string( wvalue ) ),
+                           cell->payload.stream.meta );
 
-      debug_printf( DEBUG_IO, L"write_meta_callback: added header '%s': value '%s'\n", name, value);
+            debug_printf( DEBUG_IO,
+                          L"write_meta_callback: added header '%s': value '%s'\n",
+                          name, value );
+        }
+    } else {
+        debug_print
+            ( L"Pointer passed to write_meta_callback did not point to a stream: ",
+              DEBUG_IO );
+        debug_dump_object( stream, DEBUG_IO );
     }
-  } else {
-    debug_print( L"Pointer passed to write_meta_callback did not point to a stream: ", DEBUG_IO);
-    debug_dump_object(stream, DEBUG_IO);
-  }
 
-  return nmemb;
+    return nmemb;
 }
 
 
 void collect_meta( struct cons_pointer stream, struct cons_pointer url ) {
-    URL_FILE * s = pointer2cell(stream).payload.stream.stream;
+    URL_FILE *s = pointer2cell( stream ).payload.stream.stream;
 
     switch ( s->type ) {
         case CFTYPE_NONE:
@@ -315,8 +321,9 @@ void collect_meta( struct cons_pointer stream, struct cons_pointer url ) {
         case CFTYPE_CURL:
             curl_easy_setopt( s->handle.curl, CURLOPT_VERBOSE, 1L );
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADER, 1L );
-            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERFUNCTION, write_meta_callback);
-            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream);
+            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERFUNCTION,
+                              write_meta_callback );
+            curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream );
             break;
     }
 }
@@ -338,38 +345,37 @@ void collect_meta( struct cons_pointer stream, struct cons_pointer url ) {
  * on my stream, if any, else NIL.
  */
 struct cons_pointer
-  lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
-            struct cons_pointer env ) {
-  struct cons_pointer result = NIL;
+lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
+           struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
 
-  if ( stringp( frame->arg[0] ) ) {
-    struct cons_pointer meta =
-      make_cons( make_cons(
-        c_string_to_lisp_keyword( L"url" ),
-        frame->arg[0] ),
-                NIL );
+    if ( stringp( frame->arg[0] ) ) {
+        struct cons_pointer meta =
+            make_cons( make_cons( c_string_to_lisp_keyword( L"url" ),
+                                  frame->arg[0] ),
+                       NIL );
 
-    char *url = lisp_string_to_c_string( frame->arg[0] );
+        char *url = lisp_string_to_c_string( frame->arg[0] );
 
-    if ( nilp( frame->arg[1] ) ) {
-      URL_FILE *stream = url_fopen( url, "r" );
-      result = make_read_stream( stream, meta );
-    } else {
-      // TODO: anything more complex is a problem for another day.
-      URL_FILE *stream = url_fopen( url, "w" );
-      result = make_write_stream( stream, meta);
+        if ( nilp( frame->arg[1] ) ) {
+            URL_FILE *stream = url_fopen( url, "r" );
+            result = make_read_stream( stream, meta );
+        } else {
+            // TODO: anything more complex is a problem for another day.
+            URL_FILE *stream = url_fopen( url, "w" );
+            result = make_write_stream( stream, meta );
+        }
+
+        free( url );
+
+        if ( pointer2cell( result ).payload.stream.stream == NULL ) {
+            result = NIL;
+        } else {
+            collect_meta( result, frame->arg[0] );
+        }
     }
 
-    free( url );
-
-    if ( pointer2cell( result ).payload.stream.stream == NULL ) {
-      result = NIL;
-    } else {
-      collect_meta( result, frame->arg[0]);
-    }
-  }
-
-  return result;
+    return result;
 }
 
 /**
@@ -392,8 +398,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.
-                           stream.stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.stream.
+                           stream ), NIL );
     }
 
     return result;

@@ -35,7 +35,7 @@ int print_use_colours = 0;
  * don't print anything but just return.
  */
 void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
-    while ( stringp( pointer ) || symbolp( pointer ) || keywordp(pointer)) {
+    while ( stringp( pointer ) || symbolp( pointer ) || keywordp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wchar_t c = cell->payload.string.character;
 
