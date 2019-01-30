@@ -260,11 +260,11 @@ int index_of( char c, char *s ) {
 char *trim( char *s ) {
     int i;
 
-    for ( i = strlen( s ); ( isblank( s[i] ) || iscntrl( s[i] ) ) && i > -1;
+    for ( i = strlen( s ); ( isblank( s[i] ) || iscntrl( s[i] ) ) && i >= 0;
           i-- ) {
         s[i] = ( char ) 0;
     }
-    for ( i = 0; isblank( s[i] ) && s[i] != 0; i++ );
+    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != 0; i++ );
 
     return ( char * ) &s[i];
 }
@@ -313,7 +313,7 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
 
         if ( offset != -1 ) {
             s[offset] = ( char ) 0;
-            char *name = s;
+            char *name = trim( s );
             char *value = trim( &s[++offset] );
             wchar_t *wname = calloc( strlen( name ), sizeof( wchar_t ) );
             wchar_t *wvalue = calloc( strlen( value ), sizeof( wchar_t ) );

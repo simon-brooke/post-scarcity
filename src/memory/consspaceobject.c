@@ -323,19 +323,18 @@ struct cons_pointer make_write_stream( URL_FILE * output,
 }
 
 /**
- * Return a lisp keyword representation of this wide character string.
+ * Return a lisp keyword representation of this wide character string. In keywords,
+ * I am accepting only lower case characters and numbers.
  */
 struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol ) {
     struct cons_pointer result = NIL;
 
-    for (int i = 0; symbol[i] != '\0'; i++) {
-        if(iswalpha(symbol[i] && !iswlower(symbol[i]))) {
-            symbol[i] = towlower(symbol[i]);
-        }
-    }
+    for ( int i = wcslen( symbol ) -1; i >= 0; i-- ) {
+      wchar_t c = towlower(symbol[i]);
 
-    for ( int i = wcslen( symbol ); i > 0; i-- ) {
-        result = make_keyword( symbol[i - 1], result );
+      if (iswalnum(c) || c == L'-') {
+        result = make_keyword( c, result );
+      }
     }
 
     return result;
@@ -347,8 +346,10 @@ struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol ) {
 struct cons_pointer c_string_to_lisp_string( wchar_t *string ) {
     struct cons_pointer result = NIL;
 
-    for ( int i = wcslen( string ); i > 0; i-- ) {
-        result = make_string( string[i - 1], result );
+    for ( int i = wcslen( string ) - 1; i >= 0; i-- ) {
+      if (iswprint(string[i]) && string[i] != '"') {
+        result = make_string( string[i], result );
+      }
     }
 
     return result;
