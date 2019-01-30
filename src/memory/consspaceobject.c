@@ -328,6 +328,12 @@ struct cons_pointer make_write_stream( URL_FILE * output,
 struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol ) {
     struct cons_pointer result = NIL;
 
+    for (int i = 0; symbol[i] != '\0'; i++) {
+        if(iswalpha(symbol[i] && !iswlower(symbol[i]))) {
+            symbol[i] = towlower(symbol[i]);
+        }
+    }
+
     for ( int i = wcslen( symbol ); i > 0; i-- ) {
         result = make_keyword( symbol[i - 1], result );
     }
