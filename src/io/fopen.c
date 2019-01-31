@@ -51,8 +51,9 @@
 #ifdef FOPEN_STANDALONE
 CURLSH *io_share;
 #else
-#include "io.h"
 #include "consspaceobject.h"
+#include "io.h"
+#include "utils.h"
 #endif
 
 
@@ -210,10 +211,9 @@ URL_FILE *url_fopen( const char *url, const char *operation ) {
         return NULL;
 
     file->handle.file = fopen( url, operation );
-    if ( file->handle.file )
-        file->type = CFTYPE_FILE; /* marked as URL */
-
-    else {
+    if ( file->handle.file ) {
+        file->type = CFTYPE_FILE; /* marked as file */
+    } else if ( index_of(':', url ) > -1 ) {
         file->type = CFTYPE_CURL; /* marked as URL */
         file->handle.curl = curl_easy_init(  );
 
@@ -247,7 +247,11 @@ URL_FILE *url_fopen( const char *url, const char *operation ) {
 
             file = NULL;
         }
+    } else {
+        file->type = CFTYPE_NONE;
+        /* not a file, and doesn't look like a URL. */
     }
+
     return file;
 }
 

@@ -34,6 +34,7 @@
 #include "integer.h"
 #include "intern.h"
 #include "lispops.h"
+#include "utils.h"
 
 /**
  * The sharing hub for all connections. TODO: Ultimately this probably doesn't
@@ -253,27 +254,6 @@ lisp_close( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return result;
 }
 
-int index_of( char c, char *s ) {
-    int i;
-
-    for ( i = 0; s[i] != c && s[i] != 0; i++ );
-
-    return s[i] == c ? i : -1;
-}
-
-char *trim( char *s ) {
-    int i;
-
-    for ( i = strlen( s ); ( isblank( s[i] ) || iscntrl( s[i] ) ) && i >= 0;
-          i-- ) {
-        s[i] = '\0';
-    }
-    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != '\0'; i++ );
-
-    return ( char * ) &s[i];
-}
-
-
 struct cons_pointer add_meta_integer( struct cons_pointer meta, wchar_t *key,
                                       long int value ) {
     return
@@ -289,6 +269,13 @@ struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
     /* \todo something goes wrong here: I sometimes get junk characters on the
      * end of the string. */
     mbstowcs( buffer, value, strlen( value ) );
+
+    /* hack: get rid of 32766 as a junk character, to see whether there are
+     * others. */
+    for (int i = 0; i < wcslen( buffer); i++) {
+      if (buffer[i] == (wchar_t)32766) buffer[i] = (wchar_t)0;
+    }
+
     return make_cons( make_cons( c_string_to_lisp_keyword( key ),
                                  c_string_to_lisp_string( buffer ) ), meta );
 }
@@ -398,10 +385,6 @@ void collect_meta( struct cons_pointer stream, char *url ) {
                                       ( intmax_t ) statbuf.st_size );
 
                 meta = add_meta_time( meta, L"modified", &statbuf.st_mtime );
-
-                /* this is destructive change before the cell is released into the
-                 * wild, and consequently permissible, just. */
-                cell->payload.stream.meta = meta;
             }
             break;
         case CFTYPE_CURL:
@@ -412,6 +395,10 @@ void collect_meta( struct cons_pointer stream, char *url ) {
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream );
             break;
     }
+
+    /* this is destructive change before the cell is released into the
+                   * wild, and consequently permissible, just. */
+    cell->payload.stream.meta = meta;
 }
 
 
@@ -440,6 +427,29 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         if ( nilp( frame->arg[1] ) ) {
             URL_FILE *stream = url_fopen( url, "r" );
+
+            debug_printf( DEBUG_IO,
+                         L"lisp_open: stream @ %d, stream type = %d, stream handle = %d\n",
+                         (int) &stream, (int)stream->type, (int)stream->handle.file);
+
+            switch (stream->type) {
+                case CFTYPE_NONE:
+                    return make_exception(
+                        c_string_to_lisp_string( L"Could not open stream"),
+                        frame_pointer);
+                    break;
+                case CFTYPE_FILE:
+                    if (stream->handle.file == NULL) {
+                      return make_exception(
+                          c_string_to_lisp_string( L"Could not open file"),
+                          frame_pointer);
+                    }
+                    break;
+                case CFTYPE_CURL:
+                    /* can't tell whether a URL is bad without reading it */
+                    break;
+            }
+
             result = make_read_stream( stream, NIL );
         } else {
             // TODO: anything more complex is a problem for another day.
