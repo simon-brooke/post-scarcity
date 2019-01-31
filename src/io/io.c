@@ -189,7 +189,7 @@ wint_t url_fgetwc( URL_FILE * input ) {
                     if ( count > 1 ) {
                         url_fgets( ( char * ) &cbuff[1], count, input );
                     }
-                    mbstowcs( wbuff, cbuff, 1 );  //(char *)(&input->buffer[input->buffer_pos]), 1 );
+                    mbstowcs( wbuff, cbuff, 2 );  //(char *)(&input->buffer[input->buffer_pos]), 1 );
                     result = wbuff[0];
 
                     free( wbuff );
@@ -268,13 +268,13 @@ struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
     wchar_t buffer[strlen( value ) + 1];
     /* \todo something goes wrong here: I sometimes get junk characters on the
      * end of the string. */
-    mbstowcs( buffer, value, strlen( value ) );
+    mbstowcs( buffer, value, strlen( value ) + 1 );
 
     /* hack: get rid of 32766 as a junk character, to see whether there are
-     * others. */
+     * others.
     for (int i = 0; i < wcslen( buffer); i++) {
       if (buffer[i] == (wchar_t)32766) buffer[i] = (wchar_t)0;
-    }
+    } */
 
     return make_cons( make_cons( c_string_to_lisp_keyword( key ),
                                  c_string_to_lisp_string( buffer ) ), meta );
@@ -315,7 +315,7 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
             char *value = trim( &s[++offset] );
             wchar_t wname[strlen( name )];
 
-            mbstowcs( wname, name, strlen( name ) );
+            mbstowcs( wname, name, strlen( name ) + 1 );
 
             cell->payload.stream.meta =
                 add_meta_string( cell->payload.stream.meta, wname, value );
