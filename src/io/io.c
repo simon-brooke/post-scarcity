@@ -266,9 +266,9 @@ char *trim( char *s ) {
 
     for ( i = strlen( s ); ( isblank( s[i] ) || iscntrl( s[i] ) ) && i >= 0;
           i-- ) {
-        s[i] = ( char ) 0;
+        s[i] = '\0';
     }
-    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != 0; i++ );
+    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != '\0'; i++ );
 
     return ( char * ) &s[i];
 }
@@ -284,7 +284,10 @@ struct cons_pointer add_meta_integer( struct cons_pointer meta, wchar_t *key,
 
 struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
                                      char *value ) {
+    value = trim( value);
     wchar_t buffer[strlen( value ) + 1];
+    /* \todo something goes wrong here: I sometimes get junk characters on the
+     * end of the string. */
     mbstowcs( buffer, value, strlen( value ) );
     return make_cons( make_cons( c_string_to_lisp_keyword( key ),
                                  c_string_to_lisp_string( buffer ) ), meta );
