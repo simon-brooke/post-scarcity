@@ -646,11 +646,11 @@ lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
         case CONSTV:
             result = cell.payload.cons.car;
             break;
+        case NILTV:
+            break;
         case READTV:
             result =
                 make_string( url_fgetwc( cell.payload.stream.stream ), NIL );
-            break;
-        case NILTV:
             break;
         case STRINGTV:
             result = make_string( cell.payload.string.character, NIL );
@@ -690,14 +690,14 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
         case CONSTV:
             result = cell.payload.cons.cdr;
             break;
+        case NILTV:
+            break;
         case READTV:
             url_fgetwc( cell.payload.stream.stream );
             result = frame->arg[0];
             break;
         case STRINGTV:
             result = cell.payload.string.cdr;
-            break;
-        case NILTV:
             break;
         default:
             result =

@@ -10,11 +10,15 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <grp.h>
+#include <langinfo.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <uuid/uuid.h>
 /*
  * wide characters
  */
@@ -270,29 +274,33 @@ char *trim( char *s ) {
 }
 
 
-void maybe_add_status_meta(struct cons_space_object *cell) {
-    struct cons_pointer status_key = c_string_to_lisp_keyword( L"status-code" );
-
-    debug_print(L"maybe_add_status_meta: entered\n", DEBUG_IO);
-
-    if (cell->payload.stream.stream->type == CFTYPE_CURL &&
-        nilp(c_assoc( status_key, cell->payload.stream.meta))) {
-        long status = 0;
-        curl_easy_getinfo(cell->payload.stream.stream->handle.curl,
-                          CURLINFO_RESPONSE_CODE,
-                          &status);
-
-        debug_printf( DEBUG_IO, L"maybe_add_status_meta: read HTTP status %d\n", status);
-
-        if (status > 0) {
-            cell->payload.stream.meta = make_cons(
-                make_cons(status_key,
-                          make_integer(status, NIL)),
-                cell->payload.stream.meta);
-        }
-    }
+struct cons_pointer add_meta_integer( struct cons_pointer meta, wchar_t *key,
+                                      long int value ) {
+    return
+        make_cons( make_cons
+                   ( c_string_to_lisp_keyword( key ),
+                     make_integer( value, NIL ) ), meta );
 }
 
+struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
+                                     char *value ) {
+    wchar_t buffer[strlen( value ) + 1];
+    mbstowcs( buffer, value, strlen( value ) );
+    return make_cons( make_cons( c_string_to_lisp_keyword( key ),
+                                 c_string_to_lisp_string( buffer ) ), meta );
+}
+
+struct cons_pointer add_meta_time( struct cons_pointer meta, wchar_t *key,
+                                   time_t * value ) {
+    /* I don't yet have a concept of a date-time object, which is a
+     * bit of an oversight! */
+    char datestring[256];
+    struct tm *tm = localtime( value );
+
+    strftime( datestring, sizeof( datestring ), nl_langinfo( D_T_FMT ), tm );
+
+    return add_meta_string( meta, key, datestring );
+}
 
 /**
  * Callback to assemble metadata for a URL stream. This is naughty because
@@ -303,9 +311,9 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
     struct cons_space_object *cell = &pointer2cell( stream );
 
     /* make a copy of the string that we can destructively change */
-    char * s = calloc(strlen(string), sizeof(char));
+    char *s = calloc( strlen( string ), sizeof( char ) );
 
-    strcpy( s, string);
+    strcpy( s, string );
 
     if ( strncmp( &cell->tag.bytes[0], READTAG, 4 ) ||
          strncmp( &cell->tag.bytes[0], WRITETAG, 4 ) ) {
@@ -315,37 +323,26 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
             s[offset] = ( char ) 0;
             char *name = trim( s );
             char *value = trim( &s[++offset] );
-            wchar_t *wname = calloc( strlen( name ), sizeof( wchar_t ) );
-            wchar_t *wvalue = calloc( strlen( value ), sizeof( wchar_t ) );
+            wchar_t wname[strlen( name )];
 
             mbstowcs( wname, name, strlen( name ) );
-            mbstowcs( wvalue, value, strlen( value ) );
 
             cell->payload.stream.meta =
-                make_cons( make_cons
-                           ( c_string_to_lisp_keyword( wname ),
-                             c_string_to_lisp_string( wvalue ) ),
-                           cell->payload.stream.meta );
-
-            free(wname);
-            free(wvalue);
+                add_meta_string( cell->payload.stream.meta, wname, value );
 
             debug_printf( DEBUG_IO,
                           L"write_meta_callback: added header '%s': value '%s'\n",
                           name, value );
-        } else if (strncmp( "HTTP", s, 4) == 0) {
+        } else if ( strncmp( "HTTP", s, 4 ) == 0 ) {
             int offset = index_of( ' ', s );
             char *value = trim( &s[offset] );
-            wchar_t *wvalue = calloc( strlen( value ), sizeof( wchar_t ) );
-            mbstowcs( wvalue, value, strlen( value ) );
 
             cell->payload.stream.meta =
-                make_cons( make_cons
-                           ( c_string_to_lisp_keyword( L"status" ),
-                             c_string_to_lisp_string( wvalue ) ),
-                           cell->payload.stream.meta );
-
-            maybe_add_status_meta( cell);
+                add_meta_integer( add_meta_string
+                                  ( cell->payload.stream.meta, L"status",
+                                    value ), L"status-code", strtol( value,
+                                                                     NULL,
+                                                                     10 ) );
 
             debug_printf( DEBUG_IO,
                           L"write_meta_callback: added header 'status': value '%s'\n",
@@ -355,27 +352,54 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
                           L"write_meta_callback: header passed with no colon: '%s'\n",
                           s );
         }
-      } else {
+    } else {
         debug_print
             ( L"Pointer passed to write_meta_callback did not point to a stream: ",
               DEBUG_IO );
         debug_dump_object( stream, DEBUG_IO );
     }
 
-    free(s);
-    return strlen(string);
+    free( s );
+    return strlen( string );
 }
 
-
-void collect_meta( struct cons_pointer stream, struct cons_pointer url ) {
+void collect_meta( struct cons_pointer stream, char *url ) {
+    struct cons_space_object *cell = &pointer2cell( stream );
     URL_FILE *s = pointer2cell( stream ).payload.stream.stream;
+    struct cons_pointer meta =
+        add_meta_string( cell->payload.stream.meta, L"url", url );
+    struct stat statbuf;
+    int result = stat( url, &statbuf );
+    struct passwd *pwd;
+    struct group *grp;
 
     switch ( s->type ) {
         case CFTYPE_NONE:
             break;
         case CFTYPE_FILE:
-            /* don't know whether you can get metadata on an open stream in C,
-             * although we could of course get it from the URL */
+            if ( result == 0 ) {
+                if ( ( pwd = getpwuid( statbuf.st_uid ) ) != NULL ) {
+                    meta = add_meta_string( meta, L"owner", pwd->pw_name );
+                } else {
+                    meta = add_meta_integer( meta, L"owner", statbuf.st_uid );
+                }
+
+                if ( ( grp = getgrgid( statbuf.st_gid ) ) != NULL ) {
+                    meta = add_meta_string( meta, L"group", grp->gr_name );
+                } else {
+                    meta = add_meta_integer( meta, L"group", statbuf.st_gid );
+                }
+
+                meta =
+                    add_meta_integer( meta, L"size",
+                                      ( intmax_t ) statbuf.st_size );
+
+                meta = add_meta_time( meta, L"modified", &statbuf.st_mtime );
+
+                /* this is destructive change before the cell is released into the
+                 * wild, and consequently permissible, just. */
+                cell->payload.stream.meta = meta;
+            }
             break;
         case CFTYPE_CURL:
             curl_easy_setopt( s->handle.curl, CURLOPT_VERBOSE, 1L );
@@ -409,26 +433,21 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
     struct cons_pointer result = NIL;
 
     if ( stringp( frame->arg[0] ) ) {
-        struct cons_pointer meta =
-              make_cons(make_cons( c_string_to_lisp_keyword( L"url" ),
-                                  frame->arg[0] ),
-                       NIL );
-
         char *url = lisp_string_to_c_string( frame->arg[0] );
 
         if ( nilp( frame->arg[1] ) ) {
             URL_FILE *stream = url_fopen( url, "r" );
-            result = make_read_stream( stream, meta );
+            result = make_read_stream( stream, NIL );
         } else {
             // TODO: anything more complex is a problem for another day.
             URL_FILE *stream = url_fopen( url, "w" );
-            result = make_write_stream( stream, meta );
+            result = make_write_stream( stream, NIL );
         }
 
         if ( pointer2cell( result ).payload.stream.stream == NULL ) {
             result = NIL;
         } else {
-            collect_meta( result, frame->arg[0] );
+            collect_meta( result, url );
         }
 
         free( url );
@@ -457,8 +476,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.stream.
-                           stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.
+                           stream.stream ), NIL );
     }
 
     return result;
