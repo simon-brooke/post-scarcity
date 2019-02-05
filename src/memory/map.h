@@ -30,7 +30,14 @@
 #define MAXENTRIESINASSOC 16
 
 /**
- * The vector-space payload of a map object.
+ * true if this vector_space_object is a map, else false.
+ */
+#define mapp( vso) (((struct vector_space_object *)vso)->header.tag.value == MAPTV)
+
+/**
+ * The vector-space payload of a map object. Essentially a vector of
+ * `BUCKETSINMAP` + 1 `cons_pointer`s, but the first one is considered
+ * special.
  */
 struct map_payload {
     /**
@@ -39,7 +46,7 @@ struct map_payload {
      * their own hash values. But it will be possible to override the hash
      * function by putting a function of one argument returning an integer
      * here. */
-    struct cons_pointer hash_function = NIL;
+    struct cons_pointer hash_function;
 
     /**
      * Obviously the number of buckets in a map is a trade off, and this may need
@@ -61,5 +68,23 @@ struct map_payload {
      */
     struct cons_pointer buckets[BUCKETSINMAP];
 };
+
+uint32_t get_hash_32(struct cons_pointer f, struct cons_pointer key);
+
+struct map_payload *get_map_payload( struct cons_pointer pointer );
+
+struct cons_pointer bind_in_map( struct cons_pointer parent,
+                                struct cons_pointer key,
+                                struct cons_pointer value);
+
+struct cons_pointer keys( struct cons_pointer store);
+
+struct cons_pointer merge_into_map( struct cons_pointer parent,
+                                   struct cons_pointer to_merge);
+
+struct cons_pointer assoc_in_map( struct cons_pointer map,
+                                  struct cons_pointer key);
+
+void dump_map( URL_FILE * output, struct cons_pointer map_pointer );
 
 #endif

@@ -24,6 +24,7 @@
 #include "debug.h"
 #include "equal.h"
 #include "lispops.h"
+#include "map.h"
 #include "print.h"
 
 /**
@@ -88,7 +89,7 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
  * of that key from the store; otherwise return NIL.
  */
 struct cons_pointer c_assoc( struct cons_pointer key,
-                             struct cons_pointer store ) {
+                            struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
     debug_print( L"c_assoc; key is `", DEBUG_BIND);
@@ -97,15 +98,19 @@ struct cons_pointer c_assoc( struct cons_pointer key,
     debug_dump_object( store, DEBUG_BIND);
     debug_println(DEBUG_BIND);
 
-    for ( struct cons_pointer next = store;
-          consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
-        struct cons_space_object entry =
-            pointer2cell( pointer2cell( next ).payload.cons.car );
+    if (consp(store)) {
+        for ( struct cons_pointer next = store;
+             consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
+            struct cons_space_object entry =
+                pointer2cell( pointer2cell( next ).payload.cons.car );
 
-        if ( equal( key, entry.payload.cons.car ) ) {
-            result = entry.payload.cons.cdr;
-            break;
+            if ( equal( key, entry.payload.cons.car ) ) {
+                result = entry.payload.cons.cdr;
+                break;
+            }
         }
+    } else if (vectorpointp( store)) {
+        result = assoc_in_map( key, store);
     }
 
     return result;
@@ -116,15 +121,23 @@ struct cons_pointer c_assoc( struct cons_pointer key,
  * with this key/value pair added to the front.
  */
 struct cons_pointer
-set( struct cons_pointer key, struct cons_pointer value,
-     struct cons_pointer store ) {
+    set( struct cons_pointer key, struct cons_pointer value,
+        struct cons_pointer store ) {
+    struct cons_pointer result = NIL;
+
     debug_print( L"Binding ", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
     debug_print( L" to ", DEBUG_BIND );
     debug_print_object( value, DEBUG_BIND );
     debug_println( DEBUG_BIND );
 
-    return make_cons( make_cons( key, value ), store );
+    if (consp(store)) {
+        result = make_cons( make_cons( key, value ), store );
+    } else if (vectorpointp( store)) {
+        result = bind_in_map( store, key, value);
+    }
+
+    return result;
 }
 
 /**

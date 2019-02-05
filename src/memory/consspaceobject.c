@@ -96,17 +96,40 @@ struct cons_pointer c_car( struct cons_pointer arg ) {
 }
 
 /**
- * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
+ * Implementation of cdr in C. If arg is not a sequence, does not error but returns nil.
  */
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    if ( consp( arg ) || stringp( arg ) || symbolp( arg ) ) {
+    struct cons_space_object cell = pointer2cell( arg );
+
+    switch (cell.tag.value) {
+        case CONSTV:
         result = pointer2cell( arg ).payload.cons.cdr;
+        break;
+        case KEYTV:
+        case STRINGTV:
+        case SYMBOLTV:
+        result = pointer2cell( arg ).payload.string.cdr;
+        break;
     }
 
     return result;
 }
+
+/**
+ * Implementation of `length` in C. If arg is not a cons, does not error but returns 0.
+ */
+int c_length( struct cons_pointer arg) {
+    int result = 0;
+
+    for (struct cons_pointer c = arg; !nilp(c); c = c_cdr(c)) {
+        result ++;
+    }
+
+    return result;
+}
+
 
 /**
  * Construct a cons cell from this pair of pointers.

@@ -717,6 +717,22 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
+ * Function: return, as an integer, the length of the sequence indicated by
+ * the first argument, or zero if it is not a sequence.
+ *
+ * * (length any)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the length of `any`, if it is a sequence, or zero otherwise.
+ */
+struct cons_pointer lisp_length( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    return make_integer( c_length( frame->arg[0]), NIL);
+}
+
+/**
  * Function; look up the value of a `key` in a `store`.
  *
  * * (assoc key store)
