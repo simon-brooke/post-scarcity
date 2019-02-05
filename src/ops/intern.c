@@ -91,6 +91,12 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
+    debug_print( L"c_assoc; key is `", DEBUG_BIND);
+    debug_print_object( key, DEBUG_BIND);
+    debug_print( L"`; store is \n", DEBUG_BIND);
+    debug_dump_object( store, DEBUG_BIND);
+    debug_println(DEBUG_BIND);
+
     for ( struct cons_pointer next = store;
           consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
         struct cons_space_object entry =

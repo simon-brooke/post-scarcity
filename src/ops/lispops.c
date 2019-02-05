@@ -269,8 +269,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
  * @return the result of evaluating the function with its arguments.
  */
 struct cons_pointer
-c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
-         struct cons_pointer env ) {
+    c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
     debug_print( L"Entering c_apply\n", DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
@@ -285,38 +285,47 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         switch ( fn_cell.tag.value ) {
             case EXCEPTIONTV:
-                /* just pass exceptions straight back */
-                result = fn_pointer;
-                break;
+            /* just pass exceptions straight back */
+            result = fn_pointer;
+            break;
             case FUNCTIONTV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        struct stack_frame *next =
-                            get_stack_frame( next_pointer );
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    struct stack_frame *next =
+                        get_stack_frame( next_pointer );
 
-                        result =
-                            ( *fn_cell.payload.function.executable ) ( next,
-                                                                       next_pointer,
-                                                                       env );
-                        dec_ref( next_pointer );
-                    }
+                    result =
+                        ( *fn_cell.payload.function.executable ) ( next,
+                                                                  next_pointer,
+                                                                  env );
+                    dec_ref( next_pointer );
                 }
-                break;
+            }
+            break;
+
+            case KEYTV:
+            result = c_assoc( fn_pointer,
+                             eval_form(frame,
+                                       frame_pointer,
+                                       c_car( c_cdr( frame->arg[0])),
+                                       env));
+            break;
+
             case LAMBDATV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
                         struct stack_frame *next =
                             get_stack_frame( next_pointer );
                         result =
@@ -416,9 +425,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     switch ( cell.tag.value ) {
         case CONSTV:
-            {
                 result = c_apply( frame, frame_pointer, env );
-            }
             break;
 
         case SYMBOLTV:
