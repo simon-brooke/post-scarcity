@@ -18,11 +18,11 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#ifndef __psse_stack_h
+#define __psse_stack_h
+
 #include "consspaceobject.h"
 #include "conspage.h"
-
-#ifndef __stack_h
-#define __stack_h
 
 /**
  * macros for the tag of a stack frame.
