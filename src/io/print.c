@@ -22,6 +22,7 @@
 #include "integer.h"
 #include "stack.h"
 #include "print.h"
+#include "time.h"
 
 /**
  * Whether or not we colorise output.
@@ -209,6 +210,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         case SPECIALTV:
             url_fwprintf( output, L"<Special form>" );
+            break;
+        case TIMETV:
+            print_string(output, time_to_string( pointer));
             break;
         case TRUETV:
             url_fwprintf( output, L"t" );

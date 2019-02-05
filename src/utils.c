@@ -27,7 +27,7 @@ char *trim( char *s ) {
           i-- ) {
         s[i] = '\0';
     }
-    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != '\0'; i++ );
+    for ( i = 0; s[i] != '\0' && ( isblank( s[i] ) || iscntrl( s[i] ) ); i++ );
 
     return ( char * ) &s[i];
 }

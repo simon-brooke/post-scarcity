@@ -30,6 +30,7 @@
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
+#include "time.h"
 
 // extern char *optarg; /* defined in unistd.h */
 
@@ -212,6 +213,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"source", &lisp_source );
     bind_function( L"subtract", &lisp_subtract );
     bind_function( L"throw", &lisp_exception );
+    bind_function( L"time", &lisp_time );
     bind_function( L"type", &lisp_type );
     bind_function( L"+", &lisp_add );
     bind_function( L"*", &lisp_multiply );

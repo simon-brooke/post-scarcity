@@ -194,6 +194,16 @@
 #define SYMBOLTV    1112365395
 
 /**
+ * A time stamp.
+ */
+#define TIMETAG     "TIME"
+
+/**
+ * The string `TIME`, considered as an `unsigned int`.
+ */
+#define TIMETV      1162692948
+
+/**
  * The special cons cell at address {0,1} which is canonically different
  * from NIL.
  */
@@ -344,13 +354,18 @@
  * (there should only be one of these so it's slightly redundant).
  * Also note that anything that is not NIL is truthy.
  */
-#define tp(conspoint) (checktag(conspoint,TRUETAG))
+#define tp(conspoint) (check_tag(conspoint,TRUETAG))
+
+/**
+ * true if `conspoint` points to a time cell, else false.
+ */
+#define timep(conspoint) (check_tag(conspoint,TIMETAG))
 
 /**
  * true if `conspoint` points to something that is truthy, i.e.
  * anything but NIL.
  */
-#define truep(conspoint) (!checktag(conspoint,NILTAG))
+#define truep(conspoint) (!check_tag(conspoint,NILTAG))
 
 /**
  * An indirect pointer to a cons cell
@@ -532,6 +547,15 @@ struct string_payload {
 };
 
 /**
+ * The payload of a time cell: an unsigned 128 bit value representing micro-
+ * seconds since the estimated date of the Big Bang (actually, for
+ * convenience, 14Bn years before 1st Jan 1970 (the UNIX epoch))
+ */
+struct time_payload {
+    unsigned __int128 value;
+};
+
+/**
  * payload of a vector pointer cell.
  */
 struct vectorp_payload {
@@ -616,6 +640,10 @@ struct cons_space_object {
          * if tag == STRINGTAG || tag == SYMBOLTAG
          */
         struct string_payload string;
+        /**
+         * if tag == TIMETAG
+         */
+        struct time_payload time;
         /**
          * if tag == TRUETAG; we'll treat the special cell T as just a cons
          */

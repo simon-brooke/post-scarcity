@@ -266,15 +266,7 @@ struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
                                      char *value ) {
     value = trim( value);
     wchar_t buffer[strlen( value ) + 1];
-    /* \todo something goes wrong here: I sometimes get junk characters on the
-     * end of the string. */
     mbstowcs( buffer, value, strlen( value ) + 1 );
-
-    /* hack: get rid of 32766 as a junk character, to see whether there are
-     * others.
-    for (int i = 0; i < wcslen( buffer); i++) {
-      if (buffer[i] == (wchar_t)32766) buffer[i] = (wchar_t)0;
-    } */
 
     return make_cons( make_cons( c_string_to_lisp_keyword( key ),
                                  c_string_to_lisp_string( buffer ) ), meta );
