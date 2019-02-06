@@ -30,7 +30,7 @@ uint32_t get_hash_32(struct cons_pointer f, struct cons_pointer key) {
     uint32_t result = 0;
     int l =  c_length(key);
 
-    if (keywordp(key) || stringp(key)) {
+    if (keywordp(key) || stringp(key) || symbolp( key)) {
         if ( l > 0) {
             uint32_t buffer[l];
 
@@ -44,7 +44,7 @@ uint32_t get_hash_32(struct cons_pointer f, struct cons_pointer key) {
             result = hashword( buffer, l, 0);
         }
     } else {
-        fputws(L"Hashing is thud far implemented only for keys and strings.\n", stderr);
+        fputws(L"Hashing is thus far implemented only for keys, strings and symbols.\n", stderr);
     }
 
     return result;
@@ -218,6 +218,24 @@ struct cons_pointer assoc_in_map( struct cons_pointer map,
     }
 
     return result;
+}
+
+/**
+ * Function: create a map initialised with key/value pairs from my
+ * first argument.
+ *
+ * * (make-map)
+ * * (make-map store)
+ *
+ * @param frame the stack frame in which the expression is to be interpreted;
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env the environment in which it is to be intepreted.
+ * @return a new containing all the key/value pairs from store.
+ */
+struct cons_pointer
+lisp_make_map( struct stack_frame *frame, struct cons_pointer frame_pointer,
+             struct cons_pointer env ) {
+    return merge_into_map( make_empty_map( NIL), frame->arg[0]);
 }
 
 /**

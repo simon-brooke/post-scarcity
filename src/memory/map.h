@@ -83,7 +83,11 @@ struct cons_pointer merge_into_map( struct cons_pointer parent,
                                    struct cons_pointer to_merge);
 
 struct cons_pointer assoc_in_map( struct cons_pointer map,
-                                  struct cons_pointer key);
+                                 struct cons_pointer key);
+
+struct cons_pointer lisp_make_map( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env );
 
 void dump_map( URL_FILE * output, struct cons_pointer map_pointer );
 

@@ -20,9 +20,12 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "integer.h"
+#include "intern.h"
+#include "map.h"
 #include "stack.h"
 #include "print.h"
 #include "time.h"
+#include "vectorspace.h"
 
 /**
  * Whether or not we colorise output.
@@ -98,7 +101,43 @@ void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     } else {
         url_fputws( L")", output );
     }
+}
 
+
+void print_map( URL_FILE * output, struct cons_pointer pointer) {
+    if ( vectorpointp( pointer)) {
+        struct vector_space_object *vso = pointer_to_vso( pointer);
+
+        if ( mapp( vso ) ) {
+            url_fputwc( btowc( '{' ), output );
+
+            for ( struct cons_pointer ks = keys(pointer);
+                 !nilp(ks); ks = c_cdr(ks)) {
+                print( output, c_car(ks));
+                url_fputwc( btowc( ' ' ), output );
+                print( output, c_assoc( pointer, c_car(ks)));
+
+                if ( !nilp( c_cdr( ks))) {
+                    url_fputws( L", ", output );
+                }
+            }
+
+            url_fputwc( btowc( '}' ), output );
+        }
+    }
+}
+
+
+void print_vso( URL_FILE * output, struct cons_pointer pointer) {
+    struct vector_space_object *vso =
+        pointer2cell( pointer ).payload.vectorp.address;
+
+    switch ( vso->header.tag.value) {
+        case MAPTV:
+            print_map( output, pointer);
+            break;
+        // \todo: others.
+    }
 }
 
 /**
@@ -216,6 +255,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         case TRUETV:
             url_fwprintf( output, L"t" );
+            break;
+        case VECTORPOINTTV:
+            print_vso( output, pointer);
             break;
         case WRITETV:
             url_fwprintf( output, L"<Output stream>" );

@@ -52,7 +52,7 @@ struct cons_pointer
 internedp( struct cons_pointer key, struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    if ( symbolp( key ) ) {
+    if ( symbolp( key ) || keywordp( key ) ) {
         for ( struct cons_pointer next = store;
               nilp( result ) && consp( next );
               next = pointer2cell( next ).payload.cons.cdr ) {
@@ -74,7 +74,7 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         debug_print_object( key, DEBUG_BIND );
         debug_print( L"` is a ", DEBUG_BIND );
         debug_print_object( c_type( key ), DEBUG_BIND );
-        debug_print( L", not a SYMB", DEBUG_BIND );
+        debug_print( L", not a KEYW or SYMB", DEBUG_BIND );
     }
 
     return result;
@@ -113,6 +113,10 @@ struct cons_pointer c_assoc( struct cons_pointer key,
         result = assoc_in_map( key, store);
     }
 
+    debug_print( L"c_assoc returning ", DEBUG_BIND);
+    debug_print_object( result, DEBUG_BIND);
+    debug_println( DEBUG_BIND);
+
     return result;
 }
 
@@ -125,17 +129,23 @@ struct cons_pointer
         struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    debug_print( L"Binding ", DEBUG_BIND );
+    debug_print( L"set: binding `", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
-    debug_print( L" to ", DEBUG_BIND );
+    debug_print( L"` to `", DEBUG_BIND );
     debug_print_object( value, DEBUG_BIND );
+    debug_print( L"` in store ", DEBUG_BIND );
+    debug_dump_object( store, DEBUG_BIND);
     debug_println( DEBUG_BIND );
 
-    if (consp(store)) {
+    if (nilp( store) || consp(store)) {
         result = make_cons( make_cons( key, value ), store );
     } else if (vectorpointp( store)) {
         result = bind_in_map( store, key, value);
     }
+
+    debug_print( L"set returning ", DEBUG_BIND);
+    debug_print_object( result, DEBUG_BIND);
+    debug_println( DEBUG_BIND);
 
     return result;
 }
@@ -150,11 +160,19 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     debug_print( L"Entering deep_bind\n", DEBUG_BIND );
     struct cons_pointer old = oblist;
 
+    debug_print( L"deep_bind: binding `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"` to ", DEBUG_BIND );
+    debug_print_object( value, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
+
     oblist = set( key, value, oblist );
     inc_ref( oblist );
     dec_ref( old );
 
-    debug_print( L"Leaving deep_bind\n", DEBUG_BIND );
+    debug_print( L"deep_bind returning ", DEBUG_BIND );
+    debug_print_object( oblist, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return oblist;
 }

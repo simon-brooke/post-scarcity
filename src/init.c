@@ -26,6 +26,7 @@
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
+#include "map.h"
 #include "meta.h"
 #include "peano.h"
 #include "print.h"
@@ -196,6 +197,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
+    bind_function( L"make-map", &lisp_make_map);
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
