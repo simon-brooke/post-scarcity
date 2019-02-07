@@ -378,13 +378,13 @@ void collect_meta( struct cons_pointer stream, char *url ) {
                 meta =
                     add_meta_integer( meta, L"size",
                                       ( intmax_t ) statbuf.st_size );
-
+/*
                 meta = add_meta_time( meta, L"modified", &statbuf.st_mtime );
+*/
             }
             break;
         case CFTYPE_CURL:
             curl_easy_setopt( s->handle.curl, CURLOPT_VERBOSE, 1L );
-            curl_easy_setopt( s->handle.curl, CURLOPT_HEADER, 1L );
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADERFUNCTION,
                               write_meta_callback );
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream );
