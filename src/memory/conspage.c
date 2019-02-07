@@ -115,9 +115,9 @@ void make_cons_page(  ) {
 /**
  * dump the allocated pages to this `output` stream.
  */
-void dump_pages( FILE * output ) {
+void dump_pages( URL_FILE * output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
-        fwprintf( output, L"\nDUMPING PAGE %d\n", i );
+        url_fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
             dump_object( output, ( struct cons_pointer ) {
@@ -152,7 +152,7 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.exception.frame );
                     break;
                 case FUNCTIONTV:
-                    dec_ref( cell->payload.function.source );
+                    dec_ref( cell->payload.function.meta );
                     break;
                 case INTEGERTV:
                     dec_ref( cell->payload.integer.more );
@@ -166,8 +166,13 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.ratio.dividend );
                     dec_ref( cell->payload.ratio.divisor );
                     break;
+                case READTV:
+                case WRITETV:
+                    dec_ref( cell->payload.stream.meta );
+                    url_fclose( cell->payload.stream.stream );
+                    break;
                 case SPECIALTV:
-                    dec_ref( cell->payload.special.source );
+                    dec_ref( cell->payload.special.meta );
                     break;
                 case STRINGTV:
                 case SYMBOLTV:

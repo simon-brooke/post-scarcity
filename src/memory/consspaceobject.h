@@ -8,6 +8,9 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#ifndef __psse_consspaceobject_h
+#define __psse_consspaceobject_h
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,8 +20,8 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#ifndef __consspaceobject_h
-#define __consspaceobject_h
+#include "fopen.h"
+
 
 /**
  * The length of a tag, in bytes.
@@ -37,6 +40,7 @@
 
 /**
  * The string `CONS`, considered as an `unsigned int`.
+ * @todo tag values should be collected into an enum.
  */
 #define CONSTV      1397641027
 
@@ -82,6 +86,16 @@
  * The string `INTR`, considered as an `unsigned int`.
  */
 #define INTEGERTV   1381256777
+
+/**
+ * A keyword - an interned, self-evaluating string.
+ */
+#define KEYTAG	    "KEYW"
+
+/**
+ * The string `KEYW`, considered as an `unsigned int`.
+ */
+#define KEYTV       1465468235
 
 /**
  * A lambda cell. Lambdas are the interpretable (source) versions of functions.
@@ -180,6 +194,16 @@
 #define SYMBOLTV    1112365395
 
 /**
+ * A time stamp.
+ */
+#define TIMETAG     "TIME"
+
+/**
+ * The string `TIME`, considered as an `unsigned int`.
+ */
+#define TIMETV      1162692948
+
+/**
  * The special cons cell at address {0,1} which is canonically different
  * from NIL.
  */
@@ -257,6 +281,11 @@
 #define functionp(conspoint) (check_tag(conspoint,FUNCTIONTAG))
 
 /**
+ * true if `conspoint` points to a keyword, else false
+ */
+#define keywordp(conspoint) (check_tag(conspoint,KEYTAG))
+
+/**
  * true if `conspoint` points to a special Lambda cell, else false
  */
 #define lambdap(conspoint) (check_tag(conspoint,LAMBDATAG))
@@ -318,18 +347,25 @@
  */
 #define writep(conspoint) (check_tag(conspoint,WRITETAG))
 
+#define streamp(conspoint) (check_tag(conspoint,READTAG)||check_tag(conspoint,WRITETAG))
+
 /**
  * true if `conspoint` points to a true cell, else false
  * (there should only be one of these so it's slightly redundant).
  * Also note that anything that is not NIL is truthy.
  */
-#define tp(conspoint) (checktag(conspoint,TRUETAG))
+#define tp(conspoint) (check_tag(conspoint,TRUETAG))
+
+/**
+ * true if `conspoint` points to a time cell, else false.
+ */
+#define timep(conspoint) (check_tag(conspoint,TIMETAG))
 
 /**
  * true if `conspoint` points to something that is truthy, i.e.
  * anything but NIL.
  */
-#define truep(conspoint) (!checktag(conspoint,NILTAG))
+#define truep(conspoint) (!check_tag(conspoint,NILTAG))
 
 /**
  * An indirect pointer to a cons cell
@@ -395,10 +431,9 @@ struct exception_payload {
  */
 struct function_payload {
     /**
-     * pointer to the source from which the function was compiled, or NIL
-     * if it is a primitive.
+     * pointer to metadata (e.g. the source from which the function was compiled).
      */
-    struct cons_pointer source;
+    struct cons_pointer meta;
     /**  pointer to a function which takes a cons pointer (representing
      * its argument list) and a cons pointer (representing its environment) and a
      * stack frame (representing the previous stack frame) as arguments and returns
@@ -473,7 +508,7 @@ struct special_payload {
      * pointer to the source from which the special form was compiled, or NIL
      * if it is a primitive.
      */
-    struct cons_pointer source;
+    struct cons_pointer meta;
     /**  pointer to a function which takes a cons pointer (representing
      * its argument list) and a cons pointer (representing its environment) and a
      * stack frame (representing the previous stack frame) as arguments and returns
@@ -488,14 +523,19 @@ struct special_payload {
  */
 struct stream_payload {
     /** the stream to read from or write to. */
-    FILE *stream;
+    URL_FILE *stream;
+    /** metadata on the stream (e.g. its file attributes if a file, its HTTP
+     * headers if a URL, etc). Expected to be an association, or nil. Not yet
+     * implemented. */
+    struct cons_pointer meta;
 };
 
 /**
  * payload of a string cell. At least at first, only one UTF character will
  * be stored in each cell. The doctrine that 'a symbol is just a string'
- * didn't work; however, the payload of a symbol cell is identical to the
- * payload of a string cell.
+ * didn't work; however, the payload of a symbol or keyword cell is identical
+ * to the payload of a string cell, except that a keyword may store a hash
+ * of its own value in the padding.
  */
 struct string_payload {
     /** the actual character stored in this cell */
@@ -504,6 +544,15 @@ struct string_payload {
     uint32_t padding;
     /** the remainder of the string following this character. */
     struct cons_pointer cdr;
+};
+
+/**
+ * The payload of a time cell: an unsigned 128 bit value representing micro-
+ * seconds since the estimated date of the Big Bang (actually, for
+ * convenience, 14Bn years before 1st Jan 1970 (the UNIX epoch))
+ */
+struct time_payload {
+    unsigned __int128 value;
 };
 
 /**
@@ -592,6 +641,10 @@ struct cons_space_object {
          */
         struct string_payload string;
         /**
+         * if tag == TIMETAG
+         */
+        struct time_payload time;
+        /**
          * if tag == TRUETAG; we'll treat the special cell T as just a cons
          */
         struct cons_payload t;
@@ -608,6 +661,14 @@ void inc_ref( struct cons_pointer pointer );
 
 void dec_ref( struct cons_pointer pointer );
 
+struct cons_pointer c_type( struct cons_pointer pointer );
+
+struct cons_pointer c_car( struct cons_pointer arg );
+
+struct cons_pointer c_cdr( struct cons_pointer arg );
+
+int c_length( struct cons_pointer arg);
+
 struct cons_pointer make_cons( struct cons_pointer car,
                                struct cons_pointer cdr );
 
@@ -619,6 +680,8 @@ struct cons_pointer make_function( struct cons_pointer src,
                                     ( struct stack_frame *,
                                       struct cons_pointer,
                                       struct cons_pointer ) );
+
+struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol );
 
 struct cons_pointer make_lambda( struct cons_pointer args,
                                  struct cons_pointer body );
@@ -634,11 +697,18 @@ struct cons_pointer make_special( struct cons_pointer src,
 
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 
-struct cons_pointer make_symbol( wint_t c, struct cons_pointer tail );
+struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
+                                        char *tag );
 
-struct cons_pointer make_read_stream( FILE * input );
+#define make_symbol(c, t) (make_symbol_or_key( c, t, SYMBOLTAG))
 
-struct cons_pointer make_write_stream( FILE * output );
+#define make_keyword(c, t) (make_symbol_or_key( c, t, KEYTAG))
+
+struct cons_pointer make_read_stream( URL_FILE * input,
+                                      struct cons_pointer metadata );
+
+struct cons_pointer make_write_stream( URL_FILE * output,
+                                       struct cons_pointer metadata );
 
 struct cons_pointer c_string_to_lisp_string( wchar_t *string );
 

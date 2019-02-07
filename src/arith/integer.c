@@ -12,12 +12,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-/* safe_iop, as available in the Ubuntu repository, is this one:
- * https://code.google.com/archive/p/safe-iop/wikis/README.wiki
- * which is installed as `libsafe-iop-dev`. There is an alternate
- * implementation here: https://github.com/redpig/safe-iop/
- * which shares the same version number but is not compatible. */
-#include <safe_iop.h>
 /*
  * wide characters
  */
@@ -76,20 +70,16 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
  * \see add_integers
  */
 __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
-    long int val = nilp( c ) ?
-      0 :
-      pointer2cell( c ).payload.integer.value;
+    long int val = nilp( c ) ? 0 : pointer2cell( c ).payload.integer.value;
 
     long int carry = is_first_cell ? 0 : ( MAX_INTEGER + 1 );
 
     __int128_t result = ( __int128_t ) integerp( c ) ?
-        ( val == 0 ) ?
-          carry :
-          val :
-         op == '*' ? 1 : 0;
+        ( val == 0 ) ? carry : val : op == '*' ? 1 : 0;
     debug_printf( DEBUG_ARITH,
                   L"cell_value: raw value is %ld, is_first_cell = %s; %4.4s; returning ",
-                  val, is_first_cell ? "true" : "false", pointer2cell(c).tag.bytes);
+                  val, is_first_cell ? "true" : "false",
+                  pointer2cell( c ).tag.bytes );
     debug_print_128bit( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
@@ -109,9 +99,8 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
  * @return carry, if any, else 0.
  */
 __int128_t int128_to_integer( __int128_t val,
-                                      struct cons_pointer less_significant,
-                                      struct cons_pointer new)
-{
+                              struct cons_pointer less_significant,
+                              struct cons_pointer new ) {
     struct cons_pointer cursor = NIL;
     __int128_t carry = 0;
 
@@ -120,12 +109,12 @@ __int128_t int128_to_integer( __int128_t val,
     } else {
         carry = val >> 60;
         debug_printf( DEBUG_ARITH,
-                     L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
-                     ( int64_t ) carry );
+                      L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
+                      ( int64_t ) carry );
         val &= MAX_INTEGER;
     }
 
-    struct cons_space_object * newc = &pointer2cell( new);
+    struct cons_space_object *newc = &pointer2cell( new );
     newc->payload.integer.value = val;
 
     if ( integerp( less_significant ) ) {
@@ -137,19 +126,21 @@ __int128_t int128_to_integer( __int128_t val,
     return carry;
 }
 
-struct cons_pointer make_integer_128(__int128_t val,
-                                     struct cons_pointer less_significant) {
+struct cons_pointer make_integer_128( __int128_t val,
+                                      struct cons_pointer less_significant ) {
     struct cons_pointer result = NIL;
 
     do {
         if ( MAX_INTEGER >= val ) {
-            result = make_integer( (long int) val, less_significant);
+            result = make_integer( ( long int ) val, less_significant );
         } else {
-            less_significant = make_integer( (long int)val & MAX_INTEGER, less_significant);
+            less_significant =
+                make_integer( ( long int ) val & MAX_INTEGER,
+                              less_significant );
             val = val >> 60;
         }
 
-    } while (nilp(result));
+    } while ( nilp( result ) );
 
     return result;
 }
@@ -164,10 +155,10 @@ struct cons_pointer add_integers( struct cons_pointer a,
     struct cons_pointer cursor = NIL;
 
     debug_print( L"add_integers: a = ", DEBUG_ARITH );
-    debug_print_object(a, DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH );
     debug_print( L"; b = ", DEBUG_ARITH );
-    debug_print_object(b, DEBUG_ARITH);
-    debug_println(DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH );
+    debug_println( DEBUG_ARITH );
 
     __int128_t carry = 0;
     bool is_first_cell = true;
@@ -194,8 +185,8 @@ struct cons_pointer add_integers( struct cons_pointer a,
             debug_print_128bit( rv, DEBUG_ARITH );
             debug_print( L"\n", DEBUG_ARITH );
 
-            struct cons_pointer new = make_integer( 0, NIL);
-            carry = int128_to_integer(rv, cursor, new);
+            struct cons_pointer new = make_integer( 0, NIL );
+            carry = int128_to_integer( rv, cursor, new );
             cursor = new;
 
             if ( nilp( result ) ) {
@@ -215,14 +206,14 @@ struct cons_pointer add_integers( struct cons_pointer a,
     return result;
 }
 
-struct cons_pointer base_partial(int depth) {
-  struct cons_pointer result = NIL;
+struct cons_pointer base_partial( int depth ) {
+    struct cons_pointer result = NIL;
 
-  for (int i = 0; i < depth; i++) {
-    result = make_integer(0, result);
-  }
+    for ( int i = 0; i < depth; i++ ) {
+        result = make_integer( 0, result );
+    }
 
-  return result;
+    return result;
 }
 
 /**
@@ -236,69 +227,70 @@ struct cons_pointer base_partial(int depth) {
 struct cons_pointer multiply_integers( struct cons_pointer a,
                                        struct cons_pointer b ) {
     struct cons_pointer result = NIL;
-    bool neg = is_negative(a) != is_negative(b);
+    bool neg = is_negative( a ) != is_negative( b );
     bool is_first_b = true;
     int oom = -1;
 
     debug_print( L"multiply_integers: a = ", DEBUG_ARITH );
-    debug_print_object(a, DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH );
     debug_print( L"; b = ", DEBUG_ARITH );
-    debug_print_object(b, DEBUG_ARITH);
-    debug_println(DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH );
+    debug_println( DEBUG_ARITH );
 
     if ( integerp( a ) && integerp( b ) ) {
         while ( !nilp( b ) ) {
-          bool is_first_d = true;
-          struct cons_pointer d = a;
-          struct cons_pointer partial = base_partial(++oom);
-          __int128_t carry = 0;
+            bool is_first_d = true;
+            struct cons_pointer d = a;
+            struct cons_pointer partial = base_partial( ++oom );
+            __int128_t carry = 0;
 
-          while ( !nilp(d) || carry != 0) {
-            partial = make_integer(0, partial);
-            struct cons_pointer new = NIL;
-            __int128_t dv = cell_value( d, '+', is_first_d );
-            __int128_t bv = cell_value( b, '+', is_first_b );
+            while ( !nilp( d ) || carry != 0 ) {
+                partial = make_integer( 0, partial );
+                struct cons_pointer new = NIL;
+                __int128_t dv = cell_value( d, '+', is_first_d );
+                __int128_t bv = cell_value( b, '+', is_first_b );
 
-            __int128_t rv = (dv * bv) + carry;
+                __int128_t rv = ( dv * bv ) + carry;
 
-            debug_print( L"multiply_integers: d = ", DEBUG_ARITH);
-            debug_print_object( d, DEBUG_ARITH);
-            debug_print( L"; dv = ", DEBUG_ARITH );
-            debug_print_128bit( dv, DEBUG_ARITH );
-            debug_print( L"; bv = ", DEBUG_ARITH );
-            debug_print_128bit( bv, DEBUG_ARITH );
-            debug_print( L"; carry = ", DEBUG_ARITH );
-            debug_print_128bit( carry, DEBUG_ARITH );
-            debug_print( L"; rv = ", DEBUG_ARITH );
-            debug_print_128bit( rv, DEBUG_ARITH );
-            debug_print( L"; acc = ", DEBUG_ARITH );
-            debug_print_object( result, DEBUG_ARITH);
-            debug_print( L"; partial = ", DEBUG_ARITH );
-            debug_print_object( partial, DEBUG_ARITH);
-            debug_print( L"\n", DEBUG_ARITH );
+                debug_print( L"multiply_integers: d = ", DEBUG_ARITH );
+                debug_print_object( d, DEBUG_ARITH );
+                debug_print( L"; dv = ", DEBUG_ARITH );
+                debug_print_128bit( dv, DEBUG_ARITH );
+                debug_print( L"; bv = ", DEBUG_ARITH );
+                debug_print_128bit( bv, DEBUG_ARITH );
+                debug_print( L"; carry = ", DEBUG_ARITH );
+                debug_print_128bit( carry, DEBUG_ARITH );
+                debug_print( L"; rv = ", DEBUG_ARITH );
+                debug_print_128bit( rv, DEBUG_ARITH );
+                debug_print( L"; acc = ", DEBUG_ARITH );
+                debug_print_object( result, DEBUG_ARITH );
+                debug_print( L"; partial = ", DEBUG_ARITH );
+                debug_print_object( partial, DEBUG_ARITH );
+                debug_print( L"\n", DEBUG_ARITH );
 
-            new = make_integer_128(rv, base_partial(oom));
+                new = make_integer_128( rv, base_partial( oom ) );
 
-            if ( zerop(partial)) {
-              partial = new;
-            } else {
-              partial = add_integers(partial, new);
+                if ( zerop( partial ) ) {
+                    partial = new;
+                } else {
+                    partial = add_integers( partial, new );
+                }
+
+                d = integerp( d ) ? pointer2cell( d ).payload.integer.
+                    more : NIL;
+                is_first_d = false;
             }
 
-            d = integerp(d) ? pointer2cell( d ).payload.integer.more : NIL;
-            is_first_d = false;
-          }
-
-          if (nilp(result) || zerop(result)) {
-            result = partial;
-          } else {
-            struct cons_pointer old = result;
-            result = add_integers(partial, result);
-            //if (!eq(result, old)) dec_ref(old);
-            //if (!eq(result, partial)) dec_ref(partial);
-          }
-          b = pointer2cell( b ).payload.integer.more;
-          is_first_b = false;
+            if ( nilp( result ) || zerop( result ) ) {
+                result = partial;
+            } else {
+                struct cons_pointer old = result;
+                result = add_integers( partial, result );
+                //if (!eq(result, old)) dec_ref(old);
+                //if (!eq(result, partial)) dec_ref(partial);
+            }
+            b = pointer2cell( b ).payload.integer.more;
+            is_first_b = false;
         }
     }
 
@@ -314,7 +306,6 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
  */
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
-    digits++;
     wint_t character = btowc( hex_digits[digit] );
     return ( digits % 3 == 0 ) ?
         make_string( L',', make_string( character,
@@ -352,10 +343,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
         while ( accumulator > 0 || !nilp( integer.payload.integer.more ) ) {
             if ( !nilp( integer.payload.integer.more ) ) {
                 integer = pointer2cell( integer.payload.integer.more );
-                accumulator += integer.payload.integer.value == 0 ?
-                    MAX_INTEGER :
-                    ( llabs( integer.payload.integer.value ) *
-                      ( MAX_INTEGER + 1 ) );
+                accumulator += integer.payload.integer.value;
                 debug_print
                     ( L"integer_to_string: crossing cell boundary, accumulator is: ",
                       DEBUG_IO );
@@ -369,10 +357,12 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                               L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
                               offset, hex_digits[offset] );
                 debug_print_128bit( accumulator, DEBUG_IO );
+                debug_print( L"; result is: ", DEBUG_IO );
+                debug_print_object( result, DEBUG_IO );
                 debug_println( DEBUG_IO );
 
                 result =
-                    integer_to_string_add_digit( offset, digits++, result );
+                    integer_to_string_add_digit( offset, ++digits, result );
                 accumulator = accumulator / base;
             } while ( accumulator > base );
         }

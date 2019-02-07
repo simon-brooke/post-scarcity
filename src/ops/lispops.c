@@ -31,10 +31,13 @@
 #include "equal.h"
 #include "integer.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
+#include "map.h"
 #include "print.h"
 #include "read.h"
 #include "stack.h"
+#include "vectorspace.h"
 
 /*
  * also to create in this section:
@@ -45,32 +48,6 @@
  *
  * and others I haven't thought of yet.
  */
-
-/**
- * Implementation of car in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_car( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
-
-    if ( consp( arg ) ) {
-        result = pointer2cell( arg ).payload.cons.car;
-    }
-
-    return result;
-}
-
-/**
- * Implementation of cdr in C. If arg is not a cons, does not error but returns nil.
- */
-struct cons_pointer c_cdr( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
-
-    if ( consp( arg ) || stringp( arg ) || symbolp( arg ) ) {
-        result = pointer2cell( arg ).payload.cons.cdr;
-    }
-
-    return result;
-}
 
 
 /**
@@ -231,7 +208,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
             struct cons_pointer name = c_car( names );
             struct cons_pointer val = frame->arg[i];
 
-            new_env = bind( name, val, new_env );
+            new_env = set( name, val, new_env );
             log_binding( name, val );
 
             names = c_cdr( names );
@@ -256,7 +233,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
             }
         }
 
-        new_env = bind( names, vals, new_env );
+        new_env = set( names, vals, new_env );
         inc_ref( new_env );
     }
 
@@ -294,8 +271,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
  * @return the result of evaluating the function with its arguments.
  */
 struct cons_pointer
-c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
-         struct cons_pointer env ) {
+    c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
     debug_print( L"Entering c_apply\n", DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
@@ -310,97 +287,122 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         switch ( fn_cell.tag.value ) {
             case EXCEPTIONTV:
-                /* just pass exceptions straight back */
-                result = fn_pointer;
-                break;
-            case FUNCTIONTV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        struct stack_frame *next =
-                            get_stack_frame( next_pointer );
+            /* just pass exceptions straight back */
+            result = fn_pointer;
+            break;
 
-                        result =
-                            ( *fn_cell.payload.function.executable ) ( next,
-                                                                       next_pointer,
-                                                                       env );
-                        dec_ref( next_pointer );
-                    }
+            case FUNCTIONTV:
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    struct stack_frame *next =
+                        get_stack_frame( next_pointer );
+
+                    result =
+                        ( *fn_cell.payload.function.executable ) ( next,
+                                                                  next_pointer,
+                                                                  env );
+                    dec_ref( next_pointer );
                 }
-                break;
+            }
+            break;
+
+            case KEYTV:
+            result = c_assoc( fn_pointer,
+                             eval_form(frame,
+                                       frame_pointer,
+                                       c_car( c_cdr( frame->arg[0])),
+                                       env));
+            break;
+
             case LAMBDATV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        struct stack_frame *next =
-                            get_stack_frame( next_pointer );
-                        result =
-                            eval_lambda( fn_cell, next, next_pointer, env );
-                        if ( !exceptionp( result ) ) {
-                            dec_ref( next_pointer );
-                        }
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    struct stack_frame *next =
+                        get_stack_frame( next_pointer );
+                    result =
+                        eval_lambda( fn_cell, next, next_pointer, env );
+                    if ( !exceptionp( result ) ) {
+                        dec_ref( next_pointer );
                     }
                 }
+            }
+            break;
+
+            case VECTORPOINTTV:
+            switch ( pointer_to_vso(fn_pointer)->header.tag.value) {
+                case MAPTV:
+                /* \todo: if arg[0] is a CONS, treat it as a path */
+                result = c_assoc( eval_form(frame,
+                                            frame_pointer,
+                                            c_car( c_cdr( frame->arg[0])),
+                                            env),
+                                 fn_pointer);
                 break;
+            }
+            break;
+
             case NLAMBDATV:
-                {
-                    struct cons_pointer next_pointer =
-                        make_special_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        struct stack_frame *next =
-                            get_stack_frame( next_pointer );
-                        result =
-                            eval_lambda( fn_cell, next, next_pointer, env );
-                        dec_ref( next_pointer );
-                    }
+            {
+                struct cons_pointer next_pointer =
+                    make_special_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    struct stack_frame *next =
+                        get_stack_frame( next_pointer );
+                    result =
+                        eval_lambda( fn_cell, next, next_pointer, env );
+                    dec_ref( next_pointer );
                 }
-                break;
+            }
+            break;
+
             case SPECIALTV:
-                {
-                    struct cons_pointer next_pointer =
-                        make_special_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        result =
-                            ( *fn_cell.payload.
-                              special.executable ) ( get_stack_frame
-                                                     ( next_pointer ),
-                                                     next_pointer, env );
-                        debug_print( L"Special form returning: ", DEBUG_EVAL );
-                        debug_print_object( result, DEBUG_EVAL );
-                        debug_println( DEBUG_EVAL );
-                        dec_ref( next_pointer );
-                    }
+            {
+                struct cons_pointer next_pointer =
+                    make_special_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    result =
+                        ( *fn_cell.payload.special.
+                         executable ) ( get_stack_frame( next_pointer ),
+                                       next_pointer, env );
+                    debug_print( L"Special form returning: ", DEBUG_EVAL );
+                    debug_print_object( result, DEBUG_EVAL );
+                    debug_println( DEBUG_EVAL );
+                    dec_ref( next_pointer );
                 }
-                break;
+            }
+            break;
+
             default:
-                {
-                    int bs = sizeof( wchar_t ) * 1024;
-                    wchar_t *buffer = malloc( bs );
-                    memset( buffer, '\0', bs );
-                    swprintf( buffer, bs,
-                              L"Unexpected cell with tag %d (%4.4s) in function position",
-                              fn_cell.tag.value, &fn_cell.tag.bytes[0] );
-                    struct cons_pointer message =
-                        c_string_to_lisp_string( buffer );
-                    free( buffer );
-                    result = throw_exception( message, frame_pointer );
-                }
+            {
+                int bs = sizeof( wchar_t ) * 1024;
+                wchar_t *buffer = malloc( bs );
+                memset( buffer, '\0', bs );
+                swprintf( buffer, bs,
+                         L"Unexpected cell with tag %d (%4.4s) in function position",
+                         fn_cell.tag.value, &fn_cell.tag.bytes[0] );
+                struct cons_pointer message =
+                    c_string_to_lisp_string( buffer );
+                free( buffer );
+                result = throw_exception( message, frame_pointer );
+            }
         }
     }
 
@@ -410,24 +412,6 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     return result;
 }
-
-
-/**
- * Get the Lisp type of the single argument.
- * @param pointer a pointer to the object whose type is requested.
- * @return As a Lisp string, the tag of the object which is at that pointer.
- */
-struct cons_pointer c_type( struct cons_pointer pointer ) {
-    struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( pointer );
-
-    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-        result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
-    }
-
-    return result;
-}
-
 
 /**
  * Function; evaluate the expression which is the first argument in the frame;
@@ -460,9 +444,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     switch ( cell.tag.value ) {
         case CONSTV:
-            {
                 result = c_apply( frame, frame_pointer, env );
-            }
             break;
 
         case SYMBOLTV:
@@ -627,10 +609,10 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @return true if `arg` represents an end of string, else false.
  * \todo candidate for moving to a memory/string.c file
  */
-bool end_of_stringp(struct cons_pointer arg) {
-  return nilp(arg) ||
-    ( stringp( arg ) &&
-     pointer2cell(arg).payload.string.character == (wint_t)'\0');
+bool end_of_stringp( struct cons_pointer arg ) {
+    return nilp( arg ) ||
+        ( stringp( arg ) &&
+          pointer2cell( arg ).payload.string.character == ( wint_t ) '\0' );
 }
 
 /**
@@ -656,8 +638,8 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( nilp( car ) && nilp( cdr ) ) {
         return NIL;
     } else if ( stringp( car ) && stringp( cdr ) &&
-                end_of_stringp( c_cdr( car)) ) {
-      // \todo check that car is of length 1
+                end_of_stringp( c_cdr( car ) ) ) {
+        // \todo check that car is of length 1
         result =
             make_string( pointer2cell( car ).payload.string.character, cdr );
     } else {
@@ -690,10 +672,11 @@ lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
         case CONSTV:
             result = cell.payload.cons.car;
             break;
-        case READTV:
-            result = make_string( fgetwc( cell.payload.stream.stream ), NIL );
-            break;
         case NILTV:
+            break;
+        case READTV:
+            result =
+                make_string( url_fgetwc( cell.payload.stream.stream ), NIL );
             break;
         case STRINGTV:
             result = make_string( cell.payload.string.character, NIL );
@@ -733,14 +716,14 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
         case CONSTV:
             result = cell.payload.cons.cdr;
             break;
+        case NILTV:
+            break;
         case READTV:
-            fgetwc( cell.payload.stream.stream );
+            url_fgetwc( cell.payload.stream.stream );
             result = frame->arg[0];
             break;
         case STRINGTV:
             result = cell.payload.string.cdr;
-            break;
-        case NILTV:
             break;
         default:
             result =
@@ -750,6 +733,22 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
     }
 
     return result;
+}
+
+/**
+ * Function: return, as an integer, the length of the sequence indicated by
+ * the first argument, or zero if it is not a sequence.
+ *
+ * * (length any)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the length of `any`, if it is a sequence, or zero otherwise.
+ */
+struct cons_pointer lisp_length( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    return make_integer( c_length( frame->arg[0]), NIL);
 }
 
 /**
@@ -839,7 +838,8 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
 #ifdef DEBUG
     debug_print( L"entering lisp_read\n", DEBUG_IO );
 #endif
-    FILE *input = stdin;
+    URL_FILE *input;
+
     struct cons_pointer in_stream = readp( frame->arg[0] ) ?
         frame->arg[0] : get_default_stream( true, env );
 
@@ -848,6 +848,8 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
         debug_dump_object( in_stream, DEBUG_IO );
         input = pointer2cell( in_stream ).payload.stream.stream;
         inc_ref( in_stream );
+    } else {
+        input = file_to_url_file( stdin );
     }
 
     struct cons_pointer result = read( frame, frame_pointer, input );
@@ -856,7 +858,10 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( readp( in_stream ) ) {
         dec_ref( in_stream );
+    } else {
+        free( input );
     }
+
 
     return result;
 }
@@ -878,7 +883,9 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
                 result = make_string( o.payload.string.character, result );
                 break;
             case SYMBOLTV:
-                result = make_symbol( o.payload.string.character, result );
+                result =
+                    make_symbol_or_key( o.payload.string.character, result,
+                                        SYMBOLTAG );
                 break;
         }
     }
@@ -922,7 +929,7 @@ lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
     struct cons_pointer result = NIL;
-    FILE *output = stdout;
+    URL_FILE *output;
     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
         frame->arg[1] : get_default_stream( false, env );
 
@@ -931,6 +938,8 @@ lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
         debug_dump_object( out_stream, DEBUG_IO );
         output = pointer2cell( out_stream ).payload.stream.stream;
         inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stderr );
     }
 
     debug_print( L"lisp_print: about to print\n", DEBUG_IO );
@@ -943,6 +952,8 @@ lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( writep( out_stream ) ) {
         dec_ref( out_stream );
+    } else {
+        free( output );
     }
 
     return result;
@@ -1035,7 +1046,7 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @return the value of the last expression of the first successful `clause`.
  */
 struct cons_pointer
- lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
+lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
            struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     bool done = false;
@@ -1148,7 +1159,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
-    FILE *os = pointer2cell( output ).payload.stream.stream;
+    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
     struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
@@ -1165,7 +1176,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
      * print as parent.
      */
     while ( readp( input ) && writep( output )
-            && !feof( pointer2cell( input ).payload.stream.stream ) ) {
+            && !url_feof( pointer2cell( input ).payload.stream.stream ) ) {
         /* OK, here's a really subtle problem: because lists are immutable, anything
          * bound in the oblist subsequent to this function being invoked isn't in the
          * environment. So, for example, changes to *prompt* or *log* made in the oblist
@@ -1203,7 +1214,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
         inc_ref( expr );
 
         if ( exceptionp( expr )
-             && feof( pointer2cell( input ).payload.stream.stream ) ) {
+             && url_feof( pointer2cell( input ).payload.stream.stream ) ) {
             /* suppress printing end of stream exception */
             break;
         }
@@ -1240,13 +1251,13 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( frame->arg[0] );
-
+    struct cons_pointer source_key = c_string_to_lisp_keyword( L"source" );
     switch ( cell.tag.value ) {
         case FUNCTIONTV:
-            result = cell.payload.function.source;
+            result = c_assoc( source_key, cell.payload.function.meta );
             break;
         case SPECIALTV:
-            result = cell.payload.special.source;
+            result = c_assoc( source_key, cell.payload.special.meta );
             break;
         case LAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
@@ -1282,7 +1293,7 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env ) {
     debug_print( L"Entering print\n", DEBUG_IO );
-    FILE *output = stdout;
+    URL_FILE *output;
     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
         frame->arg[1] : get_default_stream( false, env );
 
@@ -1291,11 +1302,17 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
         debug_dump_object( out_stream, DEBUG_IO );
         output = pointer2cell( out_stream ).payload.stream.stream;
         inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stdout );
     }
+
     dump_object( output, frame->arg[0] );
+    url_fputws( L"\n", output );
 
     if ( writep( out_stream ) ) {
         dec_ref( out_stream );
+    } else {
+        free( output );
     }
 
     return frame->arg[0];

@@ -32,3 +32,9 @@ log*
 utils_src/readprintwc/out
 
 *.dump
+
+*.bak
+
+src/io/fopen
+
+hi\.*

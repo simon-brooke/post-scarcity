@@ -36,7 +36,8 @@
  * @return a cons_pointer to the object, or NIL if the object could not be
  * allocated due to memory exhaustion.
  */
-struct cons_pointer make_vec_pointer( struct vector_space_object *address, char *tag ) {
+struct cons_pointer make_vec_pointer( struct vector_space_object *address,
+                                      char *tag ) {
     debug_print( L"Entered make_vec_pointer\n", DEBUG_ALLOC );
     struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
     struct cons_space_object *cell = &pointer2cell( pointer );
@@ -46,7 +47,7 @@ struct cons_pointer make_vec_pointer( struct vector_space_object *address, char 
                   address );
 
     cell->payload.vectorp.address = address;
-    strncpy(&cell->payload.vectorp.tag.bytes[0], tag, TAGLENGTH);
+    strncpy( &cell->payload.vectorp.tag.bytes[0], tag, TAGLENGTH );
 
     debug_printf( DEBUG_ALLOC,
                   L"make_vec_pointer: all good, returning pointer to %p\n",

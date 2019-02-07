@@ -28,9 +28,9 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 struct cons_pointer internedp( struct cons_pointer key,
                                struct cons_pointer environment );
 
-struct cons_pointer bind( struct cons_pointer key,
-                          struct cons_pointer value,
-                          struct cons_pointer store );
+struct cons_pointer set( struct cons_pointer key,
+                         struct cons_pointer value,
+                         struct cons_pointer store );
 
 struct cons_pointer deep_bind( struct cons_pointer key,
                                struct cons_pointer value );

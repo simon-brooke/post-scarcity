@@ -67,6 +67,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     && equal( cell_a->payload.cons.cdr,
                               cell_b->payload.cons.cdr );
                 break;
+            case KEYTV:
             case STRINGTV:
             case SYMBOLTV:
                 /*

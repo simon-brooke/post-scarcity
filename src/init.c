@@ -9,21 +9,29 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <wchar.h>
 
+/* libcurl, used for io */
+#include <curl/curl.h>
+
 #include "version.h"
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
 #include "intern.h"
+#include "io.h"
 #include "lispops.h"
+#include "map.h"
+#include "meta.h"
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
+#include "psse_time.h"
 
 // extern char *optarg; /* defined in unistd.h */
 
@@ -38,11 +46,13 @@ void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    inc_ref( n );
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
-    deep_bind( n, make_function( NIL, executable ) );
-
-    dec_ref( n );
+    deep_bind( n, make_function( meta, executable ) );
 }
 
 /**
@@ -53,11 +63,13 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    inc_ref( n );
+    struct cons_pointer meta =
+        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
+                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
+                                         n ),
+                              NIL ) );
 
-    deep_bind( n, make_special( NIL, executable ) );
-
-    dec_ref( n );
+    deep_bind( n, make_special( meta, executable ) );
 }
 
 /**
@@ -81,11 +93,14 @@ int main( int argc, char *argv[] ) {
     bool dump_at_end = false;
     bool show_prompt = false;
 
-    while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
+    setlocale( LC_ALL, "" );
+    if ( io_init(  ) != 0 ) {
+        fputs( "Failed to initialise I/O subsystem\n", stderr );
+        exit( 1 );
+    }
+
+    while ( ( option = getopt( argc, argv, "pdv:" ) ) != -1 ) {
         switch ( option ) {
-            case 'c':
-                print_use_colours = true;
-                break;
             case 'd':
                 dump_at_end = true;
                 break;
@@ -123,22 +138,45 @@ int main( int argc, char *argv[] ) {
      * standard input, output, error and sink streams
      * attempt to set wide character acceptance on all streams
      */
-    FILE *sink = fopen( "/dev/null", "w" );
+    URL_FILE *sink = url_fopen( "/dev/null", "w" );
     fwide( stdin, 1 );
     fwide( stdout, 1 );
     fwide( stderr, 1 );
-    fwide( sink, 1 );
-    bind_value( L"*in*", make_read_stream( stdin ) );
-    bind_value( L"*out*", make_write_stream( stdout ) );
-    bind_value( L"*log*", make_write_stream( stderr ) );
-    bind_value( L"*sink*", make_write_stream( sink ) );
-
+    fwide( sink->handle.file, 1 );
+    bind_value( L"*in*", make_read_stream( file_to_url_file( stdin ),
+                                           make_cons( make_cons
+                                                      ( c_string_to_lisp_keyword
+                                                        ( L"url" ),
+                                                        c_string_to_lisp_string
+                                                        ( L"system:standard input" ) ),
+                                                      NIL ) ) );
+    bind_value( L"*out*",
+                make_write_stream( file_to_url_file( stdout ),
+                                   make_cons( make_cons
+                                              ( c_string_to_lisp_keyword
+                                                ( L"url" ),
+                                                c_string_to_lisp_string
+                                                ( L"system:standard output]" ) ),
+                                              NIL ) ) );
+    bind_value( L"*log*", make_write_stream( file_to_url_file( stderr ),
+                                             make_cons( make_cons
+                                                        ( c_string_to_lisp_keyword
+                                                          ( L"url" ),
+                                                          c_string_to_lisp_string
+                                                          ( L"system:standard log" ) ),
+                                                        NIL ) ) );
+    bind_value( L"*sink*", make_write_stream( sink,
+                                              make_cons( make_cons
+                                                         ( c_string_to_lisp_keyword
+                                                           ( L"url" ),
+                                                           c_string_to_lisp_string
+                                                           ( L"system:standard sink" ) ),
+                                                         NIL ) ) );
     /*
      * the default prompt
      */
     bind_value( L"*prompt*",
                 show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL );
-
     /*
      * primitive function operations
      */
@@ -148,6 +186,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"assoc", &lisp_assoc );
     bind_function( L"car", &lisp_car );
     bind_function( L"cdr", &lisp_cdr );
+    bind_function( L"close", &lisp_close );
     bind_function( L"cons", &lisp_cons );
     bind_function( L"divide", &lisp_divide );
     bind_function( L"eq", &lisp_eq );
@@ -155,50 +194,52 @@ int main( int argc, char *argv[] ) {
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
+    bind_function( L"make-map", &lisp_make_map);
+    bind_function( L"meta", &lisp_metadata );
+    bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
-    bind_function( L"negative?", &lisp_is_negative);
-    bind_function( L"read", &lisp_read );
-    bind_function( L"repl", &lisp_repl );
+    bind_function( L"negative?", &lisp_is_negative );
     bind_function( L"oblist", &lisp_oblist );
+    bind_function( L"open", &lisp_open );
     bind_function( L"print", &lisp_print );
     bind_function( L"progn", &lisp_progn );
+    bind_function( L"read", &lisp_read );
+    bind_function( L"read-char", &lisp_read_char );
+    bind_function( L"repl", &lisp_repl );
     bind_function( L"reverse", &lisp_reverse );
     bind_function( L"set", &lisp_set );
+    bind_function( L"slurp", &lisp_slurp );
     bind_function( L"source", &lisp_source );
     bind_function( L"subtract", &lisp_subtract );
     bind_function( L"throw", &lisp_exception );
+    bind_function( L"time", &lisp_time );
     bind_function( L"type", &lisp_type );
-
     bind_function( L"+", &lisp_add );
     bind_function( L"*", &lisp_multiply );
     bind_function( L"-", &lisp_subtract );
     bind_function( L"/", &lisp_divide );
     bind_function( L"=", &lisp_equal );
-
     /*
      * primitive special forms
      */
     bind_special( L"cond", &lisp_cond );
     bind_special( L"lambda", &lisp_lambda );
-    // bind_special( L"λ", &lisp_lambda );
+    bind_special( L"\u03bb", &lisp_lambda );  // λ
     bind_special( L"nlambda", &lisp_nlambda );
-    // bind_special( L"nλ", &lisp_nlambda );
+    bind_special( L"n\u03bb", &lisp_nlambda );
     bind_special( L"progn", &lisp_progn );
     bind_special( L"quote", &lisp_quote );
     bind_special( L"set!", &lisp_set_shriek );
-
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
-
     repl( show_prompt );
-
     debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
     dec_ref( oblist );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
-
     if ( dump_at_end ) {
-        dump_pages( stdout );
+        dump_pages( file_to_url_file( stdout ) );
     }
 
+    curl_global_cleanup(  );
     return ( 0 );
 }
