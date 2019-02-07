@@ -31,7 +31,7 @@
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
-#include "time.h"
+#include "psse_time.h"
 
 // extern char *optarg; /* defined in unistd.h */
 

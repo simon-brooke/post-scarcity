@@ -24,7 +24,7 @@
 #include "map.h"
 #include "stack.h"
 #include "print.h"
-#include "time.h"
+#include "psse_time.h"
 #include "vectorspace.h"
 
 /**
@@ -139,6 +139,27 @@ void print_vso( URL_FILE * output, struct cons_pointer pointer) {
         // \todo: others.
     }
 }
+
+/**
+ * stolen from https://stackoverflow.com/questions/11656241/how-to-print-uint128-t-number-using-gcc
+ */
+void print_128bit( URL_FILE * output, __int128_t n ) {
+    if ( n == 0 ) {
+        fwprintf( stderr, L"0" );
+    } else {
+        char str[40] = { 0 }; // log10(1 << 128) + '\0'
+        char *s = str + sizeof( str ) - 1;  // start at the end
+        while ( n != 0 ) {
+            if ( s == str )
+                return;     // never happens
+
+            *--s = "0123456789"[n % 10];  // save last digit
+            n /= 10;        // drop it
+        }
+        url_fwprintf( output, L"%s", s );
+    }
+}
+
 
 /**
  * Print the cons-space object indicated by `pointer` to the stream indicated
@@ -257,7 +278,11 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             url_fputwc( L'>', output);
             break;
         case TIMETV:
-            print_string(output, time_to_string( pointer));
+            url_fwprintf( output, L"<Time: " );
+            print_string( output, time_to_string( pointer));
+            url_fputws( L"; ", output);
+            print_128bit( output, pointer2cell(pointer).payload.time.value);
+            url_fputwc( L'>', output);
             break;
         case TRUETV:
             url_fwprintf( output, L"t" );

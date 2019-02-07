@@ -1,5 +1,5 @@
 /*
- * time.h
+ * psse_time.h
  *
  * Bare bones of PSSE time. See issue #16.
  *

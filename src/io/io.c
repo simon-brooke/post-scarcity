@@ -378,9 +378,8 @@ void collect_meta( struct cons_pointer stream, char *url ) {
                 meta =
                     add_meta_integer( meta, L"size",
                                       ( intmax_t ) statbuf.st_size );
-/*
+
                 meta = add_meta_time( meta, L"modified", &statbuf.st_mtime );
-*/
             }
             break;
         case CFTYPE_CURL:
