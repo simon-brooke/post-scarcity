@@ -28,12 +28,6 @@
 #include "vectorspace.h"
 
 /**
- * Whether or not we colorise output.
- * \todo this should be a Lisp symbol binding, not a C variable.
- */
-int print_use_colours = 0;
-
-/**
  * print all the characters in the symbol or string indicated by `pointer`
  * onto this `output`; if `pointer` does not indicate a string or symbol,
  * don't print anything but just return.
@@ -89,18 +83,9 @@ print_list_contents( URL_FILE * output, struct cons_pointer pointer,
 }
 
 void print_list( URL_FILE * output, struct cons_pointer pointer ) {
-    if ( print_use_colours ) {
-        url_fwprintf( output, L"%s(%s", "\x1B[31m", "\x1B[39m" );
-    } else {
-        url_fputws( L"(", output );
-    };
-
+    url_fputws( L"(", output );
     print_list_contents( output, pointer, false );
-    if ( print_use_colours ) {
-        url_fwprintf( output, L"%s)%s", "\x1B[31m", "\x1B[39m" );
-    } else {
-        url_fputws( L")", output );
-    }
+    url_fputws( L")", output );
 }
 
 
@@ -178,8 +163,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_list( output, pointer );
             break;
         case EXCEPTIONTV:
-            url_fwprintf( output, L"\n%sException: ",
-                          print_use_colours ? "\x1B[31m" : "" );
+            url_fwuts( L"\nException: ", output );
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
@@ -190,17 +174,11 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
         case INTEGERTV:{
                 struct cons_pointer s = integer_to_string( pointer, 10 );
                 inc_ref( s );
-                if ( print_use_colours ) {
-                    url_fputws( L"\x1B[34m", output );
-                }
                 print_string_contents( output, s );
                 dec_ref( s );
             }
             break;
         case KEYTV:
-            if ( print_use_colours ) {
-                url_fputws( L"\x1B[1;33m", output );
-            }
             url_fputws( L":", output );
             print_string_contents( output, pointer );
             break;
@@ -254,22 +232,13 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                     buffer[i] = '\0';
                 }
             }
-            if ( print_use_colours ) {
-                url_fputws( L"\x1B[34m", output );
-            }
             url_fwprintf( output, L"%s", buffer );
             free( buffer );
             break;
         case STRINGTV:
-            if ( print_use_colours ) {
-                url_fputws( L"\x1B[36m", output );
-            }
             print_string( output, pointer );
             break;
         case SYMBOLTV:
-            if ( print_use_colours ) {
-                url_fputws( L"\x1B[1;33m", output );
-            }
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
@@ -297,15 +266,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         default:
             fwprintf( stderr,
-                      L"%sError: Unrecognised tag value %d (%c%c%c%c)\n",
-                      print_use_colours ? "\x1B[31m" : "",
-                      cell.tag.value, cell.tag.bytes[0], cell.tag.bytes[1],
-                      cell.tag.bytes[2], cell.tag.bytes[3] );
+                      L"Error: Unrecognised tag value %d (%4.4s)\n",
+                      cell.tag.value, &cell.tag.bytes[0] );
             break;
-    }
-
-    if ( print_use_colours ) {
-        url_fputws( L"\x1B[39m", output );
     }
 
     return pointer;

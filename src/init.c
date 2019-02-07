@@ -99,11 +99,8 @@ int main( int argc, char *argv[] ) {
         exit( 1 );
     }
 
-    while ( ( option = getopt( argc, argv, "cpdv:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "pdv:" ) ) != -1 ) {
         switch ( option ) {
-            case 'c':
-                print_use_colours = true;
-                break;
             case 'd':
                 dump_at_end = true;
                 break;
