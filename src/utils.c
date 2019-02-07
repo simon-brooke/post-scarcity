@@ -12,7 +12,7 @@
 #include <string.h>
 
 
-int index_of( char c, char *s ) {
+int index_of( char c, const char *s ) {
     int i;
 
     for ( i = 0; s[i] != c && s[i] != 0; i++ );
@@ -27,7 +27,7 @@ char *trim( char *s ) {
           i-- ) {
         s[i] = '\0';
     }
-    for ( i = 0; ( isblank( s[i] ) || iscntrl( s[i] ) ) && s[i] != '\0'; i++ );
+    for ( i = 0; s[i] != '\0' && ( isblank( s[i] ) || iscntrl( s[i] ) ); i++ );
 
     return ( char * ) &s[i];
 }

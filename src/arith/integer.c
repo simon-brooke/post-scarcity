@@ -12,12 +12,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-/* safe_iop, as available in the Ubuntu repository, is this one:
- * https://code.google.com/archive/p/safe-iop/wikis/README.wiki
- * which is installed as `libsafe-iop-dev`. There is an alternate
- * implementation here: https://github.com/redpig/safe-iop/
- * which shares the same version number but is not compatible. */
-#include <safe_iop.h>
 /*
  * wide characters
  */

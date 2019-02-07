@@ -26,10 +26,12 @@
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
+#include "map.h"
 #include "meta.h"
 #include "peano.h"
 #include "print.h"
 #include "repl.h"
+#include "time.h"
 
 // extern char *optarg; /* defined in unistd.h */
 
@@ -67,7 +69,7 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                                          n ),
                               NIL ) );
 
-    deep_bind( n, make_special( NIL, executable ) );
+    deep_bind( n, make_special( meta, executable ) );
 }
 
 /**
@@ -195,6 +197,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
     bind_function( L"inspect", &lisp_inspect );
+    bind_function( L"make-map", &lisp_make_map);
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
@@ -212,6 +215,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"source", &lisp_source );
     bind_function( L"subtract", &lisp_subtract );
     bind_function( L"throw", &lisp_exception );
+    bind_function( L"time", &lisp_time );
     bind_function( L"type", &lisp_type );
     bind_function( L"+", &lisp_add );
     bind_function( L"*", &lisp_multiply );

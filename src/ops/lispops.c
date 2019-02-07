@@ -269,8 +269,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
  * @return the result of evaluating the function with its arguments.
  */
 struct cons_pointer
-c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
-         struct cons_pointer env ) {
+    c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
     debug_print( L"Entering c_apply\n", DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
@@ -285,38 +285,47 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         switch ( fn_cell.tag.value ) {
             case EXCEPTIONTV:
-                /* just pass exceptions straight back */
-                result = fn_pointer;
-                break;
+            /* just pass exceptions straight back */
+            result = fn_pointer;
+            break;
             case FUNCTIONTV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
-                        struct stack_frame *next =
-                            get_stack_frame( next_pointer );
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
+                    struct stack_frame *next =
+                        get_stack_frame( next_pointer );
 
-                        result =
-                            ( *fn_cell.payload.function.executable ) ( next,
-                                                                       next_pointer,
-                                                                       env );
-                        dec_ref( next_pointer );
-                    }
+                    result =
+                        ( *fn_cell.payload.function.executable ) ( next,
+                                                                  next_pointer,
+                                                                  env );
+                    dec_ref( next_pointer );
                 }
-                break;
+            }
+            break;
+
+            case KEYTV:
+            result = c_assoc( fn_pointer,
+                             eval_form(frame,
+                                       frame_pointer,
+                                       c_car( c_cdr( frame->arg[0])),
+                                       env));
+            break;
+
             case LAMBDATV:
-                {
-                    struct cons_pointer exep = NIL;
-                    struct cons_pointer next_pointer =
-                        make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
-                    if ( exceptionp( next_pointer ) ) {
-                        result = next_pointer;
-                    } else {
+            {
+                struct cons_pointer exep = NIL;
+                struct cons_pointer next_pointer =
+                    make_stack_frame( frame_pointer, args, env );
+                inc_ref( next_pointer );
+                if ( exceptionp( next_pointer ) ) {
+                    result = next_pointer;
+                } else {
                         struct stack_frame *next =
                             get_stack_frame( next_pointer );
                         result =
@@ -416,9 +425,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     switch ( cell.tag.value ) {
         case CONSTV:
-            {
                 result = c_apply( frame, frame_pointer, env );
-            }
             break;
 
         case SYMBOLTV:
@@ -707,6 +714,22 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
     }
 
     return result;
+}
+
+/**
+ * Function: return, as an integer, the length of the sequence indicated by
+ * the first argument, or zero if it is not a sequence.
+ *
+ * * (length any)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the length of `any`, if it is a sequence, or zero otherwise.
+ */
+struct cons_pointer lisp_length( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    return make_integer( c_length( frame->arg[0]), NIL);
 }
 
 /**
@@ -1265,6 +1288,7 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
     }
 
     dump_object( output, frame->arg[0] );
+    url_fputws( L"\n", output );
 
     if ( writep( out_stream ) ) {
         dec_ref( out_stream );

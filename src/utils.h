@@ -10,6 +10,8 @@
 #ifndef __psse_utils_h
 #define __psse_utils_h
 
-int index_of( char c, char *s );
+int index_of( char c, const char *s );
+
 char *trim( char *s );
+
 #endif

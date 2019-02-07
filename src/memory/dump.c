@@ -21,6 +21,8 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
+#include "intern.h"
+#include "map.h"
 #include "print.h"
 #include "stack.h"
 #include "vectorspace.h"
@@ -145,6 +147,9 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
                 switch ( vso->header.tag.value ) {
                     case STACKFRAMETV:
                         dump_frame( output, pointer );
+                        break;
+                    case MAPTV:
+                        dump_map( output, pointer);
                         break;
                 }
             }
