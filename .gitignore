@@ -36,3 +36,5 @@ utils_src/readprintwc/out
 *.bak
 
 src/io/fopen
+
+hi\.*

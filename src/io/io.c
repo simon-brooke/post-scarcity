@@ -15,6 +15,7 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -277,9 +278,11 @@ struct cons_pointer add_meta_time( struct cons_pointer meta, wchar_t *key,
     /* I don't yet have a concept of a date-time object, which is a
      * bit of an oversight! */
     char datestring[256];
-    struct tm *tm = localtime( value );
 
-    strftime( datestring, sizeof( datestring ), nl_langinfo( D_T_FMT ), tm );
+    strftime( datestring,
+             sizeof( datestring ),
+             nl_langinfo( D_T_FMT ),
+             localtime( value ) );
 
     return add_meta_string( meta, key, datestring );
 }
@@ -375,13 +378,13 @@ void collect_meta( struct cons_pointer stream, char *url ) {
                 meta =
                     add_meta_integer( meta, L"size",
                                       ( intmax_t ) statbuf.st_size );
-
+/*
                 meta = add_meta_time( meta, L"modified", &statbuf.st_mtime );
+*/
             }
             break;
         case CFTYPE_CURL:
             curl_easy_setopt( s->handle.curl, CURLOPT_VERBOSE, 1L );
-            curl_easy_setopt( s->handle.curl, CURLOPT_HEADER, 1L );
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADERFUNCTION,
                               write_meta_callback );
             curl_easy_setopt( s->handle.curl, CURLOPT_HEADERDATA, stream );

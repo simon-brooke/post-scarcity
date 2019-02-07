@@ -1,6 +1,6 @@
 #!/bin/bash
 
-expected='<Special form>'
+expected='<Special form: ((:primitive . t) (:name . cond))>'
 actual=`echo "(eval 'cond)" | target/psse | tail -1`
 
 if [ "${expected}" = "${actual}" ]

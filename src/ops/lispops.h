@@ -85,7 +85,9 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
 struct cons_pointer lisp_lambda( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env );
-
+struct cons_pointer lisp_length( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+            struct cons_pointer env );
 /**
  * Construct an interpretable special form.
  *

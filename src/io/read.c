@@ -24,6 +24,7 @@
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
+#include "map.h"
 #include "peano.h"
 #include "print.h"
 #include "ratio.h"
@@ -42,6 +43,9 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  URL_FILE * input, wint_t initial,
                                  bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               URL_FILE * input, wint_t initial );
+struct cons_pointer read_map( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
@@ -100,6 +104,10 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     read_list( frame, frame_pointer, input,
                                url_fgetwc( input ) );
                 break;
+            case '{':
+                result = read_map( frame, frame_pointer, input,
+                               url_fgetwc( input ) );
+                break;
             case '"':
                 result = read_string( input, url_fgetwc( input ) );
                 break;
@@ -126,9 +134,10 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     } else if ( iswblank( next ) ) {
                         /* dotted pair. \todo this isn't right, we
                          * really need to backtrack up a level. */
-                        result =
-                            read_continuation( frame, frame_pointer, input,
+                        result = read_continuation( frame, frame_pointer, input,
                                                url_fgetwc( input ) );
+                        debug_print( L"read_continuation: dotted pair; read cdr ",
+                                    DEBUG_IO);
                     } else {
                         read_symbol_or_key( input, SYMBOLTAG, c );
                     }
@@ -275,25 +284,75 @@ struct cons_pointer read_number( struct stack_frame *frame,
  * left parenthesis.
  */
 struct cons_pointer read_list( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               URL_FILE * input, wint_t initial ) {
+                              struct cons_pointer frame_pointer,
+                              URL_FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
+    wint_t c;
+
     if ( initial != ')' ) {
         debug_printf( DEBUG_IO,
-                      L"read_list starting '%C' (%d)\n", initial, initial );
+                     L"read_list starting '%C' (%d)\n", initial, initial );
         struct cons_pointer car =
             read_continuation( frame, frame_pointer, input,
-                               initial );
-        result =
-            make_cons( car,
-                       read_list( frame, frame_pointer, input,
-                                  url_fgetwc( input ) ) );
+                              initial );
+
+        /* skip whitespace */
+        for (c = url_fgetwc( input );
+             iswblank( c ) || iswcntrl( c );
+             c = url_fgetwc( input ));
+
+        if ( c == L'.') {
+            /* might be a dotted pair; indeed, if we rule out numbers with
+             * initial periods, it must be a dotted pair. \todo Ought to check,
+             * howerver, that there's only one form after the period. */
+            result =
+                make_cons( car,
+                          c_car( read_list( frame,
+                                           frame_pointer,
+                                           input,
+                                           url_fgetwc( input ) ) ) );
+        } else {
+            result =
+                make_cons( car,
+                          read_list( frame, frame_pointer, input, c ) );
+        }
     } else {
         debug_print( L"End of list detected\n", DEBUG_IO );
     }
 
     return result;
 }
+
+
+struct cons_pointer read_map( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                             URL_FILE * input, wint_t initial ) {
+    struct cons_pointer result = make_empty_map( NIL);
+    wint_t c = initial;
+
+    while ( c != L'}' ) {
+        struct cons_pointer key =
+            read_continuation( frame, frame_pointer, input, c );
+
+        /* skip whitespace */
+        for (c = url_fgetwc( input );
+             iswblank( c ) || iswcntrl( c );
+             c = url_fgetwc( input ));
+
+        struct cons_pointer value =
+            read_continuation( frame, frame_pointer, input, c );
+
+        /* skip commaa and whitespace at this point. */
+        for (c = url_fgetwc( input );
+             c == L',' || iswblank( c ) || iswcntrl( c );
+             c = url_fgetwc( input ));
+
+        result = merge_into_map( result, make_cons( make_cons( key, value), NIL));
+    }
+
+    return result;
+}
+
 
 /**
  * Read a string. This means either a string delimited by double quotes
