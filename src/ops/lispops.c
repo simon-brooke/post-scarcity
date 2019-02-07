@@ -1288,6 +1288,7 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
     }
 
     dump_object( output, frame->arg[0] );
+    url_fputws( L"\n", output );
 
     if ( writep( out_stream ) ) {
         dec_ref( out_stream );

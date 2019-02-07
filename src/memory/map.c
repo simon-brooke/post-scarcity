@@ -15,6 +15,7 @@
 #include "dump.h"
 #include "fopen.h"
 #include "intern.h"
+#include "io.h"
 #include "lookup3.h"
 #include "map.h"
 #include "print.h"
@@ -61,10 +62,10 @@ struct map_payload *get_map_payload( struct cons_pointer pointer ) {
 
     if (vectorpointp(pointer) && mapp( vso ) ) {
         result = ( struct map_payload * ) &( vso->payload );
-        debug_printf( DEBUG_STACK,
+        debug_printf( DEBUG_BIND,
                       L"get_map_payload: all good, returning %p\n", result );
     } else {
-        debug_print( L"get_map_payload: fail, returning NULL\n", DEBUG_STACK );
+        debug_print( L"get_map_payload: fail, returning NULL\n", DEBUG_BIND );
     }
 
     return result;
@@ -79,7 +80,7 @@ struct map_payload *get_map_payload( struct cons_pointer pointer ) {
  * @return the new map, or NULL if memory is exhausted.
  */
 struct cons_pointer make_empty_map( struct cons_pointer hash_function ) {
-    debug_print( L"Entering make_empty_map\n", DEBUG_ALLOC );
+    debug_print( L"Entering make_empty_map\n", DEBUG_BIND );
     struct cons_pointer result =
         make_vso( MAPTAG, sizeof( struct map_payload ) );
 
@@ -94,6 +95,7 @@ struct cons_pointer make_empty_map( struct cons_pointer hash_function ) {
         }
     }
 
+    debug_print( L"Leaving make_empty_map\n", DEBUG_BIND );
     return result;
 }
 
@@ -143,6 +145,7 @@ struct cons_pointer bind_in_map( struct cons_pointer parent,
 
 
 struct cons_pointer keys( struct cons_pointer store) {
+    debug_print( L"Entering keys\n", DEBUG_BIND );
     struct cons_pointer result = NIL;
 
     struct cons_space_object cell = pointer2cell( store );
@@ -158,18 +161,27 @@ struct cons_pointer keys( struct cons_pointer store) {
                 pointer2cell( store ).payload.vectorp.address;
 
             if ( mapp( vso ) ) {
-                struct map_payload * payload = get_map_payload( result );
+                struct map_payload * payload = get_map_payload( store );
 
                 for (int bucket = 0; bucket < BUCKETSINMAP; bucket++) {
                     for (struct cons_pointer c = payload->buckets[bucket];
                          !nilp(c); c = c_cdr(c)) {
+                        debug_print( L"keys: c is ", DEBUG_BIND);
+                        debug_print_object( c, DEBUG_BIND);
+
                         result = make_cons( c_car( c_car( c)), result);
+                        debug_print( L"; result is ", DEBUG_BIND);
+                        debug_print_object( result, DEBUG_BIND);
+                        debug_println( DEBUG_BIND);
                     }
                 }
             }
         }
         break;
     }
+    debug_print( L"keys returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_println( DEBUG_BIND);
 
     return result;
 }
@@ -187,6 +199,7 @@ struct cons_pointer keys( struct cons_pointer store) {
  */
 struct cons_pointer merge_into_map( struct cons_pointer parent,
                                    struct cons_pointer to_merge) {
+    debug_print( L"Entering merge_into_map\n", DEBUG_BIND );
     struct cons_pointer result = make_duplicate_map(parent);
 
     if (!nilp(result)) {
@@ -202,23 +215,30 @@ struct cons_pointer merge_into_map( struct cons_pointer parent,
         }
     }
 
+    debug_print( L"Leaving merge_into_map\n", DEBUG_BIND );
+
     return result;
 }
 
 
-struct cons_pointer assoc_in_map( struct cons_pointer map,
-                                  struct cons_pointer key) {
+struct cons_pointer assoc_in_map( struct cons_pointer key,
+                                  struct cons_pointer map) {
+    debug_print( L"Entering assoc_in_map\n", DEBUG_BIND );
     struct cons_pointer result = NIL;
     struct map_payload *payload = get_map_payload( map );
 
     if (payload != NULL) {
         int bucket = get_hash_32(payload->hash_function, key) % BUCKETSINMAP;
-
         result = c_assoc(key, payload->buckets[bucket]);
     }
 
+    debug_print( L"assoc_in_map returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND);
+    debug_println( DEBUG_BIND);
+
     return result;
 }
+
 
 /**
  * Function: create a map initialised with key/value pairs from my
@@ -251,7 +271,7 @@ void dump_map( URL_FILE * output, struct cons_pointer map_pointer ) {
         struct map_payload *payload = get_map_payload( map_pointer );
 
         if ( payload != NULL ) {
-            url_fputws( L"Immutable map; hash function:", output );
+            url_fputws( L"Immutable map; hash function: ", output );
 
             if (nilp(payload->hash_function)) {
                 url_fputws( L"default", output);

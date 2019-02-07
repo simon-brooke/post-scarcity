@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tmp=hi$$
+tmp=hi.$$
 echo "Hello, there." > ${tmp}
 expected='"Hello, there.'
 actual=`echo "(slurp (open \"${tmp}\"))" | target/psse | tail -2 | head -1`

@@ -94,9 +94,7 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 
     debug_print( L"c_assoc; key is `", DEBUG_BIND);
     debug_print_object( key, DEBUG_BIND);
-    debug_print( L"`; store is \n", DEBUG_BIND);
-    debug_dump_object( store, DEBUG_BIND);
-    debug_println(DEBUG_BIND);
+    debug_print( L"`\n", DEBUG_BIND);
 
     if (consp(store)) {
         for ( struct cons_pointer next = store;

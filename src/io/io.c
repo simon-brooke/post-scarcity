@@ -15,6 +15,7 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -277,9 +278,11 @@ struct cons_pointer add_meta_time( struct cons_pointer meta, wchar_t *key,
     /* I don't yet have a concept of a date-time object, which is a
      * bit of an oversight! */
     char datestring[256];
-    struct tm *tm = localtime( value );
 
-    strftime( datestring, sizeof( datestring ), nl_langinfo( D_T_FMT ), tm );
+    strftime( datestring,
+             sizeof( datestring ),
+             nl_langinfo( D_T_FMT ),
+             localtime( value ) );
 
     return add_meta_string( meta, key, datestring );
 }

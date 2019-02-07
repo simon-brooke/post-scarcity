@@ -104,18 +104,18 @@ void print_list( URL_FILE * output, struct cons_pointer pointer ) {
 }
 
 
-void print_map( URL_FILE * output, struct cons_pointer pointer) {
-    if ( vectorpointp( pointer)) {
-        struct vector_space_object *vso = pointer_to_vso( pointer);
+void print_map( URL_FILE * output, struct cons_pointer map) {
+    if ( vectorpointp( map)) {
+        struct vector_space_object *vso = pointer_to_vso( map);
 
         if ( mapp( vso ) ) {
             url_fputwc( btowc( '{' ), output );
 
-            for ( struct cons_pointer ks = keys(pointer);
-                 !nilp(ks); ks = c_cdr(ks)) {
-                print( output, c_car(ks));
+            for ( struct cons_pointer ks = keys( map);
+                 !nilp( ks); ks = c_cdr( ks)) {
+                print( output, c_car( ks));
                 url_fputwc( btowc( ' ' ), output );
-                print( output, c_assoc( pointer, c_car(ks)));
+                print( output, c_assoc( c_car( ks), map));
 
                 if ( !nilp( c_cdr( ks))) {
                     url_fputws( L", ", output );
@@ -162,7 +162,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
-            url_fwprintf( output, L"<Function>" );
+            url_fputws( L"<Function: ", output);
+            print( output, cell.payload.function.meta);
+            url_fputwc( L'>', output);
             break;
         case INTEGERTV:{
                 struct cons_pointer s = integer_to_string( pointer, 10 );
@@ -214,7 +216,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print( output, cell.payload.ratio.divisor );
             break;
         case READTV:
-            url_fwprintf( output, L"<Input stream>" );
+            url_fwprintf( output, L"<Input stream: " );
+            print( output, cell.payload.stream.meta);
+            url_fputwc( L'>', output);
             break;
         case REALTV:
             /* \todo using the C heap is a bad plan because it will fragment.
@@ -248,7 +252,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_string_contents( output, pointer );
             break;
         case SPECIALTV:
-            url_fwprintf( output, L"<Special form>" );
+            url_fwprintf( output, L"<Special form: " );
+            print( output, cell.payload.special.meta);
+            url_fputwc( L'>', output);
             break;
         case TIMETV:
             print_string(output, time_to_string( pointer));
@@ -260,7 +266,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_vso( output, pointer);
             break;
         case WRITETV:
-            url_fwprintf( output, L"<Output stream>" );
+            url_fwprintf( output, L"<Output stream: " );
+            print( output, cell.payload.stream.meta);
+            url_fputwc( L'>', output);
             break;
         default:
             fwprintf( stderr,

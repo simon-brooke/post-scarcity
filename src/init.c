@@ -69,7 +69,7 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                                          n ),
                               NIL ) );
 
-    deep_bind( n, make_special( NIL, executable ) );
+    deep_bind( n, make_special( meta, executable ) );
 }
 
 /**
