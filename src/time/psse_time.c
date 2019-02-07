@@ -1,5 +1,5 @@
 /*
- * time.h
+ * psse_time.c
  *
  * Bare bones of PSSE time. See issue #16.
  *
@@ -8,6 +8,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 /*
  * wide characters
@@ -18,7 +19,7 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "integer.h"
-#include "time.h"
+#include "psse_time.h"
 #define _GNU_SOURCE
 
 #define seconds_per_year 31557600L
@@ -90,9 +91,17 @@ struct cons_pointer lisp_time( struct stack_frame *frame, struct cons_pointer fr
  * This is temporary, for bootstrapping.
  */
 struct cons_pointer time_to_string( struct cons_pointer pointer) {
+    struct cons_pointer result = NIL;
     long int t = lisp_time_to_unix_time(pointer);
 
-    return c_string_to_lisp_string( t == 0 ?
-                                         L"Not yet implemented: cannot print times outside UNIX time\n" :
-                                         ctime(&t));
+    if ( t != 0) {
+        char * bytes = ctime(&t);
+        int l = strlen(bytes) + 1;
+        wchar_t buffer[ l];
+
+        mbstowcs( buffer, bytes, l);
+        result = c_string_to_lisp_string( buffer);
+    }
+
+    return result;
 }
