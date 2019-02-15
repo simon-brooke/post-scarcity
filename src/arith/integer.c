@@ -240,7 +240,10 @@ struct cons_pointer append_digit( struct cons_pointer partial, struct cons_point
 /**
  * Return a pointer to an integer representing the product of the integers
  * pointed to by `a` and `b`. If either isn't an integer, will return nil.
- * \todo it is MUCH more complicated than this!
+ *
+ * Yes, this is one of Muhammad ibn Musa al-Khwarizmi's original recipes, so
+ * you'd think it would be easy; the reason that each step is documented is
+ * because I did not find it so.
  *
  * @param a an integer;
  * @param b an integer.
@@ -339,38 +342,28 @@ struct cons_pointer integer_to_string_add_digit( int digit, int digits,
  * when we get to the last digit from one integer cell, we have potentially
  * to be looking to the next. H'mmmm.
  */
-/*
- * \todo this blows up when printing three-cell integers, but works fine
- * for two-cell. What's happening is that when we cross the barrier we
- * SHOULD print 2^120, but what we actually print is 2^117. H'mmm.
- */
 struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
-                                       int base ) {
+                                      int base ) {
     struct cons_pointer result = NIL;
-    struct cons_space_object integer = pointer2cell( int_pointer );
-    __int128_t accumulator = llabs( integer.payload.integer.value );
-    bool is_negative = integer.payload.integer.value < 0;
-    int digits = 0;
 
-    if ( accumulator == 0 && nilp( integer.payload.integer.more ) ) {
-        result = c_string_to_lisp_string( L"0" );
-    } else {
-        while ( accumulator > 0 || !nilp( integer.payload.integer.more ) ) {
-            if ( !nilp( integer.payload.integer.more ) ) {
-                integer = pointer2cell( integer.payload.integer.more );
-                accumulator += integer.payload.integer.value;
-                debug_print
-                    ( L"integer_to_string: crossing cell boundary, accumulator is: ",
-                      DEBUG_IO );
-                debug_print_128bit( accumulator, DEBUG_IO );
-                debug_println( DEBUG_IO );
-            }
+    if ( integerp( int_pointer ) ) {
+        struct cons_pointer next = pointer2cell( int_pointer ).payload.integer.more;
+        __int128_t accumulator = llabs( pointer2cell( int_pointer ).payload.integer.value );
+        bool is_negative = pointer2cell( int_pointer ).payload.integer.value < 0;
+        int digits = 0;
 
-            do {
+        if ( accumulator == 0 && nilp( next ) ) {
+            result = c_string_to_lisp_string( L"0" );
+        } else {
+            while ( accumulator > 0 || !nilp( next ) ) {
+                if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
+                    accumulator += (pointer2cell(next).payload.integer.value << 60);
+                    next = pointer2cell(next).payload.integer.more;
+                }
                 int offset = ( int ) ( accumulator % base );
                 debug_printf( DEBUG_IO,
-                              L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
-                              offset, hex_digits[offset] );
+                             L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
+                             offset, hex_digits[offset] );
                 debug_print_128bit( accumulator, DEBUG_IO );
                 debug_print( L"; result is: ", DEBUG_IO );
                 debug_print_object( result, DEBUG_IO );
@@ -379,20 +372,19 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                 result =
                     integer_to_string_add_digit( offset, ++digits, result );
                 accumulator = accumulator / base;
-            } while ( accumulator > base );
-        }
+            }
 
-        if ( stringp( result )
-             && pointer2cell( result ).payload.string.character == L',' ) {
-            /* if the number of digits in the string is divisible by 3, there will be
-             * an unwanted comma on the front. */
-            struct cons_pointer tmp = result;
-            result = pointer2cell( result ).payload.string.cdr;
-            //dec_ref( tmp );
-        }
+            if ( stringp( result )
+                && pointer2cell( result ).payload.string.character == L',' ) {
+                /* if the number of digits in the string is divisible by 3, there will be
+                 * an unwanted comma on the front. */
+                result = pointer2cell( result ).payload.string.cdr;
+            }
 
-        if ( is_negative ) {
-            result = make_string( L'-', result );
+
+            if ( is_negative ) {
+                result = make_string( L'-', result );
+            }
         }
     }
 
