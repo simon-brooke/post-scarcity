@@ -163,7 +163,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_list( output, pointer );
             break;
         case EXCEPTIONTV:
-            url_fwuts( L"\nException: ", output );
+            url_fputws( L"\nException: ", output );
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
