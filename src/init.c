@@ -84,6 +84,33 @@ void bind_value( wchar_t *name, struct cons_pointer value ) {
     dec_ref( n );
 }
 
+void print_banner() {
+    fwprintf(stdout, L"Post-Scarcity Software Environment version %s\n\n", VERSION);
+}
+
+/**
+ * Print command line options to this `stream`.
+ * 
+ * @stream the stream to print to.
+ */
+void print_options(FILE* stream) {
+    fwprintf(stream, L"Expected options are:\n");
+    fwprintf(stream, L"\t-d\tDump memory to standard out at end of run (copious!);\n");
+    fwprintf(stream, L"\t-h\tPrint this message and exit;\n");
+    fwprintf(stream, L"\t-p\tShow a prompt (default is no prompt);\n");
+    fwprintf(stream, L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n");
+    fwprintf(stream, L"\t\tWhere bits are interpreted as follows:\n");
+    fwprintf(stream, L"\t\t1\tALLOC;\n");
+    fwprintf(stream, L"\t\t2\tARITH;\n");
+    fwprintf(stream, L"\t\t4\tBIND;\n");
+    fwprintf(stream, L"\t\t8\tBOOTSTRAP;\n");
+    fwprintf(stream, L"\t\t16\tEVAL;\n");
+    fwprintf(stream, L"\t\t32\tINPUT/OUTPUT;\n");
+    fwprintf(stream, L"\t\t64\tLAMBDA;\n");
+    fwprintf(stream, L"\t\t128\tREPL;\n");
+    fwprintf(stream, L"\t\t256\tSTACK.\n");
+}
+
 /**
  * main entry point; parse command line arguments, initialise the environment,
  * and enter the read-eval-print loop.
@@ -99,10 +126,15 @@ int main( int argc, char *argv[] ) {
         exit( 1 );
     }
 
-    while ( ( option = getopt( argc, argv, "pdv:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "phdv:" ) ) != -1 ) {
         switch ( option ) {
             case 'd':
                 dump_at_end = true;
+                break;
+            case 'h':
+                print_banner();
+                print_options(stdout);
+                exit( 0 );
                 break;
             case 'p':
                 show_prompt = true;
@@ -112,14 +144,14 @@ int main( int argc, char *argv[] ) {
                 break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
+                print_options(stderr);
+                exit( 1 );
                 break;
         }
     }
 
     if ( show_prompt ) {
-        fwprintf( stdout,
-                  L"Post scarcity software environment version %s\n\n",
-                  VERSION );
+        print_banner();
     }
 
     debug_print( L"About to initialise cons pages\n", DEBUG_BOOTSTRAP );
