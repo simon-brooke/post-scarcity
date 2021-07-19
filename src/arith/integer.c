@@ -217,19 +217,43 @@ struct cons_pointer base_partial( int depth ) {
 }
 
 /**
+ * destructively modify this `partial` by appending this `digit`.
+ */
+struct cons_pointer append_digit( struct cons_pointer partial, struct cons_pointer digit) {
+    struct cons_pointer c = partial;
+    struct cons_pointer result = partial;
+
+    if (nilp( partial)) {
+        result = digit;
+    } else {
+        while ( !nilp( pointer2cell(c).payload.integer.more)) {
+            c = pointer2cell(c).payload.integer.more;
+        }
+
+        (&pointer2cell(c))->payload.integer.more = digit;
+    }
+    return result;
+}
+
+
+
+/**
  * Return a pointer to an integer representing the product of the integers
  * pointed to by `a` and `b`. If either isn't an integer, will return nil.
- * \todo it is MUCH more complicated than this!
+ *
+ * Yes, this is one of Muhammad ibn Musa al-Khwarizmi's original recipes, so
+ * you'd think it would be easy; the reason that each step is documented is
+ * because I did not find it so.
  *
  * @param a an integer;
  * @param b an integer.
  */
 struct cons_pointer multiply_integers( struct cons_pointer a,
-                                       struct cons_pointer b ) {
-    struct cons_pointer result = NIL;
+                                      struct cons_pointer b ) {
+    struct cons_pointer result = make_integer( 0, NIL);
     bool neg = is_negative( a ) != is_negative( b );
     bool is_first_b = true;
-    int oom = -1;
+    int i = 0;
 
     debug_print( L"multiply_integers: a = ", DEBUG_ARITH );
     debug_print_object( a, DEBUG_ARITH );
@@ -238,60 +262,54 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
     debug_println( DEBUG_ARITH );
 
     if ( integerp( a ) && integerp( b ) ) {
-        while ( !nilp( b ) ) {
-            bool is_first_d = true;
-            struct cons_pointer d = a;
-            struct cons_pointer partial = base_partial( ++oom );
+        /* for each digit in a, starting with the least significant (ai) */
+
+        for ( struct cons_pointer ai = a; !nilp( ai );
+             ai = pointer2cell(ai).payload.integer.more) {
+            /* set carry to 0 */
             __int128_t carry = 0;
 
-            while ( !nilp( d ) || carry != 0 ) {
-                partial = make_integer( 0, partial );
-                struct cons_pointer new = NIL;
-                __int128_t dv = cell_value( d, '+', is_first_d );
-                __int128_t bv = cell_value( b, '+', is_first_b );
+            /* set least significant digits for result ri for this iteration
+             * to i zeros */
+            struct cons_pointer ri = base_partial( i++ );
 
-                __int128_t rv = ( dv * bv ) + carry;
+            /* for each digit in b, starting with the least significant (bj) */
+            for ( struct cons_pointer bj = b; !nilp( bj );
+                 bj = pointer2cell(bj).payload.integer.more) {
 
-                debug_print( L"multiply_integers: d = ", DEBUG_ARITH );
-                debug_print_object( d, DEBUG_ARITH );
-                debug_print( L"; dv = ", DEBUG_ARITH );
-                debug_print_128bit( dv, DEBUG_ARITH );
-                debug_print( L"; bv = ", DEBUG_ARITH );
-                debug_print_128bit( bv, DEBUG_ARITH );
-                debug_print( L"; carry = ", DEBUG_ARITH );
-                debug_print_128bit( carry, DEBUG_ARITH );
-                debug_print( L"; rv = ", DEBUG_ARITH );
-                debug_print_128bit( rv, DEBUG_ARITH );
-                debug_print( L"; acc = ", DEBUG_ARITH );
-                debug_print_object( result, DEBUG_ARITH );
-                debug_print( L"; partial = ", DEBUG_ARITH );
-                debug_print_object( partial, DEBUG_ARITH );
-                debug_print( L"\n", DEBUG_ARITH );
+                debug_printf( DEBUG_ARITH,
+                             L"multiply_integers: a[i] = %Ld, b[j] = %Ld, i = %d\n",
+                             pointer2cell(ai).payload.integer.value,
+                             pointer2cell(bj).payload.integer.value, i);
 
-                new = make_integer_128( rv, base_partial( oom ) );
+                /* multiply ai with bj and add the carry, resulting in a
+                 * value xj which may exceed one digit */
+                __int128_t xj = pointer2cell(ai).payload.integer.value *
+                    pointer2cell(bj).payload.integer.value;
+                xj += carry;
 
-                if ( zerop( partial ) ) {
-                    partial = new;
-                } else {
-                    partial = add_integers( partial, new );
-                }
+                /* if xj exceeds one digit, break it into the digit dj and
+                 * the carry */
+                carry = xj >> 60;
+                struct cons_pointer dj = make_integer( xj & MAX_INTEGER, NIL);
 
-                d = integerp( d ) ? pointer2cell( d ).payload.integer.
-                    more : NIL;
-                is_first_d = false;
+                /* destructively modify ri by appending dj */
+                ri = append_digit( ri, dj);
+            } /* end for bj */
+
+            /* if carry is not equal to zero, append it as a final digit
+             * to ri */
+            if (carry != 0) {
+                ri = append_digit( ri, make_integer( carry, NIL));
             }
 
-            if ( nilp( result ) || zerop( result ) ) {
-                result = partial;
-            } else {
-                struct cons_pointer old = result;
-                result = add_integers( partial, result );
-                //if (!eq(result, old)) dec_ref(old);
-                //if (!eq(result, partial)) dec_ref(partial);
-            }
-            b = pointer2cell( b ).payload.integer.more;
-            is_first_b = false;
-        }
+            /* add ri to result */
+            result = add_integers( result, ri);
+
+            debug_print( L"multiply_integers: result is ", DEBUG_ARITH );
+            debug_print_object( result, DEBUG_ARITH );
+            debug_println( DEBUG_ARITH );
+        } /* end for ai */
     }
 
     debug_print( L"multiply_integers returning: ", DEBUG_ARITH );
@@ -324,38 +342,28 @@ struct cons_pointer integer_to_string_add_digit( int digit, int digits,
  * when we get to the last digit from one integer cell, we have potentially
  * to be looking to the next. H'mmmm.
  */
-/*
- * \todo this blows up when printing three-cell integers, but works fine
- * for two-cell. What's happening is that when we cross the barrier we
- * SHOULD print 2^120, but what we actually print is 2^117. H'mmm.
- */
 struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
-                                       int base ) {
+                                      int base ) {
     struct cons_pointer result = NIL;
-    struct cons_space_object integer = pointer2cell( int_pointer );
-    __int128_t accumulator = llabs( integer.payload.integer.value );
-    bool is_negative = integer.payload.integer.value < 0;
-    int digits = 0;
 
-    if ( accumulator == 0 && nilp( integer.payload.integer.more ) ) {
-        result = c_string_to_lisp_string( L"0" );
-    } else {
-        while ( accumulator > 0 || !nilp( integer.payload.integer.more ) ) {
-            if ( !nilp( integer.payload.integer.more ) ) {
-                integer = pointer2cell( integer.payload.integer.more );
-                accumulator += integer.payload.integer.value;
-                debug_print
-                    ( L"integer_to_string: crossing cell boundary, accumulator is: ",
-                      DEBUG_IO );
-                debug_print_128bit( accumulator, DEBUG_IO );
-                debug_println( DEBUG_IO );
-            }
+    if ( integerp( int_pointer ) ) {
+        struct cons_pointer next = pointer2cell( int_pointer ).payload.integer.more;
+        __int128_t accumulator = llabs( pointer2cell( int_pointer ).payload.integer.value );
+        bool is_negative = pointer2cell( int_pointer ).payload.integer.value < 0;
+        int digits = 0;
 
-            do {
+        if ( accumulator == 0 && nilp( next ) ) {
+            result = c_string_to_lisp_string( L"0" );
+        } else {
+            while ( accumulator > 0 || !nilp( next ) ) {
+                if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
+                    accumulator += (pointer2cell(next).payload.integer.value << 60);
+                    next = pointer2cell(next).payload.integer.more;
+                }
                 int offset = ( int ) ( accumulator % base );
                 debug_printf( DEBUG_IO,
-                              L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
-                              offset, hex_digits[offset] );
+                             L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
+                             offset, hex_digits[offset] );
                 debug_print_128bit( accumulator, DEBUG_IO );
                 debug_print( L"; result is: ", DEBUG_IO );
                 debug_print_object( result, DEBUG_IO );
@@ -364,20 +372,19 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
                 result =
                     integer_to_string_add_digit( offset, ++digits, result );
                 accumulator = accumulator / base;
-            } while ( accumulator > base );
-        }
+            }
 
-        if ( stringp( result )
-             && pointer2cell( result ).payload.string.character == L',' ) {
-            /* if the number of digits in the string is divisible by 3, there will be
-             * an unwanted comma on the front. */
-            struct cons_pointer tmp = result;
-            result = pointer2cell( result ).payload.string.cdr;
-            //dec_ref( tmp );
-        }
+            if ( stringp( result )
+                && pointer2cell( result ).payload.string.character == L',' ) {
+                /* if the number of digits in the string is divisible by 3, there will be
+                 * an unwanted comma on the front. */
+                result = pointer2cell( result ).payload.string.cdr;
+            }
 
-        if ( is_negative ) {
-            result = make_string( L'-', result );
+
+            if ( is_negative ) {
+                result = make_string( L'-', result );
+            }
         }
     }
 
