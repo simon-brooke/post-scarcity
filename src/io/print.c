@@ -183,8 +183,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_string_contents( output, pointer );
             break;
         case LAMBDATV:{
+                url_fputws( L"<Anonymous Function: ", output);
                 struct cons_pointer to_print =
-                    make_cons( c_string_to_lisp_symbol( L"lambda" ),
+                    make_cons( c_string_to_lisp_symbol( L"\u03bb" ),
                                make_cons( cell.payload.lambda.args,
                                           cell.payload.lambda.body ) );
                 inc_ref( to_print );
@@ -192,14 +193,16 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 print( output, to_print );
 
                 dec_ref( to_print );
+                url_fputwc( L'>', output);
             }
             break;
         case NILTV:
             url_fwprintf( output, L"nil" );
             break;
         case NLAMBDATV:{
+                url_fputws( L"<Anonymous Special Form: ", output);
                 struct cons_pointer to_print =
-                    make_cons( c_string_to_lisp_symbol( L"nlambda" ),
+                    make_cons( c_string_to_lisp_symbol( L"n\u03bb" ),
                                make_cons( cell.payload.lambda.args,
                                           cell.payload.lambda.body ) );
                 inc_ref( to_print );
@@ -207,6 +210,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 print( output, to_print );
 
                 dec_ref( to_print );
+                url_fputwc( L'>', output);
             }
             break;
         case RATIOTV:
