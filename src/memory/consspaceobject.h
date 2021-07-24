@@ -45,7 +45,8 @@
 #define CONSTV      1397641027
 
 /**
- * An exception.
+ * An exception. TODO: we need a means of dealing with different classes of
+ * exception, and we don't have one yet.
  */
 #define EXCEPTIONTAG "EXEP"
 
@@ -107,6 +108,17 @@
  * The string `LMDA`, considered as an `unsigned int`.
  */
 #define LAMBDATV   1094995276
+
+/**
+ * A loop exit is a special kind of exception which has exactly the same
+ * payload as an exception.
+ */
+#define LOOPXTAG    "LOOX"
+
+/**
+ * The string `LOOX`, considered as an `unsigned int`.
+ */
+#define LOOPXTV     1481592652
 
 /**
  * The special cons cell at address {0,0} whose car and cdr both point to
@@ -286,9 +298,14 @@
 #define keywordp(conspoint) (check_tag(conspoint,KEYTAG))
 
 /**
- * true if `conspoint` points to a special Lambda cell, else false
+ * true if `conspoint` points to a Lambda binding cell, else false
  */
 #define lambdap(conspoint) (check_tag(conspoint,LAMBDATAG))
+
+/**
+ * true if `conspoint` points to a loop exit exception, else false.
+ */
+#define loopexitp(conspoint) (check_tag(conspoint,LOOPXTAG))
 
 /**
  * true if `conspoint` points to a special form cell, else false
@@ -414,8 +431,8 @@ struct cons_payload {
  * Message should be a Lisp string; frame should be a pointer to an (unfreed) stack frame.
  */
 struct exception_payload {
-  /** The message: should be a Lisp string but in practice anything printable will do. */
-    struct cons_pointer message;
+  /** The payload: usually a Lisp string but in practice anything printable will do. */
+    struct cons_pointer payload;
   /** pointer to the (unfreed) stack frame in which the exception was thrown. */
     struct cons_pointer frame;
 };

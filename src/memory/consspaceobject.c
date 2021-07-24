@@ -163,7 +163,7 @@ struct cons_pointer make_exception( struct cons_pointer message,
 
     inc_ref( message );
     inc_ref( frame_pointer );
-    cell->payload.exception.message = message;
+    cell->payload.exception.payload = message;
     cell->payload.exception.frame = frame_pointer;
 
     result = pointer;

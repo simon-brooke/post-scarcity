@@ -148,7 +148,7 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.cons.cdr );
                     break;
                 case EXCEPTIONTV:
-                    dec_ref( cell->payload.exception.message );
+                    dec_ref( cell->payload.exception.payload );
                     dec_ref( cell->payload.exception.frame );
                     break;
                 case FUNCTIONTV:

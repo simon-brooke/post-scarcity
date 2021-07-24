@@ -29,6 +29,10 @@
 
 struct cons_pointer c_reverse( struct cons_pointer arg );
 
+struct cons_pointer
+c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
+         struct cons_pointer expressions, struct cons_pointer env );
+
 /**
  * Useful building block; evaluate this single form in the context of this
  * parent stack frame and this environment.

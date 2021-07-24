@@ -107,7 +107,7 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
         list = c_cdr( list );
     }
 
-    return result;
+    return c_reverse( result);
 }
 
 /**
@@ -991,7 +991,7 @@ c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = eval_form( frame, frame_pointer, c_car( expressions ), env );
         dec_ref( r );
 
-        expressions = c_cdr( expressions );
+        expressions = exceptionp(result) ? NIL : c_cdr( expressions );
     }
 
     return result;
@@ -1259,7 +1259,7 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
         case SPECIALTV:
             result = c_assoc( source_key, cell.payload.special.meta );
             break;
-        case LAMBDATV:
+        case LAMBDATV: 
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
                                 make_cons( cell.payload.lambda.args,
                                            cell.payload.lambda.body ) );
