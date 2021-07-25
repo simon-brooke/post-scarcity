@@ -267,7 +267,6 @@ void dump_frame( URL_FILE * output, struct cons_pointer frame_pointer ) {
 
 void dump_stack_trace( URL_FILE * output, struct cons_pointer pointer ) {
     if ( exceptionp( pointer ) ) {
-    // todo: if the payload isn't a message, we maybe shouldn't print it?
         print( output, pointer2cell( pointer ).payload.exception.payload );
         url_fputws( L"\n", output );
         dump_stack_trace( output,

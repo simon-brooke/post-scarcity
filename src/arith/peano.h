@@ -19,13 +19,11 @@
 
 bool zerop( struct cons_pointer arg );
 
-struct cons_pointer negative( struct cons_pointer frame,
-                              struct cons_pointer arg );
+struct cons_pointer negative( struct cons_pointer arg );
 
 bool is_negative( struct cons_pointer arg );
 
-struct cons_pointer absolute( struct cons_pointer frame_pointer,
-                              struct cons_pointer arg );
+struct cons_pointer absolute( struct cons_pointer arg );
 
 long double to_long_double( struct cons_pointer arg );
 
@@ -46,8 +44,7 @@ struct cons_pointer
 lisp_multiply( struct stack_frame *frame,
                struct cons_pointer frame_pointer, struct cons_pointer env );
 
-struct cons_pointer negative( struct cons_pointer frame,
-                              struct cons_pointer arg );
+struct cons_pointer negative( struct cons_pointer arg );
 
 struct cons_pointer subtract_2( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,

@@ -250,7 +250,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
 
     if ( seen_period ) {
         debug_print( L"read_number: converting result to real\n", DEBUG_IO );
-        struct cons_pointer div = make_ratio( frame_pointer, result,
+        struct cons_pointer div = make_ratio( result,
                                               make_integer( powl
                                                             ( to_long_double
                                                               ( base ),
@@ -263,14 +263,14 @@ struct cons_pointer read_number( struct stack_frame *frame,
         dec_ref( div );
     } else if ( integerp( dividend ) ) {
         debug_print( L"read_number: converting result to ratio\n", DEBUG_IO );
-        result = make_ratio( frame_pointer, dividend, result );
+        result = make_ratio( dividend, result );
     }
 
     if ( neg ) {
         debug_print( L"read_number: converting result to negative\n",
                      DEBUG_IO );
 
-        result = negative( frame_pointer, result );
+        result = negative( result );
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );

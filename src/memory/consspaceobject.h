@@ -346,7 +346,7 @@
  * true if `conspoint` points to some sort of a number cell,
  * else false
  */
-#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG)||check_tag(conspoint,BIGNUMTAG))
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG))
 
 /**
  * true if `conspoint` points to a sequence (list, string or, later, vector),
@@ -614,7 +614,7 @@ struct cons_space_object {
          */
         struct cons_payload cons;
         /**
-         * if tag == EXCEPTIONTAG
+         * if tag == EXCEPTIONTAG || tag == LOOPXTAG
          */
         struct exception_payload exception;
         /**

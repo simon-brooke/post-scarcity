@@ -390,3 +390,38 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
 
     return result;
 }
+
+/**
+ * true if a and be are both integers whose value is the same value.
+ */
+bool equal_integer_integer(struct cons_pointer a, struct cons_pointer b) {
+    bool result = false;
+
+    if (integerp(a) && integerp(b)){
+        struct cons_space_object *cell_a = &pointer2cell( a );
+        struct cons_space_object *cell_b = &pointer2cell( b );
+
+        result = cell_a->payload.integer.value == cell_b->payload.integer.value;
+    }
+
+    return result;
+}
+
+/**
+ * true if `a` is an integer, and `b` is a real number whose value is the
+ * value of that integer.
+ */
+bool equal_integer_real(struct cons_pointer a, struct cons_pointer b) {
+    bool result = false;
+
+    if (integerp(a) && realp(b))
+    {
+        long double bv = pointer2cell(b).payload.real.value;
+
+        if (floor(bv) == bv) {
+            result = pointer2cell(a).payload.integer.value == (int64_t)bv;
+        }
+    }
+
+    return result;
+}

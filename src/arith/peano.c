@@ -86,8 +86,7 @@ bool is_negative( struct cons_pointer arg ) {
     return result;
 }
 
-struct cons_pointer absolute( struct cons_pointer frame_pointer,
-                              struct cons_pointer arg ) {
+struct cons_pointer absolute( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
@@ -99,9 +98,7 @@ struct cons_pointer absolute( struct cons_pointer frame_pointer,
                                   cell.payload.integer.more );
                 break;
             case RATIOTV:
-                result = make_ratio( frame_pointer,
-                                     absolute( frame_pointer,
-                                               cell.payload.ratio.dividend ),
+                result = make_ratio( absolute( cell.payload.ratio.dividend ),
                                      cell.payload.ratio.divisor );
                 break;
             case REALTV:
@@ -210,7 +207,7 @@ int64_t to_long_int( struct cons_pointer arg ) {
 struct cons_pointer lisp_absolute( struct stack_frame
                                    *frame, struct cons_pointer frame_pointer, struct
                                    cons_pointer env ) {
-    return absolute( frame_pointer, frame->arg[0] );
+    return absolute( frame->arg[0] );
 }
 
 /**
@@ -251,7 +248,7 @@ struct cons_pointer add_2( struct stack_frame *frame,
                         break;
                     case RATIOTV:
                         result =
-                            add_integer_ratio( frame_pointer, arg1, arg2 );
+                            add_integer_ratio( arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -272,10 +269,10 @@ struct cons_pointer add_2( struct stack_frame *frame,
                         break;
                     case INTEGERTV:
                         result =
-                            add_integer_ratio( frame_pointer, arg2, arg1 );
+                            add_integer_ratio( arg2, arg1 );
                         break;
                     case RATIOTV:
-                        result = add_ratio_ratio( frame_pointer, arg1, arg2 );
+                        result = add_ratio_ratio( arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -384,7 +381,7 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     case RATIOTV:
                         result =
-                            multiply_integer_ratio( frame_pointer, arg1,
+                            multiply_integer_ratio( arg1,
                                                     arg2 );
                         break;
                     case REALTV:
@@ -409,12 +406,12 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     case INTEGERTV:
                         result =
-                            multiply_integer_ratio( frame_pointer, arg2,
+                            multiply_integer_ratio( arg2,
                                                     arg1 );
                         break;
                     case RATIOTV:
                         result =
-                            multiply_ratio_ratio( frame_pointer, arg1, arg2 );
+                            multiply_ratio_ratio( arg1, arg2 );
                         break;
                     case REALTV:
                         result =
@@ -496,8 +493,7 @@ struct cons_pointer lisp_multiply( struct
  * return a cons_pointer indicating a number which is the
  * 0 - the number indicated by `arg`.
  */
-struct cons_pointer negative( struct cons_pointer frame,
-                              struct cons_pointer arg ) {
+struct cons_pointer negative( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
@@ -514,9 +510,7 @@ struct cons_pointer negative( struct cons_pointer frame,
             result = TRUE;
             break;
         case RATIOTV:
-            result = make_ratio( frame,
-                                 negative( frame,
-                                           cell.payload.ratio.dividend ),
+            result = make_ratio( negative( cell.payload.ratio.dividend ),
                                  cell.payload.ratio.divisor );
             break;
         case REALTV:
@@ -571,7 +565,7 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                     break;
                 case INTEGERTV:{
                         struct cons_pointer i =
-                            negative( frame_pointer, arg2 );
+                            negative( arg2 );
                         inc_ref( i );
                         result = add_integers( arg1, i );
                         dec_ref( i );
@@ -579,11 +573,11 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                     break;
                 case RATIOTV:{
                         struct cons_pointer tmp =
-                            make_ratio( frame_pointer, arg1,
+                            make_ratio( arg1,
                                         make_integer( 1, NIL ) );
                         inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, tmp, arg2 );
+                            subtract_ratio_ratio( tmp, arg2 );
                         dec_ref( tmp );
                     }
                     break;
@@ -606,16 +600,16 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                     break;
                 case INTEGERTV:{
                         struct cons_pointer tmp =
-                            make_ratio( frame_pointer, arg2,
+                            make_ratio( arg2,
                                         make_integer( 1, NIL ) );
                         inc_ref( tmp );
                         result =
-                            subtract_ratio_ratio( frame_pointer, arg1, tmp );
+                            subtract_ratio_ratio( arg1, tmp );
                         dec_ref( tmp );
                     }
                     break;
                 case RATIOTV:
-                    result = subtract_ratio_ratio( frame_pointer, arg1, arg2 );
+                    result = subtract_ratio_ratio( arg1, arg2 );
                     break;
                 case REALTV:
                     result =
@@ -687,11 +681,11 @@ struct cons_pointer lisp_divide( struct
                     break;
                 case INTEGERTV:{
                         struct cons_pointer unsimplified =
-                            make_ratio( frame_pointer, frame->arg[0],
+                            make_ratio( frame->arg[0],
                                         frame->arg[1] );
                         /* OK, if result may be unsimplified, we should not inc_ref it
                          * - but if not, we should dec_ref it. */
-                        result = simplify_ratio( frame_pointer, unsimplified );
+                        result = simplify_ratio( unsimplified );
                         if ( !eq( unsimplified, result ) ) {
                             dec_ref( unsimplified );
                         }
@@ -700,10 +694,10 @@ struct cons_pointer lisp_divide( struct
                 case RATIOTV:{
                         struct cons_pointer one = make_integer( 1, NIL );
                         struct cons_pointer ratio =
-                            make_ratio( frame_pointer, frame->arg[0], one );
+                            make_ratio( frame->arg[0], one );
                         inc_ref( ratio );
                         result =
-                            divide_ratio_ratio( frame_pointer, ratio,
+                            divide_ratio_ratio( ratio,
                                                 frame->arg[1] );
                         dec_ref( ratio );
                     }
@@ -729,10 +723,10 @@ struct cons_pointer lisp_divide( struct
                         struct cons_pointer one = make_integer( 1, NIL );
                         inc_ref( one );
                         struct cons_pointer ratio =
-                            make_ratio( frame_pointer, frame->arg[1], one );
+                            make_ratio( frame->arg[1], one );
                         inc_ref( ratio );
                         result =
-                            divide_ratio_ratio( frame_pointer, frame->arg[0],
+                            divide_ratio_ratio( frame->arg[0],
                                                 ratio );
                         dec_ref( ratio );
                         dec_ref( one );
@@ -740,7 +734,7 @@ struct cons_pointer lisp_divide( struct
                     break;
                 case RATIOTV:
                     result =
-                        divide_ratio_ratio( frame_pointer, frame->arg[0],
+                        divide_ratio_ratio( frame->arg[0],
                                             frame->arg[1] );
                     break;
                 case REALTV:

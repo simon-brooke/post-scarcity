@@ -38,3 +38,5 @@ utils_src/readprintwc/out
 src/io/fopen
 
 hi\.*
+
+.vscode/
