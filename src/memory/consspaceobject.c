@@ -101,16 +101,16 @@ struct cons_pointer c_car( struct cons_pointer arg ) {
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    struct cons_space_object cell = pointer2cell( arg );
+    struct cons_space_object *cell = &pointer2cell( arg );
 
-    switch (cell.tag.value) {
+    switch (cell->tag.value) {
         case CONSTV:
-        result = pointer2cell( arg ).payload.cons.cdr;
+        result = cell->payload.cons.cdr;
         break;
         case KEYTV:
         case STRINGTV:
         case SYMBOLTV:
-        result = pointer2cell( arg ).payload.string.cdr;
+        result = cell->payload.string.cdr;
         break;
     }
 
@@ -227,6 +227,36 @@ struct cons_pointer make_nlambda( struct cons_pointer args,
 }
 
 /**
+ * Return a hash value for this string.
+ * 
+ * What's important here is that two strings with the same characters in the
+ * same order should have the same hash value, even if one was created using
+ * `"foobar"` and the other by `(append "foo" "bar")`. I *think* this function 
+ * has that property. I doubt that it's the most efficient hash function to 
+ * have that property.
+ */ 
+uint32_t calculate_hash( wint_t c, struct cons_pointer ptr) {
+struct cons_space_object *cell = &pointer2cell(ptr);
+    uint32_t result = 0;
+
+    switch (cell->tag.value)
+    {
+    case KEYTV:
+    case STRINGTV:
+    case SYMBOLTV:
+    if (nilp(ptr)) { 
+        result =(uint32_t) c; 
+    } else {
+        result = ((uint32_t)c * 
+            cell->payload.string.hash) & 
+            0xffffffff;
+    }
+    }
+
+    return result;
+}
+
+/**
  * Construct a string from this character (which later will be UTF) and
  * this tail. A string is implemented as a flat list of cells each of which
  * has one character and a pointer to the next; in the last cell the
@@ -245,8 +275,10 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
         cell->payload.string.cdr.page = tail.page;
         /* \todo There's a problem here. Sometimes the offsets on
          * strings are quite massively off. Fix is probably
-         * cell->payload.string.cdr = tsil */
+         * cell->payload.string.cdr = tail */
         cell->payload.string.cdr.offset = tail.offset;
+
+        cell->payload.string.hash = calculate_hash(c, tail);
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,

@@ -10,11 +10,11 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
-#include "integer.h"
-#include "peano.h"
-#include "ratio.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "arith/integer.h"
+#include "arith/peano.h"
+#include "arith/ratio.h"
 
 /**
  * Shallow, and thus cheap, equality: true if these two objects are
@@ -69,6 +69,9 @@ bool equal(struct cons_pointer a, struct cons_pointer b)
         case CONSTV:
         case LAMBDATV:
         case NLAMBDATV:
+            /* TODO: it is not OK to do this on the stack since list-like 
+            * structures can be of indefinite extent. It *must* be done by 
+            * iteration (and even that is problematic) */
             result =
                 equal(cell_a->payload.cons.car, cell_b->payload.cons.car) && equal(cell_a->payload.cons.cdr,
                                                                                    cell_b->payload.cons.cdr);
@@ -76,11 +79,13 @@ bool equal(struct cons_pointer a, struct cons_pointer b)
         case KEYTV:
         case STRINGTV:
         case SYMBOLTV:
-            /*
-                 * slightly complex because a string may or may not have a '\0'
-                 * cell at the end, but I'll ignore that for now. I think in
-                 * practice only the empty string will.
-                 */
+            /* slightly complex because a string may or may not have a '\0'
+            * cell at the end, but I'll ignore that for now. I think in
+            * practice only the empty string will.
+            */
+            /* TODO: it is not OK to do this on the stack since list-like 
+             * structures can be of indefinite extent. It *must* be done by 
+             * iteration (and even that is problematic) */
             result =
                 cell_a->payload.string.character ==
                     cell_b->payload.string.character &&

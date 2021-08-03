@@ -20,7 +20,8 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "fopen.h"
+#include "io/fopen.h"
+#include "memory/conspage.h"
 
 
 /**
@@ -557,8 +558,8 @@ struct stream_payload {
 struct string_payload {
     /** the actual character stored in this cell */
     wint_t character;
-    /** unused padding to word-align the cdr */
-    uint32_t padding;
+    /** a hash of the string value, computed at store time. */
+    uint32_t hash;
     /** the remainder of the string following this character. */
     struct cons_pointer cdr;
 };

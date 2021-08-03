@@ -13,7 +13,7 @@
 #ifndef __psse_conspage_h
 #define __psse_conspage_h
 
-#include "consspaceobject.h"
+#include "memory/consspaceobject.h"
 
 /**
  * the number of cons cells on a cons page. The maximum value this can
