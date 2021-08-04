@@ -11,6 +11,9 @@
 #ifndef __integer_h
 #define __integer_h
 
+#include <stdbool.h>
+#include <stdint.h>
+
 struct cons_pointer make_integer(int64_t value, struct cons_pointer more);
 
 struct cons_pointer add_integers(struct cons_pointer a,

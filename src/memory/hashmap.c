@@ -10,6 +10,7 @@
 #include "arith/integer.h"
 #include "memory/consspaceobject.h"
 #include "memory/hashmap.h"
+#include "memory/vectorspace.h"
 
 /**
  * Get the hash value for the cell indicated by this `ptr`; currently only
@@ -45,17 +46,32 @@ struct cons_pointer lisp_get_hash(struct stack_frame *frame,
 }
 
 /**
- * Make a hashmap with this number of buckets.
+ * Make a hashmap with this number of buckets, using this `hash_fn`. If 
+ * `hash_fn` is `NIL`, use the standard hash funtion.
  */
-struct cons_pointer make_hashmap( uint32_t n_buckets) {
+struct cons_pointer make_hashmap( uint32_t n_buckets, struct cons_pointer hash_fn) {
     struct cons_pointer result = make_vso(HASHTAG,
     (sizeof(struct cons_pointer) * (n_buckets + 1)) +
     (sizeof(uint32_t) * 2));
 
-    //  TODO: fill in the payload!
-
     struct hashmap_payload *payload  = 
         (struct hashmap_payload *) &pointer_to_vso(result)->payload;
+
+    payload->hash_fn = hash_fn;
+    payload->n_buckets = n_buckets;
+    for (int i = 0; i < n_buckets; i++) {
+        payload->buckets[i] = NIL;
+    }
+
+    return result;
+}
+
+struct cons_pointer clone_hashmap(struct cons_pointer ptr) {
+    struct cons_pointer result = NIL;
+
+    if (hashmapp(ptr)) {
+
+    }
 
     return result;
 }

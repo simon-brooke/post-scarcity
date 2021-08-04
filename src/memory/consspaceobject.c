@@ -24,13 +24,30 @@
 #include "intern.h"
 #include "print.h"
 #include "stack.h"
+#include "vectorspace.h"
 
 /**
- * True if the tag on the cell at this `pointer` is this `tag`, else false.
+ * True if the tag on the cell at this `pointer` is this `tag`, or, if the tag
+ * of the cell is `VECP`, if the tag of the vectorspace object indicated by the
+ * cell is this `tag`, else false.
  */
 bool check_tag( struct cons_pointer pointer, char *tag ) {
-    struct cons_space_object cell = pointer2cell( pointer );
-    return strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
+  bool result = false;
+  struct cons_space_object cell = pointer2cell( pointer );
+
+  result = strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
+
+  if ( !result ) {
+    // if ( vectorpointp( pointer ) ) { <<< this line blows up!
+    // //  struct vector_space_object *vec = pointer_to_vso( pointer );
+
+    // //   if ( vec != NULL ) {
+    // //     result = strncmp( &vec->header.tag.bytes[0], tag, TAGLENGTH ) == 0;
+    // //   }
+    // }
+  }
+
+  return result;
 }
 
 /**
@@ -72,14 +89,22 @@ void dec_ref( struct cons_pointer pointer ) {
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
 struct cons_pointer c_type( struct cons_pointer pointer ) {
-    struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( pointer );
+  struct cons_pointer result = NIL;
+  struct cons_space_object cell = pointer2cell( pointer );
+
+  if ( strncmp( (char *)&cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
+    struct vector_space_object *vec = pointer_to_vso( pointer );
 
     for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-        result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
+      result = make_string( (wchar_t)vec->header.tag.bytes[i], result );
     }
+  } else {
+    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
+      result = make_string( (wchar_t)cell.tag.bytes[i], result );
+    }
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -227,16 +252,19 @@ struct cons_pointer make_nlambda( struct cons_pointer args,
 }
 
 /**
- * Return a hash value for this string.
+ * Return a hash value for this string like thing.
  * 
  * What's important here is that two strings with the same characters in the
  * same order should have the same hash value, even if one was created using
  * `"foobar"` and the other by `(append "foo" "bar")`. I *think* this function 
  * has that property. I doubt that it's the most efficient hash function to 
  * have that property.
- */ 
-uint32_t calculate_hash( wint_t c, struct cons_pointer ptr) {
-struct cons_space_object *cell = &pointer2cell(ptr);
+ * 
+ * returns 0 for things which are not string like.
+ */
+uint32_t calculate_hash(wint_t c, struct cons_pointer ptr)
+{
+    struct cons_space_object *cell = &pointer2cell(ptr);
     uint32_t result = 0;
 
     switch (cell->tag.value)
@@ -244,13 +272,16 @@ struct cons_space_object *cell = &pointer2cell(ptr);
     case KEYTV:
     case STRINGTV:
     case SYMBOLTV:
-    if (nilp(ptr)) { 
-        result =(uint32_t) c; 
-    } else {
-        result = ((uint32_t)c * 
-            cell->payload.string.hash) & 
-            0xffffffff;
-    }
+        if (nilp(ptr))
+        {
+            result = (uint32_t)c;
+        }
+        else
+        {
+            result = ((uint32_t)c *
+                      cell->payload.string.hash) &
+                     0xffffffff;
+        }
     }
 
     return result;

@@ -10,6 +10,8 @@
 #ifndef __psse_hashmap_h
 #define __psse_hashmap_h
 
+#include "arith/integer.h"
+#include "memory/conspage.h"
 #include "memory/consspaceobject.h"
 #include "memory/vectorspace.h"
 

@@ -28,17 +28,23 @@
 #define HASHTAG "HASH"
 #define HASHTV 0
 
+#define hashmapp(conspoint)((check_tag(conspoint,HASHTAG)))
+
 /*
  * a namespace (i.e. a binding of names to values, implemented as a hashmap)
  */
 #define NAMESPACETAG "NMSP"
 #define NAMESPACETV 0
 
+#define namespacep(conspoint)(check_tag(conspoint,NAMESPACETAG))
+
 /*
  * a vector of cons pointers.
  */
 #define VECTORTAG "VECT"
 #define VECTORTV 0
+
+#define vectorp(conspoint)(check_tag(conspoint,VECTORTAG))
 
 /**
  * given a pointer to a vector space object, return the object.
