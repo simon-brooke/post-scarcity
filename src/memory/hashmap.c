@@ -49,29 +49,47 @@ struct cons_pointer lisp_get_hash(struct stack_frame *frame,
  * Make a hashmap with this number of buckets, using this `hash_fn`. If 
  * `hash_fn` is `NIL`, use the standard hash funtion.
  */
-struct cons_pointer make_hashmap( uint32_t n_buckets, struct cons_pointer hash_fn) {
-    struct cons_pointer result = make_vso(HASHTAG,
-    (sizeof(struct cons_pointer) * (n_buckets + 1)) +
-    (sizeof(uint32_t) * 2));
+struct cons_pointer make_hashmap( uint32_t n_buckets,
+                                  struct cons_pointer hash_fn ) {
+  struct cons_pointer result =
+      make_vso( HASHTAG, ( sizeof( struct cons_pointer ) * ( n_buckets + 1 ) ) +
+                             ( sizeof( uint32_t ) * 2 ) );
 
-    struct hashmap_payload *payload  = 
-        (struct hashmap_payload *) &pointer_to_vso(result)->payload;
+  struct hashmap_payload *payload =
+      (struct hashmap_payload *)&pointer_to_vso( result )->payload;
 
-    payload->hash_fn = hash_fn;
-    payload->n_buckets = n_buckets;
-    for (int i = 0; i < n_buckets; i++) {
-        payload->buckets[i] = NIL;
-    }
+  payload->hash_fn = hash_fn;
+  payload->n_buckets = n_buckets;
+  for ( int i = 0; i < n_buckets; i++ ) {
+    payload->buckets[i] = NIL;
+  }
 
-    return result;
+  return result;
 }
 
+/**
+ * If this `ptr` is a pointer to a hashmap, return a new identical hashmap; 
+ * else return `NIL`. TODO: should return an exception.
+ */
 struct cons_pointer clone_hashmap(struct cons_pointer ptr) {
     struct cons_pointer result = NIL;
 
     if (hashmapp(ptr)) {
+        struct vector_space_object *from = pointer_to_vso( ptr );
 
+      if ( from != NULL ) {
+          struct hashmap_payload *from_pl = (struct hashmap_payload*)from->payload;
+          result = make_hashmap( from_pl->n_buckets, from_pl->hash_fn);
+          struct vector_space_object *to = pointer_to_vso(result);
+          struct hashmap_payload *to_pl = (struct hashmap_payload*)to->payload;
+
+          for (int i = 0; i < to_pl->n_buckets; i++) {
+              to_pl->buckets[i] = from_pl->buckets[i];
+              inc_ref(to_pl->buckets[i]);
+          }
+      }
     }
 
     return result;
 }
+
