@@ -37,14 +37,14 @@ bool check_tag( struct cons_pointer pointer, char *tag ) {
 
   result = strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
 
-  if ( !result ) {
-    // if ( vectorpointp( pointer ) ) { <<< this line blows up!
-    // //  struct vector_space_object *vec = pointer_to_vso( pointer );
+  if ( result == false ) {
+    if ( strncmp( &cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
+      struct vector_space_object *vec = pointer_to_vso( pointer );
 
-    // //   if ( vec != NULL ) {
-    // //     result = strncmp( &vec->header.tag.bytes[0], tag, TAGLENGTH ) == 0;
-    // //   }
-    // }
+      if ( vec != NULL ) {
+        result = strncmp( &vec->header.tag.bytes[0], tag, TAGLENGTH ) == 0;
+      }
+    }
   }
 
   return result;
