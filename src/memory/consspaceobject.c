@@ -35,15 +35,15 @@
 bool check_tag( struct cons_pointer pointer, char *tag ) {
   bool result = false;
   struct cons_space_object cell = pointer2cell( pointer );
-
+    
   result = strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
 
   if ( result == false ) {
-    if ( strncmp( &cell.tag.bytes[0], VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
+    if ( cell.tag.value == VECTORPOINTTV ) {
       struct vector_space_object *vec = pointer_to_vso( pointer );
 
       if ( vec != NULL ) {
-        result = strncmp( &vec->header.tag.bytes[0], tag, TAGLENGTH ) == 0;
+        result = strncmp( &(vec->header.tag.bytes[0]), tag, TAGLENGTH ) == 0;
       }
     }
   }
@@ -286,7 +286,7 @@ uint32_t calculate_hash(wint_t c, struct cons_pointer ptr)
     case KEYTV:
     case STRINGTV:
     case SYMBOLTV:
-        if (nilp(ptr))
+        if (nilp(cell->payload.string.cdr))
         {
             result = (uint32_t)c;
         }
@@ -296,6 +296,7 @@ uint32_t calculate_hash(wint_t c, struct cons_pointer ptr)
                       cell->payload.string.hash) &
                      0xffffffff;
         }
+        break;
     }
 
     return result;

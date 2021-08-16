@@ -854,26 +854,6 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
 }
 
-
-/**
- * Resutn the current default input, or of `inputp` is false, output stream from
- * this `env`ironment.
- */
-struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
-    struct cons_pointer result = NIL;
-    struct cons_pointer stream_name =
-        c_string_to_lisp_symbol( inputp ? L"*in*" : L"*out*" );
-
-    inc_ref( stream_name );
-
-    result = c_assoc( stream_name, env );
-
-    dec_ref( stream_name );
-
-    return result;
-}
-
-
 /**
  * Function; read one complete lisp form and return it. If read-stream is specified and
  * is a read stream, then read from that stream, else the stream which is the value of
@@ -965,6 +945,44 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
     return c_reverse( frame->arg[0] );
 }
 
+/**
+ * Function: dump/inspect one complete lisp expression and return NIL. If
+ * write-stream is specified and is a write stream, then print to that stream,
+ * else  the stream which is the value of
+ * `*out*` in the environment.
+ *
+ * * (inspect expr)
+ * * (inspect expr write-stream)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (from which the stream may be extracted).
+ * @return NIL.
+ */
+struct cons_pointer lisp_inspect( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env ) {
+  debug_print( L"Entering lisp_inspect\n", DEBUG_IO );
+  struct cons_pointer result = NIL;
+  struct cons_pointer out_stream = writep( frame->arg[1] )
+                                       ? frame->arg[1]
+                                       : get_default_stream( false, env );
+  URL_FILE *output;
+
+  if ( writep( out_stream ) ) {
+    debug_print( L"lisp_inspect: setting output stream\n", DEBUG_IO );
+    debug_dump_object( out_stream, DEBUG_IO );
+    output = pointer2cell( out_stream ).payload.stream.stream;
+  } else {
+    output = file_to_url_file( stderr );
+  }
+
+  dump_object( output, frame->arg[0] );
+
+  debug_print( L"Leaving lisp_inspect", DEBUG_IO );
+
+  return result;
+}
 
 /**
  * Function; print one complete lisp expression and return NIL. If write-stream is specified and
@@ -976,8 +994,8 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
  *
  * @param frame my stack_frame.
  * @param frame_pointer a pointer to my stack_frame.
- * @param env my environment (ignored).
- * @return the value of `expr`.
+ * @param env my environment (from which the stream may be extracted).
+ * @return NIL.
  */
 struct cons_pointer
 lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
@@ -1332,43 +1350,43 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
 }
 
 
-/**
- * Function; print the internal representation of the object indicated by `frame->arg[0]` to the
- * (optional, defaults to the value of `*out*` in the environment) stream indicated by `frame->arg[1]`.
- *
- * * (inspect expression)
- * * (inspect expression <write-stream>)
- *
- * @param frame my stack frame.
- * @param frame_pointer a pointer to my stack_frame.
- * @param env the environment.
- * @return the value of the first argument - `expression`.
- */
-struct cons_pointer lisp_inspect( struct stack_frame *frame,
-                                  struct cons_pointer frame_pointer,
-                                  struct cons_pointer env ) {
-    debug_print( L"Entering print\n", DEBUG_IO );
-    URL_FILE *output;
-    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
-        frame->arg[1] : get_default_stream( false, env );
+// /**
+//  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the
+//  * (optional, defaults to the value of `*out*` in the environment) stream indicated by `frame->arg[1]`.
+//  *
+//  * * (inspect expression)
+//  * * (inspect expression <write-stream>)
+//  *
+//  * @param frame my stack frame.
+//  * @param frame_pointer a pointer to my stack_frame.
+//  * @param env the environment.
+//  * @return the value of the first argument - `expression`.
+//  */
+// struct cons_pointer lisp_inspect( struct stack_frame *frame,
+//                                   struct cons_pointer frame_pointer,
+//                                   struct cons_pointer env ) {
+//     debug_print( L"Entering print\n", DEBUG_IO );
+//     URL_FILE *output;
+//     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+//         frame->arg[1] : get_default_stream( false, env );
 
-    if ( writep( out_stream ) ) {
-        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
-        debug_dump_object( out_stream, DEBUG_IO );
-        output = pointer2cell( out_stream ).payload.stream.stream;
-        inc_ref( out_stream );
-    } else {
-        output = file_to_url_file( stdout );
-    }
+//     if ( writep( out_stream ) ) {
+//         debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
+//         debug_dump_object( out_stream, DEBUG_IO );
+//         output = pointer2cell( out_stream ).payload.stream.stream;
+//         inc_ref( out_stream );
+//     } else {
+//         output = file_to_url_file( stdout );
+//     }
 
-    dump_object( output, frame->arg[0] );
-    url_fputws( L"\n", output );
+//     dump_object( output, frame->arg[0] );
+//     url_fputws( L"\n", output );
 
-    if ( writep( out_stream ) ) {
-        dec_ref( out_stream );
-    } else {
-        free( output );
-    }
+//     if ( writep( out_stream ) ) {
+//         dec_ref( out_stream );
+//     } else {
+//         free( output );
+//     }
 
-    return frame->arg[0];
-}
+//     return frame->arg[0];
+// }

@@ -177,13 +177,13 @@ wint_t url_fgetwc( URL_FILE * input ) {
                      * E0 to EF hex (224 to 239): first byte of a three-byte sequence.
                      * F0 to FF hex (240 to 255): first byte of a four-byte sequence.
                      */
-                    if ( c <= 0x07 ) {
+                    if ( c <= 0xf7 ) {
                         count = 1;
-                    } else if ( c >= '0xc2' && c <= '0xdf' ) {
+                    } else if ( c >= 0xc2 && c <= 0xdf ) {
                         count = 2;
-                    } else if ( c >= '0xe0' && c <= '0xef' ) {
+                    } else if ( c >= 0xe0 && c <= 0xef ) {
                         count = 3;
-                    } else if ( c >= '0xf0' && c <= '0xff' ) {
+                    } else if ( c >= 0xf0 && c <= 0xff ) {
                         count = 4;
                     }
 
@@ -395,6 +395,24 @@ void collect_meta( struct cons_pointer stream, char *url ) {
     cell->payload.stream.meta = meta;
 }
 
+/**
+ * Resutn the current default input, or of `inputp` is false, output stream from
+ * this `env`ironment.
+ */
+struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer stream_name =
+        c_string_to_lisp_symbol( inputp ? L"*in*" : L"*out*" );
+
+    inc_ref( stream_name );
+
+    result = c_assoc( stream_name, env );
+
+    dec_ref( stream_name );
+
+    return result;
+}
+
 
 /**
  * Function: return a stream open on the URL indicated by the first argument;
@@ -423,8 +441,8 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
             URL_FILE *stream = url_fopen( url, "r" );
 
             debug_printf( DEBUG_IO,
-                         L"lisp_open: stream @ %d, stream type = %d, stream handle = %d\n",
-                         (int) &stream, (int)stream->type, (int)stream->handle.file);
+                         L"lisp_open: stream @ %ld, stream type = %d, stream handle = %ld\n",
+                         (long int) &stream, (int)stream->type, (long int)stream->handle.file);
 
             switch (stream->type) {
                 case CFTYPE_NONE:

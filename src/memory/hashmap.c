@@ -12,6 +12,7 @@
 #include "authorise.h"
 #include "debug.h"
 #include "intern.h"
+#include "io/print.h"
 #include "memory/conspage.h"
 #include "memory/consspaceobject.h"
 #include "memory/hashmap.h"

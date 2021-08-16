@@ -21,6 +21,8 @@ URL_FILE *file_to_url_file( FILE * f );
 wint_t url_fgetwc( URL_FILE * input );
 wint_t url_ungetwc( wint_t wc, URL_FILE * input );
 
+struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env );
+
 struct cons_pointer
 lisp_close( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env );

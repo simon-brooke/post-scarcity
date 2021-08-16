@@ -225,7 +225,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"equal", &lisp_equal );
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
-    bind_function( L"gethash", &lisp_get_hash);
+    bind_function( L"get-hash", &lisp_get_hash);
     bind_function(L"hashmap", lisp_make_hashmap);
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"keys", &lisp_keys);

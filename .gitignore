@@ -40,3 +40,5 @@ src/io/fopen
 hi\.*
 
 .vscode/
+
+core
