@@ -179,26 +179,8 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.string.cdr );
                     break;
                 case VECTORPOINTTV:
-                    /* for vector space pointers, free the actual vector-space
-                     * object. Dangerous! */
-                    debug_printf( DEBUG_ALLOC,
-                                  L"About to free vector-space object at 0x%lx\n",
-                                  cell->payload.vectorp.address );
-                    struct vector_space_object *vso =
-                        cell->payload.vectorp.address;
-
-                    switch ( vso->header.tag.value ) {
-                        case STACKFRAMETV:
-                            free_stack_frame( get_stack_frame( pointer ) );
-                            break;
-                    }
-
-                    free( ( void * ) cell->payload.vectorp.address );
-                    debug_printf( DEBUG_ALLOC,
-                                  L"Freed vector-space object at 0x%lx\n",
-                                  cell->payload.vectorp.address );
+                    free_vso( pointer);
                     break;
-
             }
 
             strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );

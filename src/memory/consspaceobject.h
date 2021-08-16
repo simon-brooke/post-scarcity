@@ -675,9 +675,9 @@ struct cons_space_object {
 
 bool check_tag( struct cons_pointer pointer, char *tag );
 
-void inc_ref( struct cons_pointer pointer );
+struct cons_pointer inc_ref( struct cons_pointer pointer );
 
-void dec_ref( struct cons_pointer pointer );
+struct cons_pointer dec_ref( struct cons_pointer pointer );
 
 struct cons_pointer c_type( struct cons_pointer pointer );
 

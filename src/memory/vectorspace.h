@@ -18,6 +18,7 @@
 #include <wctype.h>
 
 #include "consspaceobject.h"
+#include "hashmap.h"
 
 #ifndef __vectorspace_h
 #define __vectorspace_h
@@ -58,6 +59,8 @@
 
 struct cons_pointer make_vso( char *tag, uint64_t payload_size );
 
+void free_vso(struct cons_pointer pointer);
+
 /**
  * the header which forms the start of every vector space object.
  */
@@ -75,6 +78,27 @@ struct vector_space_header {
     uint64_t size;
 };
 
+/**
+ * The payload of a hashmap. The number of buckets is assigned at run-time,
+ * and is stored in n_buckets. Each bucket is something ASSOC can consume:
+ * i.e. either an assoc list or a further hashmap.
+ */
+struct hashmap_payload {
+  struct cons_pointer
+      hash_fn; /* function for hashing values in this hashmap, or `NIL` to use
+                  the default hashing function */
+  struct cons_pointer write_acl; /* it seems to me that it is likely that the
+                                  * principal difference between a hashmap and a
+                                  * namespace is that a hashmap has a write ACL
+                                  * of `NIL`, meaning not writeable by anyone */
+  uint32_t n_buckets;            /* number of hash buckets */
+  uint32_t unused; /* for word alignment and possible later expansion */
+  struct cons_pointer
+      buckets[]; /* actual hash buckets, which should be `NIL`
+                  * or assoc lists or (possibly) further hashmaps. */
+};
+
+
 /** a vector_space_object is just a vector_space_header followed by a
  * lump of bytes; what we deem to be in there is a function of the tag,
  * and at this stage we don't have a good picture of what these may be.
@@ -87,7 +111,11 @@ struct vector_space_object {
     struct vector_space_header header;
     /** we'll malloc `size` bytes for payload, `payload` is just the first of these.
      * \todo this is almost certainly not idiomatic C. */
-    char payload;
+    union {
+        /** the payload considered as bytes */
+        char bytes;
+        struct hashmap_payload hashmap;
+    } payload;
 };
 
 #endif

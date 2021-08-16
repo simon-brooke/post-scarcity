@@ -27,6 +27,8 @@ struct cons_pointer absolute( struct cons_pointer arg );
 
 long double to_long_double( struct cons_pointer arg );
 
+int64_t to_long_int( struct cons_pointer arg ) ;
+
 struct cons_pointer lisp_absolute( struct stack_frame
                                    *frame, struct cons_pointer frame_pointer, struct
                                    cons_pointer env );

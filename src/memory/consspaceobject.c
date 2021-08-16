@@ -18,6 +18,7 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#include "authorise.h"
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
@@ -38,7 +39,7 @@ bool check_tag( struct cons_pointer pointer, char *tag ) {
   result = strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
 
   if ( result == false ) {
-    if ( strncmp( &cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
+    if ( strncmp( &cell.tag.bytes[0], VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
       struct vector_space_object *vec = pointer_to_vso( pointer );
 
       if ( vec != NULL ) {
@@ -55,13 +56,17 @@ bool check_tag( struct cons_pointer pointer, char *tag ) {
  *
  * You can't roll over the reference count. Once it hits the maximum
  * value you cannot increment further.
+ * 
+ * Returns the `pointer`.
  */
-void inc_ref( struct cons_pointer pointer ) {
+struct cons_pointer inc_ref( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     if ( cell->count < MAXREFERENCE ) {
         cell->count++;
     }
+
+    return pointer;
 }
 
 /**
@@ -69,8 +74,10 @@ void inc_ref( struct cons_pointer pointer ) {
  *
  * If a count has reached MAXREFERENCE it cannot be decremented.
  * If a count is decremented to zero the cell should be freed.
+ * 
+ * Returns the `pointer`, or, if the cell has been freed, NIL.
  */
-void dec_ref( struct cons_pointer pointer ) {
+struct cons_pointer dec_ref( struct cons_pointer pointer ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     if ( cell->count > 0 ) {
@@ -78,8 +85,11 @@ void dec_ref( struct cons_pointer pointer ) {
 
         if ( cell->count == 0 ) {
             free_cell( pointer );
+            pointer = NIL;
         }
     }
+
+    return pointer;
 }
 
 
@@ -108,38 +118,42 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
 }
 
 /**
- * Implementation of car in C. If arg is not a cons, does not error but returns nil.
+ * Implementation of car in C. If arg is not a cons, or the current user is not
+ * authorised to read it, does not error but returns nil.
  */
 struct cons_pointer c_car( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
+  struct cons_pointer result = NIL;
 
-    if ( consp( arg ) ) {
-        result = pointer2cell( arg ).payload.cons.car;
-    }
+  if ( truep( authorised( arg, NIL ) ) && consp( arg ) ) {
+    result = pointer2cell( arg ).payload.cons.car;
+  }
 
-    return result;
+  return result;
 }
 
 /**
- * Implementation of cdr in C. If arg is not a sequence, does not error but returns nil.
+ * Implementation of cdr in C. If arg is not a sequence, or the current user is
+ * not authorised to read it,does not error but returns nil.
  */
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
-    struct cons_pointer result = NIL;
+  struct cons_pointer result = NIL;
 
+  if ( truep( authorised( arg, NIL ) ) ) {
     struct cons_space_object *cell = &pointer2cell( arg );
 
-    switch (cell->tag.value) {
-        case CONSTV:
+    switch ( cell->tag.value ) {
+      case CONSTV:
         result = cell->payload.cons.cdr;
         break;
-        case KEYTV:
-        case STRINGTV:
-        case SYMBOLTV:
+      case KEYTV:
+      case STRINGTV:
+      case SYMBOLTV:
         result = cell->payload.string.cdr;
         break;
     }
+  }
 
-    return result;
+  return result;
 }
 
 /**

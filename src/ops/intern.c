@@ -23,6 +23,7 @@
 #include "consspaceobject.h"
 #include "debug.h"
 #include "equal.h"
+#include "hashmap.h"
 #include "lispops.h"
 #include "map.h"
 #include "print.h"
@@ -107,8 +108,10 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                 break;
             }
         }
-    } else if (vectorpointp( store)) {
+    } else if (hashmapp( store)) {
         result = assoc_in_map( key, store);
+    } else {
+        result = throw_exception(c_string_to_lisp_string(L"Store is of unknown type"), NIL);
     }
 
     debug_print( L"c_assoc returning ", DEBUG_BIND);
