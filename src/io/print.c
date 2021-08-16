@@ -19,9 +19,9 @@
 
 #include "conspage.h"
 #include "consspaceobject.h"
+#include "hashmap.h"
 #include "integer.h"
 #include "intern.h"
-#include "map.h"
 #include "stack.h"
 #include "print.h"
 #include "psse_time.h"
@@ -88,40 +88,38 @@ void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     url_fputws( L")", output );
 }
 
+void print_map( URL_FILE *output, struct cons_pointer map ) {
+  if ( hashmapp( map ) ) {
+    struct vector_space_object *vso = pointer_to_vso( map );
 
-void print_map( URL_FILE * output, struct cons_pointer map) {
-    if ( vectorpointp( map)) {
-        struct vector_space_object *vso = pointer_to_vso( map);
+    url_fputwc( btowc( '{' ), output );
 
-        if ( mapp( vso ) ) {
-            url_fputwc( btowc( '{' ), output );
+    for ( struct cons_pointer ks = hashmap_keys( map ); !nilp( ks );
+          ks = c_cdr( ks ) ) {
+              struct cons_pointer key = c_car( ks);
+      print( output, key );
+      url_fputwc( btowc( ' ' ), output );
+      print( output, hashmap_get( map, key ) );
 
-            for ( struct cons_pointer ks = keys( map);
-                 !nilp( ks); ks = c_cdr( ks)) {
-                print( output, c_car( ks));
-                url_fputwc( btowc( ' ' ), output );
-                print( output, c_assoc( c_car( ks), map));
-
-                if ( !nilp( c_cdr( ks))) {
-                    url_fputws( L", ", output );
-                }
-            }
-
-            url_fputwc( btowc( '}' ), output );
-        }
+      if ( !nilp( c_cdr( ks ) ) ) {
+        url_fputws( L", ", output );
+      }
     }
+
+    url_fputwc( btowc( '}' ), output );
+  }
 }
 
-
 void print_vso( URL_FILE * output, struct cons_pointer pointer) {
-    struct vector_space_object *vso =
-        pointer2cell( pointer ).payload.vectorp.address;
-
+    struct vector_space_object *vso = pointer_to_vso(pointer);
     switch ( vso->header.tag.value) {
-        case MAPTV:
+        case HASHTV:
             print_map( output, pointer);
             break;
         // \todo: others.
+        default:
+          fwprintf( stderr, L"Unrecognised vector-space type '%d'\n",
+                    vso->header.tag.value );
     }
 }
 

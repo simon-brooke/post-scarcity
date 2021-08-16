@@ -23,10 +23,10 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
+#include "hashmap.h"
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
-#include "map.h"
 #include "meta.h"
 #include "peano.h"
 #include "print.h"
@@ -225,8 +225,10 @@ int main( int argc, char *argv[] ) {
     bind_function( L"equal", &lisp_equal );
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
+    bind_function( L"gethash", &lisp_get_hash);
+    bind_function(L"hashmap", lisp_make_hashmap);
     bind_function( L"inspect", &lisp_inspect );
-    bind_function( L"make-map", &lisp_make_map);
+    bind_function( L"keys", &lisp_keys);
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
@@ -235,6 +237,8 @@ int main( int argc, char *argv[] ) {
     bind_function( L"open", &lisp_open );
     bind_function( L"print", &lisp_print );
     bind_function( L"progn", &lisp_progn );
+    bind_function( L"put", lisp_hashmap_put);
+    bind_function( L"put-all", &lisp_hashmap_put_all);
     bind_function( L"read", &lisp_read );
     bind_function( L"read-char", &lisp_read_char );
     bind_function( L"repl", &lisp_repl );

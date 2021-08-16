@@ -11,6 +11,8 @@
 #include "arith/peano.h"
 #include "authorise.h"
 #include "debug.h"
+#include "intern.h"
+#include "memory/conspage.h"
 #include "memory/consspaceobject.h"
 #include "memory/hashmap.h"
 #include "memory/vectorspace.h"
@@ -81,10 +83,12 @@ void free_hashmap( struct cons_pointer pointer ) {
     dec_ref( payload.write_acl );
 
     for ( int i = 0; i < payload.n_buckets; i++ ) {
-      debug_printf( DEBUG_ALLOC,
-                    L"Decrementing buckets[%d] of hashmap at 0x%lx\n", i,
-                    cell->payload.vectorp.address );
-      dec_ref( payload.buckets[i] );
+      if ( !nilp( payload.buckets[i] ) ) {
+        debug_printf( DEBUG_ALLOC,
+                      L"Decrementing bucket [%d] of hashmap at 0x%lx\n", i,
+                      cell->payload.vectorp.address );
+        dec_ref( payload.buckets[i] );
+      }
     }
   } else {
     debug_printf( DEBUG_ALLOC, L"Non-hashmap passed to `free_hashmap`\n" );
@@ -137,7 +141,7 @@ struct cons_pointer make_hashmap( uint32_t n_buckets,
 struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
                                        struct cons_pointer env ) {
-  uint32_t n = 32;
+  uint32_t n = DFLT_HASHMAP_BUCKETS;
   struct cons_pointer hash_fn = NIL;
   struct cons_pointer result = NIL;
 
@@ -184,6 +188,8 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
 
   return result;
 }
+
+
 
 /**
  * If this `ptr` is a pointer to a hashmap, return a new identical hashmap; 
@@ -243,6 +249,19 @@ struct cons_pointer hashmap_put( struct cons_pointer mapp,
   return mapp;
 }
 
+struct cons_pointer hashmap_get( struct cons_pointer mapp,
+                                 struct cons_pointer key ) {
+  struct cons_pointer result = NIL;
+  if ( hashmapp( mapp ) && truep( authorised( mapp, NIL ) ) && !nilp( key ) ) {
+    struct vector_space_object *map = pointer_to_vso( mapp );
+    uint32_t bucket_no = get_hash( key ) % map->payload.hashmap.n_buckets;
+
+    result = c_assoc( key, map->payload.hashmap.buckets[bucket_no] );
+  }
+
+  return result;
+}
+
 /**
  * Expects `frame->arg[1]` to be a hashmap or namespace; `frame->arg[2]` to be
  * a string-like-thing (perhaps necessarily a keyword); frame->arg[3] to be 
@@ -294,3 +313,44 @@ struct cons_pointer lisp_hashmap_put_all( struct stack_frame *frame,
   return hashmap_put_all( frame->arg[0], frame->arg[1] );
 }
 
+/**
+ * return a flat list of all the keys in the hashmap indicated by `map`.
+ */
+struct cons_pointer hashmap_keys( struct cons_pointer mapp) {
+  struct cons_pointer result = NIL;
+  if ( hashmapp( mapp ) && truep( authorised( mapp, NIL ) )) {
+        struct vector_space_object *map = pointer_to_vso( mapp );
+
+    for (int i = 0; i < map->payload.hashmap.n_buckets; i++) {
+      for (struct cons_pointer c = map->payload.hashmap.buckets[i];
+      !nilp(c);
+      c = c_cdr(c)) {
+        result = make_cons(c_car( c_car(c)), result);
+      }
+
+    }
+  }
+
+  return result;
+}
+
+struct cons_pointer lisp_hashmap_keys( struct stack_frame *frame,
+                                       struct cons_pointer frame_pointer,
+                                       struct cons_pointer env ) {
+  return hashmap_keys( frame->arg[0] );
+}
+
+void dump_map( URL_FILE *output, struct cons_pointer pointer ) {
+  struct hashmap_payload *payload = &pointer_to_vso( pointer )->payload.hashmap;
+  url_fwprintf( output, L"Hashmap with %d buckets:\n", payload->n_buckets );
+  url_fwprintf( output, L"\tHash function: " );
+  print( output, payload->hash_fn );
+  url_fwprintf( output, L"\n\tWrite ACL: " );
+  print( output, payload->write_acl );
+  url_fwprintf( output, L"\n\tBuckets:" );
+  for ( int i = 0; i < payload->n_buckets; i++ ) {
+    url_fwprintf( output, L"\n\t\t[%d]: ", i );
+    print( output, payload->buckets[i] );
+  }
+  url_fwprintf( output, L"\n" );
+}

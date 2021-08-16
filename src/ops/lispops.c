@@ -33,7 +33,6 @@
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
-#include "map.h"
 #include "print.h"
 #include "read.h"
 #include "stack.h"
@@ -378,7 +377,7 @@ struct cons_pointer
 
             case VECTORPOINTTV:
             switch ( pointer_to_vso(fn_pointer)->header.tag.value) {
-                case MAPTV:
+                case HASHTV:
                 /* \todo: if arg[0] is a CONS, treat it as a path */
                 result = c_assoc( eval_form(frame,
                                             frame_pointer,
@@ -801,6 +800,26 @@ struct cons_pointer
 lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
     return c_assoc( frame->arg[0], frame->arg[1] );
+}
+
+struct cons_pointer c_keys(struct cons_pointer store) {
+  struct cons_pointer result = NIL;
+
+  if ( hashmapp( store ) ) {
+    result = hashmap_keys( store );
+  } else if ( consp( store ) ) {
+    for ( struct cons_pointer c = store; !nilp( c ); c = c_cdr( c ) ) {
+      result = make_cons( c_car( c ), result );
+    }
+  }
+
+  return result;
+}
+
+struct cons_pointer lisp_keys( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+  return c_keys( frame->arg[0]);
 }
 
 /**

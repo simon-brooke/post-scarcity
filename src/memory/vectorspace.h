@@ -27,15 +27,17 @@
  * part of the implementation structure of a namespace.
  */
 #define HASHTAG "HASH"
-#define HASHTV 0
+#define HASHTV 1213415752
 
 #define hashmapp(conspoint)((check_tag(conspoint,HASHTAG)))
 
 /*
  * a namespace (i.e. a binding of names to values, implemented as a hashmap)
+ * TODO: but note that a namespace is now essentially a hashmap with a write ACL
+ * whose name is interned.
  */
 #define NAMESPACETAG "NMSP"
-#define NAMESPACETV 0
+#define NAMESPACETV 1347636558
 
 #define namespacep(conspoint)(check_tag(conspoint,NAMESPACETAG))
 
@@ -43,7 +45,7 @@
  * a vector of cons pointers.
  */
 #define VECTORTAG "VECT"
-#define VECTORTV 0
+#define VECTORTV 1413694806
 
 #define vectorp(conspoint)(check_tag(conspoint,VECTORTAG))
 

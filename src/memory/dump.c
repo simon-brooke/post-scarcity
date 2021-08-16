@@ -21,8 +21,8 @@
 #include "conspage.h"
 #include "consspaceobject.h"
 #include "debug.h"
+#include "hashmap.h"
 #include "intern.h"
-#include "map.h"
 #include "print.h"
 #include "stack.h"
 #include "vectorspace.h"
@@ -141,14 +141,12 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
                               L"\t\tVector space object of type %4.4s (%d), payload size %d bytes\n",
                               &vso->header.tag.bytes, vso->header.tag.value,
                               vso->header.size );
-                if ( stackframep( vso ) ) {
-                    dump_frame( output, pointer );
-                }
+
                 switch ( vso->header.tag.value ) {
                     case STACKFRAMETV:
                         dump_frame( output, pointer );
                         break;
-                    case MAPTV:
+                    case HASHTV:
                         dump_map( output, pointer);
                         break;
                 }

@@ -25,7 +25,6 @@
 #include "equal.h"
 #include "hashmap.h"
 #include "lispops.h"
-#include "map.h"
 #include "print.h"
 
 /**
@@ -109,7 +108,7 @@ struct cons_pointer c_assoc( struct cons_pointer key,
             }
         }
     } else if (hashmapp( store)) {
-        result = assoc_in_map( key, store);
+        result = hashmap_get( store, key);
     } else {
         result = throw_exception(c_string_to_lisp_string(L"Store is of unknown type"), NIL);
     }
@@ -140,8 +139,8 @@ struct cons_pointer
 
     if (nilp( store) || consp(store)) {
         result = make_cons( make_cons( key, value ), store );
-    } else if (vectorpointp( store)) {
-        result = bind_in_map( store, key, value);
+    } else if (hashmapp( store)) {
+        result = hashmap_put( store, key, value);
     }
 
     debug_print( L"set returning ", DEBUG_BIND);
@@ -196,3 +195,4 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
 
     return result;
 }
+

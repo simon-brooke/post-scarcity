@@ -26,12 +26,14 @@
  * utilities
  */
 
+struct cons_pointer c_keys( struct cons_pointer store );
 
 struct cons_pointer c_reverse( struct cons_pointer arg );
 
-struct cons_pointer
-c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
-         struct cons_pointer expressions, struct cons_pointer env );
+struct cons_pointer c_progn( struct stack_frame *frame,
+                             struct cons_pointer frame_pointer,
+                             struct cons_pointer expressions,
+                             struct cons_pointer env );
 
 /**
  * Useful building block; evaluate this single form in the context of this
@@ -56,7 +58,6 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
                                 struct cons_pointer list,
                                 struct cons_pointer env );
 
-
 /*
  * special forms
  */
@@ -67,17 +68,21 @@ struct cons_pointer lisp_apply( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,
                                 struct cons_pointer env );
 
-struct cons_pointer
-lisp_oblist( struct stack_frame *frame, struct cons_pointer frame_pointer,
-             struct cons_pointer env );
+struct cons_pointer lisp_keys( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
 
-struct cons_pointer
-lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
-          struct cons_pointer env );
+struct cons_pointer lisp_oblist( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );
 
-struct cons_pointer
-lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
-                 struct cons_pointer env );
+struct cons_pointer lisp_set( struct stack_frame *frame,
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env );
+
+struct cons_pointer lisp_set_shriek( struct stack_frame *frame,
+                                     struct cons_pointer frame_pointer,
+                                     struct cons_pointer env );
 
 /**
  * Construct an interpretable function.
@@ -90,17 +95,17 @@ struct cons_pointer lisp_lambda( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env );
 struct cons_pointer lisp_length( struct stack_frame *frame,
-                                struct cons_pointer frame_pointer,
-            struct cons_pointer env );
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );
 /**
  * Construct an interpretable special form.
  *
  * @param frame the stack frame in which the expression is to be interpreted;
  * @param env the environment in which it is to be intepreted.
  */
-struct cons_pointer
-lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
-              struct cons_pointer env );
+struct cons_pointer lisp_nlambda( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env );
 
 struct cons_pointer lisp_quote( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,
@@ -146,10 +151,9 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
  * @param env My environment (ignored).
  * @return As a Lisp string, the tag of the object which is the argument.
  */
-struct cons_pointer
-lisp_type( struct stack_frame *frame, struct cons_pointer frame_pointer,
-           struct cons_pointer env );
-
+struct cons_pointer lisp_type( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
 
 /**
  * Function; evaluate the forms which are listed in my single argument
@@ -161,9 +165,9 @@ lisp_type( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @return the value of the last form on the sequence which is my single
  * argument.
  */
-struct cons_pointer
-lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
-            struct cons_pointer env );
+struct cons_pointer lisp_progn( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+                                struct cons_pointer env );
 
 /**
  * Special form: conditional. Each arg is expected to be a list; if the first
@@ -174,22 +178,22 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @param env My environment (ignored).
  * @return the value of the last form of the first successful clause.
  */
-struct cons_pointer
-lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
-           struct cons_pointer env );
+struct cons_pointer lisp_cond( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
 
 /**
  * Throw an exception.
- * `throw_exception` is a misnomer, because it doesn't obey the calling signature of a
- * lisp function; but it is nevertheless to be preferred to make_exception. A
- * real `throw_exception`, which does, will be needed.
+ * `throw_exception` is a misnomer, because it doesn't obey the calling
+ * signature of a lisp function; but it is nevertheless to be preferred to
+ * make_exception. A real `throw_exception`, which does, will be needed.
  */
 struct cons_pointer throw_exception( struct cons_pointer message,
                                      struct cons_pointer frame_pointer );
 
-struct cons_pointer
-lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
-                struct cons_pointer env );
+struct cons_pointer lisp_exception( struct stack_frame *frame,
+                                    struct cons_pointer frame_pointer,
+                                    struct cons_pointer env );
 
 struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,

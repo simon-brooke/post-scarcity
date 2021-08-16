@@ -20,11 +20,11 @@
 #include "consspaceobject.h"
 #include "debug.h"
 #include "dump.h"
+#include "hashmap.h"
 #include "integer.h"
 #include "intern.h"
 #include "io.h"
 #include "lispops.h"
-#include "map.h"
 #include "peano.h"
 #include "print.h"
 #include "ratio.h"
@@ -323,36 +323,38 @@ struct cons_pointer read_list( struct stack_frame *frame,
     return result;
 }
 
-
 struct cons_pointer read_map( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                             URL_FILE * input, wint_t initial ) {
-    struct cons_pointer result = make_empty_map( NIL);
-    wint_t c = initial;
+                              struct cons_pointer frame_pointer,
+                              URL_FILE *input, wint_t initial ) {
+  // set write ACL to true whilst creating to prevent GC churn
+  struct cons_pointer result = make_hashmap( DFLT_HASHMAP_BUCKETS, NIL, TRUE );
+  wint_t c = initial;
 
-    while ( c != L'}' ) {
-        struct cons_pointer key =
-            read_continuation( frame, frame_pointer, input, c );
+  while ( c != L'}' ) {
+    struct cons_pointer key =
+        read_continuation( frame, frame_pointer, input, c );
 
-        /* skip whitespace */
-        for (c = url_fgetwc( input );
-             iswblank( c ) || iswcntrl( c );
-             c = url_fgetwc( input ));
+    /* skip whitespace */
+    for ( c = url_fgetwc( input ); iswblank( c ) || iswcntrl( c );
+          c = url_fgetwc( input ) )
+      ;
 
-        struct cons_pointer value =
-            read_continuation( frame, frame_pointer, input, c );
+    struct cons_pointer value =
+        read_continuation( frame, frame_pointer, input, c );
 
-        /* skip commaa and whitespace at this point. */
-        for (c = url_fgetwc( input );
-             c == L',' || iswblank( c ) || iswcntrl( c );
-             c = url_fgetwc( input ));
+    /* skip commaa and whitespace at this point. */
+    for ( c = url_fgetwc( input ); c == L',' || iswblank( c ) || iswcntrl( c );
+          c = url_fgetwc( input ) )
+      ;
 
-        result = merge_into_map( result, make_cons( make_cons( key, value), NIL));
-    }
+    result = hashmap_put( result, key, value );
+  }
 
-    return result;
+  // default write ACL for maps should be NIL.
+  pointer_to_vso( result )->payload.hashmap.write_acl = NIL;
+
+  return result;
 }
-
 
 /**
  * Read a string. This means either a string delimited by double quotes
