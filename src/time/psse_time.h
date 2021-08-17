@@ -13,8 +13,9 @@
 #define _GNU_SOURCE
 #include "consspaceobject.h"
 
-struct cons_pointer lisp_time( struct stack_frame *frame, struct cons_pointer frame_pointer,
-           struct cons_pointer env );
-struct cons_pointer time_to_string( struct cons_pointer pointer);
+struct cons_pointer lisp_time( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
+struct cons_pointer time_to_string( struct cons_pointer pointer );
 
 #endif

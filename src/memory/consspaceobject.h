@@ -685,7 +685,7 @@ struct cons_pointer c_car( struct cons_pointer arg );
 
 struct cons_pointer c_cdr( struct cons_pointer arg );
 
-int c_length( struct cons_pointer arg);
+int c_length( struct cons_pointer arg );
 
 struct cons_pointer make_cons( struct cons_pointer car,
                                struct cons_pointer cdr );

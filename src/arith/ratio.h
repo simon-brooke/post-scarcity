@@ -34,6 +34,6 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
 struct cons_pointer make_ratio( struct cons_pointer dividend,
                                 struct cons_pointer divisor );
 
-bool equal_ratio_ratio(struct cons_pointer a, struct cons_pointer b);
+bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b );
 
 #endif

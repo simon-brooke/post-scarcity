@@ -88,38 +88,38 @@ void print_list( URL_FILE * output, struct cons_pointer pointer ) {
     url_fputws( L")", output );
 }
 
-void print_map( URL_FILE *output, struct cons_pointer map ) {
-  if ( hashmapp( map ) ) {
-    struct vector_space_object *vso = pointer_to_vso( map );
+void print_map( URL_FILE * output, struct cons_pointer map ) {
+    if ( hashmapp( map ) ) {
+        struct vector_space_object *vso = pointer_to_vso( map );
 
-    url_fputwc( btowc( '{' ), output );
+        url_fputwc( btowc( '{' ), output );
 
-    for ( struct cons_pointer ks = hashmap_keys( map ); !nilp( ks );
-          ks = c_cdr( ks ) ) {
-              struct cons_pointer key = c_car( ks);
-      print( output, key );
-      url_fputwc( btowc( ' ' ), output );
-      print( output, hashmap_get( map, key ) );
+        for ( struct cons_pointer ks = hashmap_keys( map ); !nilp( ks );
+              ks = c_cdr( ks ) ) {
+            struct cons_pointer key = c_car( ks );
+            print( output, key );
+            url_fputwc( btowc( ' ' ), output );
+            print( output, hashmap_get( map, key ) );
 
-      if ( !nilp( c_cdr( ks ) ) ) {
-        url_fputws( L", ", output );
-      }
+            if ( !nilp( c_cdr( ks ) ) ) {
+                url_fputws( L", ", output );
+            }
+        }
+
+        url_fputwc( btowc( '}' ), output );
     }
-
-    url_fputwc( btowc( '}' ), output );
-  }
 }
 
-void print_vso( URL_FILE * output, struct cons_pointer pointer) {
-    struct vector_space_object *vso = pointer_to_vso(pointer);
-    switch ( vso->header.tag.value) {
+void print_vso( URL_FILE * output, struct cons_pointer pointer ) {
+    struct vector_space_object *vso = pointer_to_vso( pointer );
+    switch ( vso->header.tag.value ) {
         case HASHTV:
-            print_map( output, pointer);
+            print_map( output, pointer );
             break;
-        // \todo: others.
+            // \todo: others.
         default:
-          fwprintf( stderr, L"Unrecognised vector-space type '%d'\n",
-                    vso->header.tag.value );
+            fwprintf( stderr, L"Unrecognised vector-space type '%d'\n",
+                      vso->header.tag.value );
     }
 }
 
@@ -130,14 +130,14 @@ void print_128bit( URL_FILE * output, __int128_t n ) {
     if ( n == 0 ) {
         fwprintf( stderr, L"0" );
     } else {
-        char str[40] = { 0 }; // log10(1 << 128) + '\0'
+        char str[40] = { 0 };   // log10(1 << 128) + '\0'
         char *s = str + sizeof( str ) - 1;  // start at the end
         while ( n != 0 ) {
             if ( s == str )
-                return;     // never happens
+                return;         // never happens
 
             *--s = "0123456789"[n % 10];  // save last digit
-            n /= 10;        // drop it
+            n /= 10;            // drop it
         }
         url_fwprintf( output, L"%s", s );
     }
@@ -165,9 +165,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             dump_stack_trace( output, pointer );
             break;
         case FUNCTIONTV:
-            url_fputws( L"<Function: ", output);
-            print( output, cell.payload.function.meta);
-            url_fputwc( L'>', output);
+            url_fputws( L"<Function: ", output );
+            print( output, cell.payload.function.meta );
+            url_fputwc( L'>', output );
             break;
         case INTEGERTV:{
                 struct cons_pointer s = integer_to_string( pointer, 10 );
@@ -181,7 +181,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print_string_contents( output, pointer );
             break;
         case LAMBDATV:{
-                url_fputws( L"<Anonymous Function: ", output);
+                url_fputws( L"<Anonymous Function: ", output );
                 struct cons_pointer to_print =
                     make_cons( c_string_to_lisp_symbol( L"\u03bb" ),
                                make_cons( cell.payload.lambda.args,
@@ -191,14 +191,14 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 print( output, to_print );
 
                 dec_ref( to_print );
-                url_fputwc( L'>', output);
+                url_fputwc( L'>', output );
             }
             break;
         case NILTV:
             url_fwprintf( output, L"nil" );
             break;
         case NLAMBDATV:{
-                url_fputws( L"<Anonymous Special Form: ", output);
+                url_fputws( L"<Anonymous Special Form: ", output );
                 struct cons_pointer to_print =
                     make_cons( c_string_to_lisp_symbol( L"n\u03bb" ),
                                make_cons( cell.payload.lambda.args,
@@ -208,7 +208,7 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                 print( output, to_print );
 
                 dec_ref( to_print );
-                url_fputwc( L'>', output);
+                url_fputwc( L'>', output );
             }
             break;
         case RATIOTV:
@@ -218,8 +218,8 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         case READTV:
             url_fwprintf( output, L"<Input stream: " );
-            print( output, cell.payload.stream.meta);
-            url_fputwc( L'>', output);
+            print( output, cell.payload.stream.meta );
+            url_fputwc( L'>', output );
             break;
         case REALTV:
             /* \todo using the C heap is a bad plan because it will fragment.
@@ -245,26 +245,26 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             break;
         case SPECIALTV:
             url_fwprintf( output, L"<Special form: " );
-            print( output, cell.payload.special.meta);
-            url_fputwc( L'>', output);
+            print( output, cell.payload.special.meta );
+            url_fputwc( L'>', output );
             break;
         case TIMETV:
             url_fwprintf( output, L"<Time: " );
-            print_string( output, time_to_string( pointer));
-            url_fputws( L"; ", output);
-            print_128bit( output, pointer2cell(pointer).payload.time.value);
-            url_fputwc( L'>', output);
+            print_string( output, time_to_string( pointer ) );
+            url_fputws( L"; ", output );
+            print_128bit( output, pointer2cell( pointer ).payload.time.value );
+            url_fputwc( L'>', output );
             break;
         case TRUETV:
             url_fwprintf( output, L"t" );
             break;
         case VECTORPOINTTV:
-            print_vso( output, pointer);
+            print_vso( output, pointer );
             break;
         case WRITETV:
             url_fwprintf( output, L"<Output stream: " );
-            print( output, cell.payload.stream.meta);
-            url_fputwc( L'>', output);
+            print( output, cell.payload.stream.meta );
+            url_fputwc( L'>', output );
             break;
         default:
             fwprintf( stderr,

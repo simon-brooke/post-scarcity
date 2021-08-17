@@ -179,7 +179,7 @@ void free_cell( struct cons_pointer pointer ) {
                     dec_ref( cell->payload.string.cdr );
                     break;
                 case VECTORPOINTTV:
-                    free_vso( pointer);
+                    free_vso( pointer );
                     break;
             }
 

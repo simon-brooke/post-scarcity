@@ -33,22 +33,22 @@
  * vectorspace object indicated by the cell is this `value`, else false.
  */
 bool check_tag( struct cons_pointer pointer, uint32_t value ) {
-  bool result = false;
+    bool result = false;
 
-  struct cons_space_object cell = pointer2cell( pointer );
-  result = cell.tag.value == value;
+    struct cons_space_object cell = pointer2cell( pointer );
+    result = cell.tag.value == value;
 
-  if ( result == false ) {
-    if ( cell.tag.value == VECTORPOINTTV ) {
-      struct vector_space_object *vec = pointer_to_vso( pointer );
+    if ( result == false ) {
+        if ( cell.tag.value == VECTORPOINTTV ) {
+            struct vector_space_object *vec = pointer_to_vso( pointer );
 
-      if ( vec != NULL ) {
-        result = vec->header.tag.value == value;
-      }
+            if ( vec != NULL ) {
+                result = vec->header.tag.value == value;
+            }
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 /**
@@ -99,22 +99,24 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
 struct cons_pointer c_type( struct cons_pointer pointer ) {
-  struct cons_pointer result = NIL;
-  struct cons_space_object cell = pointer2cell( pointer );
+    struct cons_pointer result = NIL;
+    struct cons_space_object cell = pointer2cell( pointer );
 
-  if ( strncmp( (char *)&cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
-    struct vector_space_object *vec = pointer_to_vso( pointer );
+    if ( strncmp( ( char * ) &cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) ==
+         0 ) {
+        struct vector_space_object *vec = pointer_to_vso( pointer );
 
-    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-      result = make_string( (wchar_t)vec->header.tag.bytes[i], result );
+        for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
+            result =
+                make_string( ( wchar_t ) vec->header.tag.bytes[i], result );
+        }
+    } else {
+        for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
+            result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
+        }
     }
-  } else {
-    for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-      result = make_string( (wchar_t)cell.tag.bytes[i], result );
-    }
-  }
 
-  return result;
+    return result;
 }
 
 /**
@@ -122,13 +124,13 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
  * authorised to read it, does not error but returns nil.
  */
 struct cons_pointer c_car( struct cons_pointer arg ) {
-  struct cons_pointer result = NIL;
+    struct cons_pointer result = NIL;
 
-  if ( truep( authorised( arg, NIL ) ) && consp( arg ) ) {
-    result = pointer2cell( arg ).payload.cons.car;
-  }
+    if ( truep( authorised( arg, NIL ) ) && consp( arg ) ) {
+        result = pointer2cell( arg ).payload.cons.car;
+    }
 
-  return result;
+    return result;
 }
 
 /**
@@ -136,34 +138,34 @@ struct cons_pointer c_car( struct cons_pointer arg ) {
  * not authorised to read it,does not error but returns nil.
  */
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
-  struct cons_pointer result = NIL;
+    struct cons_pointer result = NIL;
 
-  if ( truep( authorised( arg, NIL ) ) ) {
-    struct cons_space_object *cell = &pointer2cell( arg );
+    if ( truep( authorised( arg, NIL ) ) ) {
+        struct cons_space_object *cell = &pointer2cell( arg );
 
-    switch ( cell->tag.value ) {
-      case CONSTV:
-        result = cell->payload.cons.cdr;
-        break;
-      case KEYTV:
-      case STRINGTV:
-      case SYMBOLTV:
-        result = cell->payload.string.cdr;
-        break;
+        switch ( cell->tag.value ) {
+            case CONSTV:
+                result = cell->payload.cons.cdr;
+                break;
+            case KEYTV:
+            case STRINGTV:
+            case SYMBOLTV:
+                result = cell->payload.string.cdr;
+                break;
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 /**
  * Implementation of `length` in C. If arg is not a cons, does not error but returns 0.
  */
-int c_length( struct cons_pointer arg) {
+int c_length( struct cons_pointer arg ) {
     int result = 0;
 
-    for (struct cons_pointer c = arg; !nilp(c); c = c_cdr(c)) {
-        result ++;
+    for ( struct cons_pointer c = arg; !nilp( c ); c = c_cdr( c ) ) {
+        result++;
     }
 
     return result;
@@ -276,27 +278,21 @@ struct cons_pointer make_nlambda( struct cons_pointer args,
  * 
  * returns 0 for things which are not string like.
  */
-uint32_t calculate_hash(wint_t c, struct cons_pointer ptr)
-{
-    struct cons_space_object *cell = &pointer2cell(ptr);
+uint32_t calculate_hash( wint_t c, struct cons_pointer ptr ) {
+    struct cons_space_object *cell = &pointer2cell( ptr );
     uint32_t result = 0;
 
-    switch (cell->tag.value)
-    {
-    case KEYTV:
-    case STRINGTV:
-    case SYMBOLTV:
-        if (nilp(cell->payload.string.cdr))
-        {
-            result = (uint32_t)c;
-        }
-        else
-        {
-            result = ((uint32_t)c *
-                      cell->payload.string.hash) &
-                     0xffffffff;
-        }
-        break;
+    switch ( cell->tag.value ) {
+        case KEYTV:
+        case STRINGTV:
+        case SYMBOLTV:
+            if ( nilp( cell->payload.string.cdr ) ) {
+                result = ( uint32_t ) c;
+            } else {
+                result = ( ( uint32_t ) c *
+                           cell->payload.string.hash ) & 0xffffffff;
+            }
+            break;
     }
 
     return result;
@@ -324,7 +320,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, uint32_t tag ) {
          * cell->payload.string.cdr = tail */
         cell->payload.string.cdr.offset = tail.offset;
 
-        cell->payload.string.hash = calculate_hash(c, tail);
+        cell->payload.string.hash = calculate_hash( c, tail );
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,
@@ -430,12 +426,12 @@ struct cons_pointer make_write_stream( URL_FILE * output,
 struct cons_pointer c_string_to_lisp_keyword( wchar_t *symbol ) {
     struct cons_pointer result = NIL;
 
-    for ( int i = wcslen( symbol ) -1; i >= 0; i-- ) {
-      wchar_t c = towlower(symbol[i]);
+    for ( int i = wcslen( symbol ) - 1; i >= 0; i-- ) {
+        wchar_t c = towlower( symbol[i] );
 
-      if (iswalnum(c) || c == L'-') {
-        result = make_keyword( c, result );
-      }
+        if ( iswalnum( c ) || c == L'-' ) {
+            result = make_keyword( c, result );
+        }
     }
 
     return result;
@@ -448,9 +444,9 @@ struct cons_pointer c_string_to_lisp_string( wchar_t *string ) {
     struct cons_pointer result = NIL;
 
     for ( int i = wcslen( string ) - 1; i >= 0; i-- ) {
-      if (iswprint(string[i]) && string[i] != '"') {
-        result = make_string( string[i], result );
-      }
+        if ( iswprint( string[i] ) && string[i] != '"' ) {
+            result = make_string( string[i], result );
+        }
     }
 
     return result;

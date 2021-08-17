@@ -265,7 +265,7 @@ struct cons_pointer add_meta_integer( struct cons_pointer meta, wchar_t *key,
 
 struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
                                      char *value ) {
-    value = trim( value);
+    value = trim( value );
     wchar_t buffer[strlen( value ) + 1];
     mbstowcs( buffer, value, strlen( value ) + 1 );
 
@@ -280,9 +280,8 @@ struct cons_pointer add_meta_time( struct cons_pointer meta, wchar_t *key,
     char datestring[256];
 
     strftime( datestring,
-             sizeof( datestring ),
-             nl_langinfo( D_T_FMT ),
-             localtime( value ) );
+              sizeof( datestring ),
+              nl_langinfo( D_T_FMT ), localtime( value ) );
 
     return add_meta_string( meta, key, datestring );
 }
@@ -391,7 +390,7 @@ void collect_meta( struct cons_pointer stream, char *url ) {
     }
 
     /* this is destructive change before the cell is released into the
-                   * wild, and consequently permissible, just. */
+     * wild, and consequently permissible, just. */
     cell->payload.stream.meta = meta;
 }
 
@@ -441,20 +440,23 @@ lisp_open( struct stack_frame *frame, struct cons_pointer frame_pointer,
             URL_FILE *stream = url_fopen( url, "r" );
 
             debug_printf( DEBUG_IO,
-                         L"lisp_open: stream @ %ld, stream type = %d, stream handle = %ld\n",
-                         (long int) &stream, (int)stream->type, (long int)stream->handle.file);
+                          L"lisp_open: stream @ %ld, stream type = %d, stream handle = %ld\n",
+                          ( long int ) &stream, ( int ) stream->type,
+                          ( long int ) stream->handle.file );
 
-            switch (stream->type) {
+            switch ( stream->type ) {
                 case CFTYPE_NONE:
-                    return make_exception(
-                        c_string_to_lisp_string( L"Could not open stream"),
-                        frame_pointer);
+                    return
+                        make_exception( c_string_to_lisp_string
+                                        ( L"Could not open stream" ),
+                                        frame_pointer );
                     break;
                 case CFTYPE_FILE:
-                    if (stream->handle.file == NULL) {
-                      return make_exception(
-                          c_string_to_lisp_string( L"Could not open file"),
-                          frame_pointer);
+                    if ( stream->handle.file == NULL ) {
+                        return
+                            make_exception( c_string_to_lisp_string
+                                            ( L"Could not open file" ),
+                                            frame_pointer );
                     }
                     break;
                 case CFTYPE_CURL:
@@ -501,8 +503,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.
-                           stream.stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.stream.
+                           stream ), NIL );
     }
 
     return result;

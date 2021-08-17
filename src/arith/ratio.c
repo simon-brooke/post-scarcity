@@ -43,42 +43,36 @@ int64_t least_common_multiple( int64_t m, int64_t n ) {
     return m / greatest_common_divisor( m, n ) * n;
 }
 
-struct cons_pointer simplify_ratio( struct cons_pointer pointer) {
+struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
     struct cons_pointer result = pointer;
-    struct cons_space_object cell = pointer2cell(pointer);
-    struct cons_space_object dividend = pointer2cell(cell.payload.ratio.dividend);
-    struct cons_space_object divisor = pointer2cell(cell.payload.ratio.divisor);
+    struct cons_space_object cell = pointer2cell( pointer );
+    struct cons_space_object dividend =
+        pointer2cell( cell.payload.ratio.dividend );
+    struct cons_space_object divisor =
+        pointer2cell( cell.payload.ratio.divisor );
 
-    if (divisor.payload.integer.value == 1)
-    {
-        result = pointer2cell(pointer).payload.ratio.dividend;
-    }
-    else
-    {
-        if (ratiop(pointer))
-        {
+    if ( divisor.payload.integer.value == 1 ) {
+        result = pointer2cell( pointer ).payload.ratio.dividend;
+    } else {
+        if ( ratiop( pointer ) ) {
             int64_t ddrv = dividend.payload.integer.value,
-                    drrv = divisor.payload.integer.value,
-                    gcd = greatest_common_divisor(ddrv, drrv);
+                drrv = divisor.payload.integer.value,
+                gcd = greatest_common_divisor( ddrv, drrv );
 
-            if (gcd > 1)
-            {
-                if (drrv / gcd == 1)
-                {
-                    result = make_integer(ddrv / gcd, NIL);
-                }
-                else
-                {
+            if ( gcd > 1 ) {
+                if ( drrv / gcd == 1 ) {
+                    result = make_integer( ddrv / gcd, NIL );
+                } else {
                     result =
-                        make_ratio(make_integer(ddrv / gcd, NIL),
-                                   make_integer(drrv / gcd, NIL));
+                        make_ratio( make_integer( ddrv / gcd, NIL ),
+                                    make_integer( drrv / gcd, NIL ) );
                 }
             }
         }
     }
 
     return result;
- 
+
 }
 
 
@@ -181,8 +175,7 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
                                         ( L"Shouldn't happen: bad arg to add_integer_ratio" ),
                                         make_cons( intarg,
                                                    make_cons( ratarg,
-                                                              NIL ) ) ),
-                             NIL );
+                                                              NIL ) ) ), NIL );
     }
 
     return result;
@@ -196,11 +189,10 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
  */
 struct cons_pointer divide_ratio_ratio( struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
-                                            // TODO: this now has to work if `arg1` is an integer
-    struct cons_pointer i = make_ratio( pointer2cell( arg2 ).payload.
-                                        ratio.divisor,
-                                        pointer2cell( arg2 ).payload.
-                                        ratio.dividend ), result =
+    // TODO: this now has to work if `arg1` is an integer
+    struct cons_pointer i =
+        make_ratio( pointer2cell( arg2 ).payload.ratio.divisor,
+                    pointer2cell( arg2 ).payload.ratio.dividend ), result =
         multiply_ratio_ratio( arg1, i );
 
     dec_ref( i );
@@ -217,7 +209,7 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer arg1,
 struct cons_pointer multiply_ratio_ratio( struct
                                           cons_pointer arg1, struct
                                           cons_pointer arg2 ) {
-                                              // TODO: this now has to work if arg1 is an integer
+    // TODO: this now has to work if arg1 is an integer
     struct cons_pointer result;
 
     debug_print( L"multiply_ratio_ratio( arg1 = ", DEBUG_ARITH );
@@ -294,7 +286,7 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer intarg,
  */
 struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
-    struct cons_pointer i = negative( arg2),
+    struct cons_pointer i = negative( arg2 ),
         result = add_ratio_ratio( arg1, i );
 
     dec_ref( i );
@@ -333,19 +325,17 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
 /**
  * True if a and be are identical ratios, else false.
  */
-bool equal_ratio_ratio(struct cons_pointer a, struct cons_pointer b)
-{
+bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b ) {
     bool result = false;
 
-    if (ratiop(a) && ratiop(b))
-    {
-        struct cons_space_object *cell_a = &pointer2cell(a);
-        struct cons_space_object *cell_b = &pointer2cell(b);
+    if ( ratiop( a ) && ratiop( b ) ) {
+        struct cons_space_object *cell_a = &pointer2cell( a );
+        struct cons_space_object *cell_b = &pointer2cell( b );
 
-        result = equal_integer_integer(cell_a->payload.ratio.dividend,
-                                       cell_b->payload.ratio.dividend) &&
-                 equal_integer_integer(cell_a->payload.ratio.divisor,
-                                       cell_b->payload.ratio.divisor);
+        result = equal_integer_integer( cell_a->payload.ratio.dividend,
+                                        cell_b->payload.ratio.dividend ) &&
+            equal_integer_integer( cell_a->payload.ratio.divisor,
+                                   cell_b->payload.ratio.divisor );
     }
 
     return result;

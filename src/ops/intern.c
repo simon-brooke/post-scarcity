@@ -89,16 +89,16 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
  * of that key from the store; otherwise return NIL.
  */
 struct cons_pointer c_assoc( struct cons_pointer key,
-                            struct cons_pointer store ) {
+                             struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    debug_print( L"c_assoc; key is `", DEBUG_BIND);
-    debug_print_object( key, DEBUG_BIND);
-    debug_print( L"`\n", DEBUG_BIND);
+    debug_print( L"c_assoc; key is `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"`\n", DEBUG_BIND );
 
-    if (consp(store)) {
+    if ( consp( store ) ) {
         for ( struct cons_pointer next = store;
-             consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
+              consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
             struct cons_space_object entry =
                 pointer2cell( pointer2cell( next ).payload.cons.car );
 
@@ -107,15 +107,17 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                 break;
             }
         }
-    } else if (hashmapp( store)) {
-        result = hashmap_get( store, key);
+    } else if ( hashmapp( store ) ) {
+        result = hashmap_get( store, key );
     } else {
-        result = throw_exception(c_string_to_lisp_string(L"Store is of unknown type"), NIL);
+        result =
+            throw_exception( c_string_to_lisp_string
+                             ( L"Store is of unknown type" ), NIL );
     }
 
-    debug_print( L"c_assoc returning ", DEBUG_BIND);
-    debug_print_object( result, DEBUG_BIND);
-    debug_println( DEBUG_BIND);
+    debug_print( L"c_assoc returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return result;
 }
@@ -125,8 +127,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
  * with this key/value pair added to the front.
  */
 struct cons_pointer
-    set( struct cons_pointer key, struct cons_pointer value,
-        struct cons_pointer store ) {
+set( struct cons_pointer key, struct cons_pointer value,
+     struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
     debug_print( L"set: binding `", DEBUG_BIND );
@@ -134,18 +136,18 @@ struct cons_pointer
     debug_print( L"` to `", DEBUG_BIND );
     debug_print_object( value, DEBUG_BIND );
     debug_print( L"` in store ", DEBUG_BIND );
-    debug_dump_object( store, DEBUG_BIND);
+    debug_dump_object( store, DEBUG_BIND );
     debug_println( DEBUG_BIND );
 
-    if (nilp( store) || consp(store)) {
+    if ( nilp( store ) || consp( store ) ) {
         result = make_cons( make_cons( key, value ), store );
-    } else if (hashmapp( store)) {
-        result = hashmap_put( store, key, value);
+    } else if ( hashmapp( store ) ) {
+        result = hashmap_put( store, key, value );
     }
 
-    debug_print( L"set returning ", DEBUG_BIND);
-    debug_print_object( result, DEBUG_BIND);
-    debug_println( DEBUG_BIND);
+    debug_print( L"set returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return result;
 }
@@ -195,4 +197,3 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
 
     return result;
 }
-

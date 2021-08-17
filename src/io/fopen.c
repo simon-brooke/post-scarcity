@@ -213,7 +213,7 @@ URL_FILE *url_fopen( const char *url, const char *operation ) {
     file->handle.file = fopen( url, operation );
     if ( file->handle.file ) {
         file->type = CFTYPE_FILE; /* marked as file */
-    } else if ( index_of(':', url ) > -1 ) {
+    } else if ( index_of( ':', url ) > -1 ) {
         file->type = CFTYPE_CURL; /* marked as URL */
         file->handle.curl = curl_easy_init(  );
 

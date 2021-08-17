@@ -84,8 +84,9 @@ void bind_value( wchar_t *name, struct cons_pointer value ) {
     dec_ref( n );
 }
 
-void print_banner() {
-    fwprintf(stdout, L"Post-Scarcity Software Environment version %s\n\n", VERSION);
+void print_banner(  ) {
+    fwprintf( stdout, L"Post-Scarcity Software Environment version %s\n\n",
+              VERSION );
 }
 
 /**
@@ -93,22 +94,24 @@ void print_banner() {
  * 
  * @stream the stream to print to.
  */
-void print_options(FILE* stream) {
-    fwprintf(stream, L"Expected options are:\n");
-    fwprintf(stream, L"\t-d\tDump memory to standard out at end of run (copious!);\n");
-    fwprintf(stream, L"\t-h\tPrint this message and exit;\n");
-    fwprintf(stream, L"\t-p\tShow a prompt (default is no prompt);\n");
-    fwprintf(stream, L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n");
-    fwprintf(stream, L"\t\tWhere bits are interpreted as follows:\n");
-    fwprintf(stream, L"\t\t1\tALLOC;\n");
-    fwprintf(stream, L"\t\t2\tARITH;\n");
-    fwprintf(stream, L"\t\t4\tBIND;\n");
-    fwprintf(stream, L"\t\t8\tBOOTSTRAP;\n");
-    fwprintf(stream, L"\t\t16\tEVAL;\n");
-    fwprintf(stream, L"\t\t32\tINPUT/OUTPUT;\n");
-    fwprintf(stream, L"\t\t64\tLAMBDA;\n");
-    fwprintf(stream, L"\t\t128\tREPL;\n");
-    fwprintf(stream, L"\t\t256\tSTACK.\n");
+void print_options( FILE * stream ) {
+    fwprintf( stream, L"Expected options are:\n" );
+    fwprintf( stream,
+              L"\t-d\tDump memory to standard out at end of run (copious!);\n" );
+    fwprintf( stream, L"\t-h\tPrint this message and exit;\n" );
+    fwprintf( stream, L"\t-p\tShow a prompt (default is no prompt);\n" );
+    fwprintf( stream,
+              L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n" );
+    fwprintf( stream, L"\t\tWhere bits are interpreted as follows:\n" );
+    fwprintf( stream, L"\t\t1\tALLOC;\n" );
+    fwprintf( stream, L"\t\t2\tARITH;\n" );
+    fwprintf( stream, L"\t\t4\tBIND;\n" );
+    fwprintf( stream, L"\t\t8\tBOOTSTRAP;\n" );
+    fwprintf( stream, L"\t\t16\tEVAL;\n" );
+    fwprintf( stream, L"\t\t32\tINPUT/OUTPUT;\n" );
+    fwprintf( stream, L"\t\t64\tLAMBDA;\n" );
+    fwprintf( stream, L"\t\t128\tREPL;\n" );
+    fwprintf( stream, L"\t\t256\tSTACK.\n" );
 }
 
 /**
@@ -132,8 +135,8 @@ int main( int argc, char *argv[] ) {
                 dump_at_end = true;
                 break;
             case 'h':
-                print_banner();
-                print_options(stdout);
+                print_banner(  );
+                print_options( stdout );
                 exit( 0 );
                 break;
             case 'p':
@@ -144,14 +147,14 @@ int main( int argc, char *argv[] ) {
                 break;
             default:
                 fwprintf( stderr, L"Unexpected option %c\n", option );
-                print_options(stderr);
+                print_options( stderr );
                 exit( 1 );
                 break;
         }
     }
 
     if ( show_prompt ) {
-        print_banner();
+        print_banner(  );
     }
 
     debug_print( L"About to initialise cons pages\n", DEBUG_BOOTSTRAP );
@@ -225,10 +228,10 @@ int main( int argc, char *argv[] ) {
     bind_function( L"equal", &lisp_equal );
     bind_function( L"eval", &lisp_eval );
     bind_function( L"exception", &lisp_exception );
-    bind_function( L"get-hash", &lisp_get_hash);
-    bind_function(L"hashmap", lisp_make_hashmap);
+    bind_function( L"get-hash", &lisp_get_hash );
+    bind_function( L"hashmap", lisp_make_hashmap );
     bind_function( L"inspect", &lisp_inspect );
-    bind_function( L"keys", &lisp_keys);
+    bind_function( L"keys", &lisp_keys );
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );
@@ -237,8 +240,8 @@ int main( int argc, char *argv[] ) {
     bind_function( L"open", &lisp_open );
     bind_function( L"print", &lisp_print );
     bind_function( L"progn", &lisp_progn );
-    bind_function( L"put", lisp_hashmap_put);
-    bind_function( L"put-all", &lisp_hashmap_put_all);
+    bind_function( L"put", lisp_hashmap_put );
+    bind_function( L"put-all", &lisp_hashmap_put_all );
     bind_function( L"read", &lisp_read );
     bind_function( L"read-char", &lisp_read_char );
     bind_function( L"repl", &lisp_repl );

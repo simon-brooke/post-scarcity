@@ -10,6 +10,7 @@
 #ifndef __psse_authorise_h
 #define __psse_authorise_h
 
-struct cons_pointer authorised(struct cons_pointer target, struct cons_pointer acl);
+struct cons_pointer authorised( struct cons_pointer target,
+                                struct cons_pointer acl );
 
 #endif

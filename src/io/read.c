@@ -46,8 +46,8 @@ struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                URL_FILE * input, wint_t initial );
 struct cons_pointer read_map( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               URL_FILE * input, wint_t initial );
+                              struct cons_pointer frame_pointer,
+                              URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
 struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
                                         wint_t initial );
@@ -106,7 +106,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 break;
             case '{':
                 result = read_map( frame, frame_pointer, input,
-                               url_fgetwc( input ) );
+                                   url_fgetwc( input ) );
                 break;
             case '"':
                 result = read_string( input, url_fgetwc( input ) );
@@ -134,10 +134,12 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     } else if ( iswblank( next ) ) {
                         /* dotted pair. \todo this isn't right, we
                          * really need to backtrack up a level. */
-                        result = read_continuation( frame, frame_pointer, input,
+                        result =
+                            read_continuation( frame, frame_pointer, input,
                                                url_fgetwc( input ) );
-                        debug_print( L"read_continuation: dotted pair; read cdr ",
-                                    DEBUG_IO);
+                        debug_print
+                            ( L"read_continuation: dotted pair; read cdr ",
+                              DEBUG_IO );
                     } else {
                         read_symbol_or_key( input, SYMBOLTV, c );
                     }
@@ -284,37 +286,34 @@ struct cons_pointer read_number( struct stack_frame *frame,
  * left parenthesis.
  */
 struct cons_pointer read_list( struct stack_frame *frame,
-                              struct cons_pointer frame_pointer,
-                              URL_FILE * input, wint_t initial ) {
+                               struct cons_pointer frame_pointer,
+                               URL_FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     wint_t c;
 
     if ( initial != ')' ) {
         debug_printf( DEBUG_IO,
-                     L"read_list starting '%C' (%d)\n", initial, initial );
+                      L"read_list starting '%C' (%d)\n", initial, initial );
         struct cons_pointer car =
             read_continuation( frame, frame_pointer, input,
-                              initial );
+                               initial );
 
         /* skip whitespace */
-        for (c = url_fgetwc( input );
-             iswblank( c ) || iswcntrl( c );
-             c = url_fgetwc( input ));
+        for ( c = url_fgetwc( input );
+              iswblank( c ) || iswcntrl( c ); c = url_fgetwc( input ) );
 
-        if ( c == L'.') {
+        if ( c == L'.' ) {
             /* might be a dotted pair; indeed, if we rule out numbers with
              * initial periods, it must be a dotted pair. \todo Ought to check,
              * howerver, that there's only one form after the period. */
             result =
                 make_cons( car,
-                          c_car( read_list( frame,
-                                           frame_pointer,
-                                           input,
-                                           url_fgetwc( input ) ) ) );
+                           c_car( read_list( frame,
+                                             frame_pointer,
+                                             input, url_fgetwc( input ) ) ) );
         } else {
             result =
-                make_cons( car,
-                          read_list( frame, frame_pointer, input, c ) );
+                make_cons( car, read_list( frame, frame_pointer, input, c ) );
         }
     } else {
         debug_print( L"End of list detected\n", DEBUG_IO );
@@ -325,35 +324,35 @@ struct cons_pointer read_list( struct stack_frame *frame,
 
 struct cons_pointer read_map( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
-                              URL_FILE *input, wint_t initial ) {
-  // set write ACL to true whilst creating to prevent GC churn
-  struct cons_pointer result = make_hashmap( DFLT_HASHMAP_BUCKETS, NIL, TRUE );
-  wint_t c = initial;
+                              URL_FILE * input, wint_t initial ) {
+    // set write ACL to true whilst creating to prevent GC churn
+    struct cons_pointer result =
+        make_hashmap( DFLT_HASHMAP_BUCKETS, NIL, TRUE );
+    wint_t c = initial;
 
-  while ( c != L'}' ) {
-    struct cons_pointer key =
-        read_continuation( frame, frame_pointer, input, c );
+    while ( c != L'}' ) {
+        struct cons_pointer key =
+            read_continuation( frame, frame_pointer, input, c );
 
-    /* skip whitespace */
-    for ( c = url_fgetwc( input ); iswblank( c ) || iswcntrl( c );
-          c = url_fgetwc( input ) )
-      ;
+        /* skip whitespace */
+        for ( c = url_fgetwc( input ); iswblank( c ) || iswcntrl( c );
+              c = url_fgetwc( input ) );
 
-    struct cons_pointer value =
-        read_continuation( frame, frame_pointer, input, c );
+        struct cons_pointer value =
+            read_continuation( frame, frame_pointer, input, c );
 
-    /* skip commaa and whitespace at this point. */
-    for ( c = url_fgetwc( input ); c == L',' || iswblank( c ) || iswcntrl( c );
-          c = url_fgetwc( input ) )
-      ;
+        /* skip commaa and whitespace at this point. */
+        for ( c = url_fgetwc( input );
+              c == L',' || iswblank( c ) || iswcntrl( c );
+              c = url_fgetwc( input ) );
 
-    result = hashmap_put( result, key, value );
-  }
+        result = hashmap_put( result, key, value );
+    }
 
-  // default write ACL for maps should be NIL.
-  pointer_to_vso( result )->payload.hashmap.write_acl = NIL;
+    // default write ACL for maps should be NIL.
+    pointer_to_vso( result )->payload.hashmap.write_acl = NIL;
 
-  return result;
+    return result;
 }
 
 /**

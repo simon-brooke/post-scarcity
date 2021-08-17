@@ -61,7 +61,7 @@
 
 struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size );
 
-void free_vso(struct cons_pointer pointer);
+void free_vso( struct cons_pointer pointer );
 
 /**
  * the header which forms the start of every vector space object.
@@ -86,18 +86,16 @@ struct vector_space_header {
  * i.e. either an assoc list or a further hashmap.
  */
 struct hashmap_payload {
-  struct cons_pointer
-      hash_fn; /* function for hashing values in this hashmap, or `NIL` to use
-                  the default hashing function */
-  struct cons_pointer write_acl; /* it seems to me that it is likely that the
-                                  * principal difference between a hashmap and a
-                                  * namespace is that a hashmap has a write ACL
-                                  * of `NIL`, meaning not writeable by anyone */
-  uint32_t n_buckets;            /* number of hash buckets */
-  uint32_t unused; /* for word alignment and possible later expansion */
-  struct cons_pointer
-      buckets[]; /* actual hash buckets, which should be `NIL`
-                  * or assoc lists or (possibly) further hashmaps. */
+    struct cons_pointer hash_fn;  /* function for hashing values in this hashmap, or `NIL` to use
+                                     the default hashing function */
+    struct cons_pointer write_acl;  /* it seems to me that it is likely that the
+                                     * principal difference between a hashmap and a
+                                     * namespace is that a hashmap has a write ACL
+                                     * of `NIL`, meaning not writeable by anyone */
+    uint32_t n_buckets;         /* number of hash buckets */
+    uint32_t unused;            /* for word alignment and possible later expansion */
+    struct cons_pointer buckets[];  /* actual hash buckets, which should be `NIL`
+                                     * or assoc lists or (possibly) further hashmaps. */
 };
 
 

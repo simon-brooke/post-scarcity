@@ -119,24 +119,24 @@ struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
  * object. Dangerous! */
 
 void free_vso( struct cons_pointer pointer ) {
-  struct cons_space_object cell = pointer2cell( pointer );
+    struct cons_space_object cell = pointer2cell( pointer );
 
-  debug_printf( DEBUG_ALLOC, L"About to free vector-space object at 0x%lx\n",
-                cell.payload.vectorp.address );
-  struct vector_space_object *vso = cell.payload.vectorp.address;
+    debug_printf( DEBUG_ALLOC, L"About to free vector-space object at 0x%lx\n",
+                  cell.payload.vectorp.address );
+    struct vector_space_object *vso = cell.payload.vectorp.address;
 
-  switch ( vso->header.tag.value ) {
-    case HASHTV:
-      free_hashmap( pointer );
-      break;
-    case STACKFRAMETV:
-      free_stack_frame( get_stack_frame( pointer ) );
-      break;
-  }
+    switch ( vso->header.tag.value ) {
+        case HASHTV:
+            free_hashmap( pointer );
+            break;
+        case STACKFRAMETV:
+            free_stack_frame( get_stack_frame( pointer ) );
+            break;
+    }
 
 //  free( (void *)cell.payload.vectorp.address );
-  debug_printf( DEBUG_ALLOC, L"Freed vector-space object at 0x%lx\n",
-                cell.payload.vectorp.address );
+    debug_printf( DEBUG_ALLOC, L"Freed vector-space object at 0x%lx\n",
+                  cell.payload.vectorp.address );
 }
 
 // bool check_vso_tag( struct cons_pointer pointer, char * tag) {

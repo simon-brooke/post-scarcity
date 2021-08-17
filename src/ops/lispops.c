@@ -106,7 +106,7 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
         list = c_cdr( list );
     }
 
-    return c_reverse( result);
+    return c_reverse( result );
 }
 
 /**
@@ -121,19 +121,18 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
  * 
  * This is experimental. It almost certainly WILL change. 
  */
-struct cons_pointer lisp_try(struct stack_frame *frame,
-                             struct cons_pointer frame_pointer,
-                             struct cons_pointer env) {
-    struct cons_pointer result = c_progn(frame, frame_pointer, frame->arg[0], env);
+struct cons_pointer lisp_try( struct stack_frame *frame,
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env ) {
+    struct cons_pointer result =
+        c_progn( frame, frame_pointer, frame->arg[0], env );
 
-    if (exceptionp(result))
-    {
+    if ( exceptionp( result ) ) {
         // TODO: need to put the exception into the environment!
-        result = c_progn(frame, frame_pointer, frame->arg[1],
-                         make_cons(
-                             make_cons(c_string_to_lisp_keyword(L"*exception*"),
-                                       result),
-                             env));
+        result = c_progn( frame, frame_pointer, frame->arg[1],
+                          make_cons( make_cons
+                                     ( c_string_to_lisp_keyword
+                                       ( L"*exception*" ), result ), env ) );
     }
 
     return result;
@@ -282,8 +281,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
 
-        if (exceptionp(result))
-        {
+        if ( exceptionp( result ) ) {
             break;
         }
     }
@@ -306,8 +304,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
  * @return the result of evaluating the function with its arguments.
  */
 struct cons_pointer
-    c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
-            struct cons_pointer env ) {
+c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
+         struct cons_pointer env ) {
     debug_print( L"Entering c_apply\n", DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
@@ -322,122 +320,124 @@ struct cons_pointer
 
         switch ( fn_cell.tag.value ) {
             case EXCEPTIONTV:
-            /* just pass exceptions straight back */
-            result = fn_pointer;
-            break;
+                /* just pass exceptions straight back */
+                result = fn_pointer;
+                break;
 
             case FUNCTIONTV:
-            {
-                struct cons_pointer exep = NIL;
-                struct cons_pointer next_pointer =
-                    make_stack_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next =
-                        get_stack_frame( next_pointer );
+                {
+                    struct cons_pointer exep = NIL;
+                    struct cons_pointer next_pointer =
+                        make_stack_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
 
-                    result =
-                        ( *fn_cell.payload.function.executable ) ( next,
-                                                                  next_pointer,
-                                                                  env );
-                    dec_ref( next_pointer );
-                }
-            }
-            break;
-
-            case KEYTV:
-            result = c_assoc( fn_pointer,
-                             eval_form(frame,
-                                       frame_pointer,
-                                       c_car( c_cdr( frame->arg[0])),
-                                       env));
-            break;
-
-            case LAMBDATV:
-            {
-                struct cons_pointer exep = NIL;
-                struct cons_pointer next_pointer =
-                    make_stack_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next =
-                        get_stack_frame( next_pointer );
-                    result =
-                        eval_lambda( fn_cell, next, next_pointer, env );
-                    if ( !exceptionp( result ) ) {
+                        result =
+                            ( *fn_cell.payload.function.executable ) ( next,
+                                                                       next_pointer,
+                                                                       env );
                         dec_ref( next_pointer );
                     }
                 }
-            }
-            break;
+                break;
+
+            case KEYTV:
+                result = c_assoc( fn_pointer,
+                                  eval_form( frame,
+                                             frame_pointer,
+                                             c_car( c_cdr( frame->arg[0] ) ),
+                                             env ) );
+                break;
+
+            case LAMBDATV:
+                {
+                    struct cons_pointer exep = NIL;
+                    struct cons_pointer next_pointer =
+                        make_stack_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
+                        result =
+                            eval_lambda( fn_cell, next, next_pointer, env );
+                        if ( !exceptionp( result ) ) {
+                            dec_ref( next_pointer );
+                        }
+                    }
+                }
+                break;
 
             case VECTORPOINTTV:
-            switch ( pointer_to_vso(fn_pointer)->header.tag.value) {
-                case HASHTV:
-                /* \todo: if arg[0] is a CONS, treat it as a path */
-                result = c_assoc( eval_form(frame,
-                                            frame_pointer,
-                                            c_car( c_cdr( frame->arg[0])),
-                                            env),
-                                 fn_pointer);
+                switch ( pointer_to_vso( fn_pointer )->header.tag.value ) {
+                    case HASHTV:
+                        /* \todo: if arg[0] is a CONS, treat it as a path */
+                        result = c_assoc( eval_form( frame,
+                                                     frame_pointer,
+                                                     c_car( c_cdr
+                                                            ( frame->
+                                                              arg[0] ) ),
+                                                     env ), fn_pointer );
+                        break;
+                }
                 break;
-            }
-            break;
 
             case NLAMBDATV:
-            {
-                struct cons_pointer next_pointer =
-                    make_special_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    struct stack_frame *next =
-                        get_stack_frame( next_pointer );
-                    result =
-                        eval_lambda( fn_cell, next, next_pointer, env );
-                    dec_ref( next_pointer );
+                {
+                    struct cons_pointer next_pointer =
+                        make_special_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        struct stack_frame *next =
+                            get_stack_frame( next_pointer );
+                        result =
+                            eval_lambda( fn_cell, next, next_pointer, env );
+                        dec_ref( next_pointer );
+                    }
                 }
-            }
-            break;
+                break;
 
             case SPECIALTV:
-            {
-                struct cons_pointer next_pointer =
-                    make_special_frame( frame_pointer, args, env );
-                inc_ref( next_pointer );
-                if ( exceptionp( next_pointer ) ) {
-                    result = next_pointer;
-                } else {
-                    result =
-                        ( *fn_cell.payload.special.
-                         executable ) ( get_stack_frame( next_pointer ),
-                                       next_pointer, env );
-                    debug_print( L"Special form returning: ", DEBUG_EVAL );
-                    debug_print_object( result, DEBUG_EVAL );
-                    debug_println( DEBUG_EVAL );
-                    dec_ref( next_pointer );
+                {
+                    struct cons_pointer next_pointer =
+                        make_special_frame( frame_pointer, args, env );
+                    inc_ref( next_pointer );
+                    if ( exceptionp( next_pointer ) ) {
+                        result = next_pointer;
+                    } else {
+                        result =
+                            ( *fn_cell.payload.
+                              special.executable ) ( get_stack_frame
+                                                     ( next_pointer ),
+                                                     next_pointer, env );
+                        debug_print( L"Special form returning: ", DEBUG_EVAL );
+                        debug_print_object( result, DEBUG_EVAL );
+                        debug_println( DEBUG_EVAL );
+                        dec_ref( next_pointer );
+                    }
                 }
-            }
-            break;
+                break;
 
             default:
-            {
-                int bs = sizeof( wchar_t ) * 1024;
-                wchar_t *buffer = malloc( bs );
-                memset( buffer, '\0', bs );
-                swprintf( buffer, bs,
-                         L"Unexpected cell with tag %d (%4.4s) in function position",
-                         fn_cell.tag.value, &fn_cell.tag.bytes[0] );
-                struct cons_pointer message =
-                    c_string_to_lisp_string( buffer );
-                free( buffer );
-                result = throw_exception( message, frame_pointer );
-            }
+                {
+                    int bs = sizeof( wchar_t ) * 1024;
+                    wchar_t *buffer = malloc( bs );
+                    memset( buffer, '\0', bs );
+                    swprintf( buffer, bs,
+                              L"Unexpected cell with tag %d (%4.4s) in function position",
+                              fn_cell.tag.value, &fn_cell.tag.bytes[0] );
+                    struct cons_pointer message =
+                        c_string_to_lisp_string( buffer );
+                    free( buffer );
+                    result = throw_exception( message, frame_pointer );
+                }
         }
     }
 
@@ -479,7 +479,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     switch ( cell.tag.value ) {
         case CONSTV:
-                result = c_apply( frame, frame_pointer, env );
+            result = c_apply( frame, frame_pointer, env );
             break;
 
         case SYMBOLTV:
@@ -781,9 +781,10 @@ lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @param env my environment (ignored).
  * @return the length of `any`, if it is a sequence, or zero otherwise.
  */
-struct cons_pointer lisp_length( struct stack_frame *frame, struct cons_pointer frame_pointer,
-            struct cons_pointer env ) {
-    return make_integer( c_length( frame->arg[0]), NIL);
+struct cons_pointer lisp_length( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env ) {
+    return make_integer( c_length( frame->arg[0] ), NIL );
 }
 
 /**
@@ -802,24 +803,24 @@ lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return c_assoc( frame->arg[0], frame->arg[1] );
 }
 
-struct cons_pointer c_keys(struct cons_pointer store) {
-  struct cons_pointer result = NIL;
+struct cons_pointer c_keys( struct cons_pointer store ) {
+    struct cons_pointer result = NIL;
 
-  if ( hashmapp( store ) ) {
-    result = hashmap_keys( store );
-  } else if ( consp( store ) ) {
-    for ( struct cons_pointer c = store; !nilp( c ); c = c_cdr( c ) ) {
-      result = make_cons( c_car( c ), result );
+    if ( hashmapp( store ) ) {
+        result = hashmap_keys( store );
+    } else if ( consp( store ) ) {
+        for ( struct cons_pointer c = store; !nilp( c ); c = c_cdr( c ) ) {
+            result = make_cons( c_car( c ), result );
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 struct cons_pointer lisp_keys( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env ) {
-  return c_keys( frame->arg[0]);
+    return c_keys( frame->arg[0] );
 }
 
 /**
@@ -962,26 +963,26 @@ struct cons_pointer lisp_reverse( struct stack_frame *frame,
 struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env ) {
-  debug_print( L"Entering lisp_inspect\n", DEBUG_IO );
-  struct cons_pointer result = NIL;
-  struct cons_pointer out_stream = writep( frame->arg[1] )
-                                       ? frame->arg[1]
-                                       : get_default_stream( false, env );
-  URL_FILE *output;
+    debug_print( L"Entering lisp_inspect\n", DEBUG_IO );
+    struct cons_pointer result = NIL;
+    struct cons_pointer out_stream = writep( frame->arg[1] )
+        ? frame->arg[1]
+        : get_default_stream( false, env );
+    URL_FILE *output;
 
-  if ( writep( out_stream ) ) {
-    debug_print( L"lisp_inspect: setting output stream\n", DEBUG_IO );
-    debug_dump_object( out_stream, DEBUG_IO );
-    output = pointer2cell( out_stream ).payload.stream.stream;
-  } else {
-    output = file_to_url_file( stderr );
-  }
+    if ( writep( out_stream ) ) {
+        debug_print( L"lisp_inspect: setting output stream\n", DEBUG_IO );
+        debug_dump_object( out_stream, DEBUG_IO );
+        output = pointer2cell( out_stream ).payload.stream.stream;
+    } else {
+        output = file_to_url_file( stderr );
+    }
 
-  dump_object( output, frame->arg[0] );
+    dump_object( output, frame->arg[0] );
 
-  debug_print( L"Leaving lisp_inspect", DEBUG_IO );
+    debug_print( L"Leaving lisp_inspect", DEBUG_IO );
 
-  return result;
+    return result;
 }
 
 /**
@@ -1064,7 +1065,7 @@ c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = eval_form( frame, frame_pointer, c_car( expressions ), env );
         dec_ref( r );
 
-        expressions = exceptionp(result) ? NIL : c_cdr( expressions );
+        expressions = exceptionp( result ) ? NIL : c_cdr( expressions );
     }
 
     return result;
@@ -1332,7 +1333,7 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
         case SPECIALTV:
             result = c_assoc( source_key, cell.payload.special.meta );
             break;
-        case LAMBDATV: 
+        case LAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
                                 make_cons( cell.payload.lambda.args,
                                            cell.payload.lambda.body ) );

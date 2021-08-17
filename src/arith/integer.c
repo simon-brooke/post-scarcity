@@ -218,18 +218,19 @@ struct cons_pointer base_partial( int depth ) {
 /**
  * destructively modify this `partial` by appending this `digit`.
  */
-struct cons_pointer append_digit( struct cons_pointer partial, struct cons_pointer digit) {
+struct cons_pointer append_digit( struct cons_pointer partial,
+                                  struct cons_pointer digit ) {
     struct cons_pointer c = partial;
     struct cons_pointer result = partial;
 
-    if (nilp( partial)) {
+    if ( nilp( partial ) ) {
         result = digit;
     } else {
-        while ( !nilp( pointer2cell(c).payload.integer.more)) {
-            c = pointer2cell(c).payload.integer.more;
+        while ( !nilp( pointer2cell( c ).payload.integer.more ) ) {
+            c = pointer2cell( c ).payload.integer.more;
         }
 
-        (&pointer2cell(c))->payload.integer.more = digit;
+        ( &pointer2cell( c ) )->payload.integer.more = digit;
     }
     return result;
 }
@@ -248,8 +249,8 @@ struct cons_pointer append_digit( struct cons_pointer partial, struct cons_point
  * @param b an integer.
  */
 struct cons_pointer multiply_integers( struct cons_pointer a,
-                                      struct cons_pointer b ) {
-    struct cons_pointer result = make_integer( 0, NIL);
+                                       struct cons_pointer b ) {
+    struct cons_pointer result = make_integer( 0, NIL );
     bool neg = is_negative( a ) != is_negative( b );
     bool is_first_b = true;
     int i = 0;
@@ -264,7 +265,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
         /* for each digit in a, starting with the least significant (ai) */
 
         for ( struct cons_pointer ai = a; !nilp( ai );
-             ai = pointer2cell(ai).payload.integer.more) {
+              ai = pointer2cell( ai ).payload.integer.more ) {
             /* set carry to 0 */
             __int128_t carry = 0;
 
@@ -274,41 +275,41 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 
             /* for each digit in b, starting with the least significant (bj) */
             for ( struct cons_pointer bj = b; !nilp( bj );
-                 bj = pointer2cell(bj).payload.integer.more) {
+                  bj = pointer2cell( bj ).payload.integer.more ) {
 
                 debug_printf( DEBUG_ARITH,
-                             L"multiply_integers: a[i] = %Ld, b[j] = %Ld, i = %d\n",
-                             pointer2cell(ai).payload.integer.value,
-                             pointer2cell(bj).payload.integer.value, i);
+                              L"multiply_integers: a[i] = %Ld, b[j] = %Ld, i = %d\n",
+                              pointer2cell( ai ).payload.integer.value,
+                              pointer2cell( bj ).payload.integer.value, i );
 
                 /* multiply ai with bj and add the carry, resulting in a
                  * value xj which may exceed one digit */
-                __int128_t xj = pointer2cell(ai).payload.integer.value *
-                    pointer2cell(bj).payload.integer.value;
+                __int128_t xj = pointer2cell( ai ).payload.integer.value *
+                    pointer2cell( bj ).payload.integer.value;
                 xj += carry;
 
                 /* if xj exceeds one digit, break it into the digit dj and
                  * the carry */
                 carry = xj >> 60;
-                struct cons_pointer dj = make_integer( xj & MAX_INTEGER, NIL);
+                struct cons_pointer dj = make_integer( xj & MAX_INTEGER, NIL );
 
                 /* destructively modify ri by appending dj */
-                ri = append_digit( ri, dj);
-            } /* end for bj */
+                ri = append_digit( ri, dj );
+            }                   /* end for bj */
 
             /* if carry is not equal to zero, append it as a final digit
              * to ri */
-            if (carry != 0) {
-                ri = append_digit( ri, make_integer( carry, NIL));
+            if ( carry != 0 ) {
+                ri = append_digit( ri, make_integer( carry, NIL ) );
             }
 
             /* add ri to result */
-            result = add_integers( result, ri);
+            result = add_integers( result, ri );
 
             debug_print( L"multiply_integers: result is ", DEBUG_ARITH );
             debug_print_object( result, DEBUG_ARITH );
             debug_println( DEBUG_ARITH );
-        } /* end for ai */
+        }                       /* end for ai */
     }
 
     debug_print( L"multiply_integers returning: ", DEBUG_ARITH );
@@ -342,13 +343,16 @@ struct cons_pointer integer_to_string_add_digit( int digit, int digits,
  * to be looking to the next. H'mmmm.
  */
 struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
-                                      int base ) {
+                                       int base ) {
     struct cons_pointer result = NIL;
 
     if ( integerp( int_pointer ) ) {
-        struct cons_pointer next = pointer2cell( int_pointer ).payload.integer.more;
-        __int128_t accumulator = llabs( pointer2cell( int_pointer ).payload.integer.value );
-        bool is_negative = pointer2cell( int_pointer ).payload.integer.value < 0;
+        struct cons_pointer next =
+            pointer2cell( int_pointer ).payload.integer.more;
+        __int128_t accumulator =
+            llabs( pointer2cell( int_pointer ).payload.integer.value );
+        bool is_negative =
+            pointer2cell( int_pointer ).payload.integer.value < 0;
         int digits = 0;
 
         if ( accumulator == 0 && nilp( next ) ) {
@@ -356,13 +360,14 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
         } else {
             while ( accumulator > 0 || !nilp( next ) ) {
                 if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
-                    accumulator += (pointer2cell(next).payload.integer.value << 60);
-                    next = pointer2cell(next).payload.integer.more;
+                    accumulator +=
+                        ( pointer2cell( next ).payload.integer.value << 60 );
+                    next = pointer2cell( next ).payload.integer.more;
                 }
                 int offset = ( int ) ( accumulator % base );
                 debug_printf( DEBUG_IO,
-                             L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
-                             offset, hex_digits[offset] );
+                              L"integer_to_string: digit is %ld, hexadecimal is %c, accumulator is: ",
+                              offset, hex_digits[offset] );
                 debug_print_128bit( accumulator, DEBUG_IO );
                 debug_print( L"; result is: ", DEBUG_IO );
                 debug_print_object( result, DEBUG_IO );
@@ -374,7 +379,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
             }
 
             if ( stringp( result )
-                && pointer2cell( result ).payload.string.character == L',' ) {
+                 && pointer2cell( result ).payload.string.character == L',' ) {
                 /* if the number of digits in the string is divisible by 3, there will be
                  * an unwanted comma on the front. */
                 result = pointer2cell( result ).payload.string.cdr;
@@ -393,14 +398,15 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
 /**
  * true if a and be are both integers whose value is the same value.
  */
-bool equal_integer_integer(struct cons_pointer a, struct cons_pointer b) {
+bool equal_integer_integer( struct cons_pointer a, struct cons_pointer b ) {
     bool result = false;
 
-    if (integerp(a) && integerp(b)){
+    if ( integerp( a ) && integerp( b ) ) {
         struct cons_space_object *cell_a = &pointer2cell( a );
         struct cons_space_object *cell_b = &pointer2cell( b );
 
-        result = cell_a->payload.integer.value == cell_b->payload.integer.value;
+        result =
+            cell_a->payload.integer.value == cell_b->payload.integer.value;
     }
 
     return result;
@@ -410,15 +416,14 @@ bool equal_integer_integer(struct cons_pointer a, struct cons_pointer b) {
  * true if `a` is an integer, and `b` is a real number whose value is the
  * value of that integer.
  */
-bool equal_integer_real(struct cons_pointer a, struct cons_pointer b) {
+bool equal_integer_real( struct cons_pointer a, struct cons_pointer b ) {
     bool result = false;
 
-    if (integerp(a) && realp(b))
-    {
-        long double bv = pointer2cell(b).payload.real.value;
+    if ( integerp( a ) && realp( b ) ) {
+        long double bv = pointer2cell( b ).payload.real.value;
 
-        if (floor(bv) == bv) {
-            result = pointer2cell(a).payload.integer.value == (int64_t)bv;
+        if ( floor( bv ) == bv ) {
+            result = pointer2cell( a ).payload.integer.value == ( int64_t ) bv;
         }
     }
 

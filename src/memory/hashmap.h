@@ -15,13 +15,13 @@
 #include "memory/consspaceobject.h"
 #include "memory/vectorspace.h"
 
-#define DFLT_HASHMAP_BUCKETS 32 
+#define DFLT_HASHMAP_BUCKETS 32
 
 uint32_t get_hash( struct cons_pointer ptr );
 
 void free_hashmap( struct cons_pointer ptr );
 
-void dump_map( URL_FILE *output, struct cons_pointer pointer );
+void dump_map( URL_FILE * output, struct cons_pointer pointer );
 
 struct cons_pointer hashmap_get( struct cons_pointer mapp,
                                  struct cons_pointer key );
