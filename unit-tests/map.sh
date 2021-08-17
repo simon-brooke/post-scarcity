@@ -16,7 +16,7 @@ fi
 #####################################################################
 # Create an empty map using make-map
 expected='{}'
-actual=`echo "(make-map)" | target/psse | tail -1`
+actual=`echo "(hashmap)" | target/psse | tail -1`
 
 echo -n "Empty map using (make-map): "
 if [ "${expected}" = "${actual}" ]
@@ -31,7 +31,7 @@ fi
 # Create a map using map notation: order of keys in output is not
 # significant at this stage, but in the long term should be sorted
 # alphanumerically
-expected='{:two 2, :one 1, :three 3}'
+expected='{:one 1, :two 2, :three 3}'
 actual=`echo "{:one 1 :two 2 :three 3}" | target/psse | tail -1`
 
 echo -n "Map using map notation: "
@@ -47,10 +47,10 @@ fi
 # Create a map using make-map: order of keys in output is not
 # significant at this stage, but in the long term should be sorted
 # alphanumerically
-expected='{:two 2, :one 1, :three 3}'
-actual=`echo "(make-map '((:one . 1)(:two . 2)(:three . 3)))" | target/psse | tail -1`
+expected='{:one 1, :two 2, :three 3}'
+actual=`echo "(hashmap nil nil '((:one . 1)(:two . 2)(:three . 3)))" | target/psse | tail -1`
 
-echo -n "Map using (make-map): "
+echo -n "Map using (hashmap): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"

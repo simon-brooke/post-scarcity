@@ -78,17 +78,16 @@ void free_hashmap( struct cons_pointer pointer ) {
 
   if ( hashmapp( pointer ) ) {
     struct vector_space_object *vso = cell->payload.vectorp.address;
-    struct hashmap_payload payload = vso->payload.hashmap;
 
-    dec_ref( payload.hash_fn );
-    dec_ref( payload.write_acl );
+    dec_ref( vso->payload.hashmap.hash_fn );
+    dec_ref( vso->payload.hashmap.write_acl );
 
-    for ( int i = 0; i < payload.n_buckets; i++ ) {
-      if ( !nilp( payload.buckets[i] ) ) {
+    for ( int i = 0; i < vso->payload.hashmap.n_buckets; i++ ) {
+      if ( !nilp( vso->payload.hashmap.buckets[i] ) ) {
         debug_printf( DEBUG_ALLOC,
                       L"Decrementing bucket [%d] of hashmap at 0x%lx\n", i,
                       cell->payload.vectorp.address );
-        dec_ref( payload.buckets[i] );
+        dec_ref( vso->payload.hashmap.buckets[i] );
       }
     }
   } else {
@@ -114,7 +113,7 @@ struct cons_pointer make_hashmap( uint32_t n_buckets,
                                   struct cons_pointer hash_fn,
                                   struct cons_pointer write_acl ) {
   struct cons_pointer result =
-      make_vso( HASHTAG, ( sizeof( struct cons_pointer ) * ( n_buckets + 1 ) ) +
+      make_vso( HASHTV, ( sizeof( struct cons_pointer ) * ( n_buckets + 1 ) ) +
                              ( sizeof( uint32_t ) * 2 ) );
 
   struct hashmap_payload *payload =

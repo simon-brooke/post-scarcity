@@ -56,7 +56,7 @@ unsigned __int128 unix_time_to_lisp_time( time_t t) {
 }
 
 struct cons_pointer make_time( struct cons_pointer integer_or_nil) {
-    struct cons_pointer pointer = allocate_cell( TIMETAG );
+    struct cons_pointer pointer = allocate_cell( TIMETV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     if (integerp(integer_or_nil)) {

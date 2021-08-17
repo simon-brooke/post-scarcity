@@ -46,11 +46,10 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     debug_print( L"Entering make_integer\n", DEBUG_ALLOC );
 
     if ( integerp( more ) || nilp( more ) ) {
-        result = allocate_cell( INTEGERTAG );
+        result = allocate_cell( INTEGERTV );
         struct cons_space_object *cell = &pointer2cell( result );
         cell->payload.integer.value = value;
         cell->payload.integer.more = more;
-
     }
 
     debug_print( L"make_integer: returning\n", DEBUG_ALLOC );

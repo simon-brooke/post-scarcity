@@ -49,7 +49,7 @@ struct cons_pointer read_map( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
-struct cons_pointer read_symbol_or_key( URL_FILE * input, char *tag,
+struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
                                         wint_t initial );
 
 /**
@@ -119,7 +119,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                             read_number( frame, frame_pointer, input, c,
                                          false );
                     } else {
-                        result = read_symbol_or_key( input, SYMBOLTAG, c );
+                        result = read_symbol_or_key( input, SYMBOLTV, c );
                     }
                 }
                 break;
@@ -139,20 +139,20 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                         debug_print( L"read_continuation: dotted pair; read cdr ",
                                     DEBUG_IO);
                     } else {
-                        read_symbol_or_key( input, SYMBOLTAG, c );
+                        read_symbol_or_key( input, SYMBOLTV, c );
                     }
                 }
                 break;
             case ':':
                 result =
-                    read_symbol_or_key( input, KEYTAG, url_fgetwc( input ) );
+                    read_symbol_or_key( input, KEYTV, url_fgetwc( input ) );
                 break;
             default:
                 if ( iswdigit( c ) ) {
                     result =
                         read_number( frame, frame_pointer, input, c, false );
                 } else if ( iswprint( c ) ) {
-                    result = read_symbol_or_key( input, SYMBOLTAG, c );
+                    result = read_symbol_or_key( input, SYMBOLTV, c );
                 } else {
                     result =
                         throw_exception( make_cons( c_string_to_lisp_string
@@ -386,7 +386,7 @@ struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
     return result;
 }
 
-struct cons_pointer read_symbol_or_key( URL_FILE * input, char *tag,
+struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
                                         wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;

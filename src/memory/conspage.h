@@ -55,7 +55,7 @@ extern struct cons_page *conspages[NCONSPAGES];
 
 void free_cell( struct cons_pointer pointer );
 
-struct cons_pointer allocate_cell( char *tag );
+struct cons_pointer allocate_cell( uint32_t tag );
 
 void initialise_cons_pages(  );
 

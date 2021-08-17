@@ -28,22 +28,22 @@
 #include "vectorspace.h"
 
 /**
- * True if the tag on the cell at this `pointer` is this `tag`, or, if the tag
- * of the cell is `VECP`, if the tag of the vectorspace object indicated by the
- * cell is this `tag`, else false.
+ * True if the value of the tag on the cell at this `pointer` is this `value`,
+ * or, if the tag of the cell is `VECP`, if the value of the tag of the
+ * vectorspace object indicated by the cell is this `value`, else false.
  */
-bool check_tag( struct cons_pointer pointer, char *tag ) {
+bool check_tag( struct cons_pointer pointer, uint32_t value ) {
   bool result = false;
+
   struct cons_space_object cell = pointer2cell( pointer );
-    
-  result = strncmp( &cell.tag.bytes[0], tag, TAGLENGTH ) == 0;
+  result = cell.tag.value == value;
 
   if ( result == false ) {
     if ( cell.tag.value == VECTORPOINTTV ) {
       struct vector_space_object *vec = pointer_to_vso( pointer );
 
       if ( vec != NULL ) {
-        result = strncmp( &(vec->header.tag.bytes[0]), tag, TAGLENGTH ) == 0;
+        result = vec->header.tag.value == value;
       }
     }
   }
@@ -177,7 +177,7 @@ struct cons_pointer make_cons( struct cons_pointer car,
                                struct cons_pointer cdr ) {
     struct cons_pointer pointer = NIL;
 
-    pointer = allocate_cell( CONSTAG );
+    pointer = allocate_cell( CONSTV );
 
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -197,7 +197,7 @@ struct cons_pointer make_cons( struct cons_pointer car,
 struct cons_pointer make_exception( struct cons_pointer message,
                                     struct cons_pointer frame_pointer ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer pointer = allocate_cell( EXCEPTIONTAG );
+    struct cons_pointer pointer = allocate_cell( EXCEPTIONTV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     inc_ref( message );
@@ -218,7 +218,7 @@ struct cons_pointer
 make_function( struct cons_pointer meta, struct cons_pointer ( *executable )
                 ( struct stack_frame *,
                   struct cons_pointer, struct cons_pointer ) ) {
-    struct cons_pointer pointer = allocate_cell( FUNCTIONTAG );
+    struct cons_pointer pointer = allocate_cell( FUNCTIONTV );
     struct cons_space_object *cell = &pointer2cell( pointer );
     inc_ref( meta );
 
@@ -233,7 +233,7 @@ make_function( struct cons_pointer meta, struct cons_pointer ( *executable )
  */
 struct cons_pointer make_lambda( struct cons_pointer args,
                                  struct cons_pointer body ) {
-    struct cons_pointer pointer = allocate_cell( LAMBDATAG );
+    struct cons_pointer pointer = allocate_cell( LAMBDATV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
@@ -252,7 +252,7 @@ struct cons_pointer make_lambda( struct cons_pointer args,
  */
 struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body ) {
-    struct cons_pointer pointer = allocate_cell( NLAMBDATAG );
+    struct cons_pointer pointer = allocate_cell( NLAMBDATV );
 
     inc_ref( pointer );         /* this is a hack; I don't know why it's necessary to do this, but if I don't the cell gets freed */
 
@@ -309,10 +309,10 @@ uint32_t calculate_hash(wint_t c, struct cons_pointer ptr)
  * pointer to next is NIL.
  */
 struct cons_pointer
-make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
+make_string_like_thing( wint_t c, struct cons_pointer tail, uint32_t tag ) {
     struct cons_pointer pointer = NIL;
 
-    if ( check_tag( tail, tag ) || check_tag( tail, NILTAG ) ) {
+    if ( check_tag( tail, tag ) || check_tag( tail, NILTV ) ) {
         pointer = allocate_cell( tag );
         struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -344,7 +344,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, char *tag ) {
  * @param tail the string which is being built.
  */
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
-    return make_string_like_thing( c, tail, STRINGTAG );
+    return make_string_like_thing( c, tail, STRINGTV );
 }
 
 /**
@@ -356,10 +356,10 @@ struct cons_pointer make_string( wint_t c, struct cons_pointer tail ) {
  * @param tag the tag to use: expected to be "SYMB" or "KEYW"
  */
 struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
-                                        char *tag ) {
+                                        uint32_t tag ) {
     struct cons_pointer result = make_string_like_thing( c, tail, tag );
 
-    if ( strncmp( tag, KEYTAG, 4 ) == 0 ) {
+    if ( tag == KEYTV ) {
         struct cons_pointer r = internedp( result, oblist );
 
         if ( nilp( r ) ) {
@@ -379,7 +379,7 @@ struct cons_pointer
 make_special( struct cons_pointer meta, struct cons_pointer ( *executable )
                ( struct stack_frame * frame,
                  struct cons_pointer, struct cons_pointer env ) ) {
-    struct cons_pointer pointer = allocate_cell( SPECIALTAG );
+    struct cons_pointer pointer = allocate_cell( SPECIALTV );
     struct cons_space_object *cell = &pointer2cell( pointer );
     inc_ref( meta );
 
@@ -397,7 +397,7 @@ make_special( struct cons_pointer meta, struct cons_pointer ( *executable )
  */
 struct cons_pointer make_read_stream( URL_FILE * input,
                                       struct cons_pointer metadata ) {
-    struct cons_pointer pointer = allocate_cell( READTAG );
+    struct cons_pointer pointer = allocate_cell( READTV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     cell->payload.stream.stream = input;
@@ -414,7 +414,7 @@ struct cons_pointer make_read_stream( URL_FILE * input,
  */
 struct cons_pointer make_write_stream( URL_FILE * output,
                                        struct cons_pointer metadata ) {
-    struct cons_pointer pointer = allocate_cell( WRITETAG );
+    struct cons_pointer pointer = allocate_cell( WRITETV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     cell->payload.stream.stream = output;

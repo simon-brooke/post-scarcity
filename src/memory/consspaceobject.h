@@ -276,114 +276,114 @@
  * true if `conspoint` points to the special cell NIL, else false
  * (there should only be one of these so it's slightly redundant).
  */
-#define nilp(conspoint) (check_tag(conspoint,NILTAG))
+#define nilp(conspoint) (check_tag(conspoint,NILTV))
 
 /**
  * true if `conspoint` points to a cons cell, else false
  */
-#define consp(conspoint) (check_tag(conspoint,CONSTAG))
+#define consp(conspoint) (check_tag(conspoint,CONSTV))
 
 /**
  * true if `conspoint` points to an exception, else false
  */
-#define exceptionp(conspoint) (check_tag(conspoint,EXCEPTIONTAG))
+#define exceptionp(conspoint) (check_tag(conspoint,EXCEPTIONTV))
 
 /**
  * true if `conspoint` points to a function cell, else false
  */
-#define functionp(conspoint) (check_tag(conspoint,FUNCTIONTAG))
+#define functionp(conspoint) (check_tag(conspoint,FUNCTIONTV))
 
 /**
  * true if `conspoint` points to a keyword, else false
  */
-#define keywordp(conspoint) (check_tag(conspoint,KEYTAG))
+#define keywordp(conspoint) (check_tag(conspoint,KEYTV))
 
 /**
  * true if `conspoint` points to a Lambda binding cell, else false
  */
-#define lambdap(conspoint) (check_tag(conspoint,LAMBDATAG))
+#define lambdap(conspoint) (check_tag(conspoint,LAMBDATV))
 
 /**
  * true if `conspoint` points to a loop exit exception, else false.
  */
-#define loopexitp(conspoint) (check_tag(conspoint,LOOPXTAG))
+#define loopexitp(conspoint) (check_tag(conspoint,LOOPXTV))
 
 /**
  * true if `conspoint` points to a special form cell, else false
  */
-#define specialp(conspoint) (check_tag(conspoint,SPECIALTAG))
+#define specialp(conspoint) (check_tag(conspoint,SPECIALTV))
 
 /**
  * true if `conspoint` points to a string cell, else false
  */
-#define stringp(conspoint) (check_tag(conspoint,STRINGTAG))
+#define stringp(conspoint) (check_tag(conspoint,STRINGTV))
 
 /**
  * true if `conspoint` points to a symbol cell, else false
  */
-#define symbolp(conspoint) (check_tag(conspoint,SYMBOLTAG))
+#define symbolp(conspoint) (check_tag(conspoint,SYMBOLTV))
 
 /**
  * true if `conspoint` points to an integer cell, else false
  */
-#define integerp(conspoint) (check_tag(conspoint,INTEGERTAG))
+#define integerp(conspoint) (check_tag(conspoint,INTEGERTV))
 
 /**
  * true if `conspoint` points to a rational number cell, else false
  */
-#define ratiop(conspoint) (check_tag(conspoint,RATIOTAG))
+#define ratiop(conspoint) (check_tag(conspoint,RATIOTV))
 
 /**
  * true if `conspoint` points to a read stream cell, else false
  */
-#define readp(conspoint) (check_tag(conspoint,READTAG))
+#define readp(conspoint) (check_tag(conspoint,READTV))
 
 /**
  * true if `conspoint` points to a real number cell, else false
  */
-#define realp(conspoint) (check_tag(conspoint,REALTAG))
+#define realp(conspoint) (check_tag(conspoint,REALTV))
 
 /**
  * true if `conspoint` points to some sort of a number cell,
  * else false
  */
-#define numberp(conspoint) (check_tag(conspoint,INTEGERTAG)||check_tag(conspoint,RATIOTAG)||check_tag(conspoint,REALTAG))
+#define numberp(conspoint) (check_tag(conspoint,INTEGERTV)||check_tag(conspoint,RATIOTV)||check_tag(conspoint,REALTV))
 
 /**
  * true if `conspoint` points to a sequence (list, string or, later, vector),
  * else false.
  */
-#define sequencep(conspoint) (check_tag(conspoint,CONSTAG)||check_tag(conspoint,STRINGTAG)||check_tag(conspoint,SYMBOLTAG))
+#define sequencep(conspoint) (check_tag(conspoint,CONSTV)||check_tag(conspoint,STRINGTV)||check_tag(conspoint,SYMBOLTV))
 
 /**
  * true if `conspoint` points to a vector pointer, else false.
  */
-#define vectorpointp(conspoint) (check_tag(conspoint,VECTORPOINTTAG))
+#define vectorpointp(conspoint) (check_tag(conspoint,VECTORPOINTTV))
 
 /**
  * true if `conspoint` points to a write stream cell, else false.
  */
-#define writep(conspoint) (check_tag(conspoint,WRITETAG))
+#define writep(conspoint) (check_tag(conspoint,WRITETV))
 
-#define streamp(conspoint) (check_tag(conspoint,READTAG)||check_tag(conspoint,WRITETAG))
+#define streamp(conspoint) (check_tag(conspoint,READTV)||check_tag(conspoint,WRITETV))
 
 /**
  * true if `conspoint` points to a true cell, else false
  * (there should only be one of these so it's slightly redundant).
  * Also note that anything that is not NIL is truthy.
  */
-#define tp(conspoint) (check_tag(conspoint,TRUETAG))
+#define tp(conspoint) (check_tag(conspoint,TRUETV))
 
 /**
  * true if `conspoint` points to a time cell, else false.
  */
-#define timep(conspoint) (check_tag(conspoint,TIMETAG))
+#define timep(conspoint) (check_tag(conspoint,TIMETV))
 
 /**
  * true if `conspoint` points to something that is truthy, i.e.
  * anything but NIL.
  */
-#define truep(conspoint) (!check_tag(conspoint,NILTAG))
+#define truep(conspoint) (!check_tag(conspoint,NILTV))
 
 /**
  * An indirect pointer to a cons cell
@@ -673,7 +673,7 @@ struct cons_space_object {
     } payload;
 };
 
-bool check_tag( struct cons_pointer pointer, char *tag );
+bool check_tag( struct cons_pointer pointer, uint32_t value );
 
 struct cons_pointer inc_ref( struct cons_pointer pointer );
 
@@ -716,11 +716,11 @@ struct cons_pointer make_special( struct cons_pointer src,
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 
 struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
-                                        char *tag );
+                                        uint32_t tag );
 
-#define make_symbol(c, t) (make_symbol_or_key( c, t, SYMBOLTAG))
+#define make_symbol(c, t) (make_symbol_or_key( c, t, SYMBOLTV))
 
-#define make_keyword(c, t) (make_symbol_or_key( c, t, KEYTAG))
+#define make_keyword(c, t) (make_symbol_or_key( c, t, KEYTV))
 
 struct cons_pointer make_read_stream( URL_FILE * input,
                                       struct cons_pointer metadata );

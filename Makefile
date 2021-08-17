@@ -17,11 +17,12 @@ INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g -DDEBUG
 LDFLAGS := -lm -lcurl
+DEBUGFLAGS := -g3
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
+	$(CC) $(DEBUGFLAGS) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 doc: $(SRCS) Makefile Doxyfile
 	doxygen
@@ -38,7 +39,7 @@ test: $(OBJS) $(TESTS) Makefile
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ *~
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ *~ core
 
 repl:
 	$(TARGET) -p 2> psse.log

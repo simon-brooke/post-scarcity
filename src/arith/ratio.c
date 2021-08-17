@@ -315,7 +315,7 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
     if ( integerp( dividend ) && integerp( divisor ) ) {
         inc_ref( dividend );
         inc_ref( divisor );
-        result = allocate_cell( RATIOTAG );
+        result = allocate_cell( RATIOTV );
         struct cons_space_object *cell = &pointer2cell( result );
         cell->payload.ratio.dividend = dividend;
         cell->payload.ratio.divisor = divisor;

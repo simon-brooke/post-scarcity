@@ -920,7 +920,7 @@ struct cons_pointer c_reverse( struct cons_pointer arg ) {
             case SYMBOLTV:
                 result =
                     make_symbol_or_key( o.payload.string.character, result,
-                                        SYMBOLTAG );
+                                        SYMBOLTV );
                 break;
         }
     }

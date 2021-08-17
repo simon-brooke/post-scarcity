@@ -140,7 +140,7 @@ void free_cell( struct cons_pointer pointer ) {
     debug_printf( DEBUG_ALLOC, L"Freeing cell " );
     debug_dump_object( pointer, DEBUG_ALLOC );
 
-    if ( !check_tag( pointer, FREETAG ) ) {
+    if ( !check_tag( pointer, FREETV ) ) {
         if ( cell->count == 0 ) {
             switch ( cell->tag.value ) {
                 case CONSTV:
@@ -209,7 +209,7 @@ void free_cell( struct cons_pointer pointer ) {
  * return an exception. Which, as we cannot create such an exception when
  * cons space is exhausted, means we must construct it at init time.
  */
-struct cons_pointer allocate_cell( char *tag ) {
+struct cons_pointer allocate_cell( uint32_t tag ) {
     struct cons_pointer result = freelist;
 
 
@@ -222,7 +222,7 @@ struct cons_pointer allocate_cell( char *tag ) {
         if ( strncmp( &cell->tag.bytes[0], FREETAG, TAGLENGTH ) == 0 ) {
             freelist = cell->payload.free.cdr;
 
-            strncpy( &cell->tag.bytes[0], tag, TAGLENGTH );
+            cell->tag.value = tag;
 
             cell->count = 0;
             cell->payload.cons.car = NIL;

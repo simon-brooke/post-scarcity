@@ -33,15 +33,15 @@
  *
  * @address the address of the vector_space_object to point to.
  * @tag the vector-space tag of the particular type of vector-space object,
- * NOT `VECTORPOINTTAG`.
+ * NOT `VECTORPOINTTV`.
  *
  * @return a cons_pointer to the object, or NIL if the object could not be
  * allocated due to memory exhaustion.
  */
 struct cons_pointer make_vec_pointer( struct vector_space_object *address,
-                                      char *tag ) {
+                                      uint32_t tag ) {
     debug_print( L"Entered make_vec_pointer\n", DEBUG_ALLOC );
-    struct cons_pointer pointer = allocate_cell( VECTORPOINTTAG );
+    struct cons_pointer pointer = allocate_cell( VECTORPOINTTV );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
     debug_printf( DEBUG_ALLOC,
@@ -49,7 +49,7 @@ struct cons_pointer make_vec_pointer( struct vector_space_object *address,
                   address );
 
     cell->payload.vectorp.address = address;
-    strncpy( &cell->payload.vectorp.tag.bytes[0], tag, TAGLENGTH );
+    cell->payload.vectorp.tag.value = tag;
 
     debug_printf( DEBUG_ALLOC,
                   L"make_vec_pointer: all good, returning pointer to %p\n",
@@ -71,7 +71,7 @@ struct cons_pointer make_vec_pointer( struct vector_space_object *address,
  * @return a cons_pointer to the object, or NIL if the object could not be
  * allocated due to memory exhaustion.
  */
-struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
+struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
     debug_print( L"Entered make_vso\n", DEBUG_ALLOC );
     struct cons_pointer result = NIL;
     int64_t total_size = sizeof( struct vector_space_header ) + payload_size;
@@ -87,7 +87,7 @@ struct cons_pointer make_vso( char *tag, uint64_t payload_size ) {
         debug_printf( DEBUG_ALLOC,
                       L"make_vso: about to write tag '%s' into vso at %p\n",
                       tag, vso );
-        strncpy( &vso->header.tag.bytes[0], tag, TAGLENGTH );
+        vso->header.tag.value = tag;
         result = make_vec_pointer( vso, tag );
         debug_dump_object( result, DEBUG_ALLOC );
         vso->header.vecp = result;

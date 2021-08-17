@@ -75,7 +75,7 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
 struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
     debug_print( L"Entering make_empty_frame\n", DEBUG_ALLOC );
     struct cons_pointer result =
-        make_vso( STACKFRAMETAG, sizeof( struct stack_frame ) );
+        make_vso( STACKFRAMETV, sizeof( struct stack_frame ) );
 
     debug_dump_object( result, DEBUG_ALLOC );
 

@@ -29,7 +29,7 @@
 #define HASHTAG "HASH"
 #define HASHTV 1213415752
 
-#define hashmapp(conspoint)((check_tag(conspoint,HASHTAG)))
+#define hashmapp(conspoint)((check_tag(conspoint,HASHTV)))
 
 /*
  * a namespace (i.e. a binding of names to values, implemented as a hashmap)
@@ -39,7 +39,7 @@
 #define NAMESPACETAG "NMSP"
 #define NAMESPACETV 1347636558
 
-#define namespacep(conspoint)(check_tag(conspoint,NAMESPACETAG))
+#define namespacep(conspoint)(check_tag(conspoint,NAMESPACETV))
 
 /*
  * a vector of cons pointers.
@@ -47,7 +47,7 @@
 #define VECTORTAG "VECT"
 #define VECTORTV 1413694806
 
-#define vectorp(conspoint)(check_tag(conspoint,VECTORTAG))
+#define vectorp(conspoint)(check_tag(conspoint,VECTORTV))
 
 /**
  * given a pointer to a vector space object, return the object.
@@ -59,7 +59,7 @@
  */
 #define vso_get_vecp(vso)((((vector_space_object)vso)->header.vecp))
 
-struct cons_pointer make_vso( char *tag, uint64_t payload_size );
+struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size );
 
 void free_vso(struct cons_pointer pointer);
 
