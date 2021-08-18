@@ -61,6 +61,77 @@ struct cons_pointer c_quote( struct cons_pointer arg ) {
 }
 
 /**
+ * Read a path macro from the stream. A path macro is expected to be
+ * 1. optionally a leading character such as '/' or '$', followed by
+ * 2. one or more keywords with leading colons (':') but no intervening spaces; or
+ * 3. one or more symbols separated by slashes; or
+ * 4. keywords (with leading colons) interspersed with symbols (prefixed by slashes).
+ */
+struct cons_pointer read_path( URL_FILE * input, wint_t initial,
+                               struct cons_pointer q ) {
+    bool done = false;
+    struct cons_pointer prefix = NIL;
+
+    switch ( initial ) {
+        case '/':
+            prefix = c_string_to_lisp_symbol( L"oblist" );
+            break;
+        case '$':
+        case L'§':
+            prefix = c_string_to_lisp_symbol( L"session" );
+            break;
+    }
+
+    while ( !done ) {
+        wint_t c = url_fgetwc( input );
+        if ( iswblank( c ) || iswcntrl( c ) ) {
+            done = true;
+        } else if ( url_feof( input ) ) {
+            done = true;
+        } else {
+            switch ( c ) {
+                case ':':
+                    q = make_cons( read_symbol_or_key
+                                   ( input, KEYTV, url_fgetwc( input ) ), q );
+                    break;
+                case '/':
+                    q = make_cons( make_cons
+                                   ( c_string_to_lisp_symbol( L"quote" ),
+                                     make_cons( read_symbol_or_key
+                                                ( input, SYMBOLTV,
+                                                  url_fgetwc( input ) ),
+                                                NIL ) ), q );
+                    break;
+                default:
+                    if ( iswalpha( c ) ) {
+                        q = make_cons( read_symbol_or_key
+                                       ( input, SYMBOLTV, c ), q );
+                    } else {
+                        // TODO: it's really an error. Exception?
+                        url_ungetwc( c, input );
+                        done = true;
+                    }
+            }
+        }
+    }
+
+    // right, we now have the path we want (reversed) in q.
+    struct cons_pointer r = NIL;
+
+    for ( struct cons_pointer p = q; !nilp( p ); p = c_cdr( p ) ) {
+        r = make_cons( c_car( p ), r );
+    }
+
+    dec_ref( q );
+
+    if ( !nilp( prefix ) ) {
+        r = make_cons( prefix, r );
+    }
+
+    return make_cons( c_string_to_lisp_symbol( L"->" ), r );
+}
+
+/**
  * Read the next object on this input stream and return a cons_pointer to it,
  * treating this initial character as the first character of the object
  * representation.
@@ -148,6 +219,27 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
             case ':':
                 result =
                     read_symbol_or_key( input, KEYTV, url_fgetwc( input ) );
+                break;
+            case '/':
+                {
+                    /* slash followed by whitespace is legit provided it's not
+                     * preceded by anything - it's the division operator. Otherwise,
+                     * it's terminal, probably part of a path, and needs pushed back.
+                     */
+                    wint_t cn = url_fgetwc( input );
+                    if ( nilp( result )
+                         && ( iswblank( cn ) || iswcntrl( cn ) ) ) {
+                        url_ungetwc( cn, input );
+                        result = make_symbol_or_key( c, NIL, SYMBOLTV );
+                    } else {
+                        url_ungetwc( cn, input );
+                        result = read_path( input, c, NIL );
+                    }
+                }
+                break;
+            case '$':
+            case L'§':
+                result = read_path( input, c, NIL );
                 break;
             default:
                 if ( iswdigit( c ) ) {
@@ -398,9 +490,10 @@ struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
             /* unwise to allow embedded quotation marks in symbols */
         case ')':
         case ':':
+        case '/':
             /*
-             * symbols and keywords may not include right-parenthesis
-             * or colons.
+             * symbols and keywords may not include right-parenthesis,
+             * slashes or colons.
              */
             result = NIL;
             /*

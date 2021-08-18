@@ -25,7 +25,7 @@
 #include "equal.h"
 #include "hashmap.h"
 #include "lispops.h"
-#include "print.h"
+// #include "print.h"
 
 /**
  * The global object list/or, to put it differently, the root namespace.
@@ -181,8 +181,11 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     debug_println( DEBUG_BIND );
 
     oblist = set( key, value, oblist );
-    inc_ref( oblist );
-    dec_ref( old );
+
+    if ( consp( oblist ) ) {
+        inc_ref( oblist );
+        dec_ref( old );
+    }
 
     debug_print( L"deep_bind returning ", DEBUG_BIND );
     debug_print_object( oblist, DEBUG_BIND );

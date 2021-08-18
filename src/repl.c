@@ -24,12 +24,16 @@
 void repl(  ) {
     debug_print( L"Entered repl\n", DEBUG_REPL );
 
-    struct cons_pointer frame_pointer = make_stack_frame( NIL, NIL, oblist );
+    struct cons_pointer env =
+        consp( oblist ) ? oblist : make_cons( oblist, NIL );
+
+    /* bottom of stack */
+    struct cons_pointer frame_pointer = make_stack_frame( NIL, NIL, env );
 
     if ( !nilp( frame_pointer ) ) {
         inc_ref( frame_pointer );
 
-        lisp_repl( get_stack_frame( frame_pointer ), frame_pointer, oblist );
+        lisp_repl( get_stack_frame( frame_pointer ), frame_pointer, env );
 
         dec_ref( frame_pointer );
     }

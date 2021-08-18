@@ -5,6 +5,7 @@
 expected='{}'
 actual=`echo "$expected" | target/psse | tail -1`
 
+echo -n "Empty map using compact map notation: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"

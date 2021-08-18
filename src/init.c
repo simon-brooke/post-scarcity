@@ -163,6 +163,9 @@ int main( int argc, char *argv[] ) {
 
     debug_print( L"Initialised cons pages, about to bind\n", DEBUG_BOOTSTRAP );
 
+//    TODO: oblist-as-hashmap (which is what we ultimately need) is failing hooribly
+//    oblist = inc_ref( make_hashmap( 32, NIL, TRUE ) );
+
     /*
      * privileged variables (keywords)
      */
@@ -271,7 +274,9 @@ int main( int argc, char *argv[] ) {
     bind_special( L"set!", &lisp_set_shriek );
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
+
     repl( show_prompt );
+
     debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
     dec_ref( oblist );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );

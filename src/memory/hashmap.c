@@ -112,7 +112,7 @@ struct cons_pointer make_hashmap( uint32_t n_buckets,
                                   struct cons_pointer write_acl ) {
     struct cons_pointer result = make_vso( HASHTV,
                                            ( sizeof( struct cons_pointer ) *
-                                             ( n_buckets + 1 ) ) +
+                                             ( n_buckets + 2 ) ) +
                                            ( sizeof( uint32_t ) * 2 ) );
 
     struct hashmap_payload *payload =
