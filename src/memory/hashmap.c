@@ -110,10 +110,10 @@ struct cons_pointer lisp_get_hash( struct stack_frame *frame,
 struct cons_pointer make_hashmap( uint32_t n_buckets,
                                   struct cons_pointer hash_fn,
                                   struct cons_pointer write_acl ) {
-    struct cons_pointer result =
-        make_vso( HASHTV,
-                  ( sizeof( struct cons_pointer ) * ( n_buckets + 1 ) ) +
-                  ( sizeof( uint32_t ) * 2 ) );
+    struct cons_pointer result = make_vso( HASHTV,
+                                           ( sizeof( struct cons_pointer ) *
+                                             ( n_buckets + 1 ) ) +
+                                           ( sizeof( uint32_t ) * 2 ) );
 
     struct hashmap_payload *payload =
         ( struct hashmap_payload * ) &pointer_to_vso( result )->payload;
@@ -175,9 +175,8 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
                 struct cons_pointer val = c_cdr( pair );
 
                 uint32_t bucket_no =
-                    get_hash( key ) %
-                    ( ( struct hashmap_payload * ) &( map->payload ) )->
-                    n_buckets;
+                    get_hash( key ) % ( ( struct hashmap_payload * )
+                                        &( map->payload ) )->n_buckets;
 
                 map->payload.hashmap.buckets[bucket_no] =
                     inc_ref( make_cons( make_cons( key, val ),

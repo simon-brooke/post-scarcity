@@ -82,13 +82,15 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                  * structures can be of indefinite extent. It *must* be done by 
                  * iteration (and even that is problematic) */
                 result =
-                    cell_a->payload.string.hash == cell_b->payload.string.hash &&
-                    cell_a->payload.string.character ==
-                    cell_b->payload.string.character &&
-                    ( equal( cell_a->payload.string.cdr,
-                             cell_b->payload.string.cdr ) ||
-                      ( end_of_string( cell_a->payload.string.cdr )
-                        && end_of_string( cell_b->payload.string.cdr ) ) );
+                    cell_a->payload.string.hash == cell_b->payload.string.hash
+                    && cell_a->payload.string.character ==
+                    cell_b->payload.string.character
+                    &&
+                    ( equal
+                      ( cell_a->payload.string.cdr,
+                        cell_b->payload.string.cdr )
+                      || ( end_of_string( cell_a->payload.string.cdr )
+                           && end_of_string( cell_b->payload.string.cdr ) ) );
                 break;
             case INTEGERTV:
                 result =

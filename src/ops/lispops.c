@@ -380,9 +380,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = c_assoc( eval_form( frame,
                                                      frame_pointer,
                                                      c_car( c_cdr
-                                                            ( frame->
-                                                              arg[0] ) ),
-                                                     env ), fn_pointer );
+                                                            ( frame->arg
+                                                              [0] ) ), env ),
+                                          fn_pointer );
                         break;
                 }
                 break;
