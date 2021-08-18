@@ -90,56 +90,67 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
  */
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
-    struct cons_pointer result = NIL;
+  struct cons_pointer result = NIL;
 
-    debug_print( L"c_assoc; key is `", DEBUG_BIND );
-    debug_print_object( key, DEBUG_BIND );
-    debug_print( L"`\n", DEBUG_BIND );
+  debug_print( L"c_assoc; key is `", DEBUG_BIND );
+  debug_print_object( key, DEBUG_BIND );
+  debug_print( L"`\n", DEBUG_BIND );
 
-    if ( consp( store ) ) {
-        for ( struct cons_pointer next = store;
-              consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
-            struct cons_space_object entry =
-                pointer2cell( pointer2cell( next ).payload.cons.car );
+  if ( consp( store ) ) {
+    for ( struct cons_pointer next = store;
+          nilp( result ) && ( consp( next ) || hashmapp( next ) );
+          next = pointer2cell( next ).payload.cons.cdr ) {
+      if ( consp( next ) ) {
+        struct cons_pointer entry_ptr = c_car( next );
+        struct cons_space_object entry = pointer2cell( entry_ptr );
 
+        switch ( entry.tag.value ) {
+          case CONSTV:
             if ( equal( key, entry.payload.cons.car ) ) {
-                result = entry.payload.cons.cdr;
-                break;
+              result = entry.payload.cons.cdr;
             }
+            break;
+          case VECTORPOINTTV:
+            result = hashmap_get( entry_ptr, key );
+            break;
+          default:
+            throw_exception(
+                c_string_to_lisp_string( L"Store entry is of unknown type" ),
+                NIL );
         }
-    } else if ( hashmapp( store ) ) {
-        result = hashmap_get( store, key );
-    } else {
-        result =
-            throw_exception( c_string_to_lisp_string
-                             ( L"Store is of unknown type" ), NIL );
+      }
     }
+  } else if ( hashmapp( store ) ) {
+    result = hashmap_get( store, key );
+  } else if (!nilp(store)) {
+    result = throw_exception(
+        c_string_to_lisp_string( L"Store is of unknown type" ), NIL );
+  }
 
-    debug_print( L"c_assoc returning ", DEBUG_BIND );
-    debug_print_object( result, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
+  debug_print( L"c_assoc returning ", DEBUG_BIND );
+  debug_print_object( result, DEBUG_BIND );
+  debug_println( DEBUG_BIND );
 
-    return result;
+  return result;
 }
 
-/**
- * Return a new key/value store containing all the key/value pairs in this store
- * with this key/value pair added to the front.
- */
-struct cons_pointer
-set( struct cons_pointer key, struct cons_pointer value,
-     struct cons_pointer store ) {
-    struct cons_pointer result = NIL;
+    /**
+     * Return a new key/value store containing all the key/value pairs in this
+     * store with this key/value pair added to the front.
+     */
+    struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
+                             struct cons_pointer store ) {
+      struct cons_pointer result = NIL;
 
-    debug_print( L"set: binding `", DEBUG_BIND );
-    debug_print_object( key, DEBUG_BIND );
-    debug_print( L"` to `", DEBUG_BIND );
-    debug_print_object( value, DEBUG_BIND );
-    debug_print( L"` in store ", DEBUG_BIND );
-    debug_dump_object( store, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
+      debug_print( L"set: binding `", DEBUG_BIND );
+      debug_print_object( key, DEBUG_BIND );
+      debug_print( L"` to `", DEBUG_BIND );
+      debug_print_object( value, DEBUG_BIND );
+      debug_print( L"` in store ", DEBUG_BIND );
+      debug_dump_object( store, DEBUG_BIND );
+      debug_println( DEBUG_BIND );
 
-    if ( nilp( store ) || consp( store ) ) {
+      if ( nilp( store ) || consp( store ) ) {
         result = make_cons( make_cons( key, value ), store );
     } else if ( hashmapp( store ) ) {
         result = hashmap_put( store, key, value );
