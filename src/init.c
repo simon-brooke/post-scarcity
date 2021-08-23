@@ -220,6 +220,7 @@ int main( int argc, char *argv[] ) {
      */
     bind_function( L"absolute", &lisp_absolute );
     bind_function( L"add", &lisp_add );
+    bind_function( L"append", &lisp_append );
     bind_function( L"apply", &lisp_apply );
     bind_function( L"assoc", &lisp_assoc );
     bind_function( L"car", &lisp_car );
@@ -235,6 +236,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"hashmap", lisp_make_hashmap );
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"keys", &lisp_keys );
+    bind_function( L"mapcar", &lisp_mapcar );
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
     bind_function( L"multiply", &lisp_multiply );

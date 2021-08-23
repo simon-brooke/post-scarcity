@@ -413,10 +413,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.
-                              special.executable ) ( get_stack_frame
-                                                     ( next_pointer ),
-                                                     next_pointer, env );
+                            ( *fn_cell.payload.special.
+                              executable ) ( get_stack_frame( next_pointer ),
+                                             next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -904,26 +903,30 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
 
 /**
- * reverse a sequence.
+ * reverse a sequence (if it is a sequence); else return it unchanged.
  */
 struct cons_pointer c_reverse( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
 
-    for ( struct cons_pointer p = arg; sequencep( p ); p = c_cdr( p ) ) {
-        struct cons_space_object o = pointer2cell( p );
-        switch ( o.tag.value ) {
-            case CONSTV:
-                result = make_cons( o.payload.cons.car, result );
-                break;
-            case STRINGTV:
-                result = make_string( o.payload.string.character, result );
-                break;
-            case SYMBOLTV:
-                result =
-                    make_symbol_or_key( o.payload.string.character, result,
-                                        SYMBOLTV );
-                break;
+    if ( sequencep( arg ) ) {
+        for ( struct cons_pointer p = arg; sequencep( p ); p = c_cdr( p ) ) {
+            struct cons_space_object o = pointer2cell( p );
+            switch ( o.tag.value ) {
+                case CONSTV:
+                    result = make_cons( o.payload.cons.car, result );
+                    break;
+                case STRINGTV:
+                    result = make_string( o.payload.string.character, result );
+                    break;
+                case SYMBOLTV:
+                    result =
+                        make_symbol_or_key( o.payload.string.character, result,
+                                            SYMBOLTV );
+                    break;
+            }
         }
+    } else {
+        result = arg;
     }
 
     return result;
@@ -1350,6 +1353,86 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
     return result;
 }
 
+/**
+ * A version of append which can conveniently be called from C.
+ */
+struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
+    switch ( pointer2cell( l1 ).tag.value ) {
+        case CONSTV:
+            if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
+                if ( nilp( c_cdr( l1 ) ) ) {
+                    return make_cons( c_car( l1 ), l2 );
+                } else {
+                    return make_cons( c_car( l1 ),
+                                      c_append( c_cdr( l1 ), l2 ) );
+                }
+            } else {
+                throw_exception( c_string_to_lisp_string
+                                 ( L"Can't append: not same type" ), NIL );
+            }
+            break;
+        case KEYTV:
+        case STRINGTV:
+        case SYMBOLTV:
+            if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
+                if ( nilp( c_cdr( l1 ) ) ) {
+                    return
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ), l2,
+                                                pointer2cell( l1 ).tag.value );
+                } else {
+                    return
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ),
+                                                c_append( c_cdr( l1 ), l2 ),
+                                                pointer2cell( l1 ).tag.value );
+                }
+            } else {
+                throw_exception( c_string_to_lisp_string
+                                 ( L"Can't append: not same type" ), NIL );
+            }
+            break;
+        default:
+            throw_exception( c_string_to_lisp_string
+                             ( L"Can't append: not a sequence" ), NIL );
+            break;
+    }
+}
+
+/**
+ * should really be overwritten with a version in Lisp, since this is much easier to write in Lisp 
+ */
+struct cons_pointer lisp_append( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env ) {
+    return c_append( frame->arg[0], frame->arg[1] );
+}
+
+
+struct cons_pointer lisp_mapcar( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env ) {
+    struct cons_pointer result = NIL;
+
+    for ( struct cons_pointer c = frame->arg[1]; truep( c ); c = c_cdr( c ) ) {
+        struct cons_pointer expr = make_cons(frame->arg[0], make_cons(c_car(c), NIL));
+        inc_ref(expr);
+
+         struct cons_pointer r = eval_form(frame, frame_pointer, expr, env);
+
+        if ( exceptionp( r ) ) {
+            result = r;
+            inc_ref( expr ); // to protect exception from the later dec_ref
+            break;
+        } else {
+            result = make_cons( c, result );
+        }
+
+        dec_ref( expr );
+    }
+
+    return c_reverse( result );
+}
 
 // /**
 //  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the

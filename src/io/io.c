@@ -503,8 +503,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.stream.
-                           stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.
+                           stream.stream ), NIL );
     }
 
     return result;

@@ -180,8 +180,8 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
 
                 map->payload.hashmap.buckets[bucket_no] =
                     inc_ref( make_cons( make_cons( key, val ),
-                                        map->payload.hashmap.
-                                        buckets[bucket_no] ) );
+                                        map->payload.
+                                        hashmap.buckets[bucket_no] ) );
             }
         }
     }

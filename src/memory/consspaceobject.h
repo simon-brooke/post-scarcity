@@ -114,12 +114,12 @@
  * A loop exit is a special kind of exception which has exactly the same
  * payload as an exception.
  */
-#define LOOPXTAG    "LOOX"
+#define LOOPTAG    "LOOP"
 
 /**
  * The string `LOOX`, considered as an `unsigned int`.
  */
-#define LOOPXTV     1481592652
+#define LOOPTV     1347374924
 
 /**
  * The special cons cell at address {0,0} whose car and cdr both point to
@@ -304,9 +304,9 @@
 #define lambdap(conspoint) (check_tag(conspoint,LAMBDATV))
 
 /**
- * true if `conspoint` points to a loop exit exception, else false.
+ * true if `conspoint` points to a loop recursion, else false.
  */
-#define loopexitp(conspoint) (check_tag(conspoint,LOOPXTV))
+#define loopp(conspoint) (check_tag(conspoint,LOOPTV))
 
 /**
  * true if `conspoint` points to a special form cell, else false
@@ -615,7 +615,7 @@ struct cons_space_object {
          */
         struct cons_payload cons;
         /**
-         * if tag == EXCEPTIONTAG || tag == LOOPXTAG
+         * if tag == EXCEPTIONTAG || tag == LOOPTAG
          */
         struct exception_payload exception;
         /**
@@ -712,6 +712,9 @@ struct cons_pointer make_special( struct cons_pointer src,
                                    ( struct stack_frame *,
                                      struct cons_pointer,
                                      struct cons_pointer ) );
+
+struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
+                                            uint32_t tag );
 
 struct cons_pointer make_string( wint_t c, struct cons_pointer tail );
 

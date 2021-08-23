@@ -202,4 +202,13 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env );
 
+struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 );
+
+struct cons_pointer lisp_append( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );
+
+struct cons_pointer lisp_mapcar( struct stack_frame *frame,
+                                 struct cons_pointer frame_pointer,
+                                 struct cons_pointer env );
 #endif
