@@ -593,7 +593,7 @@ lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = frame->arg[1];
     } else {
         result =
-            make_exception( make_cons
+            throw_exception( make_cons
                             ( c_string_to_lisp_string
                               ( L"The first argument to `set` is not a symbol: " ),
                               make_cons( frame->arg[0], NIL ) ),
@@ -632,7 +632,7 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = val;
     } else {
         result =
-            make_exception( make_cons
+            throw_exception( make_cons
                             ( c_string_to_lisp_string
                               ( L"The first argument to `set!` is not a symbol: " ),
                               make_cons( frame->arg[0], NIL ) ),
@@ -1212,7 +1212,7 @@ struct cons_pointer
 lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
-    return exceptionp( message ) ? message : make_exception( message,
+    return exceptionp( message ) ? message : throw_exception( message,
                                                              frame->previous );
 }
 
@@ -1408,9 +1408,14 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
 struct cons_pointer lisp_append( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env ) {
-    return c_append( frame->arg[0], frame->arg[1] );
-}
+  struct cons_pointer result = fetch_arg(frame, (frame->args - 1));
 
+  for (int a = frame->args - 2; a >= 0; a--) {
+      result = c_append(fetch_arg(frame, a), result);
+  }
+
+  return result; 
+}
 
 struct cons_pointer lisp_mapcar( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
@@ -1465,6 +1470,45 @@ struct cons_pointer lisp_list( struct stack_frame *frame,
 
   return result;
 }
+
+/**
+ * Special form: evaluate a series of forms in an environment in which 
+ * these bindings are bound.
+ * This is `let*` in Common Lisp parlance; `let` in Clojure parlance.
+ */
+struct cons_pointer lisp_let( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+                                struct cons_pointer env) {
+     struct cons_pointer bindings = env;
+     struct cons_pointer result = NIL;
+
+     for (struct cons_pointer cursor = frame->arg[0];
+     truep(cursor);
+     cursor = c_cdr(cursor)) {
+         struct cons_pointer pair = c_car(cursor);
+         struct cons_pointer symbol = c_car(pair);
+
+         if (symbolp(symbol)) {
+             bindings = make_cons(
+                 make_cons(symbol, eval_form(frame, frame_pointer, c_cdr(pair), bindings)),
+                 bindings);
+             
+         } else {
+             result = throw_exception(
+                 c_string_to_lisp_string(L"Let: cannot bind, not a symbol"),
+                 frame_pointer);
+                 break;
+         }
+     }
+
+         /* i.e., no exception yet */
+         for (int form = 1; !exceptionp(result) && form < frame->args; form++) {
+             result = eval_form(frame, frame_pointer, fetch_arg(frame, form), bindings);
+         }
+
+     return result;
+
+ }
 
 // /**
 //  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the

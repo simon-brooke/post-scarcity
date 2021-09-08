@@ -270,6 +270,7 @@ int main( int argc, char *argv[] ) {
     bind_special( L"cond", &lisp_cond );
     bind_special( L"lambda", &lisp_lambda );
     bind_special( L"\u03bb", &lisp_lambda );  // λ
+    bind_special(L"let", &lisp_let);
     bind_special( L"nlambda", &lisp_nlambda );
     bind_special( L"n\u03bb", &lisp_nlambda );
     bind_special( L"progn", &lisp_progn );
