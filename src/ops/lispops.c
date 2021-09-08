@@ -1453,6 +1453,19 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
     return result;
 }
 
+struct cons_pointer lisp_list( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+  struct cons_pointer result = frame->more;
+
+  for ( int a = nilp(result) ? frame->args - 1: args_in_frame - 1;
+   a >= 0; a-- ) {
+       result = make_cons(fetch_arg(frame, a), result);
+  }
+
+  return result;
+}
+
 // /**
 //  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the
 //  * (optional, defaults to the value of `*out*` in the environment) stream indicated by `frame->arg[1]`.

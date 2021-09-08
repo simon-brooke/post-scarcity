@@ -236,6 +236,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"hashmap", lisp_make_hashmap );
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"keys", &lisp_keys );
+    bind_function( L"list", &lisp_list);
     bind_function( L"mapcar", &lisp_mapcar );
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );

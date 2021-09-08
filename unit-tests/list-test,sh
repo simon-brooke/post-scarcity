@@ -1,0 +1,38 @@
+#!/bin/bash
+
+expected="(0 1 2 3 4 5 6 7 8 9 a b c d e f)"
+
+actual=`echo "(list 0 1 2 3 4 5 6 7 8 9 'a 'b 'c 'd 'e 'f)" | target/psse | tail -1`
+
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+else
+    echo "Fail: expected '$expected', got '$actual'"
+    exit 1
+fi
+
+expected="(0 1 2 3 4)"
+
+actual=`echo "(list 0 1 2 3 4)" | target/psse | tail -1`
+
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+else
+    echo "Fail: expected '$expected', got '$actual'"
+    exit 1
+fi
+
+expected="(0 1 2 3 4 5 6 7)"
+
+actual=`echo "(list 0 1 2 3 4 5 6 7)" | target/psse | tail -1`
+
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+    exit 0
+else
+    echo "Fail: expected '$expected', got '$actual'"
+    exit 1
+fi
