@@ -42,8 +42,6 @@
  * also to create in this section:
  * struct cons_pointer lisp_let( struct cons_pointer args, struct cons_pointer env,
  * struct stack_frame* frame);
- * struct cons_pointer lisp_mapcar( struct cons_pointer args, struct cons_pointer env,
- * struct stack_frame* frame);
  *
  * and others I haven't thought of yet.
  */
@@ -62,7 +60,8 @@ struct cons_pointer eval_form( struct stack_frame *parent,
                                struct cons_pointer form,
                                struct cons_pointer env ) {
     debug_print( L"eval_form: ", DEBUG_EVAL );
-    debug_dump_object( form, DEBUG_EVAL );
+    debug_print_object( form, DEBUG_EVAL );
+    debug_println(DEBUG_EVAL);
 
     struct cons_pointer result = NIL;
     struct cons_pointer next_pointer = make_empty_frame( parent_pointer );
@@ -80,6 +79,10 @@ struct cons_pointer eval_form( struct stack_frame *parent,
          * should free all the frames it's holding on to. */
         dec_ref( next_pointer );
     }
+
+    debug_print( L"eval_form returning: ", DEBUG_EVAL );
+    debug_print_object( result, DEBUG_EVAL );
+    debug_println(DEBUG_EVAL);
 
     return result;
 }
@@ -1413,25 +1416,41 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
+    debug_print( L"Mapcar: ", DEBUG_EVAL );
+    debug_dump_object( frame_pointer, DEBUG_EVAL );
+    int i = 0;
 
     for ( struct cons_pointer c = frame->arg[1]; truep( c ); c = c_cdr( c ) ) {
         struct cons_pointer expr = make_cons(frame->arg[0], make_cons(c_car(c), NIL));
         inc_ref(expr);
 
-         struct cons_pointer r = eval_form(frame, frame_pointer, expr, env);
+        debug_printf(DEBUG_EVAL, L"Mapcar %d, evaluating ", i);
+        debug_print_object( expr, DEBUG_EVAL);
+        debug_println(DEBUG_EVAL);
+
+        struct cons_pointer r = eval_form(frame, frame_pointer, expr, env);
 
         if ( exceptionp( r ) ) {
             result = r;
             inc_ref( expr ); // to protect exception from the later dec_ref
             break;
         } else {
-            result = make_cons( c, result );
+            result = make_cons( r, result );
         }
+        debug_printf(DEBUG_EVAL, L"Mapcar %d, result is ", i++);
+        debug_print_object( result, DEBUG_EVAL);
+        debug_println(DEBUG_EVAL);
 
         dec_ref( expr );
     }
 
-    return c_reverse( result );
+    result = consp(result) ? c_reverse( result ) : result;
+
+    debug_print( L"Mapcar returning: ", DEBUG_EVAL );
+    debug_print_object( result, DEBUG_EVAL );
+    debug_println(DEBUG_EVAL);
+
+    return result;
 }
 
 // /**
