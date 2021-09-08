@@ -4,6 +4,28 @@ tl,dr: look at the [wiki](wiki).
 
 ## State of play
 
+### Version 0.0.5
+
+Has working Lisp interpreter, more or less complete, with functions and symbols as defined under [[#Bindings currently available]] below. Features include hash maps.
+
+#### Known bugs
+
+At the time of writing, big number arithmetic is completely failing. It has worked in the past, but it doesn't now.
+
+#### Unknown bugs
+
+It's pretty likely that there are memory leaks.
+
+#### Not yet implemented
+
+1. There is as yet no **compiler**, and indeed it isn't yet certain what a compiler would even mean. Do all nodes in a machine necessarily share the same processor architecture?
+2. There's the beginnings of a narrative about how **namespaces** are going to work, but as yet they aren't really implemented.
+3. There is as yet no implementation of the concept of **users**. Access Control Lists exist but are not used. Related, there's no concept of a **session**.
+4. There is as yet no **multiprocessor architecture**, not even a simulated one. As it is intended that threading will be implemented by handing off parts of a computation to peer processors, this means there no **threads** either.
+5. There's no **user interface** beyond a REPL. There isn't even an **editor**, or **history**.
+6. **Printing to strings** does not work.
+7. The **exception system**, while it does exist, needs to be radically rethought.
+
 ### Version 0.0.4
 
 Has working rational number arithmetic, as well as integer and real number arithmetic. The stack is now in vector space, but vector space is not yet properly garbage collected. `defun` does not yet work, so although Lisp functions can be defined the syntax is pretty clunky. So you *can* start to do things with this, but you should probably wait for at least a 0.1.0 release!
@@ -25,7 +47,7 @@ Although I describe it as a 'Lisp environment', for reasons explained in Post Sc
 The following symbols are bound in the bootstrap layer. It is anticipated that
 
 1. Most of the functions will be overridden by versions of the same function written in Lisp; but
-2. these implementations will remain available in the package `/:bootstrap`.
+2. these implementations will remain available in the namespace `/:bootstrap`.
 
 ### Values
 
@@ -59,6 +81,8 @@ The sink stream (equivalent to `/dev/null`).
 
 The REPL prompt.
 
+### Functions
+
 #### (absolute *n*)
 
 Return the absolute value of a number.
@@ -67,9 +91,9 @@ Return the absolute value of a number.
 
 Return the result of adding together all the (assumed numeric) arguments supplied.
 
-#### (append *s1* *s2*)
+#### (append *s1* *s2* ...)
 
-Return a new sequence comprising all the elements of *s1* followed by all the elements of *s2*. *s1* and *s2* must be sequences of the same type.  At a later stage this function will accept arbitrary numbers of arguments, but by that time it will be written in Lisp.
+Return a new sequence comprising all the elements of *s1* followed by all the elements of *s2* and so on for an indefinite number of arguments. All arguments must be sequences of the same type.  
 
 #### (apply *f* *s*)
 
@@ -109,7 +133,7 @@ Returns true (`t`) if *o1* and *o2* are structurally identical to one another, e
 
 #### (exception *message*)
 
-Throws (returns) an exception, with the specified *message*. Note that it is extremely likely this signature will change.
+Throws (returns) an exception, with the specified *message*. Note that this doesn't really work at all well, and that it is extremely likely this signature will change.
 
 #### (get-hash *key* *hashmap*)
 
@@ -126,6 +150,14 @@ Prints detailed structure of the object *o*. Primarily for debugging.
 #### (keys *store*)
 
 Returns a list of the keys in *store*, which may be either an [*association list*](#Association_list), or a hashmap.
+
+#### (let *bindings* *form*...)
+
+Evaluates each of the *forms* in an environment to which ally of these *bindings* have been added. *bindings* must be an [*association list*](#Association_list), and, additionally, all keys in *bindings* must be symbols. Values in the association list will be evaluated before being bound, and this is done sequentially, as in the behaviour of Common Lisp `let*` rather than of Common Lisp `let`.
+
+#### (list *o*...)
+
+Returns a list of the values of all of its arguments in sequence.
 
 #### (mapcar *f* *s*)
 
@@ -150,6 +182,102 @@ Returns a sequence of all the names bound in the root of the naming system.
 #### (open *url* *read?*)
 
 Opens a stream to the specified *url*. If a second argument is present and is non-`nil`, the stream is opened for reading; otherwise, it's opened for writing.
+
+### Types
+
+The following types are known. Further types can be defined, and ultimately it should be possible to define further types in Lisp, but these are what you have to be going on with. Note that where this documentation differs from `memory/consspaceobject.h`, this documentation is *wrong*.
+
+#### CONS
+
+An ordinary cons cell: that is to say, a pair.
+
+#### EXEP
+
+An exception
+
+#### FREE
+
+An unallocated memory cell. User programs should never see this.
+
+#### FUNC
+
+A primitive or compiled Lisp function \-- one whose arguments are pre-evaluated.
+
+#### HASH
+
+A hash map (in vector space)
+
+#### INTR
+
+An arbitrarily large integer number.
+
+#### KEYW
+
+A keyword - an interned, self-evaluating string.
+
+#### LMBA
+
+A lambda cell. Lambdas are the interpretable (source) versions of functions.
+
+#### LOOP
+
+Internal to the workings of the ••loop** function. User functions should never see this.
+
+#### NIL 
+
+The special cons cell at address {0,0} whose **car** and **cdr** both point to itself. The canonical empty set. Generally, treated as being indicative of falsity.
+
+#### NLMD
+
+An nlambda cell. NLambdas are the interpretable (source) versions of special forms.
+
+#### RTIO
+
+A rational number, stored as pointers two integers representing dividend and divisor respectively.
+
+#### READ
+
+An open read stream.
+
+#### REAL
+
+A real number, represented internally as an IEEE 754-2008 `binary64`.
+
+#### SPFM
+
+A compiled or primitive special form - one whose arguments are not pre-evaluated but passed as provided.
+
+#### STAK
+
+A stack frame. In vector space. 
+
+#### STRG
+
+A string of [UTF-32](https://en.wikipedia.org/wiki/UTF-32) characters, stored as a linked list. Self evaluating.
+
+#### SYMB
+
+A symbol is just like a string except not self-evaluating. Later, there may be some restrictions on what characters are legal in a symbol, but at present there are not.
+
+#### TIME
+
+A time stamp. Not really properly implemented yet; the epoch is not defined, and, given the size of numbers we can store, could be pushed far into the past.
+
+#### TRUE
+
+The special cell at address {0,1} which is canonically different from NIL.
+
+#### VECP
+
+A pointer to an object in vector space. User functions shouldn't see this, they should see the type of the vector-space object indicated.
+
+#### VECT
+
+A vector of objects. In vector space.
+
+#### WRIT
+
+An open write stream.
 
 
 
