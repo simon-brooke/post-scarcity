@@ -1256,23 +1256,36 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env ) {
     struct cons_pointer expr = NIL;
-
-    /* \todo bind *prompt*, *input*, *output* in the environment to the values
-     * of arguments 0, 1, and 2 respectively, but in each case only if the
-     * argument is not nil */
+    
+    debug_printf(DEBUG_REPL, L"Entering new inner REPL\n");
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
-    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
     struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
+    
     inc_ref( env );
 
+    if (truep(frame->arg[0])) {
+        new_env = set( prompt_name, frame->arg[0], new_env);
+    }
+    if (readp(frame->arg[1])) {
+        new_env = set( c_string_to_lisp_symbol(L"*in*"), frame->arg[1], new_env);
+        input = frame->arg[1];
+    }
+    if (readp(frame->arg[2])) {
+        new_env = set( c_string_to_lisp_symbol(L"*out*"), frame->arg[2], new_env);
+        output = frame->arg[2];
+    }
+    
     inc_ref( input );
     inc_ref( output );
     inc_ref( prompt_name );
 
+    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
+
+    
     /* \todo this is subtly wrong. If we were evaluating
      *   (print (eval (read)))
      * then the stack frame for read would have the stack frame for
@@ -1287,6 +1300,8 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
          * are not visible. So copy changes made in the oblist into the enviroment.
          * \todo the whole process of resolving symbol values needs to be revisited
          * when we get onto namespaces. */
+        /* OK, there's something even more subtle here if the root namespace is a map.
+         * H'mmmm... */
         if ( !eq( oblist, old_oblist ) ) {
             struct cons_pointer cursor = oblist;
 
@@ -1335,6 +1350,8 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     dec_ref( prompt_name );
     dec_ref( env );
 
+    debug_printf(DEBUG_REPL, L"Leaving inner repl\n");
+    
     return expr;
 }
 

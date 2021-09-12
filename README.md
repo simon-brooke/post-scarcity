@@ -12,9 +12,11 @@ Has working Lisp interpreter, more or less complete, with functions and symbols 
 
 At the time of writing, big number arithmetic is completely failing. It has worked in the past, but it doesn't now.
 
+There are ludicrous memory leaks. Essentially the garbage collection strategy isn't yet really working. However, if we are to implement the hypercube architecture in future, a mark and sweep garbage collector will not work, so it's important to get the reference counter working properly.
+
 #### Unknown bugs
 
-It's pretty likely that there are memory leaks.
+There are certainly MANY unknown bugs. Please report those you find.
 
 #### Not yet implemented
 
@@ -127,7 +129,7 @@ Divides the number *n1* by the number *n2*. If *n1* and *n2* are both integers, 
 
 Returns true (`t`) if *o1* and *o2* are identically the same object, else `nil`.
 
-#### (equal *o1* *o2*)
+#### (equal *o1* *o2*), (= *o1* *o2*)
 
 Returns true (`t`) if *o1* and *o2* are structurally identical to one another, else `nil`.
 
@@ -183,7 +185,111 @@ Returns a sequence of all the names bound in the root of the naming system.
 
 Opens a stream to the specified *url*. If a second argument is present and is non-`nil`, the stream is opened for reading; otherwise, it's opened for writing.
 
-### Types
+#### (print *o* [*stream*])
+
+Prints the print-name of object *o* to the output stream which is the value of *stream*, or to the value of \*out\* in the current environment if no *stream* is provided.
+
+#### (put! *map* *key* *value*)
+
+Puts *value* as the value of *key* in hashmap *map*, destructively modifying it, and returns the map. Note that in future this will work only if the current user has write access to the specified map.
+
+#### (put-all! *map* *assoc*)
+
+Puts each (+key* . *value*) pair from the association list *assoc* into this *map*, destructively modifying it, and returns the map. Note that in future this will work only if the current user has write access to the specified map.
+
+#### (read [*stream*])
+
+Reads a single Lisp form from the input stream which is the value of *stream*, or from the value of \*in\* in the current environment if no *stream* is provided.
+
+#### (read-char [*stream*])
+
+Return the next character from the stream indicated by *stream*, or from the value of \*in\* in the current environment if no *stream* is provided; further arguments are ignored.
+
+#### (repl [*prompt* *input* *output*))
+
+Initiate a new Read/Eval/Print loop with this *prompt*, reading from this *input* stream and writing to this *output* stream. All arguments are optional and default sensibly if omitted. TODO: doesn't actually work yet.
+
+#### (reverse *seq*)
+
+Return a new sequence of the same type as *seq*, containing the same elements but in the reverse order.
+
+#### (slurp *in*)
+
+Reads all available characters on input stream *in* into a string, and returns the string.
+
+#### (source *fn*)
+
+Should return the source code of the function or special form *fn*, but as we don't yet
+have a compiler, doesn't.
+
+#### (subtract *n1* *n2*), (- *n1* *n2*)
+
+Subtracts the numeric value *n2* from the numeric value *n1*, and returns the difference.
+
+#### (throw *message*)
+
+Throws an exception, with the payload *message*. While *message* is at present most usefully a string, it doesn't have to be. Returns the exception, but as exceptions are handled specially by `eval`, it is returned to the catch block of the nearest `try` expression on the stack.
+
+#### (time [*milliseconds-since-epoch*])
+
+Returns a time object whose value is the specified number of *milliseconds-since-epoch*, where the Post Scarcity Software Environment epoch is 14 billion years prior to the UN*X epoch. If *milliseconds-since-epoch* is not specified, returns a time object representing the UTC time when the function was executed.
+
+#### (type *o*)
+
+Returns a string representing the type -- actually the tag value -- of the object *o*.
+
+### Special forms
+
+#### (cond (test value) ...)
+
+Evaluates a series of *(test value)* clauses in turn until a test returns non-nil, when the corresponding value is returned and further tests are not evaluated. This is the same syntax as Common Lisp's `cond` implementation, and different from Clojure's.
+
+It's conventional in Lisp to have a final clause in a `cond` block with the test `t`; however, since we have keywords which are always truthy, it would be equally valid to use `:else` or `:default` as final fallback tests.
+
+#### (lambda (arg ...) form ...), (&lambda; (arg ...) form ...)
+
+Returns an anonymous fuction which evaluates each of the *form*s sequentially in an environment in which the specified *arg*s are bound, and returns the value of the last such form.
+
+#### (let ((*var* . *val*) ...) form ...)
+
+Evaluates each of these *form*s sequentially in an environment in which each *var* is bound to the respective *val* in the bindings specified, and returns the value of the last form.
+
+#### (nlambda (arg ...) form ...), (n&lambda; (arg ...) form ...)
+
+Returns an anonymous special form which evaluates each of the *form*s sequentially in an environment in which the specified *arg*s are bound, and returns the value of the last such form.
+
+#### (progn *f* ...)
+
+Evaluates each of the forms which are its arguments in turn and returns the value of the last.
+
+#### (quote *o*), '*o*
+
+Returns *o*, unevaluated.
+
+#### (set! *name* *value* [*namespace*])
+
+Sets (destructively modifies) the value of *name* this *value* in the root namespace. The *namespace* argument is currently ignored but in future is anticipated to be a path specification of a namespace to be modified.
+
+#### (try (*form* ...) (*handler* ...))
+
+Attempt to evaluate, sequentially, each of the *form*s in the first sequence, and return the value of the last of them; however, if any of them cause an exception to be thrown, then evaluate sequentially each of the *handler*s in the second sequence.
+
+It is recommended that you structure this as follows:
+
+`lisp
+  (try
+    (:body
+      (print "hello")
+      (/ 1 'a)
+      (print "goodbye"))
+    (:catch
+      (print "Well, that failed.")
+      5))
+`
+
+Here, `:body` and `:catch` are syntactic sugar which will not affect the final value. 
+
+### Type values
 
 The following types are known. Further types can be defined, and ultimately it should be possible to define further types in Lisp, but these are what you have to be going on with. Note that where this documentation differs from `memory/consspaceobject.h`, this documentation is *wrong*.
 
@@ -261,7 +367,7 @@ A symbol is just like a string except not self-evaluating. Later, there may be s
 
 #### TIME
 
-A time stamp. Not really properly implemented yet; the epoch is not defined, and, given the size of numbers we can store, could be pushed far into the past.
+A time stamp. The epoch for the Post Scarcity Software Environment is 14 billion years before the UN*X epoch, and is chosen as being a reasonable estimate for the birth of the universe, and thus of the start of time.
 
 #### TRUE
 

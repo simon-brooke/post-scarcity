@@ -247,9 +247,8 @@ int main( int argc, char *argv[] ) {
     bind_function( L"oblist", &lisp_oblist );
     bind_function( L"open", &lisp_open );
     bind_function( L"print", &lisp_print );
-    bind_function( L"progn", &lisp_progn );
-    bind_function( L"put", lisp_hashmap_put );
-    bind_function( L"put-all", &lisp_hashmap_put_all );
+    bind_function( L"put!", lisp_hashmap_put );
+    bind_function( L"put-all!", &lisp_hashmap_put_all );
     bind_function( L"read", &lisp_read );
     bind_function( L"read-char", &lisp_read_char );
     bind_function( L"repl", &lisp_repl );
