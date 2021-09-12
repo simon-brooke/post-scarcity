@@ -29,6 +29,12 @@
 bool conspageinitihasbeencalled = false;
 
 /**
+ * keep track of total cells allocated and freed to check for leakage.
+ */
+uint64_t total_cells_allocated = 0;
+uint64_t total_cells_freed = 0;
+
+/**
  * the number of cons pages which have thus far been initialised.
  */
 int initialised_cons_pages = 0;
@@ -187,6 +193,7 @@ void free_cell( struct cons_pointer pointer ) {
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
             freelist = pointer;
+            total_cells_freed ++;
         } else {
             debug_printf( DEBUG_ALLOC,
                           L"ERROR: Attempt to free cell with %d dangling references at page %d, offset %d\n",
@@ -228,8 +235,10 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
             cell->payload.cons.car = NIL;
             cell->payload.cons.cdr = NIL;
 
+            total_cells_allocated ++;
+
             debug_printf( DEBUG_ALLOC,
-                          L"Allocated cell of type '%s' at %d, %d \n", tag,
+                          L"Allocated cell of type '%4.4s' at %d, %d \n", tag,
                           result.page, result.offset );
         } else {
             debug_printf( DEBUG_ALLOC, L"WARNING: Allocating non-free cell!" );
@@ -254,4 +263,8 @@ void initialise_cons_pages(  ) {
         debug_printf( DEBUG_ALLOC,
                       L"WARNING: initialise_cons_pages() called a second or subsequent time\n" );
     }
+}
+
+void summarise_allocation() {
+    fwprintf(stderr, L"Allocation summary: allocated %lld; deallocated %lld.\n", total_cells_allocated, total_cells_freed );
 }

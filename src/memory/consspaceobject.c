@@ -324,7 +324,7 @@ make_string_like_thing( wint_t c, struct cons_pointer tail, uint32_t tag ) {
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,
-                      L"Warning: only NIL and %s can be prepended to %s\n",
+                      L"Warning: only NIL and %4.4s can be prepended to %4.4s\n",
                       tag, tag );
     }
 

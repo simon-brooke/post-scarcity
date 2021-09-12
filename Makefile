@@ -3,7 +3,7 @@ SRC_DIRS ?= ./src
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
 HDRS := $(shell find $(SRC_DIRS) -name *.h)
-OBJS := $(addsuffix .o,$(basename $(SRCS)))
+OBJS := $(addsuffix .o,$(basename $(SRCS))) 
 DEPS := $(OBJS:.o=.d)
 
 TESTS := $(shell find unit-tests -name *.sh)

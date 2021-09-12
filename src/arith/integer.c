@@ -76,7 +76,7 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
     __int128_t result = ( __int128_t ) integerp( c ) ?
         ( val == 0 ) ? carry : val : op == '*' ? 1 : 0;
     debug_printf( DEBUG_ARITH,
-                  L"cell_value: raw value is %ld, is_first_cell = %s; %4.4s; returning ",
+                  L"cell_value: raw value is %ld, is_first_cell = %s; '%4.4s'; returning ",
                   val, is_first_cell ? "true" : "false",
                   pointer2cell( c ).tag.bytes );
     debug_print_128bit( result, DEBUG_ARITH );

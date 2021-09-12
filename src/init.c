@@ -288,6 +288,7 @@ int main( int argc, char *argv[] ) {
         dump_pages( file_to_url_file( stdout ) );
     }
 
+    summarise_allocation();
     curl_global_cleanup(  );
     return ( 0 );
 }

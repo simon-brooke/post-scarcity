@@ -166,6 +166,7 @@ wint_t url_fgetwc( URL_FILE * input ) {
                     debug_print( L"url_fgetwc: back from url_fgets\n",
                                  DEBUG_IO );
                     int c = ( int ) cbuff[0];
+                    // TODO: risk of reading off cbuff?
                     debug_printf( DEBUG_IO,
                                   L"url_fgetwc: cbuff is '%s'; (first) character = %d (%c)\n",
                                   cbuff, c, c & 0xf7 );

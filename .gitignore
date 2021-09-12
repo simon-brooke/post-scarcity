@@ -42,3 +42,7 @@ hi\.*
 .vscode/
 
 core
+
+.kdev4/
+
+post-scarcity.kdev4
