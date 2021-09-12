@@ -114,10 +114,10 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
         case RATIOTV:
             url_fwprintf( output,
                           L"\t\tRational cell: value %ld/%ld, count %u\n",
-                          pointer2cell( cell.payload.ratio.dividend ).
-                          payload.integer.value,
-                          pointer2cell( cell.payload.ratio.divisor ).
-                          payload.integer.value, cell.count );
+                          pointer2cell( cell.payload.ratio.dividend ).payload.
+                          integer.value,
+                          pointer2cell( cell.payload.ratio.divisor ).payload.
+                          integer.value, cell.count );
             break;
         case READTV:
             url_fputws( L"\t\tInput stream; metadata: ", output );

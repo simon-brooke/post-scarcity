@@ -193,7 +193,7 @@ void free_cell( struct cons_pointer pointer ) {
             cell->payload.free.car = NIL;
             cell->payload.free.cdr = freelist;
             freelist = pointer;
-            total_cells_freed ++;
+            total_cells_freed++;
         } else {
             debug_printf( DEBUG_ALLOC,
                           L"ERROR: Attempt to free cell with %d dangling references at page %d, offset %d\n",
@@ -235,7 +235,7 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
             cell->payload.cons.car = NIL;
             cell->payload.cons.cdr = NIL;
 
-            total_cells_allocated ++;
+            total_cells_allocated++;
 
             debug_printf( DEBUG_ALLOC,
                           L"Allocated cell of type '%4.4s' at %d, %d \n", tag,
@@ -265,6 +265,8 @@ void initialise_cons_pages(  ) {
     }
 }
 
-void summarise_allocation() {
-    fwprintf(stderr, L"Allocation summary: allocated %lld; deallocated %lld.\n", total_cells_allocated, total_cells_freed );
+void summarise_allocation(  ) {
+    fwprintf( stderr,
+              L"Allocation summary: allocated %lld; deallocated %lld.\n",
+              total_cells_allocated, total_cells_freed );
 }

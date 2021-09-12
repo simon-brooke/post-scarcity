@@ -61,7 +61,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
                                struct cons_pointer env ) {
     debug_print( L"eval_form: ", DEBUG_EVAL );
     debug_print_object( form, DEBUG_EVAL );
-    debug_println(DEBUG_EVAL);
+    debug_println( DEBUG_EVAL );
 
     struct cons_pointer result = NIL;
     struct cons_pointer next_pointer = make_empty_frame( parent_pointer );
@@ -82,7 +82,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
 
     debug_print( L"eval_form returning: ", DEBUG_EVAL );
     debug_print_object( result, DEBUG_EVAL );
-    debug_println(DEBUG_EVAL);
+    debug_println( DEBUG_EVAL );
 
     return result;
 }
@@ -416,9 +416,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.special.
-                              executable ) ( get_stack_frame( next_pointer ),
-                                             next_pointer, env );
+                            ( *fn_cell.payload.
+                              special.executable ) ( get_stack_frame
+                                                     ( next_pointer ),
+                                                     next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -594,10 +595,10 @@ lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons
-                            ( c_string_to_lisp_string
-                              ( L"The first argument to `set` is not a symbol: " ),
-                              make_cons( frame->arg[0], NIL ) ),
-                            frame_pointer );
+                             ( c_string_to_lisp_string
+                               ( L"The first argument to `set` is not a symbol: " ),
+                               make_cons( frame->arg[0], NIL ) ),
+                             frame_pointer );
     }
 
     return result;
@@ -633,10 +634,10 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
     } else {
         result =
             throw_exception( make_cons
-                            ( c_string_to_lisp_string
-                              ( L"The first argument to `set!` is not a symbol: " ),
-                              make_cons( frame->arg[0], NIL ) ),
-                            frame_pointer );
+                             ( c_string_to_lisp_string
+                               ( L"The first argument to `set!` is not a symbol: " ),
+                               make_cons( frame->arg[0], NIL ) ),
+                             frame_pointer );
     }
 
     return result;
@@ -1213,7 +1214,8 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
     return exceptionp( message ) ? message : throw_exception( message,
-                                                             frame->previous );
+                                                              frame->
+                                                              previous );
 }
 
 /**
@@ -1380,13 +1382,14 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ), l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
+                                                l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }
@@ -1408,13 +1411,13 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
 struct cons_pointer lisp_append( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env ) {
-  struct cons_pointer result = fetch_arg(frame, (frame->args - 1));
+    struct cons_pointer result = fetch_arg( frame, ( frame->args - 1 ) );
 
-  for (int a = frame->args - 2; a >= 0; a--) {
-      result = c_append(fetch_arg(frame, a), result);
-  }
+    for ( int a = frame->args - 2; a >= 0; a-- ) {
+        result = c_append( fetch_arg( frame, a ), result );
+    }
 
-  return result; 
+    return result;
 }
 
 struct cons_pointer lisp_mapcar( struct stack_frame *frame,
@@ -1426,34 +1429,35 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
     int i = 0;
 
     for ( struct cons_pointer c = frame->arg[1]; truep( c ); c = c_cdr( c ) ) {
-        struct cons_pointer expr = make_cons(frame->arg[0], make_cons(c_car(c), NIL));
-        inc_ref(expr);
+        struct cons_pointer expr =
+            make_cons( frame->arg[0], make_cons( c_car( c ), NIL ) );
+        inc_ref( expr );
 
-        debug_printf(DEBUG_EVAL, L"Mapcar %d, evaluating ", i);
-        debug_print_object( expr, DEBUG_EVAL);
-        debug_println(DEBUG_EVAL);
+        debug_printf( DEBUG_EVAL, L"Mapcar %d, evaluating ", i );
+        debug_print_object( expr, DEBUG_EVAL );
+        debug_println( DEBUG_EVAL );
 
-        struct cons_pointer r = eval_form(frame, frame_pointer, expr, env);
+        struct cons_pointer r = eval_form( frame, frame_pointer, expr, env );
 
         if ( exceptionp( r ) ) {
             result = r;
-            inc_ref( expr ); // to protect exception from the later dec_ref
+            inc_ref( expr );    // to protect exception from the later dec_ref
             break;
         } else {
             result = make_cons( r, result );
         }
-        debug_printf(DEBUG_EVAL, L"Mapcar %d, result is ", i++);
-        debug_print_object( result, DEBUG_EVAL);
-        debug_println(DEBUG_EVAL);
+        debug_printf( DEBUG_EVAL, L"Mapcar %d, result is ", i++ );
+        debug_print_object( result, DEBUG_EVAL );
+        debug_println( DEBUG_EVAL );
 
         dec_ref( expr );
     }
 
-    result = consp(result) ? c_reverse( result ) : result;
+    result = consp( result ) ? c_reverse( result ) : result;
 
     debug_print( L"Mapcar returning: ", DEBUG_EVAL );
     debug_print_object( result, DEBUG_EVAL );
-    debug_println(DEBUG_EVAL);
+    debug_println( DEBUG_EVAL );
 
     return result;
 }
@@ -1461,14 +1465,14 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
 struct cons_pointer lisp_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env ) {
-  struct cons_pointer result = frame->more;
+    struct cons_pointer result = frame->more;
 
-  for ( int a = nilp(result) ? frame->args - 1: args_in_frame - 1;
-   a >= 0; a-- ) {
-       result = make_cons(fetch_arg(frame, a), result);
-  }
+    for ( int a = nilp( result ) ? frame->args - 1 : args_in_frame - 1;
+          a >= 0; a-- ) {
+        result = make_cons( fetch_arg( frame, a ), result );
+    }
 
-  return result;
+    return result;
 }
 
 /**
@@ -1477,38 +1481,42 @@ struct cons_pointer lisp_list( struct stack_frame *frame,
  * This is `let*` in Common Lisp parlance; `let` in Clojure parlance.
  */
 struct cons_pointer lisp_let( struct stack_frame *frame,
-                                struct cons_pointer frame_pointer,
-                                struct cons_pointer env) {
-     struct cons_pointer bindings = env;
-     struct cons_pointer result = NIL;
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env ) {
+    struct cons_pointer bindings = env;
+    struct cons_pointer result = NIL;
 
-     for (struct cons_pointer cursor = frame->arg[0];
-     truep(cursor);
-     cursor = c_cdr(cursor)) {
-         struct cons_pointer pair = c_car(cursor);
-         struct cons_pointer symbol = c_car(pair);
+    for ( struct cons_pointer cursor = frame->arg[0];
+          truep( cursor ); cursor = c_cdr( cursor ) ) {
+        struct cons_pointer pair = c_car( cursor );
+        struct cons_pointer symbol = c_car( pair );
 
-         if (symbolp(symbol)) {
-             bindings = make_cons(
-                 make_cons(symbol, eval_form(frame, frame_pointer, c_cdr(pair), bindings)),
-                 bindings);
-             
-         } else {
-             result = throw_exception(
-                 c_string_to_lisp_string(L"Let: cannot bind, not a symbol"),
-                 frame_pointer);
-                 break;
-         }
-     }
+        if ( symbolp( symbol ) ) {
+            bindings =
+                make_cons( make_cons
+                           ( symbol,
+                             eval_form( frame, frame_pointer, c_cdr( pair ),
+                                        bindings ) ), bindings );
 
-         /* i.e., no exception yet */
-         for (int form = 1; !exceptionp(result) && form < frame->args; form++) {
-             result = eval_form(frame, frame_pointer, fetch_arg(frame, form), bindings);
-         }
+        } else {
+            result =
+                throw_exception( c_string_to_lisp_string
+                                 ( L"Let: cannot bind, not a symbol" ),
+                                 frame_pointer );
+            break;
+        }
+    }
 
-     return result;
+    /* i.e., no exception yet */
+    for ( int form = 1; !exceptionp( result ) && form < frame->args; form++ ) {
+        result =
+            eval_form( frame, frame_pointer, fetch_arg( frame, form ),
+                       bindings );
+    }
 
- }
+    return result;
+
+}
 
 // /**
 //  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the

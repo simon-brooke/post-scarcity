@@ -61,6 +61,6 @@ void initialise_cons_pages(  );
 
 void dump_pages( URL_FILE * output );
 
-void summarise_allocation();
+void summarise_allocation(  );
 
 #endif

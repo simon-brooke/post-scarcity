@@ -238,7 +238,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"hashmap", lisp_make_hashmap );
     bind_function( L"inspect", &lisp_inspect );
     bind_function( L"keys", &lisp_keys );
-    bind_function( L"list", &lisp_list);
+    bind_function( L"list", &lisp_list );
     bind_function( L"mapcar", &lisp_mapcar );
     bind_function( L"meta", &lisp_metadata );
     bind_function( L"metadata", &lisp_metadata );
@@ -272,7 +272,7 @@ int main( int argc, char *argv[] ) {
     bind_special( L"cond", &lisp_cond );
     bind_special( L"lambda", &lisp_lambda );
     bind_special( L"\u03bb", &lisp_lambda );  // λ
-    bind_special(L"let", &lisp_let);
+    bind_special( L"let", &lisp_let );
     bind_special( L"nlambda", &lisp_nlambda );
     bind_special( L"n\u03bb", &lisp_nlambda );
     bind_special( L"progn", &lisp_progn );
@@ -290,7 +290,7 @@ int main( int argc, char *argv[] ) {
         dump_pages( file_to_url_file( stdout ) );
     }
 
-    summarise_allocation();
+    summarise_allocation(  );
     curl_global_cleanup(  );
     return ( 0 );
 }
