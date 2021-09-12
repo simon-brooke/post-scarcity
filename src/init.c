@@ -278,6 +278,7 @@ int main( int argc, char *argv[] ) {
     bind_special( L"progn", &lisp_progn );
     bind_special( L"quote", &lisp_quote );
     bind_special( L"set!", &lisp_set_shriek );
+    bind_special( L"try", &lisp_try );
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 

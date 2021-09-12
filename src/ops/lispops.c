@@ -138,7 +138,7 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
 
 /**
  * OK, the idea here (and I know this is less than perfect) is that the basic `try`
- * function in PSSE takes two arguments, the first, `body`, being a list of forms,
+ * special form in PSSE takes two arguments, the first, `body`, being a list of forms,
  * and the second, `catch`, being a catch handler (which is also a list of forms).
  * Forms from `body` are evaluated in turn until one returns an exception object,
  * or until the list is exhausted. If the list was exhausted, then the value of
@@ -158,7 +158,7 @@ struct cons_pointer lisp_try( struct stack_frame *frame,
         // TODO: need to put the exception into the environment!
         result = c_progn( frame, frame_pointer, frame->arg[1],
                           make_cons( make_cons
-                                     ( c_string_to_lisp_keyword
+                                     ( c_string_to_lisp_symbol
                                        ( L"*exception*" ), result ), env ) );
     }
 
@@ -440,10 +440,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.
-                              special.executable ) ( get_stack_frame
-                                                     ( next_pointer ),
-                                                     next_pointer, env );
+                            ( *fn_cell.payload.special.
+                              executable ) ( get_stack_frame( next_pointer ),
+                                             next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -1238,8 +1237,7 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
     return exceptionp( message ) ? message : throw_exception( message,
-                                                              frame->
-                                                              previous );
+                                                              frame->previous );
 }
 
 /**
@@ -1406,14 +1404,13 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
-                                                l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ), l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }
