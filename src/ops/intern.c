@@ -19,15 +19,17 @@
 
 #include <stdbool.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "equal.h"
-#include "lispops.h"
-#include "print.h"
+#include "ops/equal.h"
+#include "memory/hashmap.h"
+#include "ops/lispops.h"
+// #include "print.h"
 
 /**
- * The object list. What is added to this during system setup is 'global', that is,
+ * The global object list/or, to put it differently, the root namespace.
+ * What is added to this during system setup is 'global', that is,
  * visible to all sessions/threads. What is added during a session/thread is local to
  * that session/thread (because shallow binding). There must be some way for a user to
  * make the contents of their own environment persistent between threads but I don't
@@ -50,29 +52,29 @@ struct cons_pointer
 internedp( struct cons_pointer key, struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    if ( symbolp( key ) ) {
+    if ( symbolp( key ) || keywordp( key ) ) {
         for ( struct cons_pointer next = store;
               nilp( result ) && consp( next );
               next = pointer2cell( next ).payload.cons.cdr ) {
             struct cons_space_object entry =
                 pointer2cell( pointer2cell( next ).payload.cons.car );
 
-            debug_print( L"Internedp: checking whether `", DEBUG_ALLOC );
-            debug_print_object( key, DEBUG_ALLOC );
-            debug_print( L"` equals `", DEBUG_ALLOC );
-            debug_print_object( entry.payload.cons.car, DEBUG_ALLOC );
-            debug_print( L"`\n", DEBUG_ALLOC );
+            debug_print( L"Internedp: checking whether `", DEBUG_BIND );
+            debug_print_object( key, DEBUG_BIND );
+            debug_print( L"` equals `", DEBUG_BIND );
+            debug_print_object( entry.payload.cons.car, DEBUG_BIND );
+            debug_print( L"`\n", DEBUG_BIND );
 
             if ( equal( key, entry.payload.cons.car ) ) {
                 result = entry.payload.cons.car;
             }
         }
     } else {
-        debug_print( L"`", DEBUG_ALLOC );
-        debug_print_object( key, DEBUG_ALLOC );
-        debug_print( L"` is a ", DEBUG_ALLOC );
-        debug_print_object( c_type( key ), DEBUG_ALLOC );
-        debug_print( L", not a SYMB", DEBUG_ALLOC );
+        debug_print( L"`", DEBUG_BIND );
+        debug_print_object( key, DEBUG_BIND );
+        debug_print( L"` is a ", DEBUG_BIND );
+        debug_print_object( c_type( key ), DEBUG_BIND );
+        debug_print( L", not a KEYW or SYMB", DEBUG_BIND );
     }
 
     return result;
@@ -90,34 +92,76 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    for ( struct cons_pointer next = store;
-          consp( next ); next = pointer2cell( next ).payload.cons.cdr ) {
-        struct cons_space_object entry =
-            pointer2cell( pointer2cell( next ).payload.cons.car );
+    debug_print( L"c_assoc; key is `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"`\n", DEBUG_BIND );
 
-        if ( equal( key, entry.payload.cons.car ) ) {
-            result = entry.payload.cons.cdr;
-            break;
+    if ( consp( store ) ) {
+        for ( struct cons_pointer next = store;
+              nilp( result ) && ( consp( next ) || hashmapp( next ) );
+              next = pointer2cell( next ).payload.cons.cdr ) {
+            if ( consp( next ) ) {
+                struct cons_pointer entry_ptr = c_car( next );
+                struct cons_space_object entry = pointer2cell( entry_ptr );
+
+                switch ( entry.tag.value ) {
+                    case CONSTV:
+                        if ( equal( key, entry.payload.cons.car ) ) {
+                            result = entry.payload.cons.cdr;
+                        }
+                        break;
+                    case VECTORPOINTTV:
+                        result = hashmap_get( entry_ptr, key );
+                        break;
+                    default:
+                        throw_exception( c_string_to_lisp_string
+                                         ( L"Store entry is of unknown type" ),
+                                         NIL );
+                }
+            }
         }
+    } else if ( hashmapp( store ) ) {
+        result = hashmap_get( store, key );
+    } else if ( !nilp( store ) ) {
+        result =
+            throw_exception( c_string_to_lisp_string
+                             ( L"Store is of unknown type" ), NIL );
     }
+
+    debug_print( L"c_assoc returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return result;
 }
 
-/**
- * Return a new key/value store containing all the key/value pairs in this store
- * with this key/value pair added to the front.
- */
-struct cons_pointer
-bind( struct cons_pointer key, struct cons_pointer value,
-      struct cons_pointer store ) {
-  debug_print(L"Binding ", DEBUG_ALLOC);
-  debug_print_object(key, DEBUG_ALLOC);
-  debug_print(L" to ", DEBUG_ALLOC);
-  debug_print_object(value, DEBUG_ALLOC);
-  debug_println(DEBUG_ALLOC);
+    /**
+     * Return a new key/value store containing all the key/value pairs in this
+     * store with this key/value pair added to the front.
+     */
+struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
+                         struct cons_pointer store ) {
+    struct cons_pointer result = NIL;
 
-    return make_cons( make_cons( key, value ), store );
+    debug_print( L"set: binding `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"` to `", DEBUG_BIND );
+    debug_print_object( value, DEBUG_BIND );
+    debug_print( L"` in store ", DEBUG_BIND );
+    debug_dump_object( store, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
+
+    if ( nilp( store ) || consp( store ) ) {
+        result = make_cons( make_cons( key, value ), store );
+    } else if ( hashmapp( store ) ) {
+        result = hashmap_put( store, key, value );
+    }
+
+    debug_print( L"set returning ", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
+
+    return result;
 }
 
 /**
@@ -127,16 +171,25 @@ bind( struct cons_pointer key, struct cons_pointer value,
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
-    debug_print( L"Entering deep_bind\n", DEBUG_ALLOC );
-    debug_print( L"\tSetting ", DEBUG_ALLOC );
-    debug_print_object( key, DEBUG_ALLOC );
-    debug_print( L" to ", DEBUG_ALLOC );
-    debug_print_object( value, DEBUG_ALLOC );
-    debug_print( L"\n", DEBUG_ALLOC );
+    debug_print( L"Entering deep_bind\n", DEBUG_BIND );
+    struct cons_pointer old = oblist;
 
-    oblist = bind( key, value, oblist );
+    debug_print( L"deep_bind: binding `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"` to ", DEBUG_BIND );
+    debug_print_object( value, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
-    debug_print( L"Leaving deep_bind\n", DEBUG_ALLOC );
+    oblist = set( key, value, oblist );
+
+    if ( consp( oblist ) ) {
+        inc_ref( oblist );
+        dec_ref( old );
+    }
+
+    debug_print( L"deep_bind returning ", DEBUG_BIND );
+    debug_print_object( oblist, DEBUG_BIND );
+    debug_println( DEBUG_BIND );
 
     return oblist;
 }
@@ -154,7 +207,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
         /*
          * not currently bound
          */
-        result = bind( key, NIL, environment );
+        result = set( key, NIL, environment );
     }
 
     return result;

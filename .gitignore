@@ -31,10 +31,18 @@ log*
 
 utils_src/readprintwc/out
 
-.kdev4/
+*.dump
+
+*.bak
+
+src/io/fopen
+
+hi\.*
 
 .vscode/
 
-hi.*
+core
+
+.kdev4/
 
 post-scarcity.kdev4

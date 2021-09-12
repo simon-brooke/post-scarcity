@@ -11,10 +11,13 @@
 #ifndef __read_h
 #define __read_h
 
+#include "memory/consspaceobject.h"
+
 /**
  * read the next object on this input stream and return a cons_pointer to it.
  */
 struct cons_pointer read( struct stack_frame *frame,
-                          struct cons_pointer frame_pointer, FILE * input );
+                          struct cons_pointer frame_pointer,
+                          struct cons_pointer env, URL_FILE * input );
 
 #endif

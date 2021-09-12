@@ -9,6 +9,11 @@
               (set (car form) (apply 'lambda (cdr form))))
          (t nil))))
 
+(set! defun!
+      (nlambda
+       form
+       (eval (list 'set! (car form) (cons 'lambda (cdr form))))))
+
 (defun! square (x) (* x x))
 
 (set! defsp!

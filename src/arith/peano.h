@@ -1,4 +1,4 @@
-/**
+/*
  * peano.h
  *
  * Basic peano arithmetic
@@ -12,53 +12,53 @@
 #ifndef PEANO_H
 #define PEANO_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
- * Add an indefinite number of numbers together
- * @param env the evaluation environment - ignored;
- * @param frame the stack frame.
- * @return a pointer to an integer or real.
+ * The maximum value we will allow in an integer cell.
  */
-    struct cons_pointer
-     lisp_add( struct stack_frame *frame, struct cons_pointer frame_pointer,
-               struct cons_pointer env );
+#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
 
-/**
- * Multiply an indefinite number of numbers together
- * @param env the evaluation environment - ignored;
- * @param frame the stack frame.
- * @return a pointer to an integer or real.
- */
-    struct cons_pointer
-     lisp_multiply( struct stack_frame *frame,
-                    struct cons_pointer frame_pointer,
-                    struct cons_pointer env );
+bool zerop( struct cons_pointer arg );
 
-/**
- * Subtract one number from another.
- * @param env the evaluation environment - ignored;
- * @param frame the stack frame.
- * @return a pointer to an integer or real.
- */
-    struct cons_pointer
-     lisp_subtract( struct stack_frame *frame,
-                    struct cons_pointer frame_pointer,
-                    struct cons_pointer env );
+struct cons_pointer negative( struct cons_pointer arg );
 
-/**
- * Divide one number by another.
- * @param env the evaluation environment - ignored;
- * @param frame the stack frame.
- * @return a pointer to an integer or real.
- */
-    struct cons_pointer
-     lisp_divide( struct stack_frame *frame, struct cons_pointer frame_pointer,
-                  struct cons_pointer env );
+bool is_negative( struct cons_pointer arg );
 
-#ifdef __cplusplus
-}
-#endif
-#endif                          /* PEANO_H */
+struct cons_pointer absolute( struct cons_pointer arg );
+
+long double to_long_double( struct cons_pointer arg );
+
+int64_t to_long_int( struct cons_pointer arg );
+
+struct cons_pointer lisp_absolute( struct stack_frame
+                                   *frame, struct cons_pointer frame_pointer, struct
+                                   cons_pointer env );
+
+struct cons_pointer
+lisp_add( struct stack_frame *frame, struct cons_pointer frame_pointer,
+          struct cons_pointer env );
+
+struct cons_pointer lisp_is_negative( struct stack_frame
+                                      *frame,
+                                      struct cons_pointer frame_pointer, struct
+                                      cons_pointer env );
+
+struct cons_pointer
+lisp_multiply( struct stack_frame *frame,
+               struct cons_pointer frame_pointer, struct cons_pointer env );
+
+struct cons_pointer negative( struct cons_pointer arg );
+
+struct cons_pointer subtract_2( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+                                struct cons_pointer arg1,
+                                struct cons_pointer arg2 );
+
+struct cons_pointer
+lisp_subtract( struct stack_frame *frame,
+               struct cons_pointer frame_pointer, struct cons_pointer env );
+
+struct cons_pointer
+lisp_divide( struct stack_frame *frame, struct cons_pointer frame_pointer,
+             struct cons_pointer env );
+
+#endif /* PEANO_H */
