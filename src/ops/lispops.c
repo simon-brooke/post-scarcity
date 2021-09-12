@@ -63,21 +63,45 @@ struct cons_pointer eval_form( struct stack_frame *parent,
     debug_print_object( form, DEBUG_EVAL );
     debug_println( DEBUG_EVAL );
 
-    struct cons_pointer result = NIL;
-    struct cons_pointer next_pointer = make_empty_frame( parent_pointer );
-    inc_ref( next_pointer );
+    struct cons_pointer result = form;
+    switch ( pointer2cell( form ).tag.value ) {
+            /* things which evaluate to themselves */
+        case EXCEPTIONTV:
+        case FREETV:           // shouldn't happen, but anyway...
+            // FUNCTIONTV, LAMBDATV, NLAMBDATV, SPECIALTV ?
+        case INTEGERTV:
+        case KEYTV:
+        case LOOPTV:           // don't think this should happen...
+        case NILTV:
+        case RATIOTV:
+        case REALTV:
+        case READTV:
+        case STRINGTV:
+        case TIMETV:
+        case TRUETV:
+            // case VECTORPOINTTV: ?
+        case WRITETV:
+            break;
+        default:
+            {
+                struct cons_pointer next_pointer =
+                    make_empty_frame( parent_pointer );
+                inc_ref( next_pointer );
 
-    struct stack_frame *next = get_stack_frame( next_pointer );
-    set_reg( next, 0, form );
-    next->args = 1;
+                struct stack_frame *next = get_stack_frame( next_pointer );
+                set_reg( next, 0, form );
+                next->args = 1;
 
-    result = lisp_eval( next, next_pointer, env );
+                result = lisp_eval( next, next_pointer, env );
 
-    if ( !exceptionp( result ) ) {
-        /* if we're returning an exception, we should NOT free the
-         * stack frame. Corollary is, when we free an exception, we
-         * should free all the frames it's holding on to. */
-        dec_ref( next_pointer );
+                if ( !exceptionp( result ) ) {
+                    /* if we're returning an exception, we should NOT free the
+                     * stack frame. Corollary is, when we free an exception, we
+                     * should free all the frames it's holding on to. */
+                    dec_ref( next_pointer );
+                }
+            }
+            break;
     }
 
     debug_print( L"eval_form returning: ", DEBUG_EVAL );
@@ -113,16 +137,16 @@ struct cons_pointer eval_forms( struct stack_frame *frame,
 }
 
 /**
- * OK, the idea here (and I know this is less than perfect) is that the basic `try` 
- * function in PSSE takes two arguments, the first, `body`, being a list of forms, 
- * and the second, `catch`, being a catch handler (which is also a list of forms). 
- * Forms from `body` are evaluated in turn until one returns an exception object, 
+ * OK, the idea here (and I know this is less than perfect) is that the basic `try`
+ * function in PSSE takes two arguments, the first, `body`, being a list of forms,
+ * and the second, `catch`, being a catch handler (which is also a list of forms).
+ * Forms from `body` are evaluated in turn until one returns an exception object,
  * or until the list is exhausted. If the list was exhausted, then the value of
- * evaluating the last form in `body` is returned. If an exception was encountered, 
- * then each of the forms in `catch` is evaluated and the value of the last of 
+ * evaluating the last form in `body` is returned. If an exception was encountered,
+ * then each of the forms in `catch` is evaluated and the value of the last of
  * those is returned.
- * 
- * This is experimental. It almost certainly WILL change. 
+ *
+ * This is experimental. It almost certainly WILL change.
  */
 struct cons_pointer lisp_try( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
@@ -891,7 +915,7 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
         input = file_to_url_file( stdin );
     }
 
-    struct cons_pointer result = read( frame, frame_pointer, input );
+    struct cons_pointer result = read( frame, frame_pointer, env, input );
     debug_print( L"lisp_read returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
 
@@ -1406,7 +1430,7 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
 }
 
 /**
- * should really be overwritten with a version in Lisp, since this is much easier to write in Lisp 
+ * should really be overwritten with a version in Lisp, since this is much easier to write in Lisp
  */
 struct cons_pointer lisp_append( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
@@ -1476,7 +1500,7 @@ struct cons_pointer lisp_list( struct stack_frame *frame,
 }
 
 /**
- * Special form: evaluate a series of forms in an environment in which 
+ * Special form: evaluate a series of forms in an environment in which
  * these bindings are bound.
  * This is `let*` in Common Lisp parlance; `let` in Clojure parlance.
  */

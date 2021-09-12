@@ -48,9 +48,11 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  bool seen_period );
 struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
+                               struct cons_pointer env,
                                URL_FILE * input, wint_t initial );
 struct cons_pointer read_map( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
+                              struct cons_pointer env,
                               URL_FILE * input, wint_t initial );
 struct cons_pointer read_string( URL_FILE * input, wint_t initial );
 struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
@@ -142,6 +144,7 @@ struct cons_pointer read_path( URL_FILE * input, wint_t initial,
  */
 struct cons_pointer read_continuation( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
+                                       struct cons_pointer env,
                                        URL_FILE * input, wint_t initial ) {
     debug_print( L"entering read_continuation\n", DEBUG_IO );
     struct cons_pointer result = NIL;
@@ -171,16 +174,16 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
             case '\'':
                 result =
                     c_quote( read_continuation
-                             ( frame, frame_pointer, input,
+                             ( frame, frame_pointer, env, input,
                                url_fgetwc( input ) ) );
                 break;
             case '(':
                 result =
-                    read_list( frame, frame_pointer, input,
+                    read_list( frame, frame_pointer, env, input,
                                url_fgetwc( input ) );
                 break;
             case '{':
-                result = read_map( frame, frame_pointer, input,
+                result = read_map( frame, frame_pointer, env, input,
                                    url_fgetwc( input ) );
                 break;
             case '"':
@@ -210,8 +213,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                         /* dotted pair. \todo this isn't right, we
                          * really need to backtrack up a level. */
                         result =
-                            read_continuation( frame, frame_pointer, input,
-                                               url_fgetwc( input ) );
+                            read_continuation( frame, frame_pointer, env,
+                                               input, url_fgetwc( input ) );
                         debug_print
                             ( L"read_continuation: dotted pair; read cdr ",
                               DEBUG_IO );
@@ -383,6 +386,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
  */
 struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
+                               struct cons_pointer env,
                                URL_FILE * input, wint_t initial ) {
     struct cons_pointer result = NIL;
     wint_t c;
@@ -391,7 +395,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
         debug_printf( DEBUG_IO,
                       L"read_list starting '%C' (%d)\n", initial, initial );
         struct cons_pointer car =
-            read_continuation( frame, frame_pointer, input,
+            read_continuation( frame, frame_pointer, env, input,
                                initial );
 
         /* skip whitespace */
@@ -406,10 +410,12 @@ struct cons_pointer read_list( struct stack_frame *frame,
                 make_cons( car,
                            c_car( read_list( frame,
                                              frame_pointer,
+                                             env,
                                              input, url_fgetwc( input ) ) ) );
         } else {
             result =
-                make_cons( car, read_list( frame, frame_pointer, input, c ) );
+                make_cons( car,
+                           read_list( frame, frame_pointer, env, input, c ) );
         }
     } else {
         debug_print( L"End of list detected\n", DEBUG_IO );
@@ -420,6 +426,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
 
 struct cons_pointer read_map( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
+                              struct cons_pointer env,
                               URL_FILE * input, wint_t initial ) {
     // set write ACL to true whilst creating to prevent GC churn
     struct cons_pointer result =
@@ -428,21 +435,23 @@ struct cons_pointer read_map( struct stack_frame *frame,
 
     while ( c != L'}' ) {
         struct cons_pointer key =
-            read_continuation( frame, frame_pointer, input, c );
+            read_continuation( frame, frame_pointer, env, input, c );
 
         /* skip whitespace */
         for ( c = url_fgetwc( input ); iswblank( c ) || iswcntrl( c );
               c = url_fgetwc( input ) );
 
         struct cons_pointer value =
-            read_continuation( frame, frame_pointer, input, c );
+            read_continuation( frame, frame_pointer, env, input, c );
 
         /* skip commaa and whitespace at this point. */
         for ( c = url_fgetwc( input );
               c == L',' || iswblank( c ) || iswcntrl( c );
               c = url_fgetwc( input ) );
 
-        result = hashmap_put( result, key, value );
+        result =
+            hashmap_put( result, key,
+                         eval_form( frame, frame_pointer, value, env ) );
     }
 
     // default write ACL for maps should be NIL.
@@ -536,7 +545,7 @@ struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
 struct cons_pointer read( struct
                           stack_frame
                           *frame, struct cons_pointer frame_pointer,
-                          URL_FILE * input ) {
-    return read_continuation( frame, frame_pointer, input,
+                          struct cons_pointer env, URL_FILE * input ) {
+    return read_continuation( frame, frame_pointer, env, input,
                               url_fgetwc( input ) );
 }
