@@ -28,13 +28,13 @@
 
 #include <curl/curl.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "fopen.h"
-#include "integer.h"
-#include "intern.h"
-#include "lispops.h"
+#include "io/fopen.h"
+#include "arith/integer.h"
+#include "ops/intern.h"
+#include "ops/lispops.h"
 #include "utils.h"
 
 /**
@@ -56,8 +56,6 @@ wint_t ungotten = 0;
  * @return 0 on success; any other value means failure.
  */
 int io_init(  ) {
-    CURL *curl;
-    CURLcode res;
     int result = curl_global_init( CURL_GLOBAL_SSL );
 
     io_share = curl_share_init(  );

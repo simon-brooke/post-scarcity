@@ -18,12 +18,12 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "equal.h"
-#include "lispops.h"
-#include "peano.h"
+#include "ops/equal.h"
+#include "ops/lispops.h"
+#include "arith/peano.h"
 
 /**
  * hexadecimal digits for printing numbers.

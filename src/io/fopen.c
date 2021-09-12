@@ -47,12 +47,12 @@
 
 #include <curl/curl.h>
 
-#include "fopen.h"
+#include "io/fopen.h"
 #ifdef FOPEN_STANDALONE
 CURLSH *io_share;
 #else
-#include "consspaceobject.h"
-#include "io.h"
+#include "memory/consspaceobject.h"
+#include "io/io.h"
 #include "utils.h"
 #endif
 

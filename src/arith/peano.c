@@ -14,19 +14,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "consspaceobject.h"
-#include "conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/conspage.h"
 #include "debug.h"
-#include "equal.h"
-#include "integer.h"
-#include "intern.h"
-#include "lispops.h"
-#include "peano.h"
-#include "print.h"
-#include "ratio.h"
-#include "read.h"
-#include "real.h"
-#include "stack.h"
+#include "ops/equal.h"
+#include "arith/integer.h"
+#include "ops/intern.h"
+#include "ops/lispops.h"
+#include "arith/peano.h"
+#include "io/print.h"
+#include "arith/ratio.h"
+#include "io/read.h"
+#include "arith/real.h"
+#include "memory/stack.h"
 
 long double to_long_double( struct cons_pointer arg );
 int64_t to_long_int( struct cons_pointer arg );

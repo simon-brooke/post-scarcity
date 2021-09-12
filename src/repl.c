@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <wchar.h>
 
-#include "consspaceobject.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "intern.h"
-#include "lispops.h"
-#include "stack.h"
+#include "ops/intern.h"
+#include "ops/lispops.h"
+#include "memory/stack.h"
 
 
 /**

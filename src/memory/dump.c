@@ -18,15 +18,15 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "hashmap.h"
-#include "intern.h"
-#include "io.h"
-#include "print.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "memory/hashmap.h"
+#include "ops/intern.h"
+#include "io/io.h"
+#include "io/print.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 
 void dump_string_cell( URL_FILE * output, wchar_t *prefix,

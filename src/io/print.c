@@ -17,15 +17,15 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
-#include "hashmap.h"
-#include "integer.h"
-#include "intern.h"
-#include "stack.h"
-#include "print.h"
-#include "psse_time.h"
-#include "vectorspace.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/hashmap.h"
+#include "arith/integer.h"
+#include "ops/intern.h"
+#include "memory/stack.h"
+#include "io/print.h"
+#include "time/psse_time.h"
+#include "memory/vectorspace.h"
 
 /**
  * print all the characters in the symbol or string indicated by `pointer`

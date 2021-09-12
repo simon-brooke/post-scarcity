@@ -11,7 +11,7 @@
 #include "arith/peano.h"
 #include "authorise.h"
 #include "debug.h"
-#include "intern.h"
+#include "ops/intern.h"
 #include "io/print.h"
 #include "memory/conspage.h"
 #include "memory/consspaceobject.h"

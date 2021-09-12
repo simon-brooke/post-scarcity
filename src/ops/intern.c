@@ -19,12 +19,12 @@
 
 #include <stdbool.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "equal.h"
-#include "hashmap.h"
-#include "lispops.h"
+#include "ops/equal.h"
+#include "memory/hashmap.h"
+#include "ops/lispops.h"
 // #include "print.h"
 
 /**

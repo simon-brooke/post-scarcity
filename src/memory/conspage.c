@@ -16,12 +16,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "consspaceobject.h"
-#include "conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/conspage.h"
 #include "debug.h"
-#include "dump.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "memory/dump.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 /**
  * Flag indicating whether conspage initialisation has been done.

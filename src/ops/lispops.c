@@ -24,19 +24,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "consspaceobject.h"
-#include "conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/conspage.h"
 #include "debug.h"
-#include "dump.h"
-#include "equal.h"
-#include "integer.h"
-#include "intern.h"
-#include "io.h"
-#include "lispops.h"
-#include "print.h"
-#include "read.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "memory/dump.h"
+#include "ops/equal.h"
+#include "arith/integer.h"
+#include "ops/intern.h"
+#include "io/io.h"
+#include "ops/lispops.h"
+#include "io/print.h"
+#include "io/read.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 /*
  * also to create in this section:

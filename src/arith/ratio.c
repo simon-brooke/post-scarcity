@@ -11,15 +11,15 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "equal.h"
-#include "integer.h"
-#include "lispops.h"
-#include "peano.h"
-#include "print.h"
-#include "ratio.h"
+#include "ops/equal.h"
+#include "arith/integer.h"
+#include "ops/lispops.h"
+#include "arith/peano.h"
+#include "io/print.h"
+#include "arith/ratio.h"
 
 
 /**

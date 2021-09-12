@@ -18,11 +18,11 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "consspaceobject.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "dump.h"
-#include "io.h"
-#include "print.h"
+#include "memory/dump.h"
+#include "io/io.h"
+#include "io/print.h"
 
 /**
  * the controlling flags for `debug_print`; set in `init.c`, q.v.

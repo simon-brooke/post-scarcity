@@ -7,10 +7,10 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "read.h"
+#include "io/read.h"
 
 /**
  * Allocate a real number cell representing this value and return a cons

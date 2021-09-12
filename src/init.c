@@ -20,18 +20,20 @@
 #include <curl/curl.h>
 
 #include "version.h"
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/stack.h"
 #include "debug.h"
-#include "hashmap.h"
-#include "intern.h"
-#include "io.h"
-#include "lispops.h"
-#include "meta.h"
-#include "peano.h"
-#include "print.h"
+#include "memory/hashmap.h"
+#include "ops/intern.h"
+#include "io/io.h"
+#include "ops/lispops.h"
+#include "ops/meta.h"
+#include "arith/peano.h"
+#include "io/print.h"
 #include "repl.h"
-#include "psse_time.h"
+#include "io/fopen.h"
+#include "time/psse_time.h"
 
 // extern char *optarg; /* defined in unistd.h */
 

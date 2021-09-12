@@ -17,14 +17,14 @@
 
 #include <stdlib.h>
 
-#include "consspaceobject.h"
-#include "conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/conspage.h"
 #include "debug.h"
-#include "dump.h"
-#include "lispops.h"
-#include "print.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "memory/dump.h"
+#include "ops/lispops.h"
+#include "io/print.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 /**
  * set a register in a stack frame. Alwaye use this to do so,

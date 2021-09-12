@@ -17,25 +17,29 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "consspaceobject.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "dump.h"
-#include "hashmap.h"
-#include "integer.h"
-#include "intern.h"
-#include "io.h"
-#include "lispops.h"
-#include "peano.h"
-#include "print.h"
-#include "ratio.h"
-#include "read.h"
-#include "real.h"
-#include "vectorspace.h"
+#include "memory/dump.h"
+#include "memory/hashmap.h"
+#include "arith/integer.h"
+#include "ops/intern.h"
+#include "io/io.h"
+#include "ops/lispops.h"
+#include "arith/peano.h"
+#include "io/print.h"
+#include "arith/ratio.h"
+#include "io/read.h"
+#include "arith/real.h"
+#include "memory/vectorspace.h"
 
 /*
- * for the time being things which may be read are: strings numbers - either
- * integer or real, but not yet including ratios or bignums lists Can't read
- * atoms because I don't yet know what an atom is or how it's stored.
+ * for the time being things which may be read are: 
+ * * strings
+ * * numbers - either integer, ratio or real
+ * * lists 
+ * * maps
+ * * keywords
+ * * atoms
  */
 
 struct cons_pointer read_number( struct stack_frame *frame,

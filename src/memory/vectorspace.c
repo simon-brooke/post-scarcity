@@ -19,12 +19,12 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "hashmap.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "memory/hashmap.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 
 /**

@@ -16,10 +16,10 @@
 #include <wchar.h>
 #include <wctype.h>
 
-#include "conspage.h"
-#include "consspaceobject.h"
-#include "integer.h"
-#include "psse_time.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "arith/integer.h"
+#include "time/psse_time.h"
 #define _GNU_SOURCE
 
 #define seconds_per_year 31557600L
@@ -63,7 +63,6 @@ struct cons_pointer make_time( struct cons_pointer integer_or_nil ) {
     if ( integerp( integer_or_nil ) ) {
         cell->payload.time.value =
             pointer2cell( integer_or_nil ).payload.integer.value;
-        // \todo: if integer is a bignum, deal with it.
     } else {
         cell->payload.time.value = unix_time_to_lisp_time( time( NULL ) );
     }

@@ -7,7 +7,7 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "conspage.h"
+#include "memory/conspage.h"
 #include "debug.h"
 
 /**

@@ -19,13 +19,13 @@
 #include <wctype.h>
 
 #include "authorise.h"
-#include "conspage.h"
-#include "consspaceobject.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "debug.h"
-#include "intern.h"
-#include "print.h"
-#include "stack.h"
-#include "vectorspace.h"
+#include "ops/intern.h"
+#include "io/print.h"
+#include "memory/stack.h"
+#include "memory/vectorspace.h"
 
 /**
  * True if the value of the tag on the cell at this `pointer` is this `value`,
