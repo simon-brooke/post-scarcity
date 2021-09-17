@@ -84,10 +84,11 @@ struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
 
     if ( vso != NULL ) {
         memset( vso, 0, padded );
+                vso->header.tag.value = tag;
+
         debug_printf( DEBUG_ALLOC,
-                      L"make_vso: about to write tag '%4.4s' into vso at %p\n",
-                      tag, vso );
-        vso->header.tag.value = tag;
+                      L"make_vso: written tag '%4.4s' into vso at %p\n",
+                      vso->header.tag.bytes, vso );
         result = make_vec_pointer( vso, tag );
         debug_dump_object( result, DEBUG_ALLOC );
         vso->header.vecp = result;

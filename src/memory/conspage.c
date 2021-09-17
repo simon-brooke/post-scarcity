@@ -238,7 +238,7 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
             total_cells_allocated++;
 
             debug_printf( DEBUG_ALLOC,
-                          L"Allocated cell of type '%4.4s' at %d, %d \n", tag,
+                          L"Allocated cell of type '%4.4s' at %d, %d \n", cell->tag.bytes,
                           result.page, result.offset );
         } else {
             debug_printf( DEBUG_ALLOC, L"WARNING: Allocating non-free cell!" );
