@@ -6,7 +6,7 @@ tl,dr: look at the [wiki](wiki).
 
 ### Version 0.0.5
 
-Has working Lisp interpreter, more or less complete, with functions and symbols as defined under [[#Bindings currently available]] below. Features include hash maps.
+Has working Lisp interpreter, more or less complete, with functions and symbols as defined under [#bindings-currently-available](Bindings currently available) below. Features include hash maps.
 
 #### Known bugs
 
