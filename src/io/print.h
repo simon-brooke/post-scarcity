@@ -11,6 +11,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include "io/fopen.h"
+
 #ifndef __print_h
 #define __print_h
 

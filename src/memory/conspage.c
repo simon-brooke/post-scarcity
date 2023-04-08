@@ -267,6 +267,6 @@ void initialise_cons_pages(  ) {
 
 void summarise_allocation(  ) {
     fwprintf( stderr,
-              L"Allocation summary: allocated %lld; deallocated %lld.\n",
-              total_cells_allocated, total_cells_freed );
+              L"Allocation summary: allocated %lld; deallocated %lld; not deallocated %lld.\n",
+              total_cells_allocated, total_cells_freed, total_cells_allocated - total_cells_freed );
 }
