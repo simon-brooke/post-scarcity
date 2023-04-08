@@ -13,9 +13,17 @@
 #define PEANO_H
 
 /**
- * The maximum value we will allow in an integer cell.
+ * The maximum value we will allow in an integer cell: one less than 2^60:
+ * (let ((s (make-string-output-stream)))
+ *   (format s "0x0~XL" (- (expt 2 60) 1))
+ *   (string-downcase (get-output-stream-string s)))
+ *                              "0x0fffffffffffffffl"
+ * 
+ * So left shifting and right shifting by 60 bits is correct.
  */
 #define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
+
+#define INTEGER_BIT_SHIFT (60)
 
 bool zerop( struct cons_pointer arg );
 

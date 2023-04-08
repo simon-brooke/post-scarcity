@@ -478,6 +478,8 @@ struct free_payload {
  * exceeds 60 bits, the least significant 60 bits are stored in the first cell
  * in the chain, the next 60 in the next cell, and so on. Only the value of the
  * first cell in any chain should be negative.
+ * 
+ * \todo Why is this 60, and not 64 bits?
  */
 struct integer_payload {
     /** the value of the payload (i.e. 60 bits) of this cell. */

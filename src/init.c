@@ -9,6 +9,7 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <getopt.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>

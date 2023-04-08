@@ -100,13 +100,12 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
 __int128_t int128_to_integer( __int128_t val,
                               struct cons_pointer less_significant,
                               struct cons_pointer new ) {
-    struct cons_pointer cursor = NIL;
     __int128_t carry = 0;
 
     if ( MAX_INTEGER >= val ) {
         carry = 0;
     } else {
-        carry = val >> 60;
+        carry = val >> INTEGER_BIT_SHIFT; 
         debug_printf( DEBUG_ARITH,
                       L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
                       ( int64_t ) carry );
@@ -136,7 +135,7 @@ struct cons_pointer make_integer_128( __int128_t val,
             less_significant =
                 make_integer( ( long int ) val & MAX_INTEGER,
                               less_significant );
-            val = val >> 60;
+            val = val >> INTEGER_BIT_SHIFT;
         }
 
     } while ( nilp( result ) );
@@ -290,7 +289,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 
                 /* if xj exceeds one digit, break it into the digit dj and
                  * the carry */
-                carry = xj >> 60;
+                carry = xj >> INTEGER_BIT_SHIFT;
                 struct cons_pointer dj = make_integer( xj & MAX_INTEGER, NIL );
 
                 /* destructively modify ri by appending dj */
@@ -320,7 +319,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 }
 
 /**
- * don't use; private to integer_to_string, and somewaht dodgy.
+ * don't use; private to integer_to_string, and somewhat dodgy.
  */
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
@@ -361,7 +360,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
             while ( accumulator > 0 || !nilp( next ) ) {
                 if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
                     accumulator +=
-                        ( pointer2cell( next ).payload.integer.value << 60 );
+                        ( pointer2cell( next ).payload.integer.value << INTEGER_BIT_SHIFT );
                     next = pointer2cell( next ).payload.integer.more;
                 }
                 int offset = ( int ) ( accumulator % base );

@@ -681,6 +681,8 @@ bool end_of_stringp( struct cons_pointer arg ) {
  * returns a cell constructed from a and b. If a is of type string but its
  * cdr is nill, and b is of type string, then returns a new string cell;
  * otherwise returns a new cons cell.
+ * 
+ * Thus: `(cons "a" "bcd") -> "abcd"`, but `(cons "ab" "cd") -> ("ab" . "cd")`
  *
  * * (cons a b)
  *
@@ -700,7 +702,6 @@ lisp_cons( struct stack_frame *frame, struct cons_pointer frame_pointer,
         return NIL;
     } else if ( stringp( car ) && stringp( cdr ) &&
                 end_of_stringp( c_cdr( car ) ) ) {
-        // \todo check that car is of length 1
         result =
             make_string( pointer2cell( car ).payload.string.character, cdr );
     } else {
