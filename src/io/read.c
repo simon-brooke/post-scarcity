@@ -83,7 +83,7 @@ struct cons_pointer read_path( URL_FILE * input, wint_t initial,
             prefix = c_string_to_lisp_symbol( L"oblist" );
             break;
         case '$':
-        case L'§':
+        case LSESSION:
             prefix = c_string_to_lisp_symbol( L"session" );
             break;
     }
@@ -245,7 +245,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 }
                 break;
             case '$':
-            case L'§':
+            case LSESSION:
                 result = read_path( input, c, NIL );
                 break;
             default:
@@ -298,9 +298,9 @@ struct cons_pointer read_number( struct stack_frame *frame,
                   initial );
 
     for ( c = initial; iswdigit( c )
-          || c == L'.' || c == L'/' || c == L','; c = url_fgetwc( input ) ) {
+          || c == LPERIOD || c == LSLASH || c == LCOMMA; c = url_fgetwc( input ) ) {
         switch ( c ) {
-            case L'.':
+            case LPERIOD:
                 if ( seen_period || !nilp( dividend ) ) {
                     return throw_exception( c_string_to_lisp_string
                                             ( L"Malformed number: too many periods" ),
@@ -311,7 +311,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                     seen_period = true;
                 }
                 break;
-            case L'/':
+            case LSLASH:
                 if ( seen_period || !nilp( dividend ) ) {
                     return throw_exception( c_string_to_lisp_string
                                             ( L"Malformed number: dividend of rational must be integer" ),
@@ -324,11 +324,12 @@ struct cons_pointer read_number( struct stack_frame *frame,
                     result = make_integer( 0, NIL );
                 }
                 break;
-            case L',':
+            case LCOMMA:
                 // silently ignore it.
                 break;
             default:
                 result = add_integers( multiply_integers( result, base ),
+                                        /* /todo: this won't work for hex digits */
                                        make_integer( ( int ) c - ( int ) '0',
                                                      NIL ) );
 
@@ -402,7 +403,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
         for ( c = url_fgetwc( input );
               iswblank( c ) || iswcntrl( c ); c = url_fgetwc( input ) );
 
-        if ( c == L'.' ) {
+        if ( c == LPERIOD ) {
             /* might be a dotted pair; indeed, if we rule out numbers with
              * initial periods, it must be a dotted pair. \todo Ought to check,
              * howerver, that there's only one form after the period. */
@@ -433,7 +434,7 @@ struct cons_pointer read_map( struct stack_frame *frame,
         make_hashmap( DFLT_HASHMAP_BUCKETS, NIL, TRUE );
     wint_t c = initial;
 
-    while ( c != L'}' ) {
+    while ( c != LCBRACE ) {
         struct cons_pointer key =
             read_continuation( frame, frame_pointer, env, input, c );
 
@@ -446,7 +447,7 @@ struct cons_pointer read_map( struct stack_frame *frame,
 
         /* skip commaa and whitespace at this point. */
         for ( c = url_fgetwc( input );
-              c == L',' || iswblank( c ) || iswcntrl( c );
+              c == LCOMMA || iswblank( c ) || iswcntrl( c );
               c = url_fgetwc( input ) );
 
         result =

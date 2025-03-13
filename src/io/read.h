@@ -13,6 +13,15 @@
 
 #include "memory/consspaceobject.h"
 
+/* characters (other than arabic numberals) used in number representations */
+#define LCOMMA L','
+#define LPERIOD L'.'
+#define LSLASH L'/'
+/* ... used in map representations */
+#define LCBRACE L'}'
+/* ... used in path representations */
+#define LSESSION L'§'
+
 /**
  * read the next object on this input stream and return a cons_pointer to it.
  */
