@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="post-scarcity" />
+		<Option makefile_is_custom="1" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/post-scarcity" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/post-scarcity" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="Makefile" />
+		<Unit filename="src/arith/integer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/arith/integer.h" />
+		<Unit filename="src/arith/peano.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/arith/peano.h" />
+		<Unit filename="src/arith/ratio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/arith/ratio.h" />
+		<Unit filename="src/arith/real.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/arith/real.h" />
+		<Unit filename="src/authorise.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/authorise.h" />
+		<Unit filename="src/debug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/debug.h" />
+		<Unit filename="src/init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/io/fopen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/io/fopen.h" />
+		<Unit filename="src/io/io.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/io/io.h" />
+		<Unit filename="src/io/print.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/io/print.h" />
+		<Unit filename="src/io/read.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/io/read.h" />
+		<Unit filename="src/memory/conspage.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/conspage.h" />
+		<Unit filename="src/memory/consspaceobject.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/consspaceobject.h" />
+		<Unit filename="src/memory/cursor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/cursor.h" />
+		<Unit filename="src/memory/dump.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/dump.h" />
+		<Unit filename="src/memory/hashmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/hashmap.h" />
+		<Unit filename="src/memory/lookup3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/lookup3.h" />
+		<Unit filename="src/memory/stack.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/stack.h" />
+		<Unit filename="src/memory/vectorspace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/memory/vectorspace.h" />
+		<Unit filename="src/ops/equal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ops/equal.h" />
+		<Unit filename="src/ops/intern.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ops/intern.h" />
+		<Unit filename="src/ops/lispops.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ops/lispops.h" />
+		<Unit filename="src/ops/loop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ops/loop.h" />
+		<Unit filename="src/ops/meta.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ops/meta.h" />
+		<Unit filename="src/repl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/repl.h" />
+		<Unit filename="src/time/psse_time.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/time/psse_time.h" />
+		<Unit filename="src/utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/utils.h" />
+		<Unit filename="src/version.h" />
+		<Unit filename="utils_src/debugflags/debugflags.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="utils_src/readprintwc/readprintwc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="utils_src/tagvalcalc/tagvalcalc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -87,9 +87,10 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
 
 /**
  * Overwrite the value field of the integer indicated by `new` with
- * the least significant 60 bits of `val`, and return the more significant
- * bits (if any) right-shifted by 60 places. Destructive, primitive, do not
- * use in any context except primitive operations on integers.
+ * the least significant INTEGER_BITS bits of `val`, and return the
+ * more significant bits (if any) right-shifted by INTEGER_BITS places. 
+ * Destructive, primitive, do not use in any context except primitive 
+ * operations on integers.
  *
  * @param val the value to represent;
  * @param less_significant the less significant words of this bignum, if any,
@@ -106,7 +107,7 @@ __int128_t int128_to_integer( __int128_t val,
     if ( MAX_INTEGER >= val ) {
         carry = 0;
     } else {
-        carry = val >> 60;
+        carry = val >> INTEGER_BITS;
         debug_printf( DEBUG_ARITH,
                       L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
                       ( int64_t ) carry );
@@ -136,7 +137,7 @@ struct cons_pointer make_integer_128( __int128_t val,
             less_significant =
                 make_integer( ( long int ) val & MAX_INTEGER,
                               less_significant );
-            val = val >> 60;
+            val = val >> INTEGER_BITS;
         }
 
     } while ( nilp( result ) );
@@ -290,7 +291,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 
                 /* if xj exceeds one digit, break it into the digit dj and
                  * the carry */
-                carry = xj >> 60;
+                carry = xj >> INTEGER_BITS;
                 struct cons_pointer dj = make_integer( xj & MAX_INTEGER, NIL );
 
                 /* destructively modify ri by appending dj */
@@ -361,7 +362,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
             while ( accumulator > 0 || !nilp( next ) ) {
                 if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
                     accumulator +=
-                        ( pointer2cell( next ).payload.integer.value << 60 );
+                        ( pointer2cell( next ).payload.integer.value << INTEGER_BITS );
                     next = pointer2cell( next ).payload.integer.more;
                 }
                 int offset = ( int ) ( accumulator % base );

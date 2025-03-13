@@ -14,12 +14,13 @@
 
 /**
  * The maximum value we will allow in an integer cell.
- *
- * NOTE: 20250312 this is 2^60. WHY? Given that we're using the sign bit
- * inside the int64 record, we only have 63 value bits; but why did I decide
- * not to use all 63?
  */
-#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
+#define MAX_INTEGER ((__int128_t)0x7fffffffffffffffL)
+/**
+ * @brief Number of value bits in an integer cell
+ * 
+ */
+#define INTEGER_BITS 63
 
 bool zerop( struct cons_pointer arg );
 
