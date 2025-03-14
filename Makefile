@@ -36,7 +36,7 @@ else
 	indent $(INDENT_FLAGS) $(SRCS) $(HDRS)
 endif
 
-test: $(OBJS) $(TESTS) Makefile
+test: $(TESTS) Makefile $(TARGET)
 	bash ./unit-tests.sh
 
 .PHONY: clean

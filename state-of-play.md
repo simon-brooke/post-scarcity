@@ -1,5 +1,23 @@
 # State of Play
 
+## 20250314
+
+Thinking further about this, I think at least part of the problem is that I'm storing bignums as cons-space objects, which means that the integer representation I can store has to fit into the size of a cons pointer, which is 64 bits. Which means that to store integers larger than 64 bits I need chains of these objects.
+
+If I stored bignums in vector space, this problem would go away (especially as I have not implemented vector space yet). 
+
+However, having bignums in vector space would cause a churn of non-standard-sized objects in vector space, which would mean much more frequent garbage collection, which has to be mark-and-sweep because unequal-sized objects, otherwise you get heap fragmentation.
+
+So maybe I just have to put more work into debugging my cons-space bignums.
+
+Bother, bother.
+
+There are no perfect solutions.
+
+However however, it's only the node that's short on vector space which has to pause to do a mark and sweep. It doesn't interrupt any other node, because their reference to the object will remain the same, even if it is the 'home node' of the object which is sweeping. So all the node has to do is set its busy flag, do GC, and clear its busy flag, The rest of the system can just be carrying on as normal.
+
+So... maybe mark and sweep isn't the big deal I think it is?
+
 ## 20250313
 
 OK, the 60 bit integer cell happens in `int128_to_integer` in `arith/integer.c`. It seems to be being done consistently; but there is no obvious reason. `MAX_INTEGER` is defined in `arith/peano.h`. I've changed both to use 63 bits, and this makes no change to the number of unit tests that fail.
