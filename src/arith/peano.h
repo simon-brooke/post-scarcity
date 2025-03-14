@@ -22,7 +22,10 @@
  * So left shifting and right shifting by 60 bits is correct.
  */
 #define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
-
+/**
+ * @brief Number of value bits in an integer cell
+ * 
+ */
 #define INTEGER_BIT_SHIFT (60)
 
 bool zerop( struct cons_pointer arg );

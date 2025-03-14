@@ -87,9 +87,10 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
 
 /**
  * Overwrite the value field of the integer indicated by `new` with
- * the least significant 60 bits of `val`, and return the more significant
- * bits (if any) right-shifted by 60 places. Destructive, primitive, do not
- * use in any context except primitive operations on integers.
+ * the least significant INTEGER_BITS bits of `val`, and return the
+ * more significant bits (if any) right-shifted by INTEGER_BITS places. 
+ * Destructive, primitive, do not use in any context except primitive 
+ * operations on integers.
  *
  * @param val the value to represent;
  * @param less_significant the less significant words of this bignum, if any,
