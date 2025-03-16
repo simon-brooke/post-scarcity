@@ -21,7 +21,9 @@
  * 
  * So left shifting and right shifting by 60 bits is correct.
  */
-#define MAX_INTEGER ((__int128_t)0x0fffffffffffffffL)
+#define MAX_INTEGER   ((__int128_t)0x0fffffffffffffffL)
+#define INT_CELL_BASE ((__int128_t)MAX_INTEGER + 1) // ((__int128_t)0x1000000000000000L)
+
 /**
  * @brief Number of value bits in an integer cell
  * 

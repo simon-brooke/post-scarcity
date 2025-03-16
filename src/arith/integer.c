@@ -71,7 +71,7 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
     long int val = nilp( c ) ? 0 : pointer2cell( c ).payload.integer.value;
 
-    long int carry = is_first_cell ? 0 : ( MAX_INTEGER + 1 );
+    long int carry = is_first_cell ? 0 : ( INT_CELL_BASE );
 
     __int128_t result = ( __int128_t ) integerp( c ) ?
         ( val == 0 ) ? carry : val : op == '*' ? 1 : 0;
@@ -106,15 +106,15 @@ __int128_t int128_to_integer( __int128_t val,
     if ( MAX_INTEGER >= val ) {
         carry = 0;
     } else {
-        carry = val >> INTEGER_BIT_SHIFT; 
+        carry = val % INT_CELL_BASE; 
         debug_printf( DEBUG_ARITH,
                       L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
                       ( int64_t ) carry );
-        val &= MAX_INTEGER;
+        val /= INT_CELL_BASE;
     }
 
     struct cons_space_object *newc = &pointer2cell( new );
-    newc->payload.integer.value = val;
+    newc->payload.integer.value = (int64_t)val;
 
     if ( integerp( less_significant ) ) {
         struct cons_space_object *lsc = &pointer2cell( less_significant );
@@ -136,7 +136,7 @@ struct cons_pointer make_integer_128( __int128_t val,
             less_significant =
                 make_integer( ( long int ) val & MAX_INTEGER,
                               less_significant );
-            val = val >> INTEGER_BIT_SHIFT;
+            val = val * INT_CELL_BASE;
         }
 
     } while ( nilp( result ) );
@@ -361,7 +361,7 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
             while ( accumulator > 0 || !nilp( next ) ) {
                 if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
                     accumulator +=
-                        ( pointer2cell( next ).payload.integer.value << INTEGER_BIT_SHIFT );
+                        ( pointer2cell( next ).payload.integer.value % INT_CELL_BASE );
                     next = pointer2cell( next ).payload.integer.more;
                 }
                 int offset = ( int ) ( accumulator % base );
