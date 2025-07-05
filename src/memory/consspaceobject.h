@@ -484,7 +484,7 @@ struct free_payload {
 struct integer_payload {
     /** the value of the payload (i.e. 60 bits) of this cell. */
     int64_t value;
-    /** the next (more significant) cell in the chain, ir `NIL` if there are no
+    /** the next (more significant) cell in the chain, or `NIL` if there are no
      * more. */
     struct cons_pointer more;
 };

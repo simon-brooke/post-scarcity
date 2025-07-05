@@ -12,6 +12,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 /*
  * wide characters
  */
@@ -32,32 +33,10 @@ const char *hex_digits = "0123456789ABCDEF";
 
 /*
  * Doctrine from here on in is that ALL integers are bignums, it's just
- * that integers less than 65 bits are bignums of one cell only.
+ * that integers less than 61 bits are bignums of one cell only.
  */
 
-/**
- * Allocate an integer cell representing this `value` and return a cons_pointer to it.
- * @param value an integer value;
- * @param more `NIL`, or a pointer to the more significant cell(s) of this number.
- * *NOTE* that if `more` is not `NIL`, `value` *must not* exceed `MAX_INTEGER`.
- */
-struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
-    struct cons_pointer result = NIL;
-    debug_print( L"Entering make_integer\n", DEBUG_ALLOC );
-
-    if ( integerp( more ) || nilp( more ) ) {
-        result = allocate_cell( INTEGERTV );
-        struct cons_space_object *cell = &pointer2cell( result );
-        cell->payload.integer.value = value;
-        cell->payload.integer.more = more;
-    }
-
-    debug_print( L"make_integer: returning\n", DEBUG_ALLOC );
-    debug_dump_object( result, DEBUG_ALLOC );
-    return result;
-}
-
-/**
+ /**
  * Low level integer arithmetic, do not use elsewhere.
  *
  * @param c a pointer to a cell, assumed to be an integer cell;
@@ -82,6 +61,35 @@ __int128_t cell_value( struct cons_pointer c, char op, bool is_first_cell ) {
     debug_print_128bit( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
 
+    return result;
+}
+
+
+/**
+ * Allocate an integer cell representing this `value` and return a cons_pointer to it.
+ * @param value an integer value;
+ * @param more `NIL`, or a pointer to the more significant cell(s) of this number.
+ * *NOTE* that if `more` is not `NIL`, `value` *must not* exceed `MAX_INTEGER`.
+ */
+struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
+    struct cons_pointer result = NIL;
+    debug_print( L"Entering make_integer\n", DEBUG_ALLOC );
+
+    if ( integerp(more) && (pointer2cell( more ).payload.integer.value < 0))
+    {
+        printf("WARNING: negative value %" PRId64 " passed as `more` to `make_integer`\n", 
+            pointer2cell( more ).payload.integer.value);
+    }
+
+    if ( integerp( more ) || nilp( more ) ) {
+        result = allocate_cell( INTEGERTV );
+        struct cons_space_object *cell = &pointer2cell( result );
+        cell->payload.integer.value = value;
+        cell->payload.integer.more = more;
+    }
+
+    debug_print( L"make_integer: returning\n", DEBUG_ALLOC );
+    debug_dump_object( result, DEBUG_ALLOC );
     return result;
 }
 

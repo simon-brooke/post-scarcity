@@ -1,5 +1,21 @@
 # State of Play
 
+## 20250704
+
+Right, I'm getting second and subsequent integer cells with negative values, which should not happen. This is probably the cause of (at least some of) the bignum problems. I need to find out why. This is (probably) fixable.
+
+```lisp
+:: (inspect 10000000000000000000)
+
+        INTR (1381256777) at page 3, offset 873 count 2
+                Integer cell: value 776627963145224192, count 2
+                BIGNUM! More at:
+        INTR (1381256777) at page 3, offset 872 count 1
+                Integer cell: value -8, count 1
+```
+
+Also, `print` is printing bignums wrong on ploughwright, but less wrong on mason, which implies a code difference. Investigate.
+
 ## 20250314
 
 Thinking further about this, I think at least part of the problem is that I'm storing bignums as cons-space objects, which means that the integer representation I can store has to fit into the size of a cons pointer, which is 64 bits. Which means that to store integers larger than 64 bits I need chains of these objects.

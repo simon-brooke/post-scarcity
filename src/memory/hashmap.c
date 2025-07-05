@@ -155,7 +155,16 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
         }
     }
     if ( frame->args > 1 ) {
+        if ( functionp( frame->arg[1])) {
         hash_fn = frame->arg[1];
+        } else if ( nilp(frame->arg[1])){
+            /* that's allowed */
+        } else {
+           result =
+                make_exception( c_string_to_lisp_string
+                                ( L"Second arg to `hashmap`, if passed, must "
+                                  L"be a function or `nil`.`" ), NIL );
+        }
     }
 
     if ( nilp( result ) ) {
@@ -189,26 +198,23 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
     return result;
 }
 
-
-
 /**
  * If this `ptr` is a pointer to a hashmap, return a new identical hashmap; 
- * else return `NIL`. TODO: should return an exception if ptr is not a 
- * readable hashmap.
+ * else return an exception. 
  */
 struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
     struct cons_pointer result = NIL;
 
     if ( truep( authorised( ptr, NIL ) ) ) {
         if ( hashmapp( ptr ) ) {
-            struct vector_space_object *from = pointer_to_vso( ptr );
+            struct vector_space_object const *from = pointer_to_vso( ptr );
 
             if ( from != NULL ) {
                 struct hashmap_payload from_pl = from->payload.hashmap;
                 result =
                     make_hashmap( from_pl.n_buckets, from_pl.hash_fn,
                                   from_pl.write_acl );
-                struct vector_space_object *to = pointer_to_vso( result );
+                struct vector_space_object const *to = pointer_to_vso( result );
                 struct hashmap_payload to_pl = to->payload.hashmap;
 
                 for ( int i = 0; i < to_pl.n_buckets; i++ ) {
@@ -217,8 +223,12 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
                 }
             }
         }
+    } else {
+        result =
+                make_exception( c_string_to_lisp_string
+                                ( L"Arg to `clone_hashmap` must "
+                                  L"be a readable hashmap.`" ), NIL );
     }
-    // TODO: else exception?
 
     return result;
 }
