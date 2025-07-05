@@ -130,6 +130,51 @@ fi
 
 
 #####################################################################
+# add two small bignums to produce a bigger bignum
+
+a=1152921504606846977
+c=`echo "$a + $a" | bc`
+echo -n "adding $a to $a: "
+expected='t'
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+
+actual=`echo $output |\
+  tail -1 |\
+  sed 's/\,//g'`
+
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+else
+    echo "Fail: expected '${expected}', got '${actual}'"
+    exit 1
+fi
+
+#####################################################################
+# add five small bignums to produce a bigger bignum
+
+a=1152921504606846977
+c=`echo "$a * 5" | bc`
+echo -n "adding $a, $a $a, $a, $a: "
+expected='t'
+output=`echo "(= (+ $a $a $a $a $a) $c)" | target/psse -v 2 2>psse.log`
+
+actual=`echo $output |\
+  tail -1 |\
+  sed 's/\,//g'`
+
+if [ "${expected}" = "${actual}" ]
+then
+    echo "OK"
+else
+    echo "Fail: expected '${expected}', got '${actual}'"
+    exit 1
+fi
+
+
+
+
+#####################################################################
 # add two bignums to produce a bignum
 a=10000000000000000000
 b=10000000000000000000

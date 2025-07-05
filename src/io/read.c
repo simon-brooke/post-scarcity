@@ -32,6 +32,16 @@
 #include "arith/real.h"
 #include "memory/vectorspace.h"
 
+// We can't, I think, use libreadline, because we read character by character, 
+// not line by line, and because we use wide characters. So we're going to have
+// to reimplement it. So we're going to have to maintain history of the forms
+// (or strings, but I currently think forms). So we're going to have to be able
+// to detact special keys, particularly, at this stage, the uparrow and down-
+// arrow keys
+// #include <readline/readline.h>
+// #include <readline/history.h>
+
+
 /*
  * for the time being things which may be read are: 
  * * strings
@@ -325,7 +335,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 }
                 break;
             case L',':
-                // silently ignore it.
+                // silently ignore commas.
                 break;
             default:
                 result = add_integers( multiply_integers( result, base ),
