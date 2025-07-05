@@ -122,6 +122,30 @@
 #define LOOPTV     1347374924
 
 /**
+ * @brief Tag for a lazy cons cell.
+ * 
+ * A lazy cons cell is like a cons cell, but lazy.
+ * 
+ */
+#define LAZYCONSTAG "LZYC"
+
+/**
+ * @brief Tag for a lazy string cell.
+ * 
+ * A lazy string cell is like a string cell, but lazy.
+ * 
+ */
+#define LAZYSTRTAG "LZYS"
+
+/**
+ * @brief Tag for a lazy worker cell.
+ * 
+ * A lazy 
+ * 
+ */
+#define LAZYWRKRTAG "WRKR"
+
+/**
  * The special cons cell at address {0,0} whose car and cdr both point to
  * itself.
  */
