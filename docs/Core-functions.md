@@ -1,5 +1,7 @@
 # Core functions
 
+*See [ops/lispops.h](lispops_8h.html).*
+
 In the specifications that follow, a word in all upper case refers to a tag value, defined on either the [cons space](Cons-space.html) or the [vector space](Vector-space.html) page.
 
 # (and args...)
@@ -16,7 +18,7 @@ Public. Takes an arbitrary number of arguments, which should either all be CONS 
 
 # (assoc key store)
 
-Public. Takes two arguments, a key and a store. The store may either be a CONS forming the head of a list formatted as an [assoc list](Assoc-list.html), or else a VECP pointing to a HASH. If the key is readable by the current user, returns the value associated with that key in the store, if it exists and is readable by the current user, else NIL.
+Public. Takes two arguments, a key and a store. The store may either be a CONS forming the head of a list formatted as an [assoc list](Hybrid-assoc-lists.html), or else a VECP pointing to a HASH. If the key is readable by the current user, returns the value associated with that key in the store, if it exists and is readable by the current user, else NIL.
 
 # (car arg)
 

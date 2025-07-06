@@ -1,6 +1,8 @@
 # Access control
-_
-ote that a number of details not yet finalised are used in examples in this note. There must be some mechanism for creating fully qualified and partially qualified hierarchical names, but I haven't finalised it yet. In this note I've assumed that the portions of an hierarchical name are separated by periods ('.'); that fully qualified names start with a quote mark; and that where a name doesn't start with a quote mark, the first portion of it is evaluated in the current environment and its value assumed to be a fully qualified equivalent. All of these details may change._
+
+*Not yet implemented*
+
+_Note that a number of details not yet finalised are used in examples in this note. There must be some mechanism for creating fully qualified and partially qualified hierarchical names, but I haven't finalised it yet. In this note I've assumed that the portions of an hierarchical name are separated by periods ('.'); that fully qualified names start with a quote mark; and that where a name doesn't start with a quote mark, the first portion of it is evaluated in the current environment and its value assumed to be a fully qualified equivalent. All of these details may change._
 
 In a multi-user environment, access control is necessary in order for a user to be able to protect an item of data from being seen by someone who isn't authorised to see it. But actually, in a world of immutable data, it's less necessary than you might think. As explained in my note on [Memory, threads and communication](https://www.journeyman.cc/blog/posts-output/2017-01-08-post-scarcity-memory-threads-and-communication/), if there's strict immutability, and all user processes spawn from a common root process, then no user can see into any other user's data space anyway.
 
