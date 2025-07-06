@@ -15,15 +15,15 @@ I became interested in reference counting garbage collectors, because it seemed 
 
 ## Separating cons space from vector space
 
-Lisps generate lots and lots of very small, equal sized objects: cons cells and other things which are either the same size as or even smaller than cons cells and which fit into the same memory footprint. Furthermore, most of the volatility is in cons cells - they are often extremely short lived. Larger objects are allocated much more infrequently and tend to live considerably longer.
+Lisps generate lots and lots of very small, equal sized objects: cons cells and other things which are either the same size as or even smaller than cons cells and which fit into the same memory footprint. Furthermore, most of the volatility is in cons cells &mdash; they are often extremely short lived. Larger objects are allocated much more infrequently and tend to live considerably longer.
 
-Because cons cells are all the same size, and because integers and doubles fit into the memory footprint of a cons  cell, if we maintain an array of memory units of this size then we can allocate them very efficiently because we never have to move them - we can always allocate a new object in memory vacated by deallocating an old one. Deallocation is simply a matter of pushing the deallocated cell onto the front of the free list; allocation is simply a matter of popping a cell off the free list.
+Because cons cells are all the same size, and because integers and doubles fit into the memory footprint of a cons  cell, if we maintain an array of memory units of this size then we can allocate them very efficiently because we never have to move them &mdash; we can always allocate a new object in memory vacated by deallocating an old one. Deallocation is simply a matter of pushing the deallocated cell onto the front of the free list; allocation is simply a matter of popping a cell off the free list.
 
 By contrast, a conventional software heap fragments exactly because we allocate variable sized objects into it. When an object is deallocated, it leaves a hole in the heap, into which we can only allocate objects of the same size or smaller. And because objects are heterogeneously sized, it's probable that the next object we get to allocate in it will be smaller, leaving even smaller unused holes.
 
-Consequently we end up with a memory like a swiss cheese - by no means fully occupied, but with holes which are too small to fit anything useful in. In order to make memory in this state useful, you have to mark and sweep it.
+Consequently we end up with a memory like a swiss cheese &mdash; by no means fully occupied, but with holes which are too small to fit anything useful in. In order to make memory in this state useful, you have to mark and sweep it.
 
-So my first observation is that [[cons space]] and what I call [[vector space]] - that is, the heap into which objects which won't fit into the memory footprint of a cons cell are allocated - are systematically different and require different garbage collection strategies.
+So my first observation is that [cons space](Cons-space.html) and what I call [vector space](Vector-space.html) &mdash; that is, the heap into which objects which won't fit into the memory footprint of a cons cell are allocated &mdash; are systematically different and require different garbage collection strategies.
 
 ## Reference counting: the objections
 
@@ -39,7 +39,7 @@ The other 'fault' of older reference counting Lisps is that in older Lisps, cons
 
 So badly designed programs on reference counting Lisps could leak memory badly and consequently silt up and run out of allocatable store.
 
-But modern Lisps - like Clojure - use immutable data structures. The nature of immutable data structures is that an older node can never point to a newer node. So circular data structures cannot be constructed.
+But modern Lisps &mdash; like Clojure &mdash; use immutable data structures. The nature of immutable data structures is that an older node can never point to a newer node. So circular data structures cannot be constructed.
 
 ### Performance
 

@@ -36,11 +36,11 @@ A mark and sweep garbage collector actually only needs one mark bit, but for now
 
 ### Access control
 
-Access control is a [[cons pointer]], see below; and is consequently the size of a cons pointer, which is presently 64 bits. An access control value of NIL means only system processes may access the cell; an access control value of TRUE means any user can access the cell; otherwise, the access control pointer points to the first cons cell of a list of allowed users/groups. The access control list is thus an ordinary list in ordinary cons space, and cells in an access control list can have access control lists of their own. As cons cells are immutable, infinite recursion is impossible; but it is nevertheless probably a good thing if access control list cells normally have an access control list of either TRUE or NIL.
+Access control is a [cons pointer](cons pointer.html), see below; and is consequently the size of a cons pointer, which is presently 64 bits. An access control value of NIL means only system processes may access the cell; an access control value of TRUE means any user can access the cell; otherwise, the access control pointer points to the first cons cell of a list of allowed users/groups. The access control list is thus an ordinary list in ordinary cons space, and cells in an access control list can have access control lists of their own. As cons cells are immutable, infinite recursion is impossible; but it is nevertheless probably a good thing if access control list cells normally have an access control list of either TRUE or NIL.
 
 ### Car, Cdr: Cons pointers
 
-A [[cons pointer]] is simply a pointer to a cons cell, and the simplest way to implement this is exactly as the memory address of the cons cell. 
+A [cons pointer](cons pointer.html) is simply a pointer to a cons cell, and the simplest way to implement this is exactly as the memory address of the cons cell. 
 
 We have a fixed size vector of total memory, which we address in eight bit words (bytes) because that's the current convention. Our cons cell size is 32 bytes. So 31/32 of the possible values of a cons pointer are wasted - there cannot be a valid cons cell at that address. Also, our total memory must be divided between cons space, vector space and stack (actually stack could be implemented in either cons space or vector space, and ultimately may end up being implemented in cons space, but that's a highly non-trivial detail which will be addressed much later). In practice it's likely that less than half of the total memory available will be devoted to cons space. So 63/64 of the possible values of a cons pointer are wasted.
 
@@ -50,7 +50,7 @@ One of the things I absolutely hate about modern computers is their tendency to 
 
 That was acceptable when the JVM was a special purpose platform for developing software for small embedded devices, which is what it was originally designed for. But it's one of the compromises the JVM makes in order to work well on small embedded devices which is completely unacceptable for post-scarcity computing. And we won't accept it.
 
-But be that as it may, we don't know at system initialisation time how much memory to reserve for cons space, and how much for vector space ('the heap'). If we reserve too much for cons space, we may run out of vector space while there's still cons space free, and vice versa. So we'll reserve cons space in units: [[cons pages]]. If our cons pointers are absolute memory addresses, then it becomes very expensive to move a cons page in memory, because all the pointers in the whole system to any cell on the page need to be updated.
+But be that as it may, we don't know at system initialisation time how much memory to reserve for cons space, and how much for vector space ('the heap'). If we reserve too much for cons space, we may run out of vector space while there's still cons space free, and vice versa. So we'll reserve cons space in units: [cons pages](cons pages.html). If our cons pointers are absolute memory addresses, then it becomes very expensive to move a cons page in memory, because all the pointers in the whole system to any cell on the page need to be updated.
 
 (**NOTE**: As my thinking has developed, I'm now envisaging one cons page per compute node, which means that on each node the division between cons space and vector space will have to be fixed)
 
@@ -79,13 +79,13 @@ A cons cell. The tag value of a CONS cell is that unsigned 32 bit integer which,
 
 ### FREE
 
-An unassigned cons cell. The tag value of a FREE cell is that unsigned 32 bit integer which, when considered as an ASCII string, reads 'FREE'. The count of a FREE cell is always zero. The mark of a free cell is always zero. The access control value of a FREE cell is always NIL. The Car of a FREE cell is always NIL (address zero). The Cdr of a FREE cell is a cons-pointer to the next FREE cell (the [[free list]] pointer).
+An unassigned cons cell. The tag value of a FREE cell is that unsigned 32 bit integer which, when considered as an ASCII string, reads 'FREE'. The count of a FREE cell is always zero. The mark of a free cell is always zero. The access control value of a FREE cell is always NIL. The Car of a FREE cell is always NIL (address zero). The Cdr of a FREE cell is a cons-pointer to the next FREE cell (the [free list](free list.html) pointer).
 
 ### INTR
 
 An integer; possibly an integer which isn't a big integer.  The tag value of a INTR cell is that unsigned 32 bit integer which, when considered as an ASCII string, reads 'INTR'. The count of a INTR cell is always non-zero. The mark is up to the garbage collector.
 
-There's fundamentally two ways to do this; one is we store up to 128 bit signed integers in the payload of an INTR cell, and have some other tag for an integer ('[[bignum]]') which overflows 128 bits and must thus be stored in another data structure; or else we treat one bit as a 'bignum' flag. If the bignum flag is clear we treat the remaining 127 bits as an unsigned 127 bit integer; if set, we treat the low 64 bits of the value as a cons pointer to the data structure which represents the bignum.
+There's fundamentally two ways to do this; one is we store up to 128 bit signed integers in the payload of an INTR cell, and have some other tag for an integer ('[bignum](bignum.html)') which overflows 128 bits and must thus be stored in another data structure; or else we treat one bit as a 'bignum' flag. If the bignum flag is clear we treat the remaining 127 bits as an unsigned 127 bit integer; if set, we treat the low 64 bits of the value as a cons pointer to the data structure which represents the bignum.
 
 ### NIL
 
@@ -105,13 +105,13 @@ A real number. The tag value of a REAL cell is that unsigned 32 bit integer whic
 
 A string. The tag value of a STRG cell is that unsigned 32 bit integer which, when considered as an ASCII string, reads 'STRG'. The count of a STRG cell is always non-zero. The mark is up to the garbage collector. The Car of an STRG cell contains a single UTF character. The Cdr of an STRG cell contains a cons-pointer to the remainder of the string, or NIL if this is the end of the string.
 
-Note that in this definition a string is not an atom, which is probably right. But we also at this stage don't have an idea of a [[symbol]]. Very likely we'll end up with the idea that a string which is bound to a value in a namespace is for our purposes a symbol.
+Note that in this definition a string is not an atom, which is probably right. But we also at this stage don't have an idea of a [symbol](Interning-strings.html). Very likely we'll end up with the idea that a string which is bound to a value in a namespace is for our purposes a symbol.
 
 Note, however, that there's a risk that we might have two instances of strings comprising identical characters in identical order, one of which was bound in a namespace and one of which wasn't; string equality is something to worry about.
 
 ### TIME
 
-At nanosecond resolution (if I've done my arithmetic right), 128 bits will represent a span of 1 x 10²² years, or much longer than from the big bang to the [estimated date of fuel exhaustion of all stars](https://en.wikipedia.org/wiki/Timeline_of_the_far_future). So I think I'll arbitrarily set an epoch 14Bn years before the UNIX epoch and go with that. The time will be unsigned - there is no time before the big bang.
+At nanosecond resolution (if I've done my arithmetic right), 128 bits will represent a span of 1 x 10<sup>22</sup> years, or much longer than from the big bang to the [estimated date of fuel exhaustion of all stars](https://en.wikipedia.org/wiki/Timeline_of_the_far_future). So I think I'll arbitrarily set an epoch 14Bn years before the UNIX epoch and go with that. The time will be unsigned - there is no time before the big bang.
 
 ### TRUE
 
@@ -121,7 +121,7 @@ The canonical true value. May not actually exist at all: the cell-pointer whose 
 
 A pointer into vector space. The tag value of a VECP cell is that unsigned 32 bit integer which, when considered as an ASCII string, reads 'VECP'. The count of a VECP cell is always non-zero. The mark is up to the garbage collector. The payload is the a pointer to a vector space object. On systems with an address bus up to 128 bits wide, it's simply the address of the vector; on systems with an address bus wider than 128 bits, it's probably an offset into an indirection table, but that really is a problem for another day.
 
-As an alternate implementation on hardware with a 64 bit address bus, it might be sensible to have the Car of the VECP cell simply the memory address of the vector, and the Cdr a pointer to the next VECP cell, maintained automatically in the same way that a [[free list]] is maintained. This way we automatically hold a list of all live vector space objects, which would help in garbage collecting vector space.
+As an alternate implementation on hardware with a 64 bit address bus, it might be sensible to have the Car of the VECP cell simply the memory address of the vector, and the Cdr a pointer to the next VECP cell, maintained automatically in the same way that a [free list](Free-list.html) is maintained. This way we automatically hold a list of all live vector space objects, which would help in garbage collecting vector space.
 
 Every object in vector space shall have exactly one VECP cell in cons space which refers to it. Every other object which wished to hold a reference to that object shall hold a cons pointer to VECP cell that points to the object. Each object in vector space shall hold a backpointer to the VECP cell which points to it. This means that if vector space needs to be shuffled in order to free memory, for each object which is moved only one pointer need be updated.
 
@@ -136,4 +136,4 @@ I'm not yet certain what the payload of a WRIT cell is; it is implementation dep
 
 ## Cons pages
 
-Cons cells will be initialised in cons pages. A cons page is a fixed size array of cons cells. Each cell is initialised as FREE, and each cell, as it is initialised, is linked onto the front of the system [[free list]]. Cons pages will exist in [[vector space]], and consequently each cons page will have a vector space header.
+Cons cells will be initialised in cons pages. A cons page is a fixed size array of cons cells. Each cell is initialised as FREE, and each cell, as it is initialised, is linked onto the front of the system [free list](Free-list.html). Cons pages will exist in [vector space](Vector-space.html), and consequently each cons page will have a vector space header.

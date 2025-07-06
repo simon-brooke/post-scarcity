@@ -1,6 +1,8 @@
-_I wrote this essay in 2014; it was previously published on my blog, [here](http://blog.journeyman.cc/2014/10/post-scarcity-hardware.html)_
+# Implementing post scarcity hardware
 
-Eight years ago, I wrote an essay which I called [[Post Scarcity Software]]. It's a good essay; there's a little I'd change about it now - I'd talk more about the benefits of immutability - but on the whole it's the nearest thing to a technical manifesto I have. I've been thinking about it a lot the last few weeks. The axiom on which that essay stands is that modern computers - modern hardware - are tremendously more advanced than modern software systems, and would support much better software systems than we yet seem to have the ambition to create.
+_I wrote this essay in 2014; it was previously published on my blog, [here](https://www.journeyman.cc/blog/posts-output/2017-09-19-implementing-postscarcity-hardware/)_
+
+Eight years ago, I wrote an essay which I called [Post Scarcity Software](Post-scarcity-software.html). It's a good essay; there's a little I'd change about it now - I'd talk more about the benefits of immutability - but on the whole it's the nearest thing to a technical manifesto I have. I've been thinking about it a lot the last few weeks. The axiom on which that essay stands is that modern computers - modern hardware - are tremendously more advanced than modern software systems, and would support much better software systems than we yet seem to have the ambition to create.
 
 That's still true, of course. In fact it's more true now than it was then, because although the pace of hardware change is slowing, the pace of software change is still glacial. So nothing I'm thinking of in terms of post-scarcity computing actually needs new hardware.
 
@@ -22,7 +24,7 @@ It turns out that Clojure's default *map* function simply serialises iterations 
 
 Except...
 
-Performance doesn't actually improve very much. Consider this function, which is the core function of the [MicroWorld](http://blog.journeyman.cc/2014/08/modelling-settlement-with-cellular.html) engine:
+Performance doesn't actually improve very much. Consider this function, which is the core function of the [MicroWorld](https://www.journeyman.cc/blog/posts-output/2014-08-26-modelling-settlement-with-a-cellular-automaton/) engine:
 
 <pre>
     (defn map-world

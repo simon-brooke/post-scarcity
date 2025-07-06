@@ -1,6 +1,6 @@
 # Post Scarcity Software Environment: general documentation
 
-Work towards the implementation of a software system like that described in [Post Scarcity Software](http://blog.journeyman.cc/2006/02/post-scarcity-software.html).
+Work towards the implementation of a software system like that described in [Post Scarcity Software](https://www.journeyman.cc/blog/posts-output/2006-02-20-postscarcity-software/).
 
 ## Note on canonicity
 
@@ -26,5 +26,5 @@ When Linus Torvalds sat down in his bedroom to write Linux, he had something usa
 
 ## AWFUL WARNING 2
 
-This project is necessarily experimental and exploratory. I write code, it reveals new problems, I think about them, and I mutate the design. The documentation in this wiki does not always keep up with the developing source code.
+This project is necessarily experimental and exploratory. I write code, it reveals new problems, I think about them, and I mutate the design. This documentation does not always keep up with the developing source code.
 

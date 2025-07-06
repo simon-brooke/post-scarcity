@@ -30,7 +30,7 @@ Past Lisps have implemented stack as lists and as vectors. Both work. My own gue
     | prior frame ptr | 552...615       | cons-pointer to preceding stack frame VECP        |
     +-----------------+-----------------+---------------------------------------------------+
 
-Note that every argument to a Lisp function must be a cons space object passed by reference (i.e., a cons pointer). If the actual argument is actually a [[vector space]] object, then what we pass is a reference to the VECP object which references that vector.
+Note that every argument to a Lisp function must be a [cons space object](Cons-space.html) passed by reference (i.e., a cons pointer). If the actual argument is actually a [vector space](Vector-space.html) object, then what we pass is a reference to the VECP object which references that vector.
 
 I'm not certain we need a prior frame pointer; if we don't, we may not need a VECP pointing to a stack frame, since nothing can point to a stack frame other than the next stack frame(s) up the stack (if we parallelise *map*, *and* and so on) which to implement a multi-thread system we essentially must have, there may  be two or more successor frames to any frame. In fact to use a massively multiprocessor machine efficiently we must normally evaluate each parameter in a separate thread, with only special forms such as *cond* which impose explicit control flow evaluating their clauses serially in a single thread.
 

@@ -2,7 +2,7 @@
 
 **actually, I think this is a bad idea &mdash; or at least needs significantly more thought!**
 
-System-private functions are functions private to the system, which no normal user is entitled to access; these functions normally have an [[access control]] value of NIL.
+System-private functions are functions private to the system, which no normal user is entitled to access; these functions normally have an [access control](Access-control.html) value of NIL.
 
 # (sys-access-control arg)
 

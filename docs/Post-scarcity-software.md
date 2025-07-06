@@ -1,4 +1,6 @@
-_This is the text of my essay Post-scarcity Software, originally published in 2006 on my blog [here](http://blog.journeyman.cc/2006/02/post-scarcity-software.html)._
+# Post Scarcity Software
+
+_This is the text of my essay Post-scarcity Software, originally published in 2006 on my blog [here](https://www.journeyman.cc/blog/posts-output/2006-02-20-postscarcity-software/)._
 
 For years we've said that our computers were Turing equivalent, equivalent to Turing's machine U. That they could compute any function which could be computed. They aren't, of course, and they can't, for one very important reason. U had infinite store, and our machines don't. We have always been store-poor. We've been mill-poor, too: our processors have been slow, running at hundreds, then a few thousands, of cycles per second. We haven't been able to afford the cycles to do any sophisticated munging of our data. What we stored - in the most store intensive format we had - was what we got, and what we delivered to our users. It was a compromise, but a compromise forced on us by the inadequacy of our machines.
 

@@ -1,3 +1,5 @@
+# Hashing structure writ large
+
 In Lisp, there's an expectation that any object may act as a key in a hash table. What that means, in practice, is that if a list
 
 ```lisp

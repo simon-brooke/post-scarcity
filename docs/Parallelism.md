@@ -1,6 +1,6 @@
 # Parallelism
 
-If this system doesn't make reasonably efficient use of massively parallel processors, it's failed. The sketch hardware for which it's designed is [[Post Scarcity Hardware]]; that system probably won't ever exist but systems somewhat like it almost certainly will, because we're up against the physical limits on the performance of a von Neumann machine, and the only way we can increase performance now is by going increasingly parallel.
+If this system doesn't make reasonably efficient use of massively parallel processors, it's failed. The sketch hardware for which it's designed is [Post Scarcity Hardware](Post-scarcity-hardware.html); that system probably won't ever exist but systems somewhat like it almost certainly will, because we're up against the physical limits on the performance of a von Neumann machine, and the only way we can increase performance now is by going increasingly parallel.
 
 So on such a system, every function invocation may normally delegate every argument to a different processor, if there is another processor free (which there normally will be). Only special forms, like *cond*, which implement explicit flow control, should serialise evaluation.
 

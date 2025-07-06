@@ -1,6 +1,6 @@
 # Paths
 
-*See also [[How do we notate paths?]], which in part supercedes this.*
+*See also [How do we notate paths?](How do we notate paths?.html), which in part supercedes this.*
 
 A path is essentially a list of keywords. 
 

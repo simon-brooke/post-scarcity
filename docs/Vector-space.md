@@ -2,7 +2,7 @@
 
 Vector space is what in conventional computer languages is known as 'the heap'. Because objects allocated in vector space are of variable size, vector space will fragment over time. Objects in vector space will become unreferenced, making them available for garbage collection and reallocation; but ultimately you will arrive at the situation where there are a number of small free spaces in vector space but you need a large one. Therefore there must ultimately be a mark-and-sweep garbage collector for vector space.
 
-To facilitate this, reference to every vector space object will be indirected through exactly one VECP object in [[cons space]]. If a live vector space object has to be moved in memory in order to compact the heap and to allocate a new object, only one pointer need be updated. This saves enormously on mark-and-sweep time, at the expense of a small overhead on access to vector space objects.
+To facilitate this, reference to every vector space object will be indirected through exactly one VECP object in [cons space](Cons-space.html). If a live vector space object has to be moved in memory in order to compact the heap and to allocate a new object, only one pointer need be updated. This saves enormously on mark-and-sweep time, at the expense of a small overhead on access to vector space objects.
 
 Every vector space object must have a header, indicating that it is a vector space object and what sort of a vector space object it is. Each vector space object must have a fixed size, which is declared in its header. Beyond the header, the payload of a vector space object is undetermined.
 
@@ -22,11 +22,11 @@ So the header looks like this
     
 ### Tag
 
-The tag will be a 32 bit unsigned integer in the same way and for the same reasons that it is in [[cons space]]: i.e., because it will be alternately readable as a four character ASCII string, which will aid memory debugging.
+The tag will be a 32 bit unsigned integer in the same way and for the same reasons that it is in [cons space](Cons-space.html): i.e., because it will be alternately readable as a four character ASCII string, which will aid memory debugging.
 
 ### Vecp-pointer
 
-The vecp pointer is a back pointer to the VECP object in cons space which points to this vector space object. It is, therefore, obviously, the size of a [[cons pointer]], which is to say 64 bits.
+The vecp pointer is a back pointer to the VECP object in cons space which points to this vector space object. It is, therefore, obviously, the size of a [cons pointer](consspaceobject_8h.html#structcons__pointer), which is to say 64 bits.
 
 ### Size
 
@@ -61,7 +61,7 @@ We definitely need chunks of executable code - compiled functions.
 
 ### HASH
 
-We definitely need hashtables. A hashtable is implemented as a pointer to a hashing function, and an array of N cons-pointers each of which points to an [[assoc list]] acting as a hash bucket. A hashtable is immutable. Any function which 'adds a new key/value pair to' a hashtable in fact returns a new hashtable containing all the key value bindings from the old one, with the new one added. Any function which 'changes a key/value pair' in a hashtable in fact returns a new value with the same bindings of all the keys except the one which has changed as the old one.
+We definitely need hashtables. A hashtable is implemented as a pointer to a hashing function, and an array of N cons-pointers each of which points to an [assoc list](Hybrid-assoc-lists.html) acting as a hash bucket. A hashtable is immutable. Any function which 'adds a new key/value pair to' a hashtable in fact returns a new hashtable containing all the key value bindings from the old one, with the new one added. Any function which 'changes a key/value pair' in a hashtable in fact returns a new value with the same bindings of all the keys except the one which has changed as the old one.
 
 In either case, anything which held a pointer to the old version still sees the old version, which continues to exist until everything which pointed to it has been deallocated. Only things which access the hashtable via a binding in a current namespace will see the new version.
 

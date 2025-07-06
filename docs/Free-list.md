@@ -1,4 +1,5 @@
 
+# Free list
 
 A free list is a list of FREE cells consed together. When a cell is deallocated, it is consed onto the front of the free list, and the system free-list pointer is updated to point to it. A cell is allocated by popping the front cell off the free list.
 

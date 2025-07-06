@@ -1,6 +1,6 @@
 # Core functions
 
-In the specifications that follow, a word in all upper case refers to a tag value, defined on either the [[cons space]] or the [[vector space]] page.
+In the specifications that follow, a word in all upper case refers to a tag value, defined on either the [cons space](Cons-space.html) or the [vector space](Vector-space.html) page.
 
 # (and args...)
 
@@ -16,7 +16,7 @@ Public. Takes an arbitrary number of arguments, which should either all be CONS 
 
 # (assoc key store)
 
-Public. Takes two arguments, a key and a store. The store may either be a CONS forming the head of a list formatted as an [[assoc list]], or else a VECP pointing to a HASH. If the key is readable by the current user, returns the value associated with that key in the store, if it exists and is readable by the current user, else NIL.
+Public. Takes two arguments, a key and a store. The store may either be a CONS forming the head of a list formatted as an [assoc list](Assoc-list.html), or else a VECP pointing to a HASH. If the key is readable by the current user, returns the value associated with that key in the store, if it exists and is readable by the current user, else NIL.
 
 # (car arg)
 
@@ -57,7 +57,7 @@ _Note: I'm not sure what happens if the STRG is already bound in the HASH. A nor
 
 # (lambda args forms...)
 
-Public. Takes an arbitrary number of arguments. Considers the first argument ('args') as a set of formal parameters, and returns a function composed of the forms with those parameters bound. Where I say 'returns a function', this is in initial prototyping probably an interpreted function (i.e. a code tree implemented as an S-expression), but in a usable version will mean a VECP (see [[cons space#VECP]]) pointing to an EXEC (see [[vector space#EXEC]]) vector.
+Public. Takes an arbitrary number of arguments. Considers the first argument ('args') as a set of formal parameters, and returns a function composed of the forms with those parameters bound. Where I say 'returns a function', this is in initial prototyping probably an interpreted function (i.e. a code tree implemented as an S-expression), but in a usable version will mean a VECP (see [cons space](Cons-space.html#VECP)) pointing to an EXEC (see [vector space#EXEC](Vector-space.html#EXEC)) vector.
 
 # (nil? arg)
 
@@ -89,5 +89,5 @@ Public. Takes one argument. If that argument is either an STRG or a READ, parses
 
 # (type arg)
 
-Public. Takes one argument. If that argument is readable by the current user, returns a string interned in the *core.types* namespace representing the tag value of the argument, unless the argument is a VECP in which case the value returned represents the tag value of the [[vector space]] object indicated by the VECP.
+Public. Takes one argument. If that argument is readable by the current user, returns a string interned in the *core.types* namespace representing the tag value of the argument, unless the argument is a VECP in which case the value returned represents the tag value of the [vector space](Vector-space.html) object indicated by the VECP.
 
