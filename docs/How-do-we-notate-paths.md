@@ -4,7 +4,7 @@ In order to make the namespaces thing work, we need a convenient way to notate p
 
 In this discussion, a **namespace** is just a named, mutable hashmap (but not necessarily mutable by all users; indeed namespaces will almost always be mutable only by selected users. I cannot presently see a justified use for a publicly writable namespace). '**Named**', of a hashmap, merely means there is some path from the privileged  root namespace which is the value of `oblist` which leads to that hashmap. A **path** is in principle just a sequence of keys, such that the value of each successive key is bound to a namespace in the namespace bound by its predecessor. The evaluable implementation of paths will be discussed later.
 
-I think also that there must be a privileged **session** namespace, containing information about the current session, which the user can read but not write. 
+I think also that there must be a privileged **session** namespace, containing information about the current session, which the user can read but not write. The session namespace will be indicated by the privileged name '&sect;'. 
 
 ## Security considerations
 
