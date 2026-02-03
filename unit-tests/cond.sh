@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=0
+
 expected='5'
 actual=`echo "(cond ((equal 2 2) 5))" | target/psse | tail -1`
 
@@ -8,7 +10,7 @@ then
   echo "OK"
 else
   echo "Fail: expected '${expected}', got '${actual}'"
-  exit 1
+  result=1
 fi
 
 expected='"should"'
@@ -17,8 +19,9 @@ actual=`echo "(cond ((equal 2 3) \"shouldn't\")(t \"should\"))" | target/psse | 
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
-    exit 0
-else
+ else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
+
+exit ${result}

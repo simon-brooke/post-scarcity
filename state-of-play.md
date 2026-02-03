@@ -1,5 +1,58 @@
 # State of Play
 
+## 20260203
+
+I'm consciously avoiding the bignum issue for now. My current thinking is that if the C code only handles 64 bit integers, and bignums have to be done in Lisp code, that's perfectly fine with me.
+
+### Hashmaps, assoc lists, and generalised key/value stores
+
+I now have the oblist working as a hashmap, and also hybrid assoc lists which incorporate hashmaps working. I don't 100% have consistent methods for reading stores which may be plain old assoc lists, new hybrid assoc lists, or hashmaps working but it isn't far off. This also takes me streets further towards doing hierarchies of hashmaps, allowing my namespace idea to work &mdash; and hybrid assoc lists provide a very sound basis for building environment structures.
+
+Currently all hashmaps are mutable, and my doctrine is that that is fixable when access control lists are actually implemented. 
+
+#### assoc
+
+The function `(assoc store key) => value` should be the standard way of getting a value out of a store.  
+
+#### put!
+
+The function `(put! store key value) => store` should become the standard way of setting a value in a store (of course, if the store is an assoc list or an immutable map, a new store will be returned which holds the additional key/value binding).
+
+### State of unit tests
+
+Currently:
+
+> Tested 45, passed 39, failed 6
+
+But the failures are as follows:
+```
+unit-tests/bignum-add.sh => checking a bignum was created: Fail
+unit-tests/bignum-add.sh => adding 1152921504606846977 to 1: Fail: expected 't', got 'nil'
+unit-tests/bignum-add.sh => adding 1 to 1152921504606846977: Fail: expected 't', got 'nil'
+unit-tests/bignum-add.sh => adding 1152921504606846977 to 1152921504606846977: Fail: expected 't', got 'nil'
+unit-tests/bignum-add.sh => adding 10000000000000000000 to 10000000000000000000: Fail: expected 't', got 'nil'
+unit-tests/bignum-add.sh => adding 1 to 1329227995784915872903807060280344576: Fail: expected 't', got 'nil'
+unit-tests/bignum-add.sh => adding 1 to 3064991081731777716716694054300618367237478244367204352: Fail: expected 't', got 'nil'
+unit-tests/bignum-expt.sh => (expt 2 60): Fail: expected '1152921504606846976', got '1'
+unit-tests/bignum-expt.sh => (expt 2 61): Fail: expected '2305843009213693952', got '2'
+unit-tests/bignum-expt.sh => (expt 2 64): Fail: expected '18446744073709551616', got '16'
+unit-tests/bignum-expt.sh => (expt 2 65): Fail: expected '36893488147419103232', got '32'
+unit-tests/bignum-print.sh => printing 1152921504606846976: Fail: expected '1152921504606846976', got '1'
+unit-tests/bignum-print.sh => printing 1152921504606846977: Fail: expected '1152921504606846977', got '2'
+unit-tests/bignum-print.sh => printing 1329227995784915872903807060280344576: Fail: expected '1329227995784915872903807060280344576', \n           got '1151321504605245376'
+unit-tests/bignum.sh => unit-tests/bignum.sh => Fail: expected '1,152,921,504,606,846,976', got '1'
+unit-tests/bignum-subtract.sh => unit-tests/bignum-subtract.sh => subtracting 1 from 1152921504606846976: Fail: expected '1152921504606846975', got '0'
+unit-tests/bignum-subtract.sh => subtracting 1 from 1152921504606846977: Fail: expected '1152921504606846976', got '1'
+unit-tests/bignum-subtract.sh => subtracting 1 from 1152921504606846978: Fail: expected '1152921504606846977', got '2'
+unit-tests/bignum-subtract.sh => subtracting 1152921504606846977 from 1: Fail: expected '-1152921504606846976', got '1'
+unit-tests/bignum-subtract.sh => subtracting 10000000000000000000 from 20000000000000000000: Fail: expected '10000000000000000000', got '-376293541461622793'
+unit-tests/memory.sh
+```
+
+In other words, all failures are in bignum arithmetic **except** that I still have a major memory leak due to not decrefing somewhere where I ought to.
+
+### Zig
+
 ## 20250704
 
 Right, I'm getting second and subsequent integer cells with negative values, which should not happen. This is probably the cause of (at least some of) the bignum problems. I need to find out why. This is (probably) fixable.

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+return=0
+
 expected='1,152,921,504,606,846,976'
 # 1,152,921,504,606,846,975 is the largest single cell positive integer;
 # consequently 1,152,921,504,606,846,976 is the first two cell positive integer.
@@ -9,6 +11,8 @@ if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
-    echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    echo "$0 => Fail: expected '${expected}', got '${actual}'"
+    return=1
 fi
+
+exit ${return}

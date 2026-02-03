@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=0
+
 #####################################################################
 # Create a path from root using compact path notation
 expected='(-> oblist :users :simon :functions (quote assoc))'
@@ -11,7 +13,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 #####################################################################
@@ -25,7 +27,8 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
+exit ${result}
 

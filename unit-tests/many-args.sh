@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=1
+
 expected="120"
 actual=`echo "(+ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)" | target/psse | tail -1`
 
@@ -8,7 +10,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 # check that all the args are actually being evaluated...
@@ -20,5 +22,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
+
+return ${result}

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+return=0
+
 #####################################################################
 # large number, not actally a bignum
 expected='576460752303423488'
@@ -9,13 +11,13 @@ actual=`echo $output |\
   sed 's/\,//g' |\
   sed 's/[^0-9]*\([0-9]*\).*/\1/'`
 
-echo -n "printing $expected: "
+echo -n "$0 => printing $expected: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -28,13 +30,13 @@ actual=`echo $output |\
   sed 's/\,//g' |\
   sed 's/[^0-9]*\([0-9]*\).*/\1/'`
 
-echo -n "printing $expected: "
+echo -n "$0 => printing $expected: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -47,13 +49,13 @@ actual=`echo $output |\
   sed 's/\,//g' |\
   sed 's/[^0-9]*\([0-9]*\).*/\1/'`
 
-echo -n "printing $expected: "
+echo -n "$0 => printing $expected: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -70,13 +72,13 @@ actual=`echo $output |\
   sed 's/\,//g' |\
   sed 's/[^0-9]*\([0-9]*\).*/\1/'`
 
-echo -n "printing $expected: "
+echo -n "$0 => printing $expected: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', \n           got '${actual}'"
-    exit 1
+    return=1
 fi
 
 exit 0
@@ -90,13 +92,13 @@ actual=`echo $output |\
   sed 's/\,//g' |\
   sed 's/[^0-9]*\([0-9]*\).*/\1/'`
 
-echo -n "printing $expected: "
+echo -n "$0 => printing $expected: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-exit 0
+exit ${return}

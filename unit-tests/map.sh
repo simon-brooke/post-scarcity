@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=0
+
 #####################################################################
 # Create an empty map using map notation
 expected='{}'
@@ -11,7 +13,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 #####################################################################
@@ -25,7 +27,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 #####################################################################
@@ -41,7 +43,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 #####################################################################
@@ -57,7 +59,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 #####################################################################
@@ -71,7 +73,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 
@@ -86,5 +88,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
+
+exit ${result}

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+return=0
+
 #####################################################################
 # subtract a smallnum from a smallnum to produce a smallnum
 # (right on the boundary)
@@ -12,13 +14,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "subtracting $b from $a: "
+echo -n "$0 => subtracting $b from $a: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 echo -n "checking no bignum was created: "
@@ -28,7 +30,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -43,13 +45,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "subtracting $b from $a: "
+echo -n "$0 => subtracting $b from $a: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -63,13 +65,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "subtracting $b from $a: "
+echo -n "$0 => subtracting $b from $a: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -85,13 +87,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "subtracting $b from $a: "
+echo -n "$0 => subtracting $b from $a: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -105,12 +107,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "subtracting $b from $a: "
+echo -n "$0 => subtracting $b from $a: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
+exit ${return}

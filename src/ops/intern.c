@@ -196,7 +196,7 @@ struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
                 assoc = c_cdr( assoc);
             }
         } else if (hashmapp( assoc)) {
-            for (struct cons_pointer keys = hashmap_keys( mapp); !nilp( keys);
+            for (struct cons_pointer keys = hashmap_keys( assoc); !nilp( keys);
                 keys = c_cdr( keys)) {
                 struct cons_pointer key = c_car( keys);
                 hashmap_put( mapp, key, hashmap_get( assoc, key));

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+return=0
+
 #####################################################################
 # last 'smallnum' value:
 # sbcl calculates (expt 2 59) => 576460752303423488
@@ -18,13 +20,13 @@ EOF`
 
 actual=`echo "$output" | tail -1 | sed 's/\,//g'`
 
-echo -n "(expt 2 59): "
+echo -n "$0 => (expt 2 59): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -45,13 +47,13 @@ EOF`
 
 actual=`echo "$output" | tail -1 | sed 's/\,//g'`
 
-echo -n "(expt 2 60): "
+echo -n "$0 => (expt 2 60): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -72,13 +74,13 @@ EOF`
 
 actual=`echo "$output" | tail -1 | sed 's/\,//g'`
 
-echo -n "(expt 2 61): "
+echo -n "$0 => (expt 2 61): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -99,13 +101,13 @@ EOF`
 
 actual=`echo "$output" | tail -1 | sed 's/\,//g'`
 
-echo -n "(expt 2 64): "
+echo -n "$0 => (expt 2 64): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 # sbcl calculates (expt 2 65) => 36893488147419103232
@@ -124,12 +126,13 @@ EOF`
 
 actual=`echo "$output" | tail -1 | sed 's/\,//g'`
 
-echo -n "(expt 2 65): "
+echo -n "$0 => (expt 2 65): "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
-exit 0
+
+exit ${return}

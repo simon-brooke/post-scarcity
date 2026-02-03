@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=0
+
 expected='"god yzal eht revo depmuj xof nworb kciuq ehT"'
 actual=`echo '(reverse "The quick brown fox jumped over the lazy dog")' | target/psse | tail -1`
 
@@ -8,7 +10,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 expected='(1,024 512 256 128 64 32 16 8 4 2)'
@@ -19,7 +21,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
 
 expected='esrever'
@@ -31,6 +33,8 @@ then
     exit 0
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    result=1
 fi
+
+echo ${result}
 

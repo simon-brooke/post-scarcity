@@ -1,5 +1,7 @@
 #!/bin/bash
 
+return=0
+
 #####################################################################
 # add two large numbers, not actally bignums to produce a smallnum
 # (right on the boundary)
@@ -12,13 +14,13 @@ output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
 actual=`echo $output |\
   tail -1`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 echo -n "checking no bignum was created: "
@@ -28,7 +30,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -44,23 +46,23 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-echo -n "checking a bignum was created: "
+echo -n "$0 => checking a bignum was created: "
 grep 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 
@@ -77,28 +79,29 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-echo -n "checking a bignum was created: "
+echo -n "$0 => checking a bignum was created: "
 grep 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 #####################################################################
 # add a smallnum and a bignum to produce a bignum
 # (just over the boundary)
+
 a=1
 b=1152921504606846977
 c=`echo "$a + $b" | bc`
@@ -109,13 +112,13 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 echo -n "checking a bignum was created: "
@@ -125,7 +128,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 
@@ -134,7 +137,7 @@ fi
 
 a=1152921504606846977
 c=`echo "$a + $a" | bc`
-echo -n "adding $a to $a: "
+echo -n "$0 => adding $a to $a: "
 expected='t'
 output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
 
@@ -147,7 +150,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 #####################################################################
@@ -155,7 +158,7 @@ fi
 
 a=1152921504606846977
 c=`echo "$a * 5" | bc`
-echo -n "adding $a, $a $a, $a, $a: "
+echo -n "$0 => adding $a, $a $a, $a, $a: "
 expected='t'
 output=`echo "(= (+ $a $a $a $a $a) $c)" | target/psse -v 2 2>psse.log`
 
@@ -168,7 +171,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
 
@@ -186,23 +189,23 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-echo -n "checking a bignum was created: "
+echo -n "$0 => checking a bignum was created: "
 grep 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 
@@ -219,23 +222,23 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-echo -n "checking a bignum was created: "
+echo -n "$0 => checking a bignum was created: "
 grep 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
 
 
@@ -253,21 +256,23 @@ actual=`echo $output |\
   tail -1 |\
   sed 's/\,//g'`
 
-echo -n "adding $a to $b: "
+echo -n "$0 => adding $a to $b: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=1
 fi
 
-echo -n "checking a bignum was created: "
+echo -n "$0 => checking a bignum was created: "
 grep 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    exit 1
+    return=1
 fi
+
+exit ${return}

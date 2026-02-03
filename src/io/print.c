@@ -102,7 +102,7 @@ void print_map( URL_FILE * output, struct cons_pointer map ) {
             print( output, hashmap_get( map, key ) );
 
             if ( !nilp( c_cdr( ks ) ) ) {
-                url_fputws( L" ", output );
+                url_fputws( L", ", output );
             }
         }
 

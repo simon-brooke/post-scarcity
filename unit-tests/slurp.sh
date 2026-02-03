@@ -11,6 +11,6 @@ then
     rm ${tmp}
     exit 0
 else
-    echo "Fail: expected '$expected', got '$actual'"
+    echo "$0 => Fail: expected '$expected', got '$actual'"
     exit 1
 fi
