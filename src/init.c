@@ -36,7 +36,6 @@
 #include "io/fopen.h"
 #include "time/psse_time.h"
 
-// extern char *optarg; /* defined in unistd.h */
 
 /**
  * Bind this compiled `executable` function, as a Lisp function, to
@@ -160,14 +159,22 @@ int main( int argc, char *argv[] ) {
         print_banner(  );
     }
 
-    debug_print( L"About to initialise cons pages\n", DEBUG_BOOTSTRAP );
-
     initialise_cons_pages(  );
 
-    debug_print( L"Initialised cons pages, about to bind\n", DEBUG_BOOTSTRAP );
+//     TODO: oblist-as-hashmap (which is what we ultimately need) is failing hooribly.
+//     What actually goes wrong is: 
+//     1. the hashmap is created; 
+//     2. everything bound in init seems to get initialised properly;
+//     3. the REPL starts up;
+//     4. Anything typed into the REPL (except ctrl-D) results in immediate segfault.
+//     5. If ctrl-D is the first thing typed into the REPL, shutdown proceeds normally.
+//     Hypothesis: binding stuff into a hashmap oblist either isn't happening or 
+//      is wrking ok, but retrieving from a hashmap oblist is failing.
+    debug_print( L"About to initialise oblist\n", DEBUG_BOOTSTRAP );
 
-//    TODO: oblist-as-hashmap (which is what we ultimately need) is failing hooribly
-//    oblist = inc_ref( make_hashmap( 32, NIL, TRUE ) );
+    oblist = make_hashmap( 32, NIL, TRUE );
+
+    debug_print( L"About to bind\n", DEBUG_BOOTSTRAP );
 
     /*
      * privileged variables (keywords)

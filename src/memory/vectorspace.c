@@ -25,6 +25,7 @@
 #include "memory/hashmap.h"
 #include "memory/stack.h"
 #include "memory/vectorspace.h"
+#include "ops/intern.h"
 
 
 /**

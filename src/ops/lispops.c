@@ -527,7 +527,8 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
             /*
              * \todo
              * the Clojure practice of having a map serve in the function place of
-             * an s-expression is a good one and I should adopt it;
+             * an s-expression is a good one and I should adopt it; 
+             * H'mmm... this is working, but it isn't here. Where is it?
              */
         default:
             result = frame->arg[0];

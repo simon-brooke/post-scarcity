@@ -1,5 +1,3 @@
-(set! list (lambda l l))
-
 (set! symbolp (lambda (x) (equal (type x) "SYMB")))
 
 (set! defun!

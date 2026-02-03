@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <signal.h>
 
 #include "memory/consspaceobject.h"
 #include "debug.h"
@@ -17,11 +18,20 @@
 #include "ops/lispops.h"
 #include "memory/stack.h"
 
+/**
+ * @brief Handle an interrupt signal.
+ * 
+ * @param dummy 
+ */
+void int_handler(int dummy) {
+    wprintf(L"TODO: handle ctrl-C in a more interesting way\n");
+}
 
 /**
  * The read/eval/print loop.
  */
 void repl(  ) {
+    signal(SIGINT, int_handler);
     debug_print( L"Entered repl\n", DEBUG_REPL );
 
     struct cons_pointer env =

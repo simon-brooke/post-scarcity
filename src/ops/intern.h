@@ -22,11 +22,40 @@
 
 extern struct cons_pointer oblist;
 
+uint32_t get_hash( struct cons_pointer ptr );
+
+void free_hashmap( struct cons_pointer ptr );
+
+void dump_map( URL_FILE * output, struct cons_pointer pointer );
+
+struct cons_pointer hashmap_get( struct cons_pointer mapp,
+                                 struct cons_pointer key );
+
+struct cons_pointer hashmap_put( struct cons_pointer mapp,
+                                 struct cons_pointer key,
+                                 struct cons_pointer val );
+                
+struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
+                                     struct cons_pointer assoc );
+
+struct cons_pointer hashmap_keys( struct cons_pointer map );
+
+struct cons_pointer make_hashmap( uint32_t n_buckets,
+                                  struct cons_pointer hash_fn,
+                                  struct cons_pointer write_acl );
+
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store );
 
 struct cons_pointer internedp( struct cons_pointer key,
                                struct cons_pointer environment );
+
+struct cons_pointer hashmap_get( struct cons_pointer mapp,
+                                 struct cons_pointer key );
+
+struct cons_pointer hashmap_put( struct cons_pointer mapp,
+                                 struct cons_pointer key,
+                                 struct cons_pointer val );
 
 struct cons_pointer set( struct cons_pointer key,
                          struct cons_pointer value,

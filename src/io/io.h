@@ -36,5 +36,5 @@ struct cons_pointer
 lisp_slurp( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env );
 
-
+char *lisp_string_to_c_string( struct cons_pointer s );
 #endif
