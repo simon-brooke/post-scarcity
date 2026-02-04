@@ -330,17 +330,20 @@ struct cons_pointer read_number( struct stack_frame *frame,
                     debug_print( L"read_number: ratio slash seen\n",
                                  DEBUG_IO );
                     dividend = result;
-
-                    result = make_integer( 0, NIL );
                 }
                 break;
             case LCOMMA:
                 // silently ignore comma.
                 break;
             default:
-                result = add_integers( multiply_integers( result, base ),
-                                       make_integer( ( int ) c - ( int ) '0',
-                                                     NIL ) );
+            {
+                struct cons_pointer digit = make_integer( ( int ) c - ( int ) '0',
+                                                     NIL );
+                struct cons_pointer new_result = add_integers( multiply_integers( result, base ),
+                                       digit );
+                dec_ref( result);
+                dec_ref( digit);
+                result = new_result;
 
                 debug_printf( DEBUG_IO,
                               L"read_number: added character %c, result now ",
@@ -351,6 +354,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 if ( seen_period ) {
                     places_of_decimals++;
                 }
+            }
         }
     }
 
@@ -360,13 +364,14 @@ struct cons_pointer read_number( struct stack_frame *frame,
     url_ungetwc( c, input );
 
     if ( seen_period ) {
-        debug_print( L"read_number: converting result to real\n", DEBUG_IO );
-        struct cons_pointer div = make_ratio( result,
-                                              make_integer( powl
-                                                            ( to_long_double
-                                                              ( base ),
+        struct cons_pointer divisor = make_integer( powl( to_long_double( base ),
                                                               places_of_decimals ),
-                                                            NIL ) );
+                                                            NIL );
+        debug_print( L"read_number: converting result to real\n", DEBUG_IO );
+
+        struct cons_pointer div = make_ratio( result,
+                                              divisor);
+        dec_ref( divisor);
         inc_ref( div );
 
         result = make_real( to_long_double( div ) );
@@ -378,14 +383,18 @@ struct cons_pointer read_number( struct stack_frame *frame,
     }
 
     if ( neg ) {
+        struct cons_pointer negt = negative( result );
         debug_print( L"read_number: converting result to negative\n",
                      DEBUG_IO );
 
-        result = negative( result );
+        dec_ref( result);
+        result = negt;
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
+
+    dec_ref( base);
 
     return result;
 }

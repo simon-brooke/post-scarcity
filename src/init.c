@@ -28,6 +28,7 @@
 #include "memory/hashmap.h"
 #include "ops/intern.h"
 #include "io/io.h"
+#include "io/fopen.h"
 #include "ops/lispops.h"
 #include "ops/meta.h"
 #include "arith/peano.h"
@@ -124,6 +125,7 @@ int main( int argc, char *argv[] ) {
     int option;
     bool dump_at_end = false;
     bool show_prompt = false;
+    char * infilename = NULL;
 
     setlocale( LC_ALL, "" );
     if ( io_init(  ) != 0 ) {
@@ -131,7 +133,7 @@ int main( int argc, char *argv[] ) {
         exit( 1 );
     }
 
-    while ( ( option = getopt( argc, argv, "phdv:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "phdv:i:" ) ) != -1 ) {
         switch ( option ) {
             case 'd':
                 dump_at_end = true;
@@ -140,6 +142,9 @@ int main( int argc, char *argv[] ) {
                 print_banner(  );
                 print_options( stdout );
                 exit( 0 );
+                break;
+            case 'i' :
+                infilename = optarg;
                 break;
             case 'p':
                 show_prompt = true;
@@ -191,8 +196,12 @@ int main( int argc, char *argv[] ) {
     fwide( stdout, 1 );
     fwide( stderr, 1 );
     fwide( sink->handle.file, 1 );
-    bind_value( L"*in*", make_read_stream( file_to_url_file( stdin ),
-                                           make_cons( make_cons
+
+    FILE *infile = infilename == NULL ? stdin : fopen( infilename, "r");
+
+
+    bind_value( L"*in*", make_read_stream(  file_to_url_file(infile),
+                                            make_cons( make_cons
                                                       ( c_string_to_lisp_keyword
                                                         ( L"url" ),
                                                         c_string_to_lisp_string

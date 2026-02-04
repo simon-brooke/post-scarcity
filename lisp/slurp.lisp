@@ -1,1 +1,1 @@
-(slurp (set! f (open "http://www.journeyman.cc/")))
+(slurp (open "http://www.journeyman.cc/"))

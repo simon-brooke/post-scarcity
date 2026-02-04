@@ -1,0 +1,28 @@
+
+nil
+()
+(quote ())
+(list)
+(list )
+(list 1)
+(list 1 1)
+(list 1 1 1)
+(list 1 2 3)
+(+)
+(+ 1)
+(+ 1 1)
+(+ 1 1 1)
+(+ 1 2 3)
+(list 'a 'a 'a)
+(list 'a 'b 'c)
+(list :a :b :c)
+(list :aa :bb :cc)
+(list :aaa :bbb :ccc)
+(list :alpha :bravo :charlie)
+{}
+{:z 0}
+{:zero 0}
+{:z 0 :o 1}
+{:zero 0 :one 1}
+{:z 0 :o 1 :t 2}
+{:zero 0 :one 1 :two 2 :three 3 :four 4 :five five :six 6 :seven 7 :eight 8 :nine 9}

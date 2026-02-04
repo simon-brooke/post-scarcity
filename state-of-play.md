@@ -1,5 +1,162 @@
 # State of Play
 
+## 20260204
+
+### Testing what is leaking memory
+
+#### Analysis
+
+If you just start up and immediately abort the current build of psse, you get:
+
+> Allocation summary: allocated 19986; deallocated 245; not deallocated 19741.
+
+Allocation summaries from the current unit tests give the following ranges of values:
+
+|                 | Min   | Max   |      |
+| --------------- | ----- | ----- | ---- |
+| Allocated       | 19991 | 39009 |      |
+| Deallocated     |   238 |  1952 |      |
+| Not deallocated | 19741 | 37057 |      |
+
+The numbers go up broadly in sinc with one another &mdash; that is to say, broadly, as the number allocated rises, so do both the numbers deallocated and the numbers not deallocated. But not exactly.
+
+#### Strategy: what doesn't get cleaned up?
+
+Write a test wrapper which reads a file of forms, one per line, from standard input, and passes each in turn to a fresh invocation of psse, reporting the form and the allocation summary.
+
+```bash
+#1/bin/bash
+
+while IFS= read -r form; do
+    allocation=`echo ${form} | ../../target/psse 2>&1 | grep Allocation`
+    echo "* ${allocation}: ${form}"
+done
+```
+
+So, from this:
+
+* Allocation summary: allocated 19986; deallocated 245; not deallocated 19741.: 
+* Allocation summary: allocated 19990; deallocated 249; not deallocated 19741.: ()
+* Allocation summary: allocated 20019; deallocated 253; not deallocated 19766.: nil
+
+Allocating an empty list allocates four additional cells, all of which are deallocated. Allocating 'nil' allocates a further **29** cells, 25 of which are not deallocated. WTF?
+
+Following further work I have this, showing the difference added to the base case of cells allocated, cells deallocated, and, most critically, cells not deallocated.
+
+From this we see that reading and printing `nil` allocates an additional 33 cells, of which eight are not cleaned up. That's startling, and worrying.
+
+But the next row shows us that reading and printing an empty list costs only four cells, each of which is cleaned up. Further down the table we see that an empty map is also correctly cleaned up. Where we're leaking memory is in reading (or printing, although I doubt this) symbols, either atoms, numbers, or keywords (I haven't yet tried strings, but I expect they're similar.)
+
+| **Case**                          | **Delta Allocated** | **Delta Deallocated** | **Delta Not Deallocated** |
+| --------------------------------- | ------------------- | --------------------- | ------------------------- |
+| **Basecase**                      | 0                   | 0                     | 0                         |
+| **nil**                           | 33                  | 8                     | 25                        |
+| **()**                            | 4                   | 4                     | 0                         |
+| **(quote ())**                    | 39                  | 2                     | 37                        |
+| **(list )**                       | 37                  | 12                    | 25                        |
+| **(list 1)**                      | 47                  | 14                    | 33                        |
+| **(list 1 1)**                    | 57                  | 16                    | 41                        |
+| **(list 1 1 1)**                  | 67                  | 18                    | 49                        |
+| **(list 1 2 3)**                  | 67                  | 18                    | 49                        |
+| **(+)**                           | 36                  | 10                    | 26                        |
+| **(+ 1)**                         | 44                  | 12                    | 32                        |
+| **(+ 1 1)**                       | 53                  | 14                    | 39                        |
+| **(+ 1 1 1)**                     | 62                  | 16                    | 46                        |
+| **(+ 1 2 3)**                     | 62                  | 16                    | 46                        |
+| **(list 'a 'a 'a)**               | 151                 | 33                    | 118                       |
+| **(list 'a 'b 'c)**               | 151                 | 33                    | 118                       |
+| **(list :a :b :c)**               | 121                 | 15                    | 106                       |
+| **(list :alpha :bravo :charlie)** | 485                 | 15                    | 470                       |
+| **{}**                            | 6                   | 6                     | 0                         |
+| **{:z 0}**                        | 43                  | 10                    | 33                        |
+| **{:zero 0}**                     | 121                 | 10                    | 111                       |
+| **{:z 0 :o 1}**                   | 80                  | 11                    | 69                        |
+| **{:zero 0 :one 1}**              | 210                 | 14                    | 196                       |
+| **{:z 0 :o 1 :t 2}**              | 117                 | 12                    | 105                       |
+
+Looking at the entries, we see that
+
+1. each number read costs ten allocations, of which only two are successfully deallocated;
+2. the symbol `list` costs 33 cells, of which 25 are not deallocated, whereas the symbol `+` costs only one cell fewer, and an additional cell is not deallocated. So it doesn't seem that cell allocation scales with the length of the symbol;
+3. Keyword allocation does scale with the length of the keyword, apparently, since `(list :a :b :c)` allocates 121 and deallocates 15, while `(list :alpha :bravo :charlie)` allocates 485 and deallocates the same 15;
+4. The fact that both those two deallocate 15, and a addition of three numbers `(+ 1 2 3)` or `(+ 1 1 1)` deallocates 16 suggest to me that the list structure is being fully reclaimed but atoms are not being. 
+5. The atom `'a` costs more to read than the keyword `:a` because the reader macro is expanding `'a` to `(quote a)` behind the scenes.
+
+### The integer allocation bug
+
+Looking at what happens when we read a single digit  number, we get the following:
+
+```
+2
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 507 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 507 count 0
+                Integer cell: value 0, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 508 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 508 count 0
+                Integer cell: value 10, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 509 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 509 count 0
+                Integer cell: value 2, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 510 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 510 count 0
+                Integer cell: value 0, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 506 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 506 count 0
+                Integer cell: value 0, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 505 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 505 count 0
+                Integer cell: value 0, count 0
+Entering make_integer
+Allocated cell of type 'INTR' at 19, 504 
+make_integer: returning
+        INTR (1381256777) at page 19, offset 504 count 0
+                Integer cell: value 0, count 0
+
+Allocated cell of type 'STRG' at 19, 503 
+Freeing cell    STRG (1196577875) at page 19, offset 503 count 0
+                String cell: character '2' (50) with hash 0; next at page 0 offset 0, count 0
+                 value: "2"
+Freeing cell    INTR (1381256777) at page 19, offset 504 count 0
+                Integer cell: value 2, count 0
+2
+Allocated cell of type 'SYMB' at 19, 504 
+Allocated cell of type 'SYMB' at 19, 503 
+Allocated cell of type 'SYMB' at 19, 502 
+Allocated cell of type 'SYMB' at 19, 501 
+Freeing cell    SYMB (1112365395) at page 19, offset 501 count 0
+                Symbol cell: character '*' (42) with hash 485100; next at page 19 offset 502, count 0
+                 value: *in*
+Freeing cell    SYMB (1112365395) at page 19, offset 502 count 0
+                Symbol cell: character 'i' (105) with hash 11550; next at page 19 offset 503, count 0
+                 value: in*
+Freeing cell    SYMB (1112365395) at page 19, offset 503 count 0
+                Symbol cell: character 'n' (110) with hash 110; next at page 19 offset 504, count 0
+                 value: n*
+Freeing cell    SYMB (1112365395) at page 19, offset 504 count 0
+                Symbol cell: character '*' (42) with hash 0; next at page 0 offset 0, count 0
+                 value: *
+```
+
+Many things are worrying here.
+
+1. The only thing being freed here is the symbol to which the read stream is bound &mdash; and I didn't see where that got allocated, but we shouldn't be allocating and tearing down a symbol for every read! This implies that when I create a string with `c_string_to_lisp_string`, I need to make damn sure that that string is deallocated as soon as I'm done with it &mdash; and wherever I'm dealing with symbols which will be referred to repeatedly in `C` code, I need either
+   1.  to bind a global on the C side of the world, which will become messy;
+   2. or else write a hash function which returns, for a `C` string, the same value that the standard hashing function will return for the lexically equivalent `Lisp` string, so that I can search hashmap structures from C without having to allocate and deallocate a fresh copy of the `Lisp` string;
+   3. In reading numbers, I'm generating a fresh instance of `Lisp zero` and `Lisp ten`, each time `read_integer` is called, and I'm not deallocating them.
+   4. I am correctly deallocating the number I did read, though!
+
 ## 20260203
 
 I'm consciously avoiding the bignum issue for now. My current thinking is that if the C code only handles 64 bit integers, and bignums have to be done in Lisp code, that's perfectly fine with me.
@@ -52,6 +209,8 @@ unit-tests/memory.sh
 In other words, all failures are in bignum arithmetic **except** that I still have a major memory leak due to not decrefing somewhere where I ought to.
 
 ### Zig
+
+I've also experimented with autotranslating my C into Zig, but this failed. Although I don't think C is the right language for implementing my base Lisp in, it's what I've got; and until I can get some form of autotranslate to bootstrap me into some more modern systems language, I think I need to stick with it.
 
 ## 20250704
 
