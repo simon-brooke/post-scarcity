@@ -14,7 +14,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define replace_integer_i(p,i) {struct cons_pointer __p = acquire_integer(i,NIL); release_integer(p); p = __p;}
+#define replace_integer_p(p,q) {struct cons_pointer __p = p; release_integer( p);  p = q;}
+
 struct cons_pointer make_integer( int64_t value, struct cons_pointer more );
+
+struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more );
+
+void release_integer( struct cons_pointer p);
 
 struct cons_pointer add_integers( struct cons_pointer a,
                                   struct cons_pointer b );

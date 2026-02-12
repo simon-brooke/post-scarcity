@@ -7,10 +7,11 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "consspaceobject.h"
 
 #ifndef PEANO_H
 #define PEANO_H
+
+#include "memory/consspaceobject.h"
 
 /**
  * The maximum value we will allow in an integer cell: one less than 2^60:

@@ -187,6 +187,8 @@ void free_cell( struct cons_pointer pointer ) {
                 case VECTORPOINTTV:
                     free_vso( pointer );
                     break;
+                default:
+                    fprintf( stderr, "WARNING: Freeing object of type %s!", (char *) &(cell->tag.bytes));
             }
 
             strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
@@ -231,7 +233,7 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
 
             cell->tag.value = tag;
 
-            cell->count = 0;
+            cell->count = 1;
             cell->payload.cons.car = NIL;
             cell->payload.cons.cdr = NIL;
 

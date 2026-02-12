@@ -28,11 +28,12 @@
 
 #include <curl/curl.h>
 
-#include "memory/conspage.h"
-#include "memory/consspaceobject.h"
+#include "arith/integer.h"
 #include "debug.h"
 #include "io/fopen.h"
-#include "arith/integer.h"
+#include "io/io.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "ops/intern.h"
 #include "ops/lispops.h"
 #include "utils.h"
@@ -43,6 +44,16 @@
  * user, or else we will need to not share at least cookies and ssl sessions.
  */
 CURLSH *io_share;
+
+/**
+ * @brief bound to the Lisp string representing C_IO_IN in initialisation.
+ */
+struct cons_pointer lisp_io_in = NIL;
+/**
+ * @brief bound to the Lisp string representing C_IO_OUT in initialisation.
+ */
+struct cons_pointer lisp_io_out = NIL;
+
 
 /**
  * Allow a one-character unget facility. This may not be enough - we may need
@@ -400,7 +411,7 @@ void collect_meta( struct cons_pointer stream, char *url ) {
 struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
     struct cons_pointer stream_name =
-        c_string_to_lisp_symbol( inputp ? L"*in*" : L"*out*" );
+         inputp ? lisp_io_in : lisp_io_out;
 
     inc_ref( stream_name );
 

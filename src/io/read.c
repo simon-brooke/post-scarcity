@@ -291,10 +291,10 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
 
-    struct cons_pointer result = make_integer( 0, NIL );
+    struct cons_pointer result = acquire_integer( 0, NIL );
     /* \todo we really need to be getting `base` from a privileged Lisp name -
      * and it should be the same privileged name we use when writing numbers */
-    struct cons_pointer base = make_integer( 10, NIL );
+    struct cons_pointer base = acquire_integer( 10, NIL );
     struct cons_pointer dividend = NIL;
     int places_of_decimals = 0;
     wint_t c;
@@ -330,20 +330,20 @@ struct cons_pointer read_number( struct stack_frame *frame,
                     debug_print( L"read_number: ratio slash seen\n",
                                  DEBUG_IO );
                     dividend = result;
+
+                    result = acquire_integer( 0, NIL );
+                    // If I do replace_integer_p here instead of acquire_integer, 
+                    // and thus reclaim the garbage, I get a regression. Dom't yet
+                    // know why.    
                 }
                 break;
             case LCOMMA:
                 // silently ignore comma.
                 break;
             default:
-            {
-                struct cons_pointer digit = make_integer( ( int ) c - ( int ) '0',
-                                                     NIL );
-                struct cons_pointer new_result = add_integers( multiply_integers( result, base ),
-                                       digit );
-                dec_ref( result);
-                dec_ref( digit);
-                result = new_result;
+                result = add_integers( multiply_integers( result, base ),
+                                       acquire_integer( ( int ) c - ( int ) '0',
+                                                     NIL ) );
 
                 debug_printf( DEBUG_IO,
                               L"read_number: added character %c, result now ",
@@ -354,7 +354,6 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 if ( seen_period ) {
                     places_of_decimals++;
                 }
-            }
         }
     }
 
@@ -364,14 +363,13 @@ struct cons_pointer read_number( struct stack_frame *frame,
     url_ungetwc( c, input );
 
     if ( seen_period ) {
-        struct cons_pointer divisor = make_integer( powl( to_long_double( base ),
-                                                              places_of_decimals ),
-                                                            NIL );
         debug_print( L"read_number: converting result to real\n", DEBUG_IO );
-
         struct cons_pointer div = make_ratio( result,
-                                              divisor);
-        dec_ref( divisor);
+                                              acquire_integer( powl
+                                                            ( to_long_double
+                                                              ( base ),
+                                                              places_of_decimals ),
+                                                            NIL ) );
         inc_ref( div );
 
         result = make_real( to_long_double( div ) );
@@ -383,18 +381,14 @@ struct cons_pointer read_number( struct stack_frame *frame,
     }
 
     if ( neg ) {
-        struct cons_pointer negt = negative( result );
         debug_print( L"read_number: converting result to negative\n",
                      DEBUG_IO );
 
-        dec_ref( result);
-        result = negt;
+        result = negative( result );
     }
 
     debug_print( L"read_number returning\n", DEBUG_IO );
     debug_dump_object( result, DEBUG_IO );
-
-    dec_ref( base);
 
     return result;
 }

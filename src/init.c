@@ -78,13 +78,8 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
 /**
  * Bind this `value` to this `name` in the `oblist`.
  */
-void bind_value( wchar_t *name, struct cons_pointer value ) {
-    struct cons_pointer n = c_string_to_lisp_symbol( name );
-    inc_ref( n );
-
-    deep_bind( n, value );
-
-    dec_ref( n );
+struct cons_pointer bind_value( wchar_t *name, struct cons_pointer value ) {
+    return deep_bind( c_string_to_lisp_symbol( name ), value );
 }
 
 void print_banner(  ) {
@@ -200,14 +195,14 @@ int main( int argc, char *argv[] ) {
     FILE *infile = infilename == NULL ? stdin : fopen( infilename, "r");
 
 
-    bind_value( L"*in*", make_read_stream(  file_to_url_file(infile),
-                                            make_cons( make_cons
-                                                      ( c_string_to_lisp_keyword
-                                                        ( L"url" ),
-                                                        c_string_to_lisp_string
-                                                        ( L"system:standard input" ) ),
-                                                      NIL ) ) );
-    bind_value( L"*out*",
+    lisp_io_in = bind_value( C_IO_IN, make_read_stream(  file_to_url_file(infile),
+                                    make_cons( make_cons
+                                                ( c_string_to_lisp_keyword
+                                                ( L"url" ),
+                                                c_string_to_lisp_string
+                                                ( L"system:standard input" ) ),
+                                                NIL ) ) );
+    lisp_io_out = bind_value( C_IO_OUT,
                 make_write_stream( file_to_url_file( stdout ),
                                    make_cons( make_cons
                                               ( c_string_to_lisp_keyword

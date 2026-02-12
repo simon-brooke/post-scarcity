@@ -61,11 +61,11 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
 
             if ( gcd > 1 ) {
                 if ( drrv / gcd == 1 ) {
-                    result = make_integer( ddrv / gcd, NIL );
+                    result = acquire_integer( ddrv / gcd, NIL );
                 } else {
                     result =
-                        make_ratio( make_integer( ddrv / gcd, NIL ),
-                                    make_integer( drrv / gcd, NIL ) );
+                        make_ratio( acquire_integer( ddrv / gcd, NIL ),
+                                    acquire_integer( drrv / gcd, NIL ) );
                 }
             }
         }
@@ -110,23 +110,24 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
                       m1, m2 );
 
         if ( dr1v == dr2v ) {
-            r = make_ratio( make_integer( dd1v + dd2v, NIL ),
+            r = make_ratio( acquire_integer( dd1v + dd2v, NIL ),
                             cell1.payload.ratio.divisor );
         } else {
-            struct cons_pointer dd1vm = make_integer( dd1v * m1, NIL ),
-                dr1vm = make_integer( dr1v * m1, NIL ),
-                dd2vm = make_integer( dd2v * m2, NIL ),
-                dr2vm = make_integer( dr2v * m2, NIL ),
+            struct cons_pointer dd1vm = acquire_integer( dd1v * m1, NIL ),
+                dr1vm = acquire_integer( dr1v * m1, NIL ),
+                dd2vm = acquire_integer( dd2v * m2, NIL ),
+                dr2vm = acquire_integer( dr2v * m2, NIL ),
                 r1 = make_ratio( dd1vm, dr1vm ),
                 r2 = make_ratio( dd2vm, dr2vm );
 
             r = add_ratio_ratio( r1, r2 );
 
+            if (!eq( r, r1)) { dec_ref( r1);}
+            if (!eq( r, r2)) { dec_ref( r2);}
+
             /* because the references on dd1vm, dr1vm, dd2vm and dr2vm were
              * never incremented except when making r1 and r2, decrementing
              * r1 and r2 should be enought to garbage collect them. */
-            dec_ref( r1 );
-            dec_ref( r2 );
         }
 
         result = simplify_ratio( r );
@@ -162,12 +163,12 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
         // TODO: not longer works
-        struct cons_pointer one = make_integer( 1, NIL ),
+        struct cons_pointer one = acquire_integer( 1, NIL ),
             ratio = make_ratio( intarg, one );
 
         result = add_ratio_ratio( ratio, ratarg );
 
-        dec_ref( one );
+        release_integer( one );
         dec_ref( ratio );
     } else {
         result =
@@ -231,10 +232,14 @@ struct cons_pointer multiply_ratio_ratio( struct
             pointer2cell( cell2.payload.ratio.divisor ).payload.integer.value,
             ddrv = dd1v * dd2v, drrv = dr1v * dr2v;
 
+        struct cons_pointer dividend = acquire_integer( ddrv, NIL );
+        struct cons_pointer divisor = acquire_integer( drrv, NIL );
         struct cons_pointer unsimplified =
-            make_ratio( make_integer( ddrv, NIL ),
-                        make_integer( drrv, NIL ) );
+            make_ratio( dividend, divisor);
         result = simplify_ratio( unsimplified );
+
+        release_integer( dividend);
+        release_integer( divisor);
 
         if ( !eq( unsimplified, result ) ) {
             dec_ref( unsimplified );
@@ -261,12 +266,11 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer intarg,
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
         // TODO: no longer works; fix
-        struct cons_pointer one = make_integer( 1, NIL ),
+        struct cons_pointer one = acquire_integer( 1, NIL ),
             ratio = make_ratio( intarg, one );
         result = multiply_ratio_ratio( ratio, ratarg );
 
-        dec_ref( one );
-        dec_ref( ratio );
+        release_integer( one );
     } else {
         result =
             throw_exception( c_string_to_lisp_string

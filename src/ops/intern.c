@@ -424,9 +424,8 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
 }
 
 /**
- * Binds this key to this value in the global oblist, but doesn't affect the
- * current environment. May not be useful except in bootstrapping (and even
- * there it may not be especially useful).
+ * @brief Binds this key to this value in the global oblist.
+
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
@@ -448,10 +447,10 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     }
 
     debug_print( L"deep_bind returning ", DEBUG_BIND );
-    debug_print_object( oblist, DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
     debug_println( DEBUG_BIND );
 
-    return oblist;
+    return key;
 }
 
 /**

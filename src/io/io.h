@@ -11,11 +11,17 @@
 #ifndef __psse_io_h
 #define __psse_io_h
 #include <curl/curl.h>
-#include "consspaceobject.h"
+#include "memory/consspaceobject.h"
 
 extern CURLSH *io_share;
 
 int io_init(  );
+
+#define C_IO_IN L"*in*"
+#define C_IO_OUT L"*out*"
+
+extern struct cons_pointer lisp_io_in;
+extern struct cons_pointer lisp_io_out;
 
 URL_FILE *file_to_url_file( FILE * f );
 wint_t url_fgetwc( URL_FILE * input );
