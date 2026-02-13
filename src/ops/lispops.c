@@ -38,6 +38,13 @@
 #include "memory/stack.h"
 #include "memory/vectorspace.h"
 
+/**
+ * @brief the name of the symbol to which the prompt is bound;
+ * 
+ * Set in init to `*prompt*`
+ */
+struct cons_pointer prompt_name;
+
 /*
  * also to create in this section:
  * struct cons_pointer lisp_let( struct cons_pointer args, struct cons_pointer env,
@@ -45,7 +52,6 @@
  *
  * and others I haven't thought of yet.
  */
-
 
 /**
  * Useful building block; evaluate this single form in the context of this
@@ -1263,7 +1269,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
-    struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
+//    struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
     
@@ -1558,43 +1564,35 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
 
 }
 
-// /**
-//  * Function; print the internal representation of the object indicated by `frame->arg[0]` to the
-//  * (optional, defaults to the value of `*out*` in the environment) stream indicated by `frame->arg[1]`.
-//  *
-//  * * (inspect expression)
-//  * * (inspect expression <write-stream>)
-//  *
-//  * @param frame my stack frame.
-//  * @param frame_pointer a pointer to my stack_frame.
-//  * @param env the environment.
-//  * @return the value of the first argument - `expression`.
-//  */
-// struct cons_pointer lisp_inspect( struct stack_frame *frame,
-//                                   struct cons_pointer frame_pointer,
-//                                   struct cons_pointer env ) {
-//     debug_print( L"Entering print\n", DEBUG_IO );
-//     URL_FILE *output;
-//     struct cons_pointer out_stream = writep( frame->arg[1] ) ?
-//         frame->arg[1] : get_default_stream( false, env );
+// struct cons_pointer c_concat( struct cons_pointer a, struct cons_pointer b) {
+//     struct cons_pointer result = b;
 
-//     if ( writep( out_stream ) ) {
-//         debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
-//         debug_dump_object( out_stream, DEBUG_IO );
-//         output = pointer2cell( out_stream ).payload.stream.stream;
-//         inc_ref( out_stream );
+//     if ( nilp( b.tag.value)) {
+//         result = make_cons( a, b);
 //     } else {
-//         output = file_to_url_file( stdout );
+//         if ( ! nilp( a)) {
+//             if (a.tag.value == b.tag.value) {
+
+//                 struct cons_pointer tail = c_concat( c_cdr( a), b);
+
+//                 switch ( a.tag.value) {
+//                     case CONSTV:
+//                         result = make_cons( c_car( a), tail);
+//                         break;
+//                     case KEYTV:
+//                     case STRINGTV:
+//                     case SYMBOLTV:
+//                         result = make_string_like_thing()
+
+//                 }
+
+//             } else {
+//                 // throw an exception
+//             }
+//         }
 //     }
+    
 
-//     dump_object( output, frame->arg[0] );
-//     url_fputws( L"\n", output );
 
-//     if ( writep( out_stream ) ) {
-//         dec_ref( out_stream );
-//     } else {
-//         free( output );
-//     }
-
-//     return frame->arg[0];
+//     return result;
 // }

@@ -201,7 +201,6 @@ struct cons_pointer make_exception( struct cons_pointer message,
   struct cons_pointer pointer = allocate_cell( EXCEPTIONTV );
   struct cons_space_object *cell = &pointer2cell( pointer );
 
-  inc_ref( message );
   inc_ref( frame_pointer );
   cell->payload.exception.payload = message;
   cell->payload.exception.frame = frame_pointer;
@@ -237,9 +236,6 @@ struct cons_pointer make_lambda( struct cons_pointer args,
   struct cons_pointer pointer = allocate_cell( LAMBDATV );
   struct cons_space_object *cell = &pointer2cell( pointer );
 
-  inc_ref( pointer ); /* this is a hack; I don't know why it's necessary to do
-                         this, but if I don't the cell gets freed */
-
   inc_ref( args );
   inc_ref( body );
   cell->payload.lambda.args = args;
@@ -255,9 +251,6 @@ struct cons_pointer make_lambda( struct cons_pointer args,
 struct cons_pointer make_nlambda( struct cons_pointer args,
                                   struct cons_pointer body ) {
   struct cons_pointer pointer = allocate_cell( NLAMBDATV );
-
-  inc_ref( pointer ); /* this is a hack; I don't know why it's necessary to do
-                         this, but if I don't the cell gets freed */
 
   struct cons_space_object *cell = &pointer2cell( pointer );
   inc_ref( args );
@@ -312,7 +305,6 @@ struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
     pointer = allocate_cell( tag );
     struct cons_space_object *cell = &pointer2cell( pointer );
 
-    inc_ref( tail );
     cell->payload.string.character = c;
     cell->payload.string.cdr.page = tail.page;
     /* \todo There's a problem here. Sometimes the offsets on

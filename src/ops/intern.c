@@ -292,7 +292,7 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         //     if ( equal( key, entry.payload.cons.car ) ) {
         //         result = entry.payload.cons.car;
         //     }
-        if (!nilp( c_assoc( store, key))) {
+        if (!nilp( c_assoc( key, store))) {
             result = key;
         }
     } else {
@@ -340,18 +340,23 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                         result = hashmap_get( entry_ptr, key );
                         break;
                     default:
-                        throw_exception( c_string_to_lisp_string
-                                         ( L"Store entry is of unknown type" ),
-                                         NIL );
+                        throw_exception( c_append(
+                            c_string_to_lisp_string( L"Store entry is of unknown type: " ),
+                            c_type( entry_ptr)), NIL);
                 }
             }
         }
     } else if ( hashmapp( store ) ) {
         result = hashmap_get( store, key );
     } else if ( !nilp( store ) ) {
+        debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
+        debug_print_object( c_type( store), DEBUG_BIND );
+        debug_print( L"`\n", DEBUG_BIND );
         result =
-            throw_exception( c_string_to_lisp_string
-                             ( L"Store is of unknown type" ), NIL );
+            throw_exception( 
+                c_append( 
+                    c_string_to_lisp_string( L"Store is of unknown type: " ),
+                    c_type( store)), NIL );
     }
 
     debug_print( L"c_assoc returning ", DEBUG_BIND );

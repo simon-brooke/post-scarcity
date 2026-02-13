@@ -37,6 +37,34 @@
 #include "io/fopen.h"
 #include "time/psse_time.h"
 
+/**
+ * @brief If `pointer` is an exception, display that exception to stderr, 
+ * decrement that exception, and return NIL; else return the pointer.
+ * 
+ * @param pointer a cons pointer.
+ * @param location_descriptor a description of where the pointer was caught.
+ * @return struct cons_pointer 
+ */
+struct cons_pointer check_exception( struct cons_pointer pointer, char * location_descriptor) {
+    struct cons_pointer result = NIL;
+
+    struct cons_space_object * object = &pointer2cell( pointer);
+
+    if ( exceptionp( pointer)) {
+        fprintf( stderr, "ERROR: Exception at %s: ", location_descriptor);
+        URL_FILE *ustderr = file_to_url_file( stderr );
+        fwide( stderr, 1 );
+        print( ustderr, object->payload.exception.payload );
+        free( ustderr );
+
+        dec_ref( pointer);
+    } else {
+        result = pointer;
+    }
+
+    return result;
+}
+
 
 /**
  * Bind this compiled `executable` function, as a Lisp function, to
@@ -55,7 +83,8 @@ void bind_function( wchar_t *name, struct cons_pointer ( *executable )
                                          n ),
                               NIL ) );
 
-    deep_bind( n, make_function( meta, executable ) );
+    check_exception( deep_bind( n, make_function( meta, executable ) ),
+                    "bind_function");
 }
 
 /**
@@ -72,14 +101,17 @@ void bind_special( wchar_t *name, struct cons_pointer ( *executable )
                                          n ),
                               NIL ) );
 
-    deep_bind( n, make_special( meta, executable ) );
+    check_exception(deep_bind( n, make_special( meta, executable ) ),
+                    "bind_special");
 }
 
 /**
  * Bind this `value` to this `name` in the `oblist`.
  */
 struct cons_pointer bind_value( wchar_t *name, struct cons_pointer value ) {
-    return deep_bind( c_string_to_lisp_symbol( name ), value );
+    return check_exception( 
+        deep_bind( c_string_to_lisp_symbol( name ), value ),
+            "bind_value");
 }
 
 void print_banner(  ) {
@@ -227,7 +259,7 @@ int main( int argc, char *argv[] ) {
     /*
      * the default prompt
      */
-    bind_value( L"*prompt*",
+    prompt_name = bind_value( L"*prompt*",
                 show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL );
     /*
      * primitive function operations

@@ -272,8 +272,11 @@ struct cons_pointer add_integers( struct cons_pointer a,
     return result;
 }
 
+// TODO: I have really no idea what I was trying to do here, or why it could possibly be a good idea.
 struct cons_pointer base_partial( int depth ) {
     struct cons_pointer result = NIL;
+
+    debug_printf( DEBUG_ARITH, L"base_partial: depth = %d\n", depth);
 
     for ( int i = 0; i < depth; i++ ) {
         result = acquire_integer( 0, result );

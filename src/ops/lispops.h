@@ -22,6 +22,8 @@
 #ifndef __psse_lispops_h
 #define __psse_lispops_h
 
+extern struct cons_pointer prompt_name;
+
 /*
  * utilities
  */

@@ -41,8 +41,6 @@ void repl(  ) {
     struct cons_pointer frame_pointer = make_stack_frame( NIL, NIL, env );
 
     if ( !nilp( frame_pointer ) ) {
-        inc_ref( frame_pointer );
-
         lisp_repl( get_stack_frame( frame_pointer ), frame_pointer, env );
 
         dec_ref( frame_pointer );

@@ -169,9 +169,11 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             print( output, cell.payload.function.meta );
             url_fputwc( L'>', output );
             break;
-        case INTEGERTV:{
+        case INTEGERTV:
+            if ( nilp( cell.payload.integer.more)) {
+                url_fwprintf( output, L"%ld", cell.payload.integer.value);
+            } else {
                 struct cons_pointer s = integer_to_string( pointer, 10 );
-                inc_ref( s );
                 print_string_contents( output, s );
                 dec_ref( s );
             }
@@ -186,7 +188,6 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                     make_cons( c_string_to_lisp_symbol( L"\u03bb" ),
                                make_cons( cell.payload.lambda.args,
                                           cell.payload.lambda.body ) );
-                inc_ref( to_print );
 
                 print( output, to_print );
 
@@ -203,7 +204,6 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
                     make_cons( c_string_to_lisp_symbol( L"n\u03bb" ),
                                make_cons( cell.payload.lambda.args,
                                           cell.payload.lambda.body ) );
-                inc_ref( to_print );
 
                 print( output, to_print );
 
