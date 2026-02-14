@@ -7,7 +7,7 @@
 #
 
 expected=nil
-actual=`echo "'()" | target/psse | tail -1`
+actual=`echo "'()" | target/psse 2>/dev/null | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

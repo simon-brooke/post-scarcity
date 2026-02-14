@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='<Special form: ((:primitive . t) (:name . cond))>'
-actual=`echo "(eval 'cond)" | target/psse | tail -1`
+actual=`echo "(eval 'cond)" | target/psse 2>/dev/null | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

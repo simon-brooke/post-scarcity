@@ -5,10 +5,9 @@ result=0
 #####################################################################
 # Create a path from root using compact path notation
 echo -n "$0: Create a path from root using compact path notation... "
-expected='(-> oblist :users :simon :functions (quote assoc))'
+expected='(-> (oblist) :users :simon :functions (quote assoc))'
 actual=`echo "'/:users:simon:functions/assoc" | target/psse 2>&1 | tail -1`
 
-echo -n "Path from root (oblist) using compact notation: "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='354'
-actual=`echo ${expected} | target/psse | tail -1`
+actual=`echo ${expected} | target/psse 2>/dev/null | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

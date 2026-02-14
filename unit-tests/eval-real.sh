@@ -3,7 +3,7 @@
 # for this test, trailing zeros can be ignored
 expected='5.05'
 actual=`echo "(eval 5.05)" |\
-  target/psse 2> /dev/null |\
+  target/psse 2>/dev/null |\
   sed 's/0*$//' |\
   tail -1`
 
