@@ -6,6 +6,10 @@ Work towards the implementation of a software system like that described in [Pos
 
 *Originally most of this documentation was on a wiki attached to the [GitHub project](https://github.com/simon-brooke/post-scarcity); when that was transferred to [my own foregejo instance](https://git.journeyman.cc/simon/post-scarcity) the wiki was copied. However, it's more convenient to keep documentation in the project with the source files, and version controlled in the same Git repository. So while both wikis still exist, they should no longer be considered canonical. The canonical version is in `/docs`, and is incorporated by [Doxygen](https://www.doxygen.nl/) into the generated documentation &mdash; which is generated into `/doc` using the command `make doc`.*
 
+## State of Play
+
+You can read about the current [state of play](md_home_2simon_2workspace_2post-scarcity_2docs_2state-of-play.html).
+
 ## AWFUL WARNING 1
 
 This does not work. It isn't likely to work any time soon. If you want to learn Lisp, don't start here; try Clojure, Scheme or Common Lisp (in which case I recommend Steel Bank Common Lisp). If you want to learn how Lisp works, still don't start here. This isn't ever going to be anything like a conventional Lisp environment.

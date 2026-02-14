@@ -32,7 +32,7 @@
  * onto this `output`; if `pointer` does not indicate a string or symbol,
  * don't print anything but just return.
  */
-void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
+void print_string_contents( URL_FILE *output, struct cons_pointer pointer ) {
     while ( stringp( pointer ) || symbolp( pointer ) || keywordp( pointer ) ) {
         struct cons_space_object *cell = &pointer2cell( pointer );
         wchar_t c = cell->payload.string.character;
@@ -49,7 +49,7 @@ void print_string_contents( URL_FILE * output, struct cons_pointer pointer ) {
  * the stream at this `output`, prepending and appending double quote
  * characters.
  */
-void print_string( URL_FILE * output, struct cons_pointer pointer ) {
+void print_string( URL_FILE *output, struct cons_pointer pointer ) {
     url_fputwc( btowc( '"' ), output );
     print_string_contents( output, pointer );
     url_fputwc( btowc( '"' ), output );
@@ -61,7 +61,7 @@ void print_string( URL_FILE * output, struct cons_pointer pointer ) {
  * a space character.
  */
 void
-print_list_contents( URL_FILE * output, struct cons_pointer pointer,
+print_list_contents( URL_FILE *output, struct cons_pointer pointer,
                      bool initial_space ) {
     struct cons_space_object *cell = &pointer2cell( pointer );
 
@@ -82,13 +82,13 @@ print_list_contents( URL_FILE * output, struct cons_pointer pointer,
     }
 }
 
-void print_list( URL_FILE * output, struct cons_pointer pointer ) {
+void print_list( URL_FILE *output, struct cons_pointer pointer ) {
     url_fputws( L"(", output );
     print_list_contents( output, pointer, false );
     url_fputws( L")", output );
 }
 
-void print_map( URL_FILE * output, struct cons_pointer map ) {
+void print_map( URL_FILE *output, struct cons_pointer map ) {
     if ( hashmapp( map ) ) {
         struct vector_space_object *vso = pointer_to_vso( map );
 
@@ -110,7 +110,7 @@ void print_map( URL_FILE * output, struct cons_pointer map ) {
     }
 }
 
-void print_vso( URL_FILE * output, struct cons_pointer pointer ) {
+void print_vso( URL_FILE *output, struct cons_pointer pointer ) {
     struct vector_space_object *vso = pointer_to_vso( pointer );
     switch ( vso->header.tag.value ) {
         case HASHTV:
@@ -126,7 +126,7 @@ void print_vso( URL_FILE * output, struct cons_pointer pointer ) {
 /**
  * stolen from https://stackoverflow.com/questions/11656241/how-to-print-uint128-t-number-using-gcc
  */
-void print_128bit( URL_FILE * output, __int128_t n ) {
+void print_128bit( URL_FILE *output, __int128_t n ) {
     if ( n == 0 ) {
         fwprintf( stderr, L"0" );
     } else {
@@ -148,7 +148,7 @@ void print_128bit( URL_FILE * output, __int128_t n ) {
  * Print the cons-space object indicated by `pointer` to the stream indicated
  * by `output`.
  */
-struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
+struct cons_pointer print( URL_FILE *output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     char *buffer;
 
@@ -272,6 +272,6 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
     return pointer;
 }
 
-void println( URL_FILE * output ) {
+void println( URL_FILE *output ) {
     url_fputws( L"\n", output );
 }

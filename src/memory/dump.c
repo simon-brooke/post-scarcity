@@ -29,7 +29,7 @@
 #include "memory/vectorspace.h"
 
 
-void dump_string_cell( URL_FILE * output, wchar_t *prefix,
+void dump_string_cell( URL_FILE *output, wchar_t *prefix,
                        struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     if ( cell.payload.string.character == 0 ) {
@@ -56,7 +56,7 @@ void dump_string_cell( URL_FILE * output, wchar_t *prefix,
 /**
  * dump the object at this cons_pointer to this output stream.
  */
-void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
+void dump_object( URL_FILE *output, struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
     url_fwprintf( output, L"\t%4.4s (%d) at page %d, offset %d count %u\n",
                   cell.tag.bytes, cell.tag.value, pointer.page, pointer.offset,
@@ -114,10 +114,10 @@ void dump_object( URL_FILE * output, struct cons_pointer pointer ) {
         case RATIOTV:
             url_fwprintf( output,
                           L"\t\tRational cell: value %ld/%ld, count %u\n",
-                          pointer2cell( cell.payload.ratio.dividend ).payload.
-                          integer.value,
-                          pointer2cell( cell.payload.ratio.divisor ).payload.
-                          integer.value, cell.count );
+                          pointer2cell( cell.payload.ratio.dividend ).
+                          payload.integer.value,
+                          pointer2cell( cell.payload.ratio.divisor ).
+                          payload.integer.value, cell.count );
             break;
         case READTV:
             url_fputws( L"\t\tInput stream; metadata: ", output );

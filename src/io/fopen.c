@@ -99,7 +99,7 @@ static size_t write_callback( char *buffer,
 }
 
 /* use to attempt to fill the read buffer up to requested number of bytes */
-static int fill_buffer( URL_FILE * file, size_t want ) {
+static int fill_buffer( URL_FILE *file, size_t want ) {
     fd_set fdread;
     fd_set fdwrite;
     fd_set fdexcep;
@@ -181,7 +181,7 @@ static int fill_buffer( URL_FILE * file, size_t want ) {
 }
 
 /* use to remove want bytes from the front of a files buffer */
-static int use_buffer( URL_FILE * file, size_t want ) {
+static int use_buffer( URL_FILE *file, size_t want ) {
     /* sort out buffer */
     if ( ( file->buffer_pos - want ) <= 0 ) {
         /* ditch buffer - write will recreate */
@@ -255,7 +255,7 @@ URL_FILE *url_fopen( const char *url, const char *operation ) {
     return file;
 }
 
-int url_fclose( URL_FILE * file ) {
+int url_fclose( URL_FILE *file ) {
     int ret = 0;                /* default is good return */
 
     switch ( file->type ) {
@@ -283,7 +283,7 @@ int url_fclose( URL_FILE * file ) {
     return ret;
 }
 
-int url_feof( URL_FILE * file ) {
+int url_feof( URL_FILE *file ) {
     int ret = 0;
 
     switch ( file->type ) {
@@ -304,7 +304,7 @@ int url_feof( URL_FILE * file ) {
     return ret;
 }
 
-size_t url_fread( void *ptr, size_t size, size_t nmemb, URL_FILE * file ) {
+size_t url_fread( void *ptr, size_t size, size_t nmemb, URL_FILE *file ) {
     size_t want;
 
     switch ( file->type ) {
@@ -343,7 +343,7 @@ size_t url_fread( void *ptr, size_t size, size_t nmemb, URL_FILE * file ) {
     return want;
 }
 
-char *url_fgets( char *ptr, size_t size, URL_FILE * file ) {
+char *url_fgets( char *ptr, size_t size, URL_FILE *file ) {
     size_t want = size - 1;     /* always need to leave room for zero termination */
     size_t loop;
 
@@ -390,7 +390,7 @@ char *url_fgets( char *ptr, size_t size, URL_FILE * file ) {
     return ptr;                 /*success */
 }
 
-void url_rewind( URL_FILE * file ) {
+void url_rewind( URL_FILE *file ) {
     switch ( file->type ) {
         case CFTYPE_FILE:
             rewind( file->handle.file );  /* passthrough */

@@ -191,20 +191,20 @@ struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
                   pair = c_car( assoc ) ) {
                 /* TODO: this is really hammering the memory management system, because
                  * it will make a new lone for every key/value pair added. Fix. */
-                if (consp( pair)) {
+                if ( consp( pair ) ) {
                     mapp = hashmap_put( mapp, c_car( pair ), c_cdr( pair ) );
-                } else if (hashmapp( pair)) {
-                    hashmap_put_all( mapp, pair);
+                } else if ( hashmapp( pair ) ) {
+                    hashmap_put_all( mapp, pair );
                 } else {
-                    hashmap_put( mapp, pair, TRUE);
+                    hashmap_put( mapp, pair, TRUE );
                 }
-                assoc = c_cdr( assoc);
+                assoc = c_cdr( assoc );
             }
-        } else if (hashmapp( assoc)) {
-            for (struct cons_pointer keys = hashmap_keys( assoc); !nilp( keys);
-                keys = c_cdr( keys)) {
-                struct cons_pointer key = c_car( keys);
-                hashmap_put( mapp, key, hashmap_get( assoc, key));
+        } else if ( hashmapp( assoc ) ) {
+            for ( struct cons_pointer keys = hashmap_keys( assoc );
+                  !nilp( keys ); keys = c_cdr( keys ) ) {
+                struct cons_pointer key = c_car( keys );
+                hashmap_put( mapp, key, hashmap_get( assoc, key ) );
             }
         }
     }
@@ -246,7 +246,8 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
                 result =
                     make_hashmap( from_pl.n_buckets, from_pl.hash_fn,
                                   from_pl.write_acl );
-                struct vector_space_object const *to = pointer_to_vso( result );
+                struct vector_space_object const *to =
+                    pointer_to_vso( result );
                 struct hashmap_payload to_pl = to->payload.hashmap;
 
                 for ( int i = 0; i < to_pl.n_buckets; i++ ) {
@@ -257,9 +258,9 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
         }
     } else {
         result =
-                make_exception( c_string_to_lisp_string
-                                ( L"Arg to `clone_hashmap` must "
-                                  L"be a readable hashmap.`" ), NIL );
+            make_exception( c_string_to_lisp_string
+                            ( L"Arg to `clone_hashmap` must "
+                              L"be a readable hashmap.`" ), NIL );
     }
 
     return result;
@@ -299,9 +300,9 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         //     if ( equal( key, entry.payload.cons.car ) ) {
         //         result = entry.payload.cons.car;
         //     }
-        if (!nilp( c_assoc( key, store))) {
+        if ( !nilp( c_assoc( key, store ) ) ) {
             result = key;
-        } else if ( equal( key, privileged_symbol_nil)) {
+        } else if ( equal( key, privileged_symbol_nil ) ) {
             result = privileged_symbol_nil;
         }
     } else {
@@ -349,9 +350,10 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                         result = hashmap_get( entry_ptr, key );
                         break;
                     default:
-                        throw_exception( c_append(
-                            c_string_to_lisp_string( L"Store entry is of unknown type: " ),
-                            c_type( entry_ptr)), NIL);
+                        throw_exception( c_append
+                                         ( c_string_to_lisp_string
+                                           ( L"Store entry is of unknown type: " ),
+                                           c_type( entry_ptr ) ), NIL );
                 }
             }
         }
@@ -359,13 +361,13 @@ struct cons_pointer c_assoc( struct cons_pointer key,
         result = hashmap_get( store, key );
     } else if ( !nilp( store ) ) {
         debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
-        debug_print_object( c_type( store), DEBUG_BIND );
+        debug_print_object( c_type( store ), DEBUG_BIND );
         debug_print( L"`\n", DEBUG_BIND );
         result =
-            throw_exception( 
-                c_append( 
-                    c_string_to_lisp_string( L"Store is of unknown type: " ),
-                    c_type( store)), NIL );
+            throw_exception( c_append
+                             ( c_string_to_lisp_string
+                               ( L"Store is of unknown type: " ),
+                               c_type( store ) ), NIL );
     }
 
     debug_print( L"c_assoc returning ", DEBUG_BIND );
@@ -419,14 +421,14 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
     debug_dump_object( store, DEBUG_BIND );
     debug_println( DEBUG_BIND );
 
-    debug_printf( DEBUG_BIND, L"set: store is %s\n`", lisp_string_to_c_string( c_type( store)) );
-    if (nilp( value)) {
+    debug_printf( DEBUG_BIND, L"set: store is %s\n`",
+                  lisp_string_to_c_string( c_type( store ) ) );
+    if ( nilp( value ) ) {
         result = store;
-    }
-    else if ( nilp( store ) || consp( store ) ) {
+    } else if ( nilp( store ) || consp( store ) ) {
         result = make_cons( make_cons( key, value ), store );
     } else if ( hashmapp( store ) ) {
-        debug_print( L"set: storing in hashmap\n", DEBUG_BIND);
+        debug_print( L"set: storing in hashmap\n", DEBUG_BIND );
         result = hashmap_put( store, key, value );
     }
 

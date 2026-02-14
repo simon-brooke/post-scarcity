@@ -64,15 +64,16 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
                 if ( drrv / gcd == 1 ) {
                     result = acquire_integer( ddrv / gcd, NIL );
                 } else {
-                    debug_printf( DEBUG_ARITH, 
-                        L"simplify_ratio: %ld/%ld => %ld/%ld\n", ddrv, drrv, ddrv/gcd, drrv/gcd);
+                    debug_printf( DEBUG_ARITH,
+                                  L"simplify_ratio: %ld/%ld => %ld/%ld\n",
+                                  ddrv, drrv, ddrv / gcd, drrv / gcd );
                     result =
                         make_ratio( acquire_integer( ddrv / gcd, NIL ),
                                     acquire_integer( drrv / gcd, NIL ) );
                 }
             }
         }
-    } 
+    }
     // TODO: else throw exception?
 
     return result;
@@ -126,8 +127,12 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
 
             r = add_ratio_ratio( r1, r2 );
 
-            if (!eq( r, r1)) { dec_ref( r1);}
-            if (!eq( r, r2)) { dec_ref( r2);}
+            if ( !eq( r, r1 ) ) {
+                dec_ref( r1 );
+            }
+            if ( !eq( r, r2 ) ) {
+                dec_ref( r2 );
+            }
 
             /* because the references on dd1vm, dr1vm, dd2vm and dr2vm were
              * never incremented except when making r1 and r2, decrementing
@@ -238,12 +243,11 @@ struct cons_pointer multiply_ratio_ratio( struct
 
         struct cons_pointer dividend = acquire_integer( ddrv, NIL );
         struct cons_pointer divisor = acquire_integer( drrv, NIL );
-        struct cons_pointer unsimplified =
-            make_ratio( dividend, divisor);
+        struct cons_pointer unsimplified = make_ratio( dividend, divisor );
         result = simplify_ratio( unsimplified );
 
-        release_integer( dividend);
-        release_integer( divisor);
+        release_integer( dividend );
+        release_integer( divisor );
 
         if ( !eq( unsimplified, result ) ) {
             dec_ref( unsimplified );
@@ -320,8 +324,10 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
         cell->payload.ratio.dividend = dividend;
         cell->payload.ratio.divisor = divisor;
 
-        result = simplify_ratio( unsimplified);
-        if ( !eq( result, unsimplified)) { dec_ref( unsimplified); }
+        result = simplify_ratio( unsimplified );
+        if ( !eq( result, unsimplified ) ) {
+            dec_ref( unsimplified );
+        }
     } else {
         result =
             throw_exception( c_string_to_lisp_string

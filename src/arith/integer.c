@@ -90,10 +90,11 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result = NIL;
     debug_print( L"Entering make_integer\n", DEBUG_ALLOC );
 
-    if ( integerp(more) && (pointer2cell( more ).payload.integer.value < 0))
-    {
-        printf("WARNING: negative value %" PRId64 " passed as `more` to `make_integer`\n", 
-            pointer2cell( more ).payload.integer.value);
+    if ( integerp( more )
+         && ( pointer2cell( more ).payload.integer.value < 0 ) ) {
+        printf( "WARNING: negative value %" PRId64
+                " passed as `more` to `make_integer`\n",
+                pointer2cell( more ).payload.integer.value );
     }
 
     if ( integerp( more ) || nilp( more ) ) {
@@ -128,20 +129,23 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result;
 
-    if ( !nilp( more) || value < 0 || value >= SMALL_INT_LIMIT) {
-        debug_print( L"acquire_integer passing to make_integer (outside small int range)\n", DEBUG_ALLOC );
-        result = make_integer( value, more);
+    if ( !nilp( more ) || value < 0 || value >= SMALL_INT_LIMIT ) {
+        debug_print
+            ( L"acquire_integer passing to make_integer (outside small int range)\n",
+              DEBUG_ALLOC );
+        result = make_integer( value, more );
     } else {
-        if ( !small_int_cache_initialised) {
-            for (int64_t i = 0; i < SMALL_INT_LIMIT; i++) {
-                small_int_cache[i] = make_integer( i, NIL);
-                pointer2cell(small_int_cache[i]).count = UINT32_MAX; // lock it in so it can't be GC'd
+        if ( !small_int_cache_initialised ) {
+            for ( int64_t i = 0; i < SMALL_INT_LIMIT; i++ ) {
+                small_int_cache[i] = make_integer( i, NIL );
+                pointer2cell( small_int_cache[i] ).count = UINT32_MAX;  // lock it in so it can't be GC'd
             }
-           small_int_cache_initialised = true;
+            small_int_cache_initialised = true;
             debug_print( L"small_int_cache initialised.\n", DEBUG_ALLOC );
         }
 
-        debug_printf( DEBUG_ALLOC, L"acquire_integer: returning %" PRId64 "\n", value);
+        debug_printf( DEBUG_ALLOC, L"acquire_integer: returning %" PRId64 "\n",
+                      value );
         result = small_int_cache[value];
     }
     return result;
@@ -156,15 +160,17 @@ struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more ) {
  * 
  * @param p a pointer, expected to be to an integer.
  */
-void release_integer( struct cons_pointer p) {
-    struct cons_space_object o = pointer2cell( p);
-    if ( !integerp( p) ||                   // what I've been passed isn't an integer;
-        !nilp( o.payload.integer.more) ||   // or it's a bignum;
-        o.payload.integer.value >= SMALL_INT_LIMIT || // or it's bigger than the small int cache limit;
-        !eq( p, small_int_cache[ o.payload.integer.value]) // or it's simply not the copy in the cache...
-    ) { dec_ref( p); } else {
-        debug_printf( DEBUG_ALLOC, L"release_integer: releasing %" PRId64 "\n", 
-            o.payload.integer.value);
+void release_integer( struct cons_pointer p ) {
+    struct cons_space_object o = pointer2cell( p );
+    if ( !integerp( p ) ||      // what I've been passed isn't an integer;
+         !nilp( o.payload.integer.more ) || // or it's a bignum;
+         o.payload.integer.value >= SMALL_INT_LIMIT ||  // or it's bigger than the small int cache limit;
+         !eq( p, small_int_cache[o.payload.integer.value] ) // or it's simply not the copy in the cache...
+         ) {
+        dec_ref( p );
+    } else {
+        debug_printf( DEBUG_ALLOC, L"release_integer: releasing %" PRId64 "\n",
+                      o.payload.integer.value );
     }
 }
 
@@ -192,7 +198,7 @@ __int128_t int128_to_integer( __int128_t val,
     if ( MAX_INTEGER >= val ) {
         carry = 0;
     } else {
-        carry = val % INT_CELL_BASE; 
+        carry = val % INT_CELL_BASE;
         debug_printf( DEBUG_ARITH,
                       L"int128_to_integer: 64 bit overflow; setting carry to %ld\n",
                       ( int64_t ) carry );
@@ -200,7 +206,7 @@ __int128_t int128_to_integer( __int128_t val,
     }
 
     struct cons_space_object *newc = &pointer2cell( new );
-    newc->payload.integer.value = (int64_t)val;
+    newc->payload.integer.value = ( int64_t ) val;
 
     if ( integerp( less_significant ) ) {
         struct cons_space_object *lsc = &pointer2cell( less_significant );
@@ -239,7 +245,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av = cell_value( a, '+', is_first_cell );
             __int128_t bv = cell_value( b, '+', is_first_cell );
-            __int128_t rv = (av + bv) + carry;
+            __int128_t rv = ( av + bv ) + carry;
 
             debug_print( L"add_integers: av = ", DEBUG_ARITH );
             debug_print_128bit( av, DEBUG_ARITH );
@@ -251,8 +257,9 @@ struct cons_pointer add_integers( struct cons_pointer a,
             debug_print_128bit( rv, DEBUG_ARITH );
             debug_print( L"\n", DEBUG_ARITH );
 
-            if ( carry == 0 && ( rv >= 0 || rv < SMALL_INT_LIMIT)) {
-                result = acquire_integer( (int64_t)(rv & 0xffffffff), NIL);
+            if ( carry == 0 && ( rv >= 0 || rv < SMALL_INT_LIMIT ) ) {
+                result =
+                    acquire_integer( ( int64_t ) ( rv & 0xffffffff ), NIL );
                 break;
             } else {
                 struct cons_pointer new = make_integer( 0, NIL );
@@ -281,7 +288,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
 struct cons_pointer base_partial( int depth ) {
     struct cons_pointer result = NIL;
 
-    debug_printf( DEBUG_ARITH, L"base_partial: depth = %d\n", depth);
+    debug_printf( DEBUG_ARITH, L"base_partial: depth = %d\n", depth );
 
     for ( int i = 0; i < depth; i++ ) {
         result = acquire_integer( 0, result );
@@ -299,15 +306,15 @@ struct cons_pointer base_partial( int depth ) {
  * numbering system here is base INT_CELL_BASE, currently x0fffffffffffffffL
  */
 struct cons_pointer append_cell( struct cons_pointer partial,
-                                  struct cons_pointer digit ) {
-    struct cons_space_object cell = pointer2cell( partial);
+                                 struct cons_pointer digit ) {
+    struct cons_space_object cell = pointer2cell( partial );
     // TODO: I should recursively copy the whole bignum chain, because
     // we're still destructively modifying the end of it.
-    struct cons_pointer c = make_integer( cell.payload.integer.value, 
-        cell.payload.integer.more);
+    struct cons_pointer c = make_integer( cell.payload.integer.value,
+                                          cell.payload.integer.more );
     struct cons_pointer result = partial;
 
-    if ( nilp( partial)) {
+    if ( nilp( partial ) ) {
         result = digit;
     } else {
         // find the last digit in the chain...
@@ -376,9 +383,10 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
                 /* if xj exceeds one digit, break it into the digit dj and
                  * the carry */
                 carry = xj >> INTEGER_BIT_SHIFT;
-                struct cons_pointer dj = acquire_integer( xj & MAX_INTEGER, NIL );
+                struct cons_pointer dj =
+                    acquire_integer( xj & MAX_INTEGER, NIL );
 
-                replace_integer_p( ri,  append_cell( ri, dj ));
+                replace_integer_p( ri, append_cell( ri, dj ) );
                 // struct cons_pointer new_ri = append_cell( ri, dj );
                 // release_integer( ri); 
                 // ri = new_ri;
@@ -387,7 +395,7 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
             /* if carry is not equal to zero, append it as a final cell
              * to ri */
             if ( carry != 0 ) {
-                replace_integer_i( ri, carry)
+                replace_integer_i( ri, carry )
             }
 
             /* add ri to result */
@@ -412,14 +420,16 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
     wint_t character = btowc( hex_digits[digit] );
-    debug_printf( DEBUG_IO, L"integer_to_string_add_digit: digit is %d, digits is %d; returning: ", digit, digits);
-    struct cons_pointer r = ( digits % 3 == 0 ) ?
-        make_string( L',', make_string( character,
-                                        tail ) ) :
+    debug_printf( DEBUG_IO,
+                  L"integer_to_string_add_digit: digit is %d, digits is %d; returning: ",
+                  digit, digits );
+    struct cons_pointer r =
+        ( digits % 3 == 0 ) ? make_string( L',', make_string( character,
+                                                              tail ) ) :
         make_string( character, tail );
 
-    debug_print_object( r, DEBUG_IO);
-    debug_println( DEBUG_IO);
+    debug_print_object( r, DEBUG_IO );
+    debug_println( DEBUG_IO );
 
     return r;
 }
@@ -460,7 +470,8 @@ struct cons_pointer integer_to_string( struct cons_pointer int_pointer,
             while ( accumulator > 0 || !nilp( next ) ) {
                 if ( accumulator < MAX_INTEGER && !nilp( next ) ) {
                     accumulator +=
-                        ( pointer2cell( next ).payload.integer.value % INT_CELL_BASE );
+                        ( pointer2cell( next ).payload.integer.value %
+                          INT_CELL_BASE );
                     next = pointer2cell( next ).payload.integer.more;
                 }
                 int offset = ( int ) ( accumulator % base );

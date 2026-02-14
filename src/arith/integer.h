@@ -21,7 +21,7 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more );
 
 struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more );
 
-void release_integer( struct cons_pointer p);
+void release_integer( struct cons_pointer p );
 
 struct cons_pointer add_integers( struct cons_pointer a,
                                   struct cons_pointer b );

@@ -121,7 +121,7 @@ void make_cons_page(  ) {
 /**
  * dump the allocated pages to this `output` stream.
  */
-void dump_pages( URL_FILE * output ) {
+void dump_pages( URL_FILE *output ) {
     for ( int i = 0; i < initialised_cons_pages; i++ ) {
         url_fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
@@ -188,7 +188,8 @@ void free_cell( struct cons_pointer pointer ) {
                     free_vso( pointer );
                     break;
                 default:
-                    fprintf( stderr, "WARNING: Freeing object of type %s!", (char *) &(cell->tag.bytes));
+                    fprintf( stderr, "WARNING: Freeing object of type %s!",
+                             ( char * ) &( cell->tag.bytes ) );
             }
 
             strncpy( &cell->tag.bytes[0], FREETAG, TAGLENGTH );
@@ -240,8 +241,8 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
             total_cells_allocated++;
 
             debug_printf( DEBUG_ALLOC,
-                          L"Allocated cell of type '%4.4s' at %d, %d \n", cell->tag.bytes,
-                          result.page, result.offset );
+                          L"Allocated cell of type '%4.4s' at %d, %d \n",
+                          cell->tag.bytes, result.page, result.offset );
         } else {
             debug_printf( DEBUG_ALLOC, L"WARNING: Allocating non-free cell!" );
         }
@@ -270,5 +271,6 @@ void initialise_cons_pages(  ) {
 void summarise_allocation(  ) {
     fwprintf( stderr,
               L"Allocation summary: allocated %lld; deallocated %lld; not deallocated %lld.\n",
-              total_cells_allocated, total_cells_freed, total_cells_allocated - total_cells_freed );
+              total_cells_allocated, total_cells_freed,
+              total_cells_allocated - total_cells_freed );
 }

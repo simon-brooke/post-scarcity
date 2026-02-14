@@ -85,7 +85,7 @@ struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
 
     if ( vso != NULL ) {
         memset( vso, 0, padded );
-                vso->header.tag.value = tag;
+        vso->header.tag.value = tag;
 
         debug_printf( DEBUG_ALLOC,
                       L"make_vso: written tag '%4.4s' into vso at %p\n",

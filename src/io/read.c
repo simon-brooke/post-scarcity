@@ -83,14 +83,14 @@ struct cons_pointer c_quote( struct cons_pointer arg ) {
  * 3. one or more symbols separated by slashes; or
  * 4. keywords (with leading colons) interspersed with symbols (prefixed by slashes).
  */
-struct cons_pointer read_path( URL_FILE * input, wint_t initial,
+struct cons_pointer read_path( URL_FILE *input, wint_t initial,
                                struct cons_pointer q ) {
     bool done = false;
     struct cons_pointer prefix = NIL;
 
     switch ( initial ) {
         case '/':
-            prefix = c_string_to_lisp_symbol( L"oblist" );
+            prefix = make_cons( c_string_to_lisp_symbol( L"oblist" ), NIL);
             break;
         case '$':
         case LSESSION:
@@ -155,7 +155,7 @@ struct cons_pointer read_path( URL_FILE * input, wint_t initial,
 struct cons_pointer read_continuation( struct stack_frame *frame,
                                        struct cons_pointer frame_pointer,
                                        struct cons_pointer env,
-                                       URL_FILE * input, wint_t initial ) {
+                                       URL_FILE *input, wint_t initial ) {
     debug_print( L"entering read_continuation\n", DEBUG_IO );
     struct cons_pointer result = NIL;
 
@@ -287,7 +287,7 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
  */
 struct cons_pointer read_number( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
-                                 URL_FILE * input,
+                                 URL_FILE *input,
                                  wint_t initial, bool seen_period ) {
     debug_print( L"entering read_number\n", DEBUG_IO );
 
@@ -308,7 +308,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
                   initial );
 
     for ( c = initial; iswdigit( c )
-          || c == LPERIOD || c == LSLASH || c == LCOMMA; c = url_fgetwc( input ) ) {
+          || c == LPERIOD || c == LSLASH || c == LCOMMA;
+          c = url_fgetwc( input ) ) {
         switch ( c ) {
             case LPERIOD:
                 if ( seen_period || !nilp( dividend ) ) {
@@ -342,8 +343,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 break;
             default:
                 result = add_integers( multiply_integers( result, base ),
-                                       acquire_integer( ( int ) c - ( int ) '0',
-                                                     NIL ) );
+                                       acquire_integer( ( int ) c -
+                                                        ( int ) '0', NIL ) );
 
                 debug_printf( DEBUG_IO,
                               L"read_number: added character %c, result now ",
@@ -366,10 +367,10 @@ struct cons_pointer read_number( struct stack_frame *frame,
         debug_print( L"read_number: converting result to real\n", DEBUG_IO );
         struct cons_pointer div = make_ratio( result,
                                               acquire_integer( powl
-                                                            ( to_long_double
-                                                              ( base ),
-                                                              places_of_decimals ),
-                                                            NIL ) );
+                                                               ( to_long_double
+                                                                 ( base ),
+                                                                 places_of_decimals ),
+                                                               NIL ) );
         inc_ref( div );
 
         result = make_real( to_long_double( div ) );
@@ -400,7 +401,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
 struct cons_pointer read_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env,
-                               URL_FILE * input, wint_t initial ) {
+                               URL_FILE *input, wint_t initial ) {
     struct cons_pointer result = NIL;
     wint_t c;
 
@@ -440,7 +441,7 @@ struct cons_pointer read_list( struct stack_frame *frame,
 struct cons_pointer read_map( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
                               struct cons_pointer env,
-                              URL_FILE * input, wint_t initial ) {
+                              URL_FILE *input, wint_t initial ) {
     // set write ACL to true whilst creating to prevent GC churn
     struct cons_pointer result =
         make_hashmap( DFLT_HASHMAP_BUCKETS, NIL, TRUE );
@@ -480,7 +481,7 @@ struct cons_pointer read_map( struct stack_frame *frame,
  * so delimited in which case it may not contain whitespace (unless escaped)
  * but may contain a double quote character (probably not a good idea!)
  */
-struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
+struct cons_pointer read_string( URL_FILE *input, wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
     switch ( initial ) {
@@ -503,7 +504,7 @@ struct cons_pointer read_string( URL_FILE * input, wint_t initial ) {
     return result;
 }
 
-struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
+struct cons_pointer read_symbol_or_key( URL_FILE *input, uint32_t tag,
                                         wint_t initial ) {
     struct cons_pointer cdr = NIL;
     struct cons_pointer result;
@@ -558,7 +559,7 @@ struct cons_pointer read_symbol_or_key( URL_FILE * input, uint32_t tag,
 struct cons_pointer read( struct
                           stack_frame
                           *frame, struct cons_pointer frame_pointer,
-                          struct cons_pointer env, URL_FILE * input ) {
+                          struct cons_pointer env, URL_FILE *input ) {
     return read_continuation( frame, frame_pointer, env, input,
                               url_fgetwc( input ) );
 }

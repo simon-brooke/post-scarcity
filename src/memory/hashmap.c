@@ -54,12 +54,12 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
         }
     }
     if ( frame->args > 1 ) {
-        if ( functionp( frame->arg[1])) {
-        hash_fn = frame->arg[1];
-        } else if ( nilp(frame->arg[1])){
+        if ( functionp( frame->arg[1] ) ) {
+            hash_fn = frame->arg[1];
+        } else if ( nilp( frame->arg[1] ) ) {
             /* that's allowed */
         } else {
-           result =
+            result =
                 make_exception( c_string_to_lisp_string
                                 ( L"Second arg to `hashmap`, if passed, must "
                                   L"be a function or `nil`.`" ), NIL );
@@ -88,8 +88,7 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
 
                 map->payload.hashmap.buckets[bucket_no] =
                     make_cons( make_cons( key, val ),
-                                        map->payload.hashmap.
-                                        buckets[bucket_no] );
+                               map->payload.hashmap.buckets[bucket_no] );
             }
         }
     }
@@ -114,7 +113,7 @@ struct cons_pointer lisp_hashmap_put( struct stack_frame *frame,
     struct cons_pointer val = frame->arg[2];
 
     struct cons_pointer result = hashmap_put( mapp, key, val );
-    struct cons_space_object *cell = &pointer2cell( result);
+    struct cons_space_object *cell = &pointer2cell( result );
     return result;
 
     // TODO: else clone and return clone.
@@ -136,7 +135,7 @@ struct cons_pointer lisp_hashmap_keys( struct stack_frame *frame,
     return hashmap_keys( frame->arg[0] );
 }
 
-void dump_map( URL_FILE * output, struct cons_pointer pointer ) {
+void dump_map( URL_FILE *output, struct cons_pointer pointer ) {
     struct hashmap_payload *payload =
         &pointer_to_vso( pointer )->payload.hashmap;
     url_fwprintf( output, L"Hashmap with %d buckets:\n", payload->n_buckets );

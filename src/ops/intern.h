@@ -36,7 +36,7 @@ struct cons_pointer hashmap_get( struct cons_pointer mapp,
 struct cons_pointer hashmap_put( struct cons_pointer mapp,
                                  struct cons_pointer key,
                                  struct cons_pointer val );
-                
+
 struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
                                      struct cons_pointer assoc );
 

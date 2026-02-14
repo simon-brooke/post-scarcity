@@ -131,7 +131,7 @@ char *lisp_string_to_c_string( struct cons_pointer s ) {
  * @param f the file to be wrapped;
  * @return the new handle, or null if no such handle could be allocated.
  */
-URL_FILE *file_to_url_file( FILE * f ) {
+URL_FILE *file_to_url_file( FILE *f ) {
     URL_FILE *result = ( URL_FILE * ) malloc( sizeof( URL_FILE ) );
 
     if ( result != NULL ) {
@@ -148,7 +148,7 @@ URL_FILE *file_to_url_file( FILE * f ) {
  * @param file the stream to read from;
  * @return the next wide character on the stream, or zero if no more.
  */
-wint_t url_fgetwc( URL_FILE * input ) {
+wint_t url_fgetwc( URL_FILE *input ) {
     wint_t result = -1;
 
     if ( ungotten != 0 ) {
@@ -217,7 +217,7 @@ wint_t url_fgetwc( URL_FILE * input ) {
     return result;
 }
 
-wint_t url_ungetwc( wint_t wc, URL_FILE * input ) {
+wint_t url_ungetwc( wint_t wc, URL_FILE *input ) {
     wint_t result = -1;
 
     switch ( input->type ) {
@@ -284,7 +284,7 @@ struct cons_pointer add_meta_string( struct cons_pointer meta, wchar_t *key,
 }
 
 struct cons_pointer add_meta_time( struct cons_pointer meta, wchar_t *key,
-                                   time_t * value ) {
+                                   time_t *value ) {
     /* I don't yet have a concept of a date-time object, which is a
      * bit of an oversight! */
     char datestring[256];
@@ -410,8 +410,7 @@ void collect_meta( struct cons_pointer stream, char *url ) {
  */
 struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_pointer stream_name =
-         inputp ? lisp_io_in : lisp_io_out;
+    struct cons_pointer stream_name = inputp ? lisp_io_in : lisp_io_out;
 
     result = c_assoc( stream_name, env );
 
@@ -509,8 +508,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( readp( frame->arg[0] ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer2cell( frame->arg[0] ).payload.stream.
-                           stream ), NIL );
+                         ( pointer2cell( frame->arg[0] ).payload.
+                           stream.stream ), NIL );
     }
 
     return result;
