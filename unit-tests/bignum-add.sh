@@ -20,7 +20,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "checking no bignum was created: "
@@ -30,7 +30,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 #####################################################################
@@ -52,7 +52,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "$0 => checking a bignum was created: "
@@ -62,7 +62,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 
@@ -85,7 +85,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "$0 => checking a bignum was created: "
@@ -95,7 +95,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 #####################################################################
@@ -118,7 +118,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "checking a bignum was created: "
@@ -128,7 +128,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 
@@ -150,7 +150,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 #####################################################################
@@ -171,7 +171,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 
@@ -195,7 +195,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "$0 => checking a bignum was created: "
@@ -205,7 +205,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 
@@ -228,7 +228,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "$0 => checking a bignum was created: "
@@ -238,7 +238,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 
@@ -262,7 +262,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 echo -n "$0 => checking a bignum was created: "
@@ -272,7 +272,7 @@ then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    return=`echo "${return} + 1" | bc`
 fi
 
 exit ${return}

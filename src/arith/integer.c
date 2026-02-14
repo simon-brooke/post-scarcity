@@ -55,7 +55,7 @@ struct cons_pointer small_int_cache[SMALL_INT_LIMIT];
   * Low level integer arithmetic, do not use elsewhere.
   *
   * @param c a pointer to a cell, assumed to be an integer cell;
-  * @param op a character representing the operation: expectedto be either
+  * @param op a character representing the operation: expected to be either
   * '+' or '*'; behaviour with other values is undefined.
   * @param is_first_cell true if this is the first cell in a bignum
   * chain, else false.
@@ -128,8 +128,8 @@ struct cons_pointer make_integer( int64_t value, struct cons_pointer more ) {
 struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more ) {
     struct cons_pointer result;
 
-    if ( !nilp( more) || value >= SMALL_INT_LIMIT) {
-        debug_print( L"acquire_integer passing to make_integer (too large)\n", DEBUG_ALLOC );
+    if ( !nilp( more) || value < 0 || value >= SMALL_INT_LIMIT) {
+        debug_print( L"acquire_integer passing to make_integer (outside small int range)\n", DEBUG_ALLOC );
         result = make_integer( value, more);
     } else {
         if ( !small_int_cache_initialised) {
@@ -239,7 +239,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
         while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
             __int128_t av = cell_value( a, '+', is_first_cell );
             __int128_t bv = cell_value( b, '+', is_first_cell );
-            __int128_t rv = av + bv + carry;
+            __int128_t rv = (av + bv) + carry;
 
             debug_print( L"add_integers: av = ", DEBUG_ARITH );
             debug_print_128bit( av, DEBUG_ARITH );
@@ -251,17 +251,22 @@ struct cons_pointer add_integers( struct cons_pointer a,
             debug_print_128bit( rv, DEBUG_ARITH );
             debug_print( L"\n", DEBUG_ARITH );
 
-            struct cons_pointer new = make_integer( 0, NIL );
-            carry = int128_to_integer( rv, cursor, new );
-            cursor = new;
+            if ( carry == 0 && ( rv >= 0 || rv < SMALL_INT_LIMIT)) {
+                result = acquire_integer( (int64_t)(rv & 0xffffffff), NIL);
+                break;
+            } else {
+                struct cons_pointer new = make_integer( 0, NIL );
+                carry = int128_to_integer( rv, cursor, new );
+                cursor = new;
 
-            if ( nilp( result ) ) {
-                result = cursor;
+                if ( nilp( result ) ) {
+                    result = cursor;
+                }
+
+                a = pointer2cell( a ).payload.integer.more;
+                b = pointer2cell( b ).payload.integer.more;
+                is_first_cell = false;
             }
-
-            a = pointer2cell( a ).payload.integer.more;
-            b = pointer2cell( b ).payload.integer.more;
-            is_first_cell = false;
         }
     }
 

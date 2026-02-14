@@ -20,6 +20,8 @@
 #ifndef __intern_h
 #define __intern_h
 
+extern struct cons_pointer privileged_symbol_nil;
+
 extern struct cons_pointer oblist;
 
 uint32_t get_hash( struct cons_pointer ptr );

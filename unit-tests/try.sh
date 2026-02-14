@@ -1,5 +1,7 @@
 #!/bin/bash
 
+result=0
+
 expected=':foo'
 actual=`echo "(try ((+ 2 (/ 1 'a))) (:foo))" | target/psse | tail -1`
 
@@ -8,7 +10,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=`echo "${return} + 1" | bc`
 fi
 
 expected='4'
@@ -19,7 +21,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=`echo "${return} + 1" | bc`
 fi
 
 expected='8'
@@ -30,16 +32,18 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=`echo "${return} + 1" | bc`
 fi
 
-expected=''
-actual=`echo "(try (:body (+ 2 (/ 1 'a))) (:catch *exception*))" | target/psse | tail -1`
+expected='Exception: "Cannot divide: not a number"'
+actual=`echo "(try (:body (+ 2 (/ 1 'a))) (:catch *exception*))" | target/psse | grep Exception`
 
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    exit 1
+    return=`echo "${return} + 1" | bc`
 fi
+
+exit ${result}

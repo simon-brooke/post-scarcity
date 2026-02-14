@@ -1273,8 +1273,6 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
     
-    inc_ref( env );
-
     if (truep(frame->arg[0])) {
         new_env = set( prompt_name, frame->arg[0], new_env);
     }
@@ -1338,7 +1336,6 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 
         expr = lisp_read( get_stack_frame( frame_pointer ), frame_pointer,
                           new_env );
-        inc_ref( expr );
 
         if ( exceptionp( expr )
              && url_feof( pointer2cell( input ).payload.stream.stream ) ) {
@@ -1356,7 +1353,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     dec_ref( input );
     dec_ref( output );
     dec_ref( prompt_name );
-    dec_ref( env );
+    dec_ref( new_env);
 
     debug_printf(DEBUG_REPL, L"Leaving inner repl\n");
     

@@ -65,6 +65,25 @@ struct cons_pointer check_exception( struct cons_pointer pointer, char * locatio
     return result;
 }
 
+struct cons_pointer init_name_symbol = NIL;
+struct cons_pointer init_primitive_symbol = NIL;
+
+void maybe_bind_init_symbols() {
+    if ( nilp( init_name_symbol)) {
+        init_name_symbol = c_string_to_lisp_keyword( L"name" );
+    }
+    if ( nilp( init_primitive_symbol)) {
+        init_primitive_symbol = c_string_to_lisp_keyword( L"primitive" );
+    }
+    if ( nilp( privileged_symbol_nil)) {
+        privileged_symbol_nil = c_string_to_lisp_symbol( L"nil");
+    }
+}
+
+void free_init_symbols() {
+    dec_ref( init_name_symbol);
+    dec_ref( init_primitive_symbol);
+}
 
 /**
  * Bind this compiled `executable` function, as a Lisp function, to
@@ -73,45 +92,75 @@ struct cons_pointer check_exception( struct cons_pointer pointer, char * locatio
  * the name on the source pointer. Would make stack frames potentially
  * more readable and aid debugging generally.
  */
-void bind_function( wchar_t *name, struct cons_pointer ( *executable )
+struct cons_pointer bind_function( wchar_t *name, struct cons_pointer ( *executable )
                      ( struct stack_frame *,
                        struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
     struct cons_pointer meta =
-        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
-                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
-                                         n ),
+        make_cons( make_cons( init_primitive_symbol, TRUE ),
+                   make_cons( make_cons( init_name_symbol, n ),
                               NIL ) );
 
-    check_exception( deep_bind( n, make_function( meta, executable ) ),
+    struct cons_pointer r = check_exception( 
+        deep_bind( n, make_function( meta, executable ) ),
                     "bind_function");
+    
+    dec_ref( n);
+
+    return r;
 }
 
 /**
  * Bind this compiled `executable` function, as a Lisp special form, to
  * this `name` in the `oblist`.
  */
-void bind_special( wchar_t *name, struct cons_pointer ( *executable )
+struct cons_pointer bind_special( wchar_t *name, struct cons_pointer ( *executable )
                     ( struct stack_frame *,
                       struct cons_pointer, struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
-    struct cons_pointer meta =
-        make_cons( make_cons( c_string_to_lisp_keyword( L"primitive" ), TRUE ),
-                   make_cons( make_cons( c_string_to_lisp_keyword( L"name" ),
-                                         n ),
-                              NIL ) );
 
-    check_exception(deep_bind( n, make_special( meta, executable ) ),
+    struct cons_pointer meta =
+        make_cons( make_cons( init_primitive_symbol, TRUE ),
+                   make_cons( make_cons( init_name_symbol, n), NIL ) );
+
+    struct cons_pointer r = 
+        check_exception(deep_bind( n, make_special( meta, executable ) ),
                     "bind_special");
+    
+    dec_ref( n);
+
+    return r;
+}
+
+/**
+ * Bind this `value` to this `symbol` in the `oblist`.
+ */
+struct cons_pointer 
+bind_symbol_value( struct cons_pointer symbol, struct cons_pointer value, bool lock) {
+    struct cons_pointer r = check_exception( 
+        deep_bind( symbol, value ),
+            "bind_symbol_value");
+
+    if ( lock && !exceptionp( r)){
+        struct cons_space_object * cell = & pointer2cell( r);
+
+        cell->count = UINT32_MAX;
+    }
+
+    return r;
 }
 
 /**
  * Bind this `value` to this `name` in the `oblist`.
  */
-struct cons_pointer bind_value( wchar_t *name, struct cons_pointer value ) {
-    return check_exception( 
-        deep_bind( c_string_to_lisp_symbol( name ), value ),
-            "bind_value");
+struct cons_pointer bind_value( wchar_t *name, struct cons_pointer value, bool lock ) {
+    struct cons_pointer p = c_string_to_lisp_symbol( name );
+
+    struct cons_pointer r = bind_symbol_value( p, value, lock);
+
+    dec_ref( p);
+
+    return r;
 }
 
 void print_banner(  ) {
@@ -187,21 +236,15 @@ int main( int argc, char *argv[] ) {
         }
     }
 
+    initialise_cons_pages();
+
+    maybe_bind_init_symbols();
+
+
     if ( show_prompt ) {
         print_banner(  );
     }
 
-    initialise_cons_pages(  );
-
-//     TODO: oblist-as-hashmap (which is what we ultimately need) is failing hooribly.
-//     What actually goes wrong is: 
-//     1. the hashmap is created; 
-//     2. everything bound in init seems to get initialised properly;
-//     3. the REPL starts up;
-//     4. Anything typed into the REPL (except ctrl-D) results in immediate segfault.
-//     5. If ctrl-D is the first thing typed into the REPL, shutdown proceeds normally.
-//     Hypothesis: binding stuff into a hashmap oblist either isn't happening or 
-//      is wrking ok, but retrieving from a hashmap oblist is failing.
     debug_print( L"About to initialise oblist\n", DEBUG_BOOTSTRAP );
 
     oblist = make_hashmap( 32, NIL, TRUE );
@@ -211,8 +254,8 @@ int main( int argc, char *argv[] ) {
     /*
      * privileged variables (keywords)
      */
-    bind_value( L"nil", NIL );
-    bind_value( L"t", TRUE );
+    bind_symbol_value( privileged_symbol_nil, NIL, true);
+    bind_value( L"t", TRUE, true );
 
     /*
      * standard input, output, error and sink streams
@@ -233,7 +276,7 @@ int main( int argc, char *argv[] ) {
                                                 ( L"url" ),
                                                 c_string_to_lisp_string
                                                 ( L"system:standard input" ) ),
-                                                NIL ) ) );
+                                                NIL ) ), false );
     lisp_io_out = bind_value( C_IO_OUT,
                 make_write_stream( file_to_url_file( stdout ),
                                    make_cons( make_cons
@@ -241,26 +284,26 @@ int main( int argc, char *argv[] ) {
                                                 ( L"url" ),
                                                 c_string_to_lisp_string
                                                 ( L"system:standard output]" ) ),
-                                              NIL ) ) );
+                                              NIL ) ), false);
     bind_value( L"*log*", make_write_stream( file_to_url_file( stderr ),
                                              make_cons( make_cons
                                                         ( c_string_to_lisp_keyword
                                                           ( L"url" ),
                                                           c_string_to_lisp_string
                                                           ( L"system:standard log" ) ),
-                                                        NIL ) ) );
+                                                        NIL ) ), false );
     bind_value( L"*sink*", make_write_stream( sink,
                                               make_cons( make_cons
                                                          ( c_string_to_lisp_keyword
                                                            ( L"url" ),
                                                            c_string_to_lisp_string
                                                            ( L"system:standard sink" ) ),
-                                                         NIL ) ) );
+                                                         NIL ) ), false );
     /*
      * the default prompt
      */
     prompt_name = bind_value( L"*prompt*",
-                show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL );
+                show_prompt ? c_string_to_lisp_symbol( L":: " ) : NIL, false );
     /*
      * primitive function operations
      */
@@ -327,12 +370,14 @@ int main( int argc, char *argv[] ) {
 
     repl( show_prompt );
 
-    debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
-    dec_ref( oblist );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
     if ( dump_at_end ) {
         dump_pages( file_to_url_file( stdout ) );
     }
+
+    debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
+    dec_ref( oblist );
+    free_init_symbols();
 
     summarise_allocation(  );
     curl_global_cleanup(  );

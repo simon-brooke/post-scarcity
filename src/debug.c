@@ -1,4 +1,4 @@
-/**
+/*
  * debug.c
  *
  * Better debug log messages.
@@ -25,13 +25,17 @@
 #include "io/print.h"
 
 /**
- * the controlling flags for `debug_print`; set in `init.c`, q.v.
+ * @brief the controlling flags for `debug_print`; set in `init.c`, q.v.
+ *
+ * Interpreted as a set o binary flags. The values are controlled by macros 
+ * with names 'DEBUG_[A_Z]*' in `debug.h`, q.v.
  */
 int verbosity = 0;
 
 /**
- * print this debug `message` to stderr, if `verbosity` matches `level`.
- * `verbosity is a set of flags, see debug_print.h; so you can
+ * @brief print this debug `message` to stderr, if `verbosity` matches `level`.
+ *
+ * `verbosity` is a set of flags, see debug_print.h; so you can
  * turn debugging on for only one part of the system.
  */
 void debug_print( wchar_t *message, int level ) {
@@ -44,6 +48,11 @@ void debug_print( wchar_t *message, int level ) {
 }
 
 /**
+ * @brief print a 128 bit integer value to stderr, if `verbosity` matches `level`.
+ *
+ * `verbosity` is a set of flags, see debug_print.h; so you can
+ * turn debugging on for only one part of the system.
+ *
  * stolen from https://stackoverflow.com/questions/11656241/how-to-print-uint128-t-number-using-gcc
  */
 void debug_print_128bit( __int128_t n, int level ) {
@@ -68,8 +77,9 @@ void debug_print_128bit( __int128_t n, int level ) {
 }
 
 /**
- * print a line feed to stderr, if `verbosity` matches `level`.
- * `verbosity is a set of flags, see debug_print.h; so you can
+ * @brief print a line feed to stderr, if `verbosity` matches `level`.
+ *
+ * `verbosity` is a set of flags, see debug_print.h; so you can
  * turn debugging on for only one part of the system.
  */
 void debug_println( int level ) {
@@ -83,8 +93,10 @@ void debug_println( int level ) {
 
 
 /**
- * `wprintf` adapted for the debug logging system. Print to stderr only
- * `verbosity` matches `level`. All other arguments as for `wprintf`.
+ * @brief `wprintf` adapted for the debug logging system. 
+ *
+ * Print to stderr only if `verbosity` matches `level`. All other arguments
+ * as for `wprintf`.
  */
 void debug_printf( int level, wchar_t *format, ... ) {
 #ifdef DEBUG
@@ -98,8 +110,10 @@ void debug_printf( int level, wchar_t *format, ... ) {
 }
 
 /**
- * print the object indicated by this `pointer` to stderr, if `verbosity`
- * matches `level`.`verbosity is a set of flags, see debug_print.h; so you can
+ * @brief print the object indicated by this `pointer` to stderr, if `verbosity`
+ * matches `level`.
+ *
+ * `verbosity` is a set of flags, see debug_print.h; so you can
  * turn debugging on for only one part of the system.
  */
 void debug_print_object( struct cons_pointer pointer, int level ) {
@@ -114,7 +128,10 @@ void debug_print_object( struct cons_pointer pointer, int level ) {
 }
 
 /**
- * Like `dump_object`, q.v., but protected by the verbosity mechanism.
+ * @brief Like `dump_object`, q.v., but protected by the verbosity mechanism.
+ *
+ * `verbosity` is a set of flags, see debug_print.h; so you can
+ * turn debugging on for only one part of the system.
  */
 void debug_dump_object( struct cons_pointer pointer, int level ) {
 #ifdef DEBUG

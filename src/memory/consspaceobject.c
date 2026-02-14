@@ -80,7 +80,7 @@ struct cons_pointer inc_ref( struct cons_pointer pointer ) {
 struct cons_pointer dec_ref( struct cons_pointer pointer ) {
   struct cons_space_object *cell = &pointer2cell( pointer );
 
-  if ( cell->count > 0 ) {
+  if ( cell->count > 0 && cell->count != UINT32_MAX) {
     cell->count--;
 
     if ( cell->count == 0 ) {
@@ -307,10 +307,6 @@ struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
 
     cell->payload.string.character = c;
     cell->payload.string.cdr = tail;
-    /* \todo There's a problem here. Sometimes the offsets on
-     * strings are quite massively off. Fix is probably
-     * cell->payload.string.cdr = tail */
-    //cell->payload.string.cdr.offset = tail.offset;
 
     cell->payload.string.hash = calculate_hash( c, tail );
   } else {

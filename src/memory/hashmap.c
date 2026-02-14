@@ -94,9 +94,6 @@ struct cons_pointer lisp_make_hashmap( struct stack_frame *frame,
         }
     }
 
-    // TODO: I am not sure this is right! We do not inc_ref a string when
-    // we make it.
-    inc_ref(result);
     return result;
 }
 
@@ -118,9 +115,6 @@ struct cons_pointer lisp_hashmap_put( struct stack_frame *frame,
 
     struct cons_pointer result = hashmap_put( mapp, key, val );
     struct cons_space_object *cell = &pointer2cell( result);
-    // if (cell->count <= 1) {
-    //     inc_ref( result); // TODO: I DO NOT BELIEVE this is the right place! 
-    // }
     return result;
 
     // TODO: else clone and return clone.

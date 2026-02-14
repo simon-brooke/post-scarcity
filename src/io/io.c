@@ -413,11 +413,7 @@ struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
     struct cons_pointer stream_name =
          inputp ? lisp_io_in : lisp_io_out;
 
-    inc_ref( stream_name );
-
     result = c_assoc( stream_name, env );
-
-    dec_ref( stream_name );
 
     return result;
 }
@@ -430,7 +426,7 @@ struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
  * to append, or error if the URL is faulty or indicates an unavailable
  * resource.
  *
- * * (read-char stream)
+ * * (open url)
  *
  * @param frame my stack_frame.
  * @param frame_pointer a pointer to my stack_frame.
@@ -523,6 +519,8 @@ lisp_read_char( struct stack_frame *frame, struct cons_pointer frame_pointer,
 /**
  * Function: return a string representing all characters from the stream
  * indicated by arg 0; further arguments are ignored.
+ *
+ * TODO: it should be possible to optionally pass a string URL to this function,
  *
  * * (slurp stream)
  *

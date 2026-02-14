@@ -36,7 +36,7 @@
 // #include "print.h"
 
 /**
- * The global object list/or, to put it differently, the root namespace.
+ * @brief The global object list/or, to put it differently, the root namespace.
  * What is added to this during system setup is 'global', that is,
  * visible to all sessions/threads. What is added during a session/thread is local to
  * that session/thread (because shallow binding). There must be some way for a user to
@@ -46,6 +46,12 @@
  * that will work.
  */
 struct cons_pointer oblist = NIL;
+
+/**
+ * @brief the symbol `NIL`, which is special!
+ * 
+ */
+struct cons_pointer privileged_symbol_nil = NIL;
 
 /**
  * Return a hash value for the structure indicated by `ptr` such that if
@@ -163,7 +169,6 @@ struct cons_pointer hashmap_keys( struct cons_pointer mapp ) {
                   !nilp( c ); c = c_cdr( c ) ) {
                 result = make_cons( c_car( c_car( c ) ), result );
             }
-
         }
     }
 
@@ -260,6 +265,8 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
     return result;
 }
 
+// (keys set let quote read equal *out* *log* oblist cons source cond close meta mapcar negative? open subtract eval nλ *in* *sink* cdr set! reverse slurp try assoc eq add list time car t *prompt* absolute append apply divide exception get-hash hashmap inspect metadata multiply print put! put-all! read-char repl throw type + * - / = lambda λ nlambda progn)
+
 /**
  * Implementation of interned? in C. The final implementation if interned? will
  * deal with stores which can be association lists or hashtables or hybrids of
@@ -294,6 +301,8 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         //     }
         if (!nilp( c_assoc( key, store))) {
             result = key;
+        } else if ( equal( key, privileged_symbol_nil)) {
+            result = privileged_symbol_nil;
         }
     } else {
         debug_print( L"`", DEBUG_BIND );

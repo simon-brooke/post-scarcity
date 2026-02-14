@@ -45,16 +45,17 @@ int64_t least_common_multiple( int64_t m, int64_t n ) {
 
 struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
     struct cons_pointer result = pointer;
-    struct cons_space_object cell = pointer2cell( pointer );
-    struct cons_space_object dividend =
-        pointer2cell( cell.payload.ratio.dividend );
-    struct cons_space_object divisor =
-        pointer2cell( cell.payload.ratio.divisor );
 
-    if ( divisor.payload.integer.value == 1 ) {
-        result = pointer2cell( pointer ).payload.ratio.dividend;
-    } else {
-        if ( ratiop( pointer ) ) {
+    if ( ratiop( pointer ) ) {
+        struct cons_space_object cell = pointer2cell( pointer );
+        struct cons_space_object dividend =
+            pointer2cell( cell.payload.ratio.dividend );
+        struct cons_space_object divisor =
+            pointer2cell( cell.payload.ratio.divisor );
+
+        if ( divisor.payload.integer.value == 1 ) {
+            result = pointer2cell( pointer ).payload.ratio.dividend;
+        } else {
             int64_t ddrv = dividend.payload.integer.value,
                 drrv = divisor.payload.integer.value,
                 gcd = greatest_common_divisor( ddrv, drrv );
@@ -63,13 +64,16 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
                 if ( drrv / gcd == 1 ) {
                     result = acquire_integer( ddrv / gcd, NIL );
                 } else {
+                    debug_printf( DEBUG_ARITH, 
+                        L"simplify_ratio: %ld/%ld => %ld/%ld\n", ddrv, drrv, ddrv/gcd, drrv/gcd);
                     result =
                         make_ratio( acquire_integer( ddrv / gcd, NIL ),
                                     acquire_integer( drrv / gcd, NIL ) );
                 }
             }
         }
-    }
+    } 
+    // TODO: else throw exception?
 
     return result;
 
@@ -311,23 +315,30 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
     if ( integerp( dividend ) && integerp( divisor ) ) {
         inc_ref( dividend );
         inc_ref( divisor );
-        result = allocate_cell( RATIOTV );
-        struct cons_space_object *cell = &pointer2cell( result );
+        struct cons_pointer unsimplified = allocate_cell( RATIOTV );
+        struct cons_space_object *cell = &pointer2cell( unsimplified );
         cell->payload.ratio.dividend = dividend;
         cell->payload.ratio.divisor = divisor;
+
+        result = simplify_ratio( unsimplified);
+        if ( !eq( result, unsimplified)) { dec_ref( unsimplified); }
     } else {
         result =
             throw_exception( c_string_to_lisp_string
                              ( L"Dividend and divisor of a ratio must be integers" ),
                              NIL );
     }
+    // debug_print( L"make_ratio returning:\n", DEBUG_ARITH);
     debug_dump_object( result, DEBUG_ARITH );
 
     return result;
 }
 
 /**
- * True if a and be are identical ratios, else false.
+ * True if a and be are identical rationals, else false.
+ *
+ * TODO: we need ways of checking whether rationals are equal
+ * to floats and to integers.
  */
 bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b ) {
     bool result = false;
