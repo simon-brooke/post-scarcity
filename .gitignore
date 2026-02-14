@@ -1,7 +1,7 @@
 
-*.d
+**/*.d
 
-*.o
+**/*.o
 
 target/
 
@@ -46,3 +46,12 @@ core
 .kdev4/
 
 post-scarcity.kdev4
+
+\.calva/
+\.clj-kondo/
+\.lsp/
+\.portal/
+\.settings/
+\.zig-cache/
+sq/
+tmp/
