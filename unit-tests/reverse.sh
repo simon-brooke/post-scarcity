@@ -2,30 +2,33 @@
 
 result=0
 
+echo -n "$0: reverse a string... "
 expected='"god yzal eht revo depmuj xof nworb kciuq ehT"'
-actual=`echo '(reverse "The quick brown fox jumped over the lazy dog")' | target/psse | tail -1`
+actual=`echo '(reverse "The quick brown fox jumped over the lazy dog")' | target/psse 2>&1 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    result=1
+    result=`echo "${result} + 1" | bc`
 fi
 
+echo -n "$0: reverse a list... "
 expected='(1,024 512 256 128 64 32 16 8 4 2)'
-actual=`echo "(reverse '(2 4 8 16 32 64 128 256 512 1024))" | target/psse | tail -1`
+actual=`echo "(reverse '(2 4 8 16 32 64 128 256 512 1024))" | target/psse 2>&1 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    result=1
+    result=`echo "${result} + 1" | bc`
 fi
 
+echo -n "$0: reverse a symbol... "
 expected='esrever'
-actual=`echo "(reverse 'reverse)" | target/psse | tail -1`
+actual=`echo "(reverse 'reverse)" | target/psse 2>&1 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -33,8 +36,8 @@ then
     exit 0
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    result=1
+    result=`echo "${result} + 1" | bc`
 fi
 
-echo ${result}
+exit ${result}
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='"Strings should be able to include spaces (and other stuff)!"'
-actual=`echo ${expected} | target/psse | tail -1`
+actual=`echo ${expected} | target/psse 2>&1 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

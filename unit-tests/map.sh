@@ -5,9 +5,9 @@ result=0
 #####################################################################
 # Create an empty map using map notation
 expected='{}'
-actual=`echo "$expected" | target/psse | tail -1`
+actual=`echo "$expected" | target/psse 2>/dev/null | tail -1`
 
-echo -n "Empty map using compact map notation: "
+echo -n "$0: Empty map using compact map notation... "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
@@ -19,7 +19,7 @@ fi
 #####################################################################
 # Create an empty map using make-map
 expected='{}'
-actual=`echo "(hashmap)" | target/psse | tail -1`
+actual=`echo "(hashmap)" | target/psse 2>/dev/null | tail -1`
 
 echo -n "Empty map using (make-map): "
 if [ "${expected}" = "${actual}" ]
@@ -35,9 +35,9 @@ fi
 # significant at this stage, but in the long term should be sorted
 # alphanumerically
 expected='{:one 1, :two 2, :three 3}'
-actual=`echo "{:one 1 :two 2 :three 3}" | target/psse | tail -1`
+actual=`echo "{:one 1 :two 2 :three 3}" | target/psse 2>/dev/null | tail -1`
 
-echo -n "Map using map notation: "
+echo -n "$0: Map using map notation... "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
@@ -51,9 +51,10 @@ fi
 # significant at this stage, but in the long term should be sorted
 # alphanumerically
 expected='{:one 1, :two 2, :three 3}'
-actual=`echo "(hashmap nil nil '((:one . 1)(:two . 2)(:three . 3)))" | target/psse | tail -1`
+actual=`echo "(hashmap nil nil '((:one . 1)(:two . 2)(:three . 3)))" |\
+    target/psse 2>/dev/null | tail -1`
 
-echo -n "Map using (hashmap): "
+echo -n "$0: Map using (hashmap) with arguments... "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
@@ -65,9 +66,9 @@ fi
 #####################################################################
 # Keyword in function position
 expected='2'
-actual=`echo "(:two {:one 1 :two 2 :three 3})" | target/psse | tail -1`
+actual=`echo "(:two {:one 1 :two 2 :three 3})" | target/psse 2>/dev/null | tail -1`
 
-echo -n "Keyword in function position: "
+echo -n "$0: Keyword in function position... "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"
@@ -80,9 +81,9 @@ fi
 #####################################################################
 # Map in function position
 expected='2'
-actual=`echo "({:one 1 :two 2 :three 3} :two)" | target/psse | tail -1`
+actual=`echo "({:one 1 :two 2 :three 3} :two)" | target/psse 2>/dev/null | tail -1`
 
-echo -n "Map in function position: "
+echo -n "$0: Map in function position... "
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"

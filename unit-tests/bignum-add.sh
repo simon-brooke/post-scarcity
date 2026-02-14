@@ -9,7 +9,7 @@ a=1152921504606846975
 b=1
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1`
@@ -23,8 +23,8 @@ else
     return=`echo "${return} + 1" | bc`
 fi
 
-echo -n "checking no bignum was created: "
-grep -v 'BIGNUM!' psse.log > /dev/null
+echo -n "$0: checking no bignum was created: "
+grep -v 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -40,7 +40,7 @@ a='1152921504606846976'
 b=1
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -56,7 +56,7 @@ else
 fi
 
 echo -n "$0 => checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -73,7 +73,7 @@ a='1152921504606846977'
 b=1
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -89,7 +89,7 @@ else
 fi
 
 echo -n "$0 => checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -106,7 +106,7 @@ a=1
 b=1152921504606846977
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -121,8 +121,8 @@ else
     return=`echo "${return} + 1" | bc`
 fi
 
-echo -n "checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+echo -n "$0 => checking a bignum was created: "
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -139,7 +139,7 @@ a=1152921504606846977
 c=`echo "$a + $a" | bc`
 echo -n "$0 => adding $a to $a: "
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -160,7 +160,7 @@ a=1152921504606846977
 c=`echo "$a * 5" | bc`
 echo -n "$0 => adding $a, $a $a, $a, $a: "
 expected='t'
-output=`echo "(= (+ $a $a $a $a $a) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $a $a $a $a) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -183,7 +183,7 @@ a=10000000000000000000
 b=10000000000000000000
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -199,7 +199,7 @@ else
 fi
 
 echo -n "$0 => checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -216,7 +216,7 @@ a=1
 b=1329227995784915872903807060280344576
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -232,7 +232,7 @@ else
 fi
 
 echo -n "$0 => checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
@@ -250,7 +250,7 @@ a=1
 b=3064991081731777716716694054300618367237478244367204352
 c=`echo "$a + $b" | bc`
 expected='t'
-output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>psse.log`
+output=`echo "(= (+ $a $b) $c)" | target/psse -v 2 2>tmp/psse.log`
 
 actual=`echo $output |\
   tail -1 |\
@@ -266,7 +266,7 @@ else
 fi
 
 echo -n "$0 => checking a bignum was created: "
-grep 'BIGNUM!' psse.log > /dev/null
+grep 'BIGNUM!' tmp/psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"

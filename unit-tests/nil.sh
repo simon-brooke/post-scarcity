@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected=nil
-actual=`echo 'nil' | target/psse | tail -1`
+actual=`echo 'nil' | target/psse 2>/dev/null | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

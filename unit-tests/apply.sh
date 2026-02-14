@@ -18,7 +18,6 @@ echo -n "$0: Apply function to multiple arguments... "
 expected='3'
 actual=`echo "(apply 'add '(1 2))"| target/psse 2>/dev/null | tail -1`
 
-
 if [ "${expected}" = "${actual}" ]
 then
     echo "OK"

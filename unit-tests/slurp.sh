@@ -1,9 +1,9 @@
 #!/bin/bash
 
-tmp=hi.$$
+tmp=tmp/hi.$$
 echo "Hello, there." > ${tmp}
 expected='"Hello, there.'
-actual=`echo "(slurp (open \"${tmp}\"))" | target/psse | tail -2 | head -1`
+actual=`echo "(slurp (open \"${tmp}\"))" | target/psse 2>&1 | tail -2 | head -1`
 
 if [ "${expected}" = "${actual}" ]
 then

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='Fred'
-actual=`echo "'Fred" | target/psse | tail -1`
+actual=`echo "'Fred" | target/psse 2>&1 | tail -1`
 
 if [ "${expected}" = "${actual}" ]
 then

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-return=0
+result=0
 
 #####################################################################
 # subtract a smallnum from a smallnum to produce a smallnum
@@ -20,17 +20,17 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
-echo -n "checking no bignum was created: "
+echo -n "$0 => checking no bignum was created: "
 grep -v 'BIGNUM!' psse.log > /dev/null
 if [ $? -eq "0" ]
 then
     echo "OK"
 else
     echo "Fail"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 #####################################################################
@@ -51,7 +51,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 #####################################################################
@@ -71,7 +71,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 
@@ -93,7 +93,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 #####################################################################
@@ -113,7 +113,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
-exit ${return}
+exit ${result}

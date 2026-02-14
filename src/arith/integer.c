@@ -412,10 +412,16 @@ struct cons_pointer multiply_integers( struct cons_pointer a,
 struct cons_pointer integer_to_string_add_digit( int digit, int digits,
                                                  struct cons_pointer tail ) {
     wint_t character = btowc( hex_digits[digit] );
-    return ( digits % 3 == 0 ) ?
+    debug_printf( DEBUG_IO, L"integer_to_string_add_digit: digit is %d, digits is %d; returning: ", digit, digits);
+    struct cons_pointer r = ( digits % 3 == 0 ) ?
         make_string( L',', make_string( character,
                                         tail ) ) :
         make_string( character, tail );
+
+    debug_print_object( r, DEBUG_IO);
+    debug_println( DEBUG_IO);
+
+    return r;
 }
 
 /**

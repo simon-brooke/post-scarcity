@@ -12,7 +12,7 @@ then
   echo "OK"
 else
   echo "Fail: expected '${expected}', got '${actual}'"
-  result=1
+  result=`echo "${result} + 1" | bc`
 fi
 
 echo -n "$0: cond with two clauses... "
@@ -25,7 +25,7 @@ then
     echo "OK"
  else
     echo "Fail: expected '${expected}', got '${actual}'"
-    result=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 exit ${result}

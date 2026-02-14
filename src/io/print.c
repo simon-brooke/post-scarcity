@@ -170,13 +170,9 @@ struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer ) {
             url_fputwc( L'>', output );
             break;
         case INTEGERTV:
-            if ( nilp( cell.payload.integer.more)) {
-                url_fwprintf( output, L"%ld", cell.payload.integer.value);
-            } else {
-                struct cons_pointer s = integer_to_string( pointer, 10 );
-                print_string_contents( output, s );
-                dec_ref( s );
-            }
+            struct cons_pointer s = integer_to_string( pointer, 10 );
+            print_string_contents( output, s );
+            dec_ref( s );
             break;
         case KEYTV:
             url_fputws( L":", output );
