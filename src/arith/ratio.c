@@ -64,14 +64,15 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
 
             if ( gcd > 1 ) {
                 if ( drrv / gcd == 1 ) {
-                    result = acquire_integer( (int64_t)(ddrv / gcd), NIL );
+                    result =
+                        acquire_integer( ( int64_t ) ( ddrv / gcd ), NIL );
                 } else {
                     debug_printf( DEBUG_ARITH,
                                   L"simplify_ratio: %ld/%ld => %ld/%ld\n",
                                   ddrv, drrv, ddrv / gcd, drrv / gcd );
                     result =
                         make_ratio( acquire_integer( ddrv / gcd, NIL ),
-                                    acquire_integer( drrv / gcd, NIL ) );
+                                    acquire_integer( drrv / gcd, NIL ), false);
                 }
             }
         }
@@ -93,25 +94,26 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
                                      struct cons_pointer arg2 ) {
     struct cons_pointer r;
 
-    debug_print( L"\nadd_ratio_ratio: ", DEBUG_ARITH);
-    debug_print_object( arg1, DEBUG_ARITH);
-    debug_print( L" + ", DEBUG_ARITH);
-    debug_print_object( arg2, DEBUG_ARITH);
+    debug_print( L"\nadd_ratio_ratio: ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L" + ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
 
     if ( ratiop( arg1 ) && ratiop( arg2 ) ) {
-        struct cons_space_object * cell1 = &pointer2cell( arg1 );
-        struct cons_space_object * cell2 = &pointer2cell( arg2 );
-        
-        struct cons_pointer divisor = multiply_integers( cell1->payload.ratio.divisor, cell2->payload.ratio.divisor );
-        struct cons_pointer dividend = add_integers( 
-            multiply_integers( cell1->payload.ratio.dividend, 
-                cell2->payload.ratio.divisor),
-            multiply_integers( cell2->payload.ratio.dividend, 
-                cell1->payload.ratio.divisor));
-            r = make_ratio( dividend, divisor );
+        struct cons_space_object *cell1 = &pointer2cell( arg1 );
+        struct cons_space_object *cell2 = &pointer2cell( arg2 );
+
+        struct cons_pointer divisor =
+            multiply_integers( cell1->payload.ratio.divisor,
+                               cell2->payload.ratio.divisor );
+        struct cons_pointer dividend =
+            add_integers( multiply_integers( cell1->payload.ratio.dividend,
+                                             cell2->payload.ratio.divisor ),
+                          multiply_integers( cell2->payload.ratio.dividend,
+                                             cell1->payload.ratio.divisor ) );
+        r = make_ratio( dividend, divisor, true );
     } else {
-        r =
-            throw_exception( make_cons( c_string_to_lisp_string
+        r = throw_exception( make_cons( c_string_to_lisp_string
                                         ( L"Shouldn't happen: bad arg to add_ratio_ratio" ),
                                         make_cons( arg1,
                                                    make_cons( arg2, NIL ) ) ),
@@ -136,15 +138,14 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
                                        struct cons_pointer ratarg ) {
     struct cons_pointer result;
 
-    debug_print( L"\nadd_integer_ratio: ", DEBUG_ARITH);
-    debug_print_object( intarg, DEBUG_ARITH);
-    debug_print( L" + ", DEBUG_ARITH);
-    debug_print_object( ratarg, DEBUG_ARITH);
+    debug_print( L"\nadd_integer_ratio: ", DEBUG_ARITH );
+    debug_print_object( intarg, DEBUG_ARITH );
+    debug_print( L" + ", DEBUG_ARITH );
+    debug_print_object( ratarg, DEBUG_ARITH );
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
-        // TODO: not longer works
         struct cons_pointer one = acquire_integer( 1, NIL ),
-            ratio = make_ratio( intarg, one );
+            ratio = make_ratio( intarg, one, false );
 
         result = add_ratio_ratio( ratio, ratarg );
 
@@ -174,14 +175,14 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
  */
 struct cons_pointer divide_ratio_ratio( struct cons_pointer arg1,
                                         struct cons_pointer arg2 ) {
-    debug_print( L"\ndivide_ratio_ratio: ", DEBUG_ARITH);
-    debug_print_object( arg1, DEBUG_ARITH);
-    debug_print( L" / ", DEBUG_ARITH);
-    debug_print_object( arg2, DEBUG_ARITH);
+    debug_print( L"\ndivide_ratio_ratio: ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L" / ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
     // TODO: this now has to work if `arg1` is an integer
     struct cons_pointer i =
         make_ratio( pointer2cell( arg2 ).payload.ratio.divisor,
-                    pointer2cell( arg2 ).payload.ratio.dividend ), result =
+                    pointer2cell( arg2 ).payload.ratio.dividend, false ), result =
         multiply_ratio_ratio( arg1, i );
 
     dec_ref( i );
@@ -226,15 +227,10 @@ struct cons_pointer multiply_ratio_ratio( struct
 
         struct cons_pointer dividend = acquire_integer( ddrv, NIL );
         struct cons_pointer divisor = acquire_integer( drrv, NIL );
-        struct cons_pointer unsimplified = make_ratio( dividend, divisor );
-        result = simplify_ratio( unsimplified );
-
+        result = make_ratio( dividend, divisor, true );
+        
         release_integer( dividend );
         release_integer( divisor );
-
-        if ( !eq( unsimplified, result ) ) {
-            dec_ref( unsimplified );
-        }
     } else {
         result =
             throw_exception( c_string_to_lisp_string
@@ -259,15 +255,14 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer intarg,
                                             struct cons_pointer ratarg ) {
     struct cons_pointer result;
 
-    debug_print( L"\nmultiply_integer_ratio: ", DEBUG_ARITH);
-    debug_print_object( intarg, DEBUG_ARITH);
-    debug_print( L" * ", DEBUG_ARITH);
-    debug_print_object( ratarg, DEBUG_ARITH);
+    debug_print( L"\nmultiply_integer_ratio: ", DEBUG_ARITH );
+    debug_print_object( intarg, DEBUG_ARITH );
+    debug_print( L" * ", DEBUG_ARITH );
+    debug_print_object( ratarg, DEBUG_ARITH );
 
     if ( integerp( intarg ) && ratiop( ratarg ) ) {
-        // TODO: no longer works; fix
         struct cons_pointer one = acquire_integer( 1, NIL ),
-            ratio = make_ratio( intarg, one );
+            ratio = make_ratio( intarg, one, false );
         result = multiply_ratio_ratio( ratio, ratarg );
 
         release_integer( one );
@@ -294,10 +289,10 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer intarg,
  */
 struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
                                           struct cons_pointer arg2 ) {
-    debug_print( L"\nsubtract_ratio_ratio: ", DEBUG_ARITH);
-    debug_print_object( arg1, DEBUG_ARITH);
-    debug_print( L" * ", DEBUG_ARITH);
-    debug_print_object( arg2, DEBUG_ARITH);
+    debug_print( L"\nsubtract_ratio_ratio: ", DEBUG_ARITH );
+    debug_print_object( arg1, DEBUG_ARITH );
+    debug_print( L" * ", DEBUG_ARITH );
+    debug_print_object( arg2, DEBUG_ARITH );
 
     struct cons_pointer i = negative( arg2 ),
         result = add_ratio_ratio( arg1, i );
@@ -315,7 +310,14 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
  * @exception if either `dividend` or `divisor` is not an integer.
  */
 struct cons_pointer make_ratio( struct cons_pointer dividend,
-                                struct cons_pointer divisor ) {
+                                struct cons_pointer divisor,
+                                bool simplify ) {
+    debug_print( L"make_ratio: dividend = ", DEBUG_ALLOC);
+    debug_print_object( dividend, DEBUG_ALLOC);
+    debug_print( L"; divisor = ", DEBUG_ALLOC);
+    debug_print_object( divisor, DEBUG_ALLOC);
+    debug_printf( DEBUG_ALLOC, L"; simplify = %d\n", simplify);
+
     struct cons_pointer result;
     if ( integerp( dividend ) && integerp( divisor ) ) {
         inc_ref( dividend );
@@ -325,9 +327,13 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
         cell->payload.ratio.dividend = dividend;
         cell->payload.ratio.divisor = divisor;
 
-        result = simplify_ratio( unsimplified );
-        if ( !eq( result, unsimplified ) ) {
-            dec_ref( unsimplified );
+        if ( simplify) {
+            result = simplify_ratio( unsimplified );
+            if ( !eq( result, unsimplified ) ) {
+                dec_ref( unsimplified );
+            }
+        } else {
+            result = unsimplified;
         }
     } else {
         result =
@@ -335,8 +341,9 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
                              ( L"Dividend and divisor of a ratio must be integers" ),
                              NIL );
     }
-    // debug_print( L"make_ratio returning:\n", DEBUG_ARITH);
-    debug_dump_object( result, DEBUG_ARITH );
+    debug_print( L" => ", DEBUG_ALLOC);
+    debug_print_object( result, DEBUG_ALLOC );
+    debug_println( DEBUG_ALLOC);
 
     return result;
 }
@@ -369,28 +376,31 @@ bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b ) {
  * @param rat a pointer to a ratio.
  * @return long double 
  */
-long double c_ratio_to_ld( struct cons_pointer rat) {
+long double c_ratio_to_ld( struct cons_pointer rat ) {
     long double result = NAN;
 
-    debug_print( L"\nc_ratio_to_ld: ", DEBUG_ARITH);
-    debug_print_object( rat, DEBUG_ARITH);
+    debug_print( L"\nc_ratio_to_ld: ", DEBUG_ARITH );
+    debug_print_object( rat, DEBUG_ARITH );
 
-    if ( ratiop( rat)) {
-        struct cons_space_object * cell_a = & pointer2cell( rat);
+    if ( ratiop( rat ) ) {
+        struct cons_space_object *cell_a = &pointer2cell( rat );
         struct cons_pointer dv = cell_a->payload.ratio.divisor;
-        struct cons_space_object * dv_cell = &pointer2cell( dv);
+        struct cons_space_object *dv_cell = &pointer2cell( dv );
         struct cons_pointer dd = cell_a->payload.ratio.dividend;
-        struct cons_space_object * dd_cell = &pointer2cell( dd);
-        
-        if ( nilp( dv_cell->payload.integer.more) && nilp( dd_cell->payload.integer.more)) {
-            result = ((long double) dd_cell->payload.integer.value) / ((long double) dv_cell->payload.integer.value);;
+        struct cons_space_object *dd_cell = &pointer2cell( dd );
+
+        if ( nilp( dv_cell->payload.integer.more )
+             && nilp( dd_cell->payload.integer.more ) ) {
+            result =
+                ( ( long double ) dd_cell->payload.integer.value ) /
+                ( ( long double ) dv_cell->payload.integer.value );;
         } else {
-            fwprintf( stderr, L"real conversion is not yet implemented for bignums rationals.");
-        } 
+            fwprintf( stderr,
+                      L"real conversion is not yet implemented for bignums rationals." );
+        }
     }
 
     debug_printf( DEBUG_ARITH, L"\nc_ratio_to_ld returning %d\n", result );
 
     return result;
 }
-

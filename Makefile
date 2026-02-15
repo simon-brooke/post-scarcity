@@ -30,6 +30,7 @@ $(TARGET): $(OBJS) Makefile
 
 doc: $(SRCS) Makefile Doxyfile
 	doxygen
+	tar czvf target/doc.tgz doc
 
 format: $(SRCS) $(HDRS) Makefile
 ifeq ($(shell uname -s), Darwin)

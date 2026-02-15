@@ -22,6 +22,27 @@ fractions once bignums are working.
 So we're down to eight unit tests failing: the memory leak, one unimplemented 
 feature, and the bignum problem.
 
+At the end of the day I decided to chew up some memory by doing a series of 
+moderately large computations, to see how much memory is being successfully 
+deallocated.
+
+```lisp
+:: (mapcar fact '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+
+(1 2 6 24 120 720 5,040 40,320 362,880 3,628,800 39,916,800 479,001,600 
+1,932,053,504 1,278,945,280 2,004,310,016 2,004,189,184 4,006,445,056 
+3,396,534,272 109,641,728 2,192,834,560)
+:: 
+
+Allocation summary: allocated 10136; deallocated 548; not deallocated 9588.
+```
+
+So, about 5%. This is still a major problem, and is making me doubt my reference
+counting strategy. Must do better!
+
+Note that the reason that the numbers become eratic past about two billion is 
+the bignum arithmetic bug.
+
 ## 20260214
 
 ### Memory leaks

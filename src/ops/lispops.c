@@ -446,10 +446,9 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.
-                              special.executable ) ( get_stack_frame
-                                                     ( next_pointer ),
-                                                     next_pointer, env );
+                            ( *fn_cell.payload.special.
+                              executable ) ( get_stack_frame( next_pointer ),
+                                             next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -1246,8 +1245,7 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
     return exceptionp( message ) ? message : throw_exception( message,
-                                                              frame->
-                                                              previous );
+                                                              frame->previous );
 }
 
 /**
@@ -1430,14 +1428,13 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
-                                                l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ), l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }

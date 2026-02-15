@@ -32,10 +32,11 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
                                           struct cons_pointer arg2 );
 
 struct cons_pointer make_ratio( struct cons_pointer dividend,
-                                struct cons_pointer divisor );
+                                struct cons_pointer divisor,
+                                bool simplify );
 
 bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b );
 
-long double c_ratio_to_ld( struct cons_pointer rat);
+long double c_ratio_to_ld( struct cons_pointer rat );
 
 #endif

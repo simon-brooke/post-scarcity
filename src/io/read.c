@@ -90,7 +90,7 @@ struct cons_pointer read_path( URL_FILE *input, wint_t initial,
 
     switch ( initial ) {
         case '/':
-            prefix = make_cons( c_string_to_lisp_symbol( L"oblist" ), NIL);
+            prefix = make_cons( c_string_to_lisp_symbol( L"oblist" ), NIL );
             break;
         case '$':
         case LSESSION:
@@ -370,7 +370,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                                                ( to_long_double
                                                                  ( base ),
                                                                  places_of_decimals ),
-                                                               NIL ) );
+                                                               NIL ), true);
         inc_ref( div );
 
         result = make_real( to_long_double( div ) );
@@ -378,7 +378,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
         dec_ref( div );
     } else if ( integerp( dividend ) ) {
         debug_print( L"read_number: converting result to ratio\n", DEBUG_IO );
-        result = make_ratio( dividend, result );
+        result = make_ratio( dividend, result, true );
     }
 
     if ( neg ) {
