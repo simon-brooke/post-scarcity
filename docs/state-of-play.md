@@ -1,5 +1,27 @@
 # State of Play
 
+## 20260215
+
+Both of yesterday's regressions are fixed. Memory problem still in much the 
+same state.
+
+> Allocation summary: allocated 1210; deallocated 10; not deallocated 1200.
+
+That left the add ratios problem which was deeper. I had unintended unterminated 
+recursion happening there. :-(
+
+It burned through 74 cons pages each of 1,024 cons cells, total 76,800 cells, 
+and 19,153 stack frames. before it got there; and then threw the exception back
+up through each of those 19,153 stack frames. But the actual exception message
+was `Unrecognised tag value 0 (    )`, which is not enormously helpful.
+
+However, once I had recognised what the problem was, it was quickly fixed, with
+the added bonus that the new solution will automatically work for bignum 
+fractions once bignums are working.
+
+So we're down to eight unit tests failing: the memory leak, one unimplemented 
+feature, and the bignum problem.
+
 ## 20260214
 
 ### Memory leaks

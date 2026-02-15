@@ -1,13 +1,13 @@
 #!/bin/bash
 
-return=0
+result=0
 
 #####################################################################
 # last 'smallnum' value:
 # sbcl calculates (expt 2 59) => 576460752303423488
 expected='576460752303423488'
 
-output=`target/psse <<EOF
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! expt (lambda
               (n x)
@@ -26,7 +26,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 #####################################################################
@@ -34,7 +34,7 @@ fi
 # sbcl calculates (expt 2 60) => 1152921504606846976
 expected='1152921504606846976'
 
-output=`target/psse <<EOF
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! expt (lambda
               (n x)
@@ -53,7 +53,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 #####################################################################
@@ -61,7 +61,7 @@ fi
 # sbcl calculates (expt 2 61) => 2305843009213693952
 expected='2305843009213693952'
 
-output=`target/psse <<EOF
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! expt (lambda
               (n x)
@@ -80,15 +80,13 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
-
-
 
 # sbcl calculates (expt 2 64) => 18446744073709551616
 expected='18446744073709551616'
 
-output=`target/psse <<EOF
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! expt (lambda
               (n x)
@@ -107,13 +105,13 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
 # sbcl calculates (expt 2 65) => 36893488147419103232
 expected='36893488147419103232'
 
-output=`target/psse <<EOF
+output=`target/psse 2>/dev/null <<EOF
 (progn
   (set! expt (lambda
               (n x)
@@ -132,7 +130,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    return=1
+    result=`echo "${result} + 1" | bc`
 fi
 
-exit ${return}
+exit ${result}

@@ -25,7 +25,7 @@
 
 
 /**
- * return, as a int64_t, the greatest common divisor of `m` and `n`,
+ * @brief return, as an int64_t, the greatest common divisor of `m` and `n`,
  */
 int64_t greatest_common_divisor( int64_t m, int64_t n ) {
     int o;
@@ -39,7 +39,7 @@ int64_t greatest_common_divisor( int64_t m, int64_t n ) {
 }
 
 /**
- * return, as a int64_t, the least common multiple of `m` and `n`,
+ * @brief return, as an int64_t, the least common multiple of `m` and `n`,
  */
 int64_t least_common_multiple( int64_t m, int64_t n ) {
     return m / greatest_common_divisor( m, n ) * n;
@@ -64,7 +64,7 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
 
             if ( gcd > 1 ) {
                 if ( drrv / gcd == 1 ) {
-                    result = acquire_integer( ddrv / gcd, NIL );
+                    result = acquire_integer( (int64_t)(ddrv / gcd), NIL );
                 } else {
                     debug_printf( DEBUG_ARITH,
                                   L"simplify_ratio: %ld/%ld => %ld/%ld\n",
@@ -91,61 +91,26 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
  */
 struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
                                      struct cons_pointer arg2 ) {
-    struct cons_pointer r, result;
+    struct cons_pointer r;
 
-    debug_print( L"\naadd_ratio_ratio: ", DEBUG_ARITH);
+    debug_print( L"\nadd_ratio_ratio: ", DEBUG_ARITH);
     debug_print_object( arg1, DEBUG_ARITH);
     debug_print( L" + ", DEBUG_ARITH);
     debug_print_object( arg2, DEBUG_ARITH);
 
     if ( ratiop( arg1 ) && ratiop( arg2 ) ) {
-        struct cons_space_object cell1 = pointer2cell( arg1 );
-        struct cons_space_object cell2 = pointer2cell( arg2 );
-        int64_t dd1v =
-            pointer2cell( cell1.payload.ratio.dividend ).payload.integer.value,
-            dd2v =
-            pointer2cell( cell2.payload.ratio.dividend ).payload.integer.value,
-            dr1v =
-            pointer2cell( cell1.payload.ratio.divisor ).payload.integer.value,
-            dr2v =
-            pointer2cell( cell2.payload.ratio.divisor ).payload.integer.value,
-            lcm = least_common_multiple( dr1v, dr2v ),
-            m1 = lcm / dr1v, m2 = lcm / dr2v;
-
-        debug_printf( DEBUG_ARITH, L"; lcm = %ld; m1 = %ld; m2 = %ld", lcm,
-                      m1, m2 );
-
-        if ( dr1v == dr2v ) {
-            r = make_ratio( acquire_integer( dd1v + dd2v, NIL ),
-                            cell1.payload.ratio.divisor );
-        } else {
-            struct cons_pointer dd1vm = acquire_integer( dd1v * m1, NIL ),
-                dr1vm = acquire_integer( dr1v * m1, NIL ),
-                dd2vm = acquire_integer( dd2v * m2, NIL ),
-                dr2vm = acquire_integer( dr2v * m2, NIL ),
-                r1 = make_ratio( dd1vm, dr1vm ),
-                r2 = make_ratio( dd2vm, dr2vm );
-
-            r = add_ratio_ratio( r1, r2 );
-
-            if ( !eq( r, r1 ) ) {
-                dec_ref( r1 );
-            }
-            if ( !eq( r, r2 ) ) {
-                dec_ref( r2 );
-            }
-
-            /* because the references on dd1vm, dr1vm, dd2vm and dr2vm were
-             * never incremented except when making r1 and r2, decrementing
-             * r1 and r2 should be enought to garbage collect them. */
-        }
-
-        result = simplify_ratio( r );
-        if ( !eq( r, result ) ) {
-            dec_ref( r );
-        }
+        struct cons_space_object * cell1 = &pointer2cell( arg1 );
+        struct cons_space_object * cell2 = &pointer2cell( arg2 );
+        
+        struct cons_pointer divisor = multiply_integers( cell1->payload.ratio.divisor, cell2->payload.ratio.divisor );
+        struct cons_pointer dividend = add_integers( 
+            multiply_integers( cell1->payload.ratio.dividend, 
+                cell2->payload.ratio.divisor),
+            multiply_integers( cell2->payload.ratio.dividend, 
+                cell1->payload.ratio.divisor));
+            r = make_ratio( dividend, divisor );
     } else {
-        result =
+        r =
             throw_exception( make_cons( c_string_to_lisp_string
                                         ( L"Shouldn't happen: bad arg to add_ratio_ratio" ),
                                         make_cons( arg1,
@@ -153,11 +118,11 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
                              NIL );
     }
 
-    debug_print( L" => ", DEBUG_ARITH );
-    debug_print_object( result, DEBUG_ARITH );
+    debug_print( L"add_ratio_ratio => ", DEBUG_ARITH );
+    debug_print_object( r, DEBUG_ARITH );
     debug_print( L"\n", DEBUG_ARITH );
 
-    return result;
+    return r;
 }
 
 
