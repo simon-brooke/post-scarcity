@@ -15,6 +15,7 @@
 #include "arith/integer.h"
 #include "arith/peano.h"
 #include "arith/ratio.h"
+#include "debug.h"
 
 /**
  * Shallow, and thus cheap, equality: true if these two objects are
@@ -49,10 +50,208 @@ bool end_of_string( struct cons_pointer string ) {
 }
 
 /**
+ * @brief compare two long doubles and returns true if they are the same to
+ * within a tolerance of one part in a million.
+ * 
+ * @param a 
+ * @param b 
+ * @return true if `a` and `b` are equal to within one part in a million.
+ * @return false otherwise.
+ */
+bool equal_ld_ld( long double a, long double b) {
+    long double fa = fabsl( a);
+    long double fb = fabsl( b);
+    /* difference of magnitudes */
+    long double diff = fabsl( fa - fb);
+    /* average magnitude of the two */
+    long double av = (fa > fb) ? ( fa - diff) : ( fb - diff);
+    /* amount of difference we will tolerate for equality */
+    long double tolerance = av * 0.0000001;
+
+    bool result = ( fabsl( a - b) < tolerance);
+
+    debug_printf( DEBUG_ARITH, L"\nequal_ld_ld returning %d\n", result );
+
+    return result;
+}
+
+/**
+ * @brief Private function, don't use. It depends on its arguments being 
+ * numbers and doesn't sanity check them.
+ * 
+ * @param a a lisp integer -- if it isn't an integer, things will break.
+ * @param b a lisp real -- if it isn't a real, things will break.
+ * @return true if the two numbers have equal value.
+ * @return false if they don't.
+ */
+bool equal_integer_real( struct cons_pointer a, struct cons_pointer b ){
+    debug_print( L"\nequal_integer_real: ", DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH);
+    debug_print( L" = ", DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH);
+    bool result = false;
+    struct cons_space_object * cell_a = &pointer2cell( a);
+    struct cons_space_object * cell_b = & pointer2cell( b);
+
+    if (nilp( cell_a->payload.integer.more)) {
+        result = equal_ld_ld( (long double) cell_a->payload.integer.value, cell_b->payload.real.value);
+    } else {
+        fwprintf( stderr, L"\nequality is not yet implemented for bignums compared to reals.");
+    }
+
+    debug_printf( DEBUG_ARITH, L"\nequal_integer_real returning %d\n", result );
+
+    return result;
+}
+
+/**
+ * @brief Private function, don't use. It depends on its arguments being 
+ * numbers and doesn't sanity check them.
+ * 
+ * @param a a lisp integer -- if it isn't an integer, things will break.
+ * @param b a lisp number.
+ * @return true if the two numbers have equal value.
+ * @return false if they don't.
+ */
+bool equal_integer_number( struct cons_pointer a, struct cons_pointer b ) {
+    debug_print( L"\nequal_integer_number: ", DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH);
+    debug_print( L" = ", DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH);
+    bool result = false;
+    struct cons_space_object * cell_b = & pointer2cell( b);
+
+    switch ( cell_b->tag.value) {
+        case INTEGERTV:
+            result = equal_integer_integer( a, b);
+            break;
+        case REALTV: 
+            result = equal_integer_real( a, b);
+            break;
+        case RATIOTV:
+            result = false;
+            break;
+    }
+        
+    debug_printf( DEBUG_ARITH, L"\nequal_integer_number returning %d\n", result );
+
+    return result;
+}
+
+/**
+ * @brief Private function, don't use. It depends on its arguments being 
+ * numbers and doesn't sanity check them.
+ * 
+ * @param a a lisp real -- if it isn't an real, things will break.
+ * @param b a lisp number.
+ * @return true if the two numbers have equal value.
+ * @return false if they don't.
+ */
+bool equal_real_number( struct cons_pointer a, struct cons_pointer b) {
+    debug_print( L"\nequal_real_number: ", DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH);
+    debug_print( L" = ", DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH);
+    bool result = false;
+    struct cons_space_object * cell_b = & pointer2cell( b);
+
+    switch ( cell_b->tag.value) {
+        case INTEGERTV:
+            result = equal_integer_real( b, a);
+            break;
+        case REALTV: {
+                struct cons_space_object * cell_a = & pointer2cell( a);
+                result = equal_ld_ld( cell_a->payload.real.value, cell_b->payload.real.value);
+            }
+            break;
+        case RATIOTV: {
+                struct cons_space_object * cell_a = & pointer2cell( a);
+                struct cons_pointer dv = cell_a->payload.ratio.divisor;
+                struct cons_space_object * dv_cell = &pointer2cell( dv);
+                struct cons_pointer dd = cell_a->payload.ratio.dividend;
+                struct cons_space_object * dd_cell = &pointer2cell( dd);
+                
+                if ( nilp( dv_cell->payload.integer.more) && nilp( dd_cell->payload.integer.more)) {
+                    long double bv = ((long double) dv_cell->payload.integer.value) / ((long double) dd_cell->payload.integer.value);
+                    result = equal_ld_ld( bv, cell_a->payload.real.value);
+                } else {
+                    fwprintf( stderr, L"\nequality is not yet implemented for bignums rationals compared to reals.");
+                }
+            }
+            break;
+        }
+
+        debug_printf( DEBUG_ARITH, L"\nequal_real_number returning %d\n", result );
+
+    return result;
+}
+
+/**
+ * @brief Private function, don't use. It depends on its arguments being 
+ * numbers and doesn't sanity check them.
+ * 
+ * @param a a number
+ * @param b a number
+ * @return true if the two numbers have equal value.
+ * @return false if they don't.
+ */
+bool equal_number_number( struct cons_pointer a, struct cons_pointer b ) {
+    bool result = eq( a, b );
+
+    debug_print( L"\nequal_number_number: ", DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH);
+    debug_print( L" = ", DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH);
+
+    if ( !result ) {
+        struct cons_space_object * cell_a = & pointer2cell( a);
+        struct cons_space_object * cell_b = & pointer2cell( b);
+
+        switch ( cell_a->tag.value) {
+            case INTEGERTV: 
+                result = equal_integer_number( a, b);
+                break;
+            case REALTV:
+                result = equal_real_number( a, b);
+                break;
+            case RATIOTV:
+                switch( cell_b->tag.value) {
+                    case INTEGERTV:
+                        /* as all ratios are simplified by make_ratio, any
+                         * ratio that would simplify to an integer is an
+                         * integer, */
+                        result = false;
+                        break;
+                    case REALTV:
+                        result = equal_real_number( b, a);
+                        break;
+                    case RATIOTV:
+                        result = equal_ratio_ratio( a, b);
+                        break;
+                    /* can't throw an exception from here, but non-numbers
+                     * shouldn't have been passed in anyway, so no default. */
+                }
+                break;
+                /* can't throw an exception from here, but non-numbers
+                 * shouldn't have been passed in anyway, so no default. */
+        }
+    }
+
+    debug_printf( DEBUG_ARITH, L"\nequal_number_number returning %d\n", result );
+
+    return result;
+}
+ 
+/**
  * Deep, and thus expensive, equality: true if these two objects have
  * identical structure, else false.
  */
 bool equal( struct cons_pointer a, struct cons_pointer b ) {
+    debug_print( L"\nequal: ", DEBUG_ARITH);
+    debug_print_object( a, DEBUG_ARITH);
+    debug_print( L" = ", DEBUG_ARITH);
+    debug_print_object( b, DEBUG_ARITH);
+
     bool result = eq( a, b );
 
     if ( !result && same_type( a, b ) ) {
@@ -121,11 +320,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                 break;
         }
     } else if ( numberp( a ) && numberp( b ) ) {
-        if ( integerp( a ) ) {
-            result = equal_integer_real( a, b );
-        } else if ( integerp( b ) ) {
-            result = equal_integer_real( b, a );
-        }
+        result = equal_number_number( a, b);
     }
 
     /*
@@ -135,6 +330,8 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
      * I'm not certain what equality means for read and write streams, so
      * I'll ignore them, too, for now.
      */
+
+    debug_printf( DEBUG_ARITH, L"\nequal returning %d\n", result );
 
     return result;
 }
