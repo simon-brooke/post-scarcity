@@ -36,4 +36,6 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
 
 bool equal_ratio_ratio( struct cons_pointer a, struct cons_pointer b );
 
+long double c_ratio_to_ld( struct cons_pointer rat);
+
 #endif

@@ -75,4 +75,7 @@ struct cons_pointer
 lisp_divide( struct stack_frame *frame, struct cons_pointer frame_pointer,
              struct cons_pointer env );
 
+struct cons_pointer lisp_ratio_to_real( struct stack_frame *frame, struct cons_pointer frame_pointer,
+    struct cons_pointer env);
+
 #endif /* PEANO_H */

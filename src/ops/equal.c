@@ -51,11 +51,11 @@ bool end_of_string( struct cons_pointer string ) {
 
 /**
  * @brief compare two long doubles and returns true if they are the same to
- * within a tolerance of one part in a million.
+ * within a tolerance of one part in a billion.
  * 
  * @param a 
  * @param b 
- * @return true if `a` and `b` are equal to within one part in a million.
+ * @return true if `a` and `b` are equal to within one part in a billion.
  * @return false otherwise.
  */
 bool equal_ld_ld( long double a, long double b) {
@@ -66,7 +66,7 @@ bool equal_ld_ld( long double a, long double b) {
     /* average magnitude of the two */
     long double av = (fa > fb) ? ( fa - diff) : ( fb - diff);
     /* amount of difference we will tolerate for equality */
-    long double tolerance = av * 0.0000001;
+    long double tolerance = av * 0.000000001;
 
     bool result = ( fabsl( a - b) < tolerance);
 
@@ -164,20 +164,9 @@ bool equal_real_number( struct cons_pointer a, struct cons_pointer b) {
                 result = equal_ld_ld( cell_a->payload.real.value, cell_b->payload.real.value);
             }
             break;
-        case RATIOTV: {
+        case RATIOTV: 
                 struct cons_space_object * cell_a = & pointer2cell( a);
-                struct cons_pointer dv = cell_a->payload.ratio.divisor;
-                struct cons_space_object * dv_cell = &pointer2cell( dv);
-                struct cons_pointer dd = cell_a->payload.ratio.dividend;
-                struct cons_space_object * dd_cell = &pointer2cell( dd);
-                
-                if ( nilp( dv_cell->payload.integer.more) && nilp( dd_cell->payload.integer.more)) {
-                    long double bv = ((long double) dv_cell->payload.integer.value) / ((long double) dd_cell->payload.integer.value);
-                    result = equal_ld_ld( bv, cell_a->payload.real.value);
-                } else {
-                    fwprintf( stderr, L"\nequality is not yet implemented for bignums rationals compared to reals.");
-                }
-            }
+                result = equal_ld_ld( c_ratio_to_ld( b), cell_a->payload.real.value);
             break;
         }
 

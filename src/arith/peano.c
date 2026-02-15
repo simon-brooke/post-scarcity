@@ -748,3 +748,29 @@ struct cons_pointer lisp_divide( struct
 
     return result;
 }
+
+/**
+ * @brief Function: return a real (approcimately) equal in value to the ratio 
+ * which is the first argument.
+ * 
+ * @param frame 
+ * @param frame_pointer 
+ * @param env 
+ * @return struct cons_pointer a pointer to a real
+ */
+// struct cons_pointer lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
+//            struct cons_pointer env )
+struct cons_pointer lisp_ratio_to_real( struct stack_frame *frame, struct cons_pointer frame_pointer,
+    struct cons_pointer env) {
+    struct cons_pointer result = NIL;
+    struct cons_pointer rat = frame->arg[0];
+
+    debug_print( L"\nc_ratio_to_ld: ", DEBUG_ARITH);
+    debug_print_object( rat, DEBUG_ARITH);
+
+    if ( ratiop( rat)) {
+        result = make_real( c_ratio_to_ld( rat));
+    } // TODO: else throw an exception?
+
+    return result;
+}
