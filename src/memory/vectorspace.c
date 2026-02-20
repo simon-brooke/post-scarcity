@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
 /*
  * wide characters
  */
@@ -22,6 +24,7 @@
 #include "memory/conspage.h"
 #include "memory/consspaceobject.h"
 #include "debug.h"
+#include "io/io.h"
 #include "memory/hashmap.h"
 #include "memory/stack.h"
 #include "memory/vectorspace.h"
@@ -123,7 +126,8 @@ struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
 void free_vso( struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
 
-    debug_printf( DEBUG_ALLOC, L"About to free vector-space object at 0x%lx\n",
+    debug_printf( DEBUG_ALLOC, L"About to free vector-space object of type %s at 0x%lx\n",
+                  (char *) cell.payload.vectorp.tag.bytes,
                   cell.payload.vectorp.address );
     struct vector_space_object *vso = cell.payload.vectorp.address;
 

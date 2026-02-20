@@ -1,9 +1,9 @@
-(set! symbolp (lambda (x) (equal (type x) "SYMB")))
+(set! symbol? (lambda (x) (equal (type x) "SYMB")))
 
 (set! defun!
       (nlambda
        form
-       (cond ((symbolp (car form))
+       (cond ((symbol? (car form))
               (set (car form) (apply 'lambda (cdr form))))
          (t nil))))
 
@@ -17,7 +17,7 @@
 (set! defsp!
       (nlambda
        form
-       (cond (symbolp (car form))
+       (cond (symbol? (car form))
          (set! (car form) (apply nlambda (cdr form))))))
 
 (defsp! cube (x) ((* x x x)))

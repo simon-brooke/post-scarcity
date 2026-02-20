@@ -64,6 +64,14 @@ struct cons_pointer inc_ref( struct cons_pointer pointer ) {
 
     if ( cell->count < MAXREFERENCE ) {
         cell->count++;
+#ifdef DEBUG
+        debug_printf( DEBUG_ALLOC, L"\nIncremented cell of type %4.4s at page %d, offset %d to count %d", ((char *)cell->tag.bytes), pointer.page, pointer.offset, cell->count);
+        if ( strncmp( cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
+            debug_printf( DEBUG_ALLOC, L"; pointer to vector object of type %4.4s.\n", ((char *)(cell->payload.vectorp.tag.bytes)));
+        } else {
+            debug_println( DEBUG_ALLOC);
+        }
+#endif
     }
 
     return pointer;
@@ -82,6 +90,14 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
 
     if ( cell->count > 0 && cell->count != UINT32_MAX ) {
         cell->count--;
+#ifdef DEBUG
+        debug_printf( DEBUG_ALLOC, L"\nDecremented cell of type %4.4s at page %d, offset %d to count %d", ((char *)cell->tag.bytes), pointer.page, pointer.offset, cell->count);
+        if ( strncmp( (char *)cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
+            debug_printf( DEBUG_ALLOC, L"; pointer to vector object of type %4.4s.\n", ((char *)(cell->payload.vectorp.tag.bytes)));
+        } else {
+            debug_println( DEBUG_ALLOC);
+        }
+#endif
 
         if ( cell->count == 0 ) {
             free_cell( pointer );
@@ -320,7 +336,7 @@ struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,
-                      L"Warning: only NIL and %4.4s can be prepended to %4.4s\n",
+                      L"Warning: only %4.4s can be prepended to %4.4s\n",
                       tag, tag );
     }
 

@@ -92,7 +92,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
             {
                 struct cons_pointer next_pointer =
                     make_empty_frame( parent_pointer );
-                inc_ref( next_pointer );
+                // inc_ref( next_pointer );
 
                 struct stack_frame *next = get_stack_frame( next_pointer );
                 set_reg( next, 0, form );
@@ -362,7 +362,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     struct cons_pointer exep = NIL;
                     struct cons_pointer next_pointer =
                         make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
+//                    inc_ref( next_pointer );
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -391,7 +391,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     struct cons_pointer exep = NIL;
                     struct cons_pointer next_pointer =
                         make_stack_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
+//                    inc_ref( next_pointer );
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -424,7 +424,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 {
                     struct cons_pointer next_pointer =
                         make_special_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
+//                    inc_ref( next_pointer );
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -1269,7 +1269,6 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
-//    struct cons_pointer prompt_name = c_string_to_lisp_symbol( L"*prompt*" );
     struct cons_pointer old_oblist = oblist;
     struct cons_pointer new_env = env;
 
@@ -1342,6 +1341,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
         if ( exceptionp( expr )
              && url_feof( pointer2cell( input ).payload.stream.stream ) ) {
             /* suppress printing end of stream exception */
+            dec_ref( expr);
             break;
         }
 

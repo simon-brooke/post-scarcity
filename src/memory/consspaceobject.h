@@ -313,6 +313,11 @@
 #define exceptionp(conspoint) (check_tag(conspoint,EXCEPTIONTV))
 
 /**
+ * true if `conspoint` points to an unassigned cell, else false
+ */
+#define freep(conspoint) (check_tag(conspoint,FREETV))
+
+/**
  * true if `conspoint` points to a function cell, else false
  */
 #define functionp(conspoint) (check_tag(conspoint,FUNCTIONTV))

@@ -185,6 +185,7 @@ void print_options( FILE *stream ) {
               L"\t-d\tDump memory to standard out at end of run (copious!);\n" );
     fwprintf( stream, L"\t-h\tPrint this message and exit;\n" );
     fwprintf( stream, L"\t-p\tShow a prompt (default is no prompt);\n" );
+#ifdef DEBUG
     fwprintf( stream,
               L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n" );
     fwprintf( stream, L"\t\tWhere bits are interpreted as follows:\n" );
@@ -197,6 +198,7 @@ void print_options( FILE *stream ) {
     fwprintf( stream, L"\t\t64\tLAMBDA;\n" );
     fwprintf( stream, L"\t\t128\tREPL;\n" );
     fwprintf( stream, L"\t\t256\tSTACK.\n" );
+#endif
 }
 
 /**
@@ -384,13 +386,18 @@ int main( int argc, char *argv[] ) {
     repl( show_prompt );
 
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
+
+    debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
+    while ( (pointer2cell(oblist)).count > 0) {
+        fprintf( stderr, "Dangling refs on oblist: %d\n", (pointer2cell(oblist)).count );
+        dec_ref( oblist );
+    }
+
+    free_init_symbols(  );
+
     if ( dump_at_end ) {
         dump_pages( file_to_url_file( stdout ) );
     }
-
-    debug_print( L"Freeing oblist\n", DEBUG_BOOTSTRAP );
-    dec_ref( oblist );
-    free_init_symbols(  );
 
     summarise_allocation(  );
     curl_global_cleanup(  );

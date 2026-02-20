@@ -214,9 +214,9 @@ bool equal_number_number( struct cons_pointer a, struct cons_pointer b ) {
             case RATIOTV:
                 switch ( cell_b->tag.value ) {
                     case INTEGERTV:
-                        /* as all ratios are simplified by make_ratio, any
+                        /* as ratios are simplified by make_ratio, any
                          * ratio that would simplify to an integer is an
-                         * integer, */
+                         * integer, TODO: no longer always true. */
                         result = false;
                         break;
                     case REALTV:
@@ -278,6 +278,12 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                 /* TODO: it is not OK to do this on the stack since list-like 
                  * structures can be of indefinite extent. It *must* be done by 
                  * iteration (and even that is problematic) */
+#ifdef DEBUG
+                 debug_print( L"Comparing '", DEBUG_ARITH);
+                 debug_print_object( a, DEBUG_ARITH);
+                 debug_print( L"' to '", DEBUG_ARITH);
+                 debug_print_object( b, DEBUG_ARITH);
+#endif
                 result =
                     cell_a->payload.string.hash == cell_b->payload.string.hash
                     && cell_a->payload.string.character ==

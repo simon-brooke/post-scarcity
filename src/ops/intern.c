@@ -18,6 +18,7 @@
  */
 
 #include <stdbool.h>
+#include <string.h>
 /*
  * wide characters
  */
@@ -309,7 +310,7 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         debug_print( L"`", DEBUG_BIND );
         debug_print_object( key, DEBUG_BIND );
         debug_print( L"` is a ", DEBUG_BIND );
-        debug_print_object( c_type( key ), DEBUG_BIND );
+        debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
         debug_print( L", not a KEYW or SYMB", DEBUG_BIND );
     }
 
@@ -361,7 +362,7 @@ struct cons_pointer c_assoc( struct cons_pointer key,
         result = hashmap_get( store, key );
     } else if ( !nilp( store ) ) {
         debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
-        debug_print_object( c_type( store ), DEBUG_BIND );
+        debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
         debug_print( L"`\n", DEBUG_BIND );
         result =
             throw_exception( c_append
@@ -398,8 +399,8 @@ struct cons_pointer hashmap_put( struct cons_pointer mapp,
         // hashmap to a bigger number of buckets, and return that.
 
         map->payload.hashmap.buckets[bucket_no] =
-            inc_ref( make_cons( make_cons( key, val ),
-                                map->payload.hashmap.buckets[bucket_no] ) );
+            make_cons( make_cons( key, val ),
+                                map->payload.hashmap.buckets[bucket_no] );
     }
 
     return mapp;
@@ -413,6 +414,7 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
                          struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
+#ifdef DEBUG
     debug_print( L"set: binding `", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
     debug_print( L"` to `", DEBUG_BIND );
@@ -421,8 +423,15 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
     debug_dump_object( store, DEBUG_BIND );
     debug_println( DEBUG_BIND );
 
-    debug_printf( DEBUG_BIND, L"set: store is %s\n`",
-                  lisp_string_to_c_string( c_type( store ) ) );
+    debug_printf( DEBUG_BIND, L"set: store is %4.4s",
+                  pointer2cell(store).tag.bytes );
+    if (strncmp(pointer2cell(store).tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
+        debug_printf( DEBUG_BIND, L" -> %4.4s\n",
+                  pointer2cell(store).payload.vectorp.tag.bytes );
+    } else {
+        debug_println( DEBUG_BIND);
+    }
+#endif
     if ( nilp( value ) ) {
         result = store;
     } else if ( nilp( store ) || consp( store ) ) {
@@ -440,8 +449,7 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
 }
 
 /**
- * @brief Binds this key to this value in the global oblist.
-
+ * @brief Binds this `key` to this `value` in the global oblist, and returns the `key`. 
  */
 struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {

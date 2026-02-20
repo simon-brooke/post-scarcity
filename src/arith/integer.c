@@ -138,7 +138,7 @@ struct cons_pointer acquire_integer( int64_t value, struct cons_pointer more ) {
         if ( !small_int_cache_initialised ) {
             for ( int64_t i = 0; i < SMALL_INT_LIMIT; i++ ) {
                 small_int_cache[i] = make_integer( i, NIL );
-                pointer2cell( small_int_cache[i] ).count = UINT32_MAX;  // lock it in so it can't be GC'd
+                pointer2cell( small_int_cache[i] ).count = MAXREFERENCE;  // lock it in so it can't be GC'd
             }
             small_int_cache_initialised = true;
             debug_print( L"small_int_cache initialised.\n", DEBUG_ALLOC );

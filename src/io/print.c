@@ -116,6 +116,9 @@ void print_vso( URL_FILE *output, struct cons_pointer pointer ) {
         case HASHTV:
             print_map( output, pointer );
             break;
+        case STACKFRAMETV:
+            dump_stack_trace( output, pointer);
+            break;
             // \todo: others.
         default:
             fwprintf( stderr, L"Unrecognised vector-space type '%d'\n",
