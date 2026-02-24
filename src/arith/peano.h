@@ -31,6 +31,19 @@
  */
 #define INTEGER_BIT_SHIFT (60)
 
+/**
+ * @brief return `true` if arg is `nil`,  else `false`. 
+ *
+ * Note that this doesn't really belong in `peano.h`, but after code cleanup it
+ * was the last thing remaining in either `boolean.c` or `boolean.h`, and it 
+ * wasn't worth keeping two files around for one one-line macro.
+ * 
+ * @param arg 
+ * @return true if the sole argument is `nil`.
+ * @return false otherwise.
+ */
+#define truthy(arg)(!nilp(arg))
+
 bool zerop( struct cons_pointer arg );
 
 struct cons_pointer negative( struct cons_pointer arg );

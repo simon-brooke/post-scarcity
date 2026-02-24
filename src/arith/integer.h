@@ -13,6 +13,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "memory/consspaceobject.h"
+
 
 #define replace_integer_i(p,i) {struct cons_pointer __p = acquire_integer(i,NIL); release_integer(p); p = __p;}
 #define replace_integer_p(p,q) {struct cons_pointer __p = p; release_integer( p);  p = q;}

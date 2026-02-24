@@ -225,4 +225,17 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
 struct cons_pointer lisp_try( struct stack_frame *frame,
                               struct cons_pointer frame_pointer,
                               struct cons_pointer env );
+
+
+struct cons_pointer lisp_and( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
+
+struct cons_pointer lisp_or( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
+
+struct cons_pointer lisp_not( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env );
 #endif

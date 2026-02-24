@@ -64,6 +64,35 @@ bool zerop( struct cons_pointer arg ) {
     return result;
 }
 
+// TODO: think about
+// bool greaterp( struct cons_pointer arg_1, struct cons_pointer arg_2) {
+//     bool result = false;
+//     struct cons_space_object * cell_1 = & pointer2cell( arg_1 );
+//     struct cons_space_object * cell_2 = & pointer2cell( arg_2 );
+    
+//     if (cell_1->tag.value == cell_2->tag.value) {
+
+//     switch ( cell_1->tag.value ) {
+//         case INTEGERTV:{
+//                 if ( nilp(cell_1->payload.integer.more) && nilp( cell_2->payload.integer.more)) {
+//                     result = cell_1->payload.integer.value > cell_2->payload.integer.value;
+//                 }
+//                 // else deal with comparing bignums...
+//             }
+//             break;
+//         case RATIOTV:
+//             result = lisp_ratio_to_real( cell_1) > ratio_to_real( cell_2);
+//             break;
+//         case REALTV:
+//             result = ( cell.payload.real.value == 0 );
+//             break;
+//     }
+//     }
+
+//     return result;
+    
+// }
+
 /**
  * does this `arg` point to a negative number?
  */
@@ -86,24 +115,35 @@ bool is_negative( struct cons_pointer arg ) {
     return result;
 }
 
+/**
+ * @brief if `arg` is a number, return the absolute value of that number, else
+ * `NIL`
+ * 
+ * @param arg a cons space object, probably a number.
+ * @return struct cons_pointer 
+ */
 struct cons_pointer absolute( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
-    if ( is_negative( arg ) ) {
-        switch ( cell.tag.value ) {
-            case INTEGERTV:
-                result =
-                    make_integer( llabs( cell.payload.integer.value ),
-                                  cell.payload.integer.more );
-                break;
-            case RATIOTV:
-                result = make_ratio( absolute( cell.payload.ratio.dividend ),
-                                     cell.payload.ratio.divisor, false );
-                break;
-            case REALTV:
-                result = make_real( 0 - cell.payload.real.value );
-                break;
+    if ( numberp( arg))  {
+        if ( is_negative( arg ) ) {
+            switch ( cell.tag.value ) {
+                case INTEGERTV:
+                    result =
+                        make_integer( llabs( cell.payload.integer.value ),
+                                    cell.payload.integer.more );
+                    break;
+                case RATIOTV:
+                    result = make_ratio( absolute( cell.payload.ratio.dividend ),
+                                        cell.payload.ratio.divisor, false );
+                    break;
+                case REALTV:
+                    result = make_real( 0 - cell.payload.real.value );
+                    break;
+            }
+        } else {
+            result = arg;
         }
     }
 

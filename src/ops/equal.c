@@ -10,12 +10,15 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "memory/conspage.h"
-#include "memory/consspaceobject.h"
 #include "arith/integer.h"
 #include "arith/peano.h"
 #include "arith/ratio.h"
 #include "debug.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/vectorspace.h"
+#include "ops/equal.h"
+#include "ops/intern.h"
 
 /**
  * Shallow, and thus cheap, equality: true if these two objects are
@@ -241,6 +244,86 @@ bool equal_number_number( struct cons_pointer a, struct cons_pointer b ) {
 }
 
 /**
+ * @brief equality of two map-like things. 
+ *
+ * The list returned by `keys` on a map-like thing is not sorted, and is not 
+ * guaranteed always to come out in the same order. So equality is established
+ * if:
+ * 1. the length of the keys list is the same; and 
+ * 2. the value of each key in the keys list for map `a` is the same in map `a` 
+ *    and in map `b`.
+ *
+ * Private function, do not use outside this file, **WILL NOT** work 
+ * unless both arguments are VECPs.
+ * 
+ * @param a a pointer to a vector space object.
+ * @param b another pointer to a vector space object.
+ * @return true if the two objects have the same logical structure.
+ * @return false otherwise.
+ */
+bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
+    bool result=false;
+
+    struct cons_pointer keys_a = hashmap_keys( a);
+    
+    if ( c_length( keys_a) == c_length( hashmap_keys( b))) {
+        result = true;
+
+        for ( struct cons_pointer i = keys_a; !nilp( i); i = c_cdr( i)) {
+            struct cons_pointer key = c_car( i);
+            if ( !equal( hashmap_get( a, key),hashmap_get( b, key))) {
+                result = false; break;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @brief equality of two vector-space things. 
+ *
+ * Expensive, but we need to be able to check for equality of at least hashmaps
+ * and namespaces.
+ *
+ * Private function, do not use outside this file, not guaranteed to work 
+ * unless both arguments are VECPs pointing to map like things.
+ * 
+ * @param a a pointer to a vector space object.
+ * @param b another pointer to a vector space object.
+ * @return true if the two objects have the same logical structure.
+ * @return false otherwise.
+ */
+bool equal_vector_vector( struct cons_pointer a, struct cons_pointer b ) {
+    bool result = false;
+
+    if ( eq( a, b)) {
+        result = true; // same 
+        /* there shouldn't ever be two separate VECP cells which point to the
+         * same address in vector space, so I don't believe it's worth checking
+         * for this.
+         */
+    } else if ( vectorp( a) && vectorp( b)) {
+        struct vector_space_object * va = pointer_to_vso( a);
+        struct vector_space_object * vb = pointer_to_vso( b);
+
+        /* what we're saying here is that a namespace is not equal to a map,
+         * even if they have identical logical structure. Is this right? */
+        if ( va->header.tag.value == vb->header.tag.value) {
+            switch ( va->header.tag.value) {
+                case HASHTV:
+                case NAMESPACETV:
+                    result = equal_map_map( a, b);
+                    break;
+            }
+        }
+    }
+    // else can't throw an exception from here but TODO: should log.
+
+    return result;
+}
+
+/**
  * Deep, and thus expensive, equality: true if these two objects have
  * identical structure, else false.
  */
@@ -319,6 +402,13 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     result = fabs( num_a - num_b ) < ( max / 1000000.0 );
                 }
                 break;
+            case VECTORPOINTTV:
+                if ( cell_b->tag.value == VECTORPOINTTV) {
+                    result = equal_vector_vector( a, b);
+                } else {
+                    result = false;
+                }
+                break;
             default:
                 result = false;
                 break;
@@ -329,8 +419,8 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
 
     /*
      * there's only supposed ever to be one T and one NIL cell, so each
-     * should be caught by eq; equality of vector-space objects is a whole
-     * other ball game so we won't deal with it now (and indeed may never).
+     * should be caught by eq.
+     *
      * I'm not certain what equality means for read and write streams, so
      * I'll ignore them, too, for now.
      */

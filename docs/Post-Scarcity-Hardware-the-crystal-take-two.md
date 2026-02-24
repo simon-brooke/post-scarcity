@@ -12,22 +12,22 @@ I never liked this 'four distinct spaces' idea. As I wrote way back in my first 
 
 So I'm now back to the idea of each node treating its physical memory as one undifferentiated vector space, with its own cons pages, being arrays of equal sized cons-space objects, floating in that vector space. I'm proposing two new types of cons space object. 
 
-The idea of having four distinct spaces per node was that each node would curate just one cons page, and that  each cons pointer was 128 bits comprising 64 bits of originating node address, and 64 bits of page offset. 
+The idea of having four distinct spaces per node was that each node would curate just one cons page, and that  each cons pointer was 64 bits comprising 32 bits of originating node address, and 32 bits of page offset. 
 
-I'm still thinking that 128 bits is a not-unreasonable size for a cons pointer, but that it should now be considered made up of three distinct fields, node address, page number, offset. The exact sizes of each of those fields can be variable, but
-
-```
-+------*------*----------+
-| 0    | 32   | 64...127 |
-+------*------*----------+
-| Node | Page | Offset   |
-+------*------*----------+
+I'm still thinking that 64 bits is a not-unreasonable size for a cons pointer, but that it should now be considered made up of three distinct fields, node address, page number, offset. The exact sizes of each of those fields can be variable, but
 
 ```
++------*------*---------+
+| 0    | 32   | 40...63 |
++------*------*---------+
+| Node | Page | Offset  |
++------*------*---------+
 
-would allow for a hypercube with edges a billion cells long, each capable of addressing 2,535,301,200,456,458,802,993,406,410,752 (2.5x10<sup>30</sup>) bytes. As this is very substantially more than the number of atoms in the universe, a machine of that size could never be built; so this schema is sufficient for any possible machine which ever could be built!
+```
 
-In practice, I don't actually need a 128 bit cons pointer, and at some stage I may make a pragmatic decision to make it smaller. But the whole idea of the post scarcity computing project is to design systems as though there weren't physical constraints on them, so I'm not proposing to change it yet.
+would allow for a hypercube with edges 536,870,912 &mdash; half a billion &mdash; nodes long, with each node capable of addressing 256 pages of each of 16,777,216 cells for a total of 4 billion cells, each of 32 bytes. So the cells alone addressable by a single node could occupy 2<sup>37</sup> =  137,438,953,472 bytes; but each node would have a 64 bit address bus, so the potential heap is vastly larger.
+
+In practice, I don't actually need a 64 bit cons pointer, and at some stage I may make a pragmatic decision to make it smaller. But the whole idea of the post scarcity computing project is to design systems as though there weren't physical constraints on them, so I'm not proposing to change it yet.
 
 ## The `CACH` Cell
 
@@ -54,4 +54,22 @@ A cons space object is something which can be stored in [a cons cell](Cons-space
 In designing the bootstrapping cons space object types of the system, I've designed cells which are essentially two 64 bit pointers (such as `CONS` or `RTIO`); one which is a single 128 bit [IEEE754]() floating point number (`REAL`); one which is a single `unsigned __int128` (`TIME`); several which comprise one 32 bit `wide character`, some padding, and a cons pointer to another cell of the same type (`KEYW`, `STRG`, `SYMB`); one which comprises a tag, some padding, and a 64 bit pointer into vector space (`VECP`); ones that are simply markers and have no payload (`LOOP`, `WRKR`) , and so on.
 
 There are a lot of different sorts of things you can store in 128 bits of memory. You can divide it up into fields any way you please, and store anything you like &mdash; that will fit &mdash; in those fields.
+
+## The Node Processor hardware
+
+I suggested in my earlier essay that the node processors could be off the shelf parts, probably ARM chips. But the router still needs to be custom silicon. If you were to do custom silicon for the node processor, what would it look like?
+
+Well, firstly, although it could have a very small instruction set, I don't think it would count as strictly a RISC processor. The reason it wouldn't is that some of the instructions would be themselves recursive, meaning they could not complete in a single clock cycle.
+
+So, what does it look like?
+
+Firstly, it must have at least one register in which it can construct a complete cons space object, which is to say, 256 bits. 
+
+It must have sufficient registers to represent the full content of a stack frame, which is to say eleven 64 bit cons pointers and one 32 bit argument counter, so at least 736 bits (but 768 probably makes more sense). But note that a function call with zero args needs only 160 bits, one with one arg needs only 224 bits, one with three, 288 bits register. So when evaluating functions with low numbers of arguments, it's at least potentially possible for the processor to use unused bits in the stack frame register as additional shipyards in which to assemble cons space objects.
+
+H'mmm. You need two stack frame registers, one for the frame you're evaluating, and one for the frame you're assembling. I think you also need an additional cons space object shipyard, for the cons space object (VECP) which will point to the current frame when is released.
+
+### Instructions
+
+
 

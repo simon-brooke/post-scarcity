@@ -67,10 +67,14 @@ struct cons_pointer check_exception( struct cons_pointer pointer,
     return result;
 }
 
+struct cons_pointer init_documentation_symbol = NIL;
 struct cons_pointer init_name_symbol = NIL;
 struct cons_pointer init_primitive_symbol = NIL;
 
 void maybe_bind_init_symbols(  ) {
+    if ( nilp( init_documentation_symbol)) {
+        init_documentation_symbol = c_string_to_lisp_keyword( L"documentation");
+    }
     if ( nilp( init_name_symbol ) ) {
         init_name_symbol = c_string_to_lisp_keyword( L"name" );
     }
@@ -83,6 +87,7 @@ void maybe_bind_init_symbols(  ) {
 }
 
 void free_init_symbols(  ) {
+    dec_ref( init_documentation_symbol);
     dec_ref( init_name_symbol );
     dec_ref( init_primitive_symbol );
 }
@@ -95,21 +100,25 @@ void free_init_symbols(  ) {
  * more readable and aid debugging generally.
  */
 struct cons_pointer bind_function( wchar_t *name,
+                                   wchar_t *doc,
                                    struct cons_pointer ( *executable )
                                     ( struct stack_frame *,
                                       struct cons_pointer,
                                       struct cons_pointer ) ) {
     struct cons_pointer n = c_string_to_lisp_symbol( name );
+    struct cons_pointer d = c_string_to_lisp_string( doc);
+
     struct cons_pointer meta =
         make_cons( make_cons( init_primitive_symbol, TRUE ),
                    make_cons( make_cons( init_name_symbol, n ),
-                              NIL ) );
+                   make_cons( make_cons( init_documentation_symbol, d), NIL) ) );
 
     struct cons_pointer r =
         check_exception( deep_bind( n, make_function( meta, executable ) ),
                          "bind_function" );
 
     dec_ref( n );
+    dec_ref( d );
 
     return r;
 }
@@ -321,52 +330,82 @@ int main( int argc, char *argv[] ) {
     /*
      * primitive function operations
      */
-    bind_function( L"absolute", &lisp_absolute );
-    bind_function( L"add", &lisp_add );
-    bind_function( L"append", &lisp_append );
-    bind_function( L"apply", &lisp_apply );
-    bind_function( L"assoc", &lisp_assoc );
-    bind_function( L"car", &lisp_car );
-    bind_function( L"cdr", &lisp_cdr );
-    bind_function( L"close", &lisp_close );
-    bind_function( L"cons", &lisp_cons );
-    bind_function( L"divide", &lisp_divide );
-    bind_function( L"eq", &lisp_eq );
-    bind_function( L"equal", &lisp_equal );
-    bind_function( L"eval", &lisp_eval );
-    bind_function( L"exception", &lisp_exception );
-    bind_function( L"get-hash", &lisp_get_hash );
-    bind_function( L"hashmap", lisp_make_hashmap );
-    bind_function( L"inspect", &lisp_inspect );
-    bind_function( L"keys", &lisp_keys );
-    bind_function( L"list", &lisp_list );
-    bind_function( L"mapcar", &lisp_mapcar );
-    bind_function( L"meta", &lisp_metadata );
-    bind_function( L"metadata", &lisp_metadata );
-    bind_function( L"multiply", &lisp_multiply );
-    bind_function( L"negative?", &lisp_is_negative );
-    bind_function( L"oblist", &lisp_oblist );
-    bind_function( L"open", &lisp_open );
-    bind_function( L"print", &lisp_print );
-    bind_function( L"put!", lisp_hashmap_put );
-    bind_function( L"put-all!", &lisp_hashmap_put_all );
-    bind_function( L"ratio->real", &lisp_ratio_to_real );
-    bind_function( L"read", &lisp_read );
-    bind_function( L"read-char", &lisp_read_char );
-    bind_function( L"repl", &lisp_repl );
-    bind_function( L"reverse", &lisp_reverse );
-    bind_function( L"set", &lisp_set );
-    bind_function( L"slurp", &lisp_slurp );
-    bind_function( L"source", &lisp_source );
-    bind_function( L"subtract", &lisp_subtract );
-    bind_function( L"throw", &lisp_exception );
-    bind_function( L"time", &lisp_time );
-    bind_function( L"type", &lisp_type );
-    bind_function( L"+", &lisp_add );
-    bind_function( L"*", &lisp_multiply );
-    bind_function( L"-", &lisp_subtract );
-    bind_function( L"/", &lisp_divide );
-    bind_function( L"=", &lisp_equal );
+     /* TODO: docstrings should be moved to a header file, or even to an at-run-time resolution system. 
+      * HTTP from an address at journeyman? */
+    bind_function( L"absolute", 
+        L"`(absolute arg)`: If `arg` is a number, return the absolute value of that number, else `nil`.", 
+        &lisp_absolute );
+    bind_function( L"add", 
+        L"`(+ args...)`: If `args` are all numbers, return the sum of those numbers.", 
+        &lisp_add );
+    bind_function( L"and", 
+        L"`(and args...)`: Return a logical `and` of all the arguments and return `t` only if all are truthy, else `nil`.",
+        &lisp_and);
+    bind_function( L"append", L"`(append args...)`: If args are all collections, return the concatenation of those collections.", 
+        &lisp_append );
+    bind_function( L"apply", 
+        L"`(apply f args)`: If `f` is usable as a function, and `args` is a collection, apply `f` to `args` and return the value.", 
+        &lisp_apply );
+    bind_function( L"assoc", 
+        L"`(assoc key store)`: Return the value associated with this `key` in this `store`.",
+         &lisp_assoc );
+    bind_function( L"car", 
+        L"`(car arg)`: If `arg` is a sequence, return the item which is the head of that sequence.", 
+        &lisp_car );
+    bind_function( L"cdr", 
+        L"`(cdr arg)`: If `arg` is a sequence, return the remainder of that sequence with the first item removed.", 
+        &lisp_cdr );
+    bind_function( L"close", L"`(close stream)`: If `stream` is a stream, close that stream.", &lisp_close );
+    bind_function( L"cons", L"`(cons a b)`: Return a cons cell whose `car` is `a` and whose `cdr` is `b`.", &lisp_cons );
+    bind_function( L"divide", 
+        L"`(/ a b)`: If `a` and `b` are both numbers, return the numeric result of dividing `a` by `b`.", 
+        &lisp_divide );
+    bind_function( L"eq", L"`(eq a b)`: Return `t` if `a` and `b` are the exact same object, else `nil`.", &lisp_eq );
+    bind_function( L"equal", L"`(eq a b)`: Return `t` if `a` and `b` have logically equivalent value, else `nil`.", &lisp_equal );
+    bind_function( L"eval", L"", &lisp_eval );
+    bind_function( L"exception", L"`(exception message)`: Return (throw) an exception with this `message`.", &lisp_exception );
+    bind_function( L"get-hash", L"`(get-hash arg)`: returns the natural number hash value of `arg`.", &lisp_get_hash );
+    bind_function( L"hashmap", 
+        L"`(hashmap n-buckets hashfn store acl)`: Return a new hashmap, with `n-buckets` buckets and this `hashfn`, containing the content of this `store`.", 
+        lisp_make_hashmap );
+    bind_function( L"inspect", 
+        L"`(inspect object ouput-stream)`: Print details of this `object` to this `output-stream` or `*out*`.", 
+        &lisp_inspect );
+    bind_function( L"keys", L"`(keys store)`: Return a list of all keys in this `store`.", &lisp_keys );
+    bind_function( L"list", L"`(list args...): Return a list of these `args`.", &lisp_list );
+    bind_function( L"mapcar", L"`(mapcar function sequence)`: Apply `function` to each element of `sequence` in turn, and return a sequence of the results.", &lisp_mapcar );
+    bind_function( L"meta", L"`(meta symbol)`: If the binding of `symbol` has metadata, return that metadata, else `nil`.", &lisp_metadata );
+    bind_function( L"metadata", L"`(metadata symbol)`: If the binding of `symbol` has metadata, return that metadata, else `nil`.", &lisp_metadata );
+    bind_function( L"multiply", L"`(* args...)` Multiply these `args`, all of which should be numbers.", &lisp_multiply );
+    bind_function( L"negative?", L"`(negative? n)`: Return `t` if `n` is a negative number, else `nil`.", &lisp_is_negative );
+    bind_function( L"not", 
+        L"`(not arg)`: Return`t` only if `arg` is `nil`, else `nil`.",
+        &lisp_not);
+    bind_function( L"oblist", L"`(oblist)`: Return the current symbol bindings, as a map.", &lisp_oblist );
+    bind_function( L"open", L"`(open url read?)`: Open a stream to this `url`. If `read` is present and is non-nil, open it for reading, else writing.", &lisp_open );
+    bind_function( L"or", 
+        L"`(or args...)`: Return a logical `or` of all the arguments and return `t` if any is truthy, else `nil`.",
+        &lisp_or);
+    bind_function( L"print", L"`(print object stream)`: Print `object` to `stream`, if specified, else to `*out*`.", &lisp_print );
+    bind_function( L"put!", L"", lisp_hashmap_put );
+    bind_function( L"put-all!", L"", &lisp_hashmap_put_all );
+    bind_function( L"ratio->real", L"", &lisp_ratio_to_real );
+    bind_function( L"read", L"", &lisp_read );
+    bind_function( L"read-char", L"", &lisp_read_char );
+    bind_function( L"repl", L"", &lisp_repl );
+    bind_function( L"reverse", L"", &lisp_reverse );
+    bind_function( L"set", L"", &lisp_set );
+    bind_function( L"slurp", L"", &lisp_slurp );
+    bind_function( L"source", L"", &lisp_source );
+    bind_function( L"subtract", L"", &lisp_subtract );
+    bind_function( L"throw", L"", &lisp_exception );
+    bind_function( L"time", L"", &lisp_time );
+    bind_function( L"type", L"", &lisp_type );
+    bind_function( L"+", L"", &lisp_add );
+    bind_function( L"*", L"", &lisp_multiply );
+    bind_function( L"-", L"", &lisp_subtract );
+    bind_function( L"/", L"", &lisp_divide );
+    bind_function( L"=", L"", &lisp_equal );
     /*
      * primitive special forms
      */

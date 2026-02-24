@@ -24,19 +24,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory/consspaceobject.h"
-#include "memory/conspage.h"
-#include "debug.h"
-#include "memory/dump.h"
-#include "ops/equal.h"
 #include "arith/integer.h"
-#include "ops/intern.h"
+#include "arith/peano.h"
+#include "debug.h"
 #include "io/io.h"
-#include "ops/lispops.h"
 #include "io/print.h"
 #include "io/read.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
 #include "memory/stack.h"
 #include "memory/vectorspace.h"
+#include "memory/dump.h"
+#include "ops/equal.h"
+#include "ops/intern.h"
+#include "ops/lispops.h"
 
 /**
  * @brief the name of the symbol to which the prompt is bound;
@@ -74,7 +75,6 @@ struct cons_pointer eval_form( struct stack_frame *parent,
             /* things which evaluate to themselves */
         case EXCEPTIONTV:
         case FREETV:           // shouldn't happen, but anyway...
-            // FUNCTIONTV, LAMBDATV, NLAMBDATV, SPECIALTV ?
         case INTEGERTV:
         case KEYTV:
         case LOOPTV:           // don't think this should happen...
@@ -85,7 +85,6 @@ struct cons_pointer eval_form( struct stack_frame *parent,
         case STRINGTV:
         case TIMETV:
         case TRUETV:
-            // case VECTORPOINTTV: ?
         case WRITETV:
             break;
         default:
@@ -243,10 +242,10 @@ lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 void log_binding( struct cons_pointer name, struct cons_pointer val ) {
-    debug_print( L"\n\tBinding ", DEBUG_ALLOC );
-    debug_dump_object( name, DEBUG_ALLOC );
-    debug_print( L" to ", DEBUG_ALLOC );
-    debug_dump_object( val, DEBUG_ALLOC );
+    debug_print( L"\n\tBinding ", DEBUG_LAMBDA );
+    debug_dump_object( name, DEBUG_LAMBDA  );
+    debug_print( L" to ", DEBUG_LAMBDA  );
+    debug_dump_object( val, DEBUG_LAMBDA  );
 }
 
 /**
@@ -305,12 +304,15 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
         debug_print( L"In lambda: evaluating ", DEBUG_LAMBDA );
         debug_print_object( sexpr, DEBUG_LAMBDA );
+        // debug_print( L"\t env is: ", DEBUG_LAMBDA );
+        // debug_print_object( new_env, DEBUG_LAMBDA );
         debug_println( DEBUG_LAMBDA );
 
         /* if a result is not the terminal result in the lambda, it's a
          * side effect, and needs to be GCed */
-        if ( !nilp( result ) )
-            dec_ref( result );
+        if ( !nilp( result ) ){
+            // dec_ref( result );
+        }
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
 
@@ -319,7 +321,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         }
     }
 
-    dec_ref( new_env );
+    // dec_ref( new_env );
 
     debug_print( L"eval_lambda returning: \n", DEBUG_LAMBDA );
     debug_print_object( result, DEBUG_LAMBDA );
@@ -870,7 +872,12 @@ struct cons_pointer lisp_keys( struct stack_frame *frame,
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
                              struct cons_pointer env ) {
-    return eq( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
+    if ( frame->args == 2) {
+        return eq( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
+    } else {
+        return throw_exception( c_string_to_lisp_string( L"Wrong number of args to `eq`."),
+            frame_pointer);
+    }
 }
 
 /**
@@ -886,7 +893,12 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
 struct cons_pointer
 lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
+    if ( frame->args == 2) {
+        return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
+    } else {    
+        return throw_exception( c_string_to_lisp_string( L"Wrong number of args to `equal`."),
+            frame_pointer);
+    }
 }
 
 /**
@@ -1507,6 +1519,14 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
     return result;
 }
 
+/**
+ * @brief construct and return a list of arbitrarily many arguments.
+ * 
+ * @param frame The stack frame.
+ * @param frame_pointer A pointer to the stack frame.
+ * @param env The evaluation environment.
+ * @return struct cons_pointer a pointer to the result
+ */
 struct cons_pointer lisp_list( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env ) {
@@ -1563,35 +1583,70 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
 
 }
 
-// struct cons_pointer c_concat( struct cons_pointer a, struct cons_pointer b) {
-//     struct cons_pointer result = b;
+/**
+ * @brief Boolean `and` of arbitrarily many arguments.
+ * 
+ * @param frame The stack frame.
+ * @param frame_pointer A pointer to the stack frame.
+ * @param env The evaluation environment.
+ * @return struct cons_pointer a pointer to the result
+ */
+struct cons_pointer lisp_and( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+    bool accumulator = true;                            
+    struct cons_pointer result = frame->more;
 
-//     if ( nilp( b.tag.value)) {
-//         result = make_cons( a, b);
-//     } else {
-//         if ( ! nilp( a)) {
-//             if (a.tag.value == b.tag.value) {
+    for ( int a = 0; accumulator == true && a < args_in_frame; a++) {
+        accumulator = truthy( frame->arg[ a]);
+    }
 
-//                 struct cons_pointer tail = c_concat( c_cdr( a), b);
+    if ( accumulator && ! nilp( frame->more)) {
+        for ( struct cons_pointer rest = frame->more; accumulator == true && !nilp( rest); rest = c_cdr(rest)) {
+            accumulator = truthy( c_car( rest));
+        } 
+    }
 
-//                 switch ( a.tag.value) {
-//                     case CONSTV:
-//                         result = make_cons( c_car( a), tail);
-//                         break;
-//                     case KEYTV:
-//                     case STRINGTV:
-//                     case SYMBOLTV:
-//                         result = make_string_like_thing()
+    return accumulator ? TRUE : NIL;
+}
 
-//                 }
+/**
+ * @brief Boolean `or` of arbitrarily many arguments.
+ * 
+ * @param frame The stack frame.
+ * @param frame_pointer A pointer to the stack frame.
+ * @param env The evaluation environment.
+ * @return struct cons_pointer a pointer to the result
+ */
+struct cons_pointer lisp_or( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+    bool accumulator = false;                            
+    struct cons_pointer result = frame->more;
 
-//             } else {
-//                 // throw an exception
-//             }
-//         }
-//     }
+    for ( int a = 0; accumulator == false && a < args_in_frame; a++) {
+        accumulator = truthy( frame->arg[ a]);
+    }
 
+    if ( ! accumulator && ! nilp( frame->more)) {
+        for ( struct cons_pointer rest = frame->more; accumulator == false && !nilp( rest); rest = c_cdr(rest)) {
+            accumulator = truthy( c_car( rest));
+        } 
+    }
 
+    return accumulator ? TRUE : NIL;
+}
 
-//     return result;
-// }
+/**
+ * @brief Logical inverese: if the first argument is `nil`, return `t`, else `nil`.
+ * 
+ * @param frame The stack frame.
+ * @param frame_pointer A pointer to the stack frame.
+ * @param env The evaluation environment.
+ * @return struct cons_pointer `t` if the first argument is `nil`, else `nil`.
+ */
+struct cons_pointer lisp_not( struct stack_frame *frame,
+                               struct cons_pointer frame_pointer,
+                               struct cons_pointer env ) {
+    return nilp( frame->arg[0]) ? TRUE : NIL;
+}
