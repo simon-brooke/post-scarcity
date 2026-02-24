@@ -257,9 +257,9 @@ struct cons_pointer add_integers( struct cons_pointer a,
             debug_print_128bit( rv, DEBUG_ARITH );
             debug_print( L"\n", DEBUG_ARITH );
 
-            if ( carry == 0 && ( rv >= 0 || rv < SMALL_INT_LIMIT ) ) {
+            if ( carry == 0 && rv >= 0 && rv < SMALL_INT_LIMIT ) { 
                 result =
-                    acquire_integer( ( int64_t ) ( rv & 0xffffffff ), NIL );
+                    acquire_integer( ( int64_t ) ( rv & MAX_INTEGER ), NIL ); 
                 break;
             } else {
                 struct cons_pointer new = make_integer( 0, NIL );
