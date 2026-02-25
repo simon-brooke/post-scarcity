@@ -149,6 +149,9 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
 struct cons_pointer lisp_reverse( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env );
+struct cons_pointer
+lisp_count( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env );
 
 /**
  * Function: Get the Lisp type of the single argument.

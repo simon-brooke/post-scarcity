@@ -77,7 +77,7 @@ expected='6.25'
 actual=`echo "(+ 6.000000001 1/4)" |\
   target/psse 2> /dev/null |\
   sed -r '/^\s*$/d' |\
-  sed 's/0*$//' 
+  sed 's/0*$//'`
 
 outcome=`echo "sqrt((${expected} - ${actual})^2) < 0.0000001" | bc`
 

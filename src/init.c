@@ -361,11 +361,12 @@ int main( int argc, char *argv[] ) {
         &lisp_cdr );
     bind_function( L"close", L"`(close stream)`: If `stream` is a stream, close that stream.", &lisp_close );
     bind_function( L"cons", L"`(cons a b)`: Return a cons cell whose `car` is `a` and whose `cdr` is `b`.", &lisp_cons );
+    bind_function( L"count", L"`(count s)`: Return the number of items in the sequence `s`.", &lisp_count);
     bind_function( L"divide", 
         L"`(/ a b)`: If `a` and `b` are both numbers, return the numeric result of dividing `a` by `b`.", 
         &lisp_divide );
-    bind_function( L"eq", L"`(eq a b)`: Return `t` if `a` and `b` are the exact same object, else `nil`.", &lisp_eq );
-    bind_function( L"equal", L"`(eq a b)`: Return `t` if `a` and `b` have logically equivalent value, else `nil`.", &lisp_equal );
+    bind_function( L"eq?", L"`(eq? args...)`: Return `t` if all args are the exact same object, else `nil`.", &lisp_eq );
+    bind_function( L"equal?", L"`(equal? args...)`: Return `t` if all args have logically equivalent value, else `nil`.", &lisp_equal );
     bind_function( L"eval", L"", &lisp_eval );
     bind_function( L"exception", L"`(exception message)`: Return (throw) an exception with this `message`.", &lisp_exception );
     bind_function( L"get-hash", L"`(get-hash arg)`: returns the natural number hash value of `arg`.", &lisp_get_hash );
@@ -393,7 +394,7 @@ int main( int argc, char *argv[] ) {
     bind_function( L"print", L"`(print object stream)`: Print `object` to `stream`, if specified, else to `*out*`.", &lisp_print );
     bind_function( L"put!", L"", lisp_hashmap_put );
     bind_function( L"put-all!", L"", &lisp_hashmap_put_all );
-    bind_function( L"ratio->real", L"", &lisp_ratio_to_real );
+    bind_function( L"ratio->real", L"`(ratio->real r)`: If `r` is a rational number, return the real number equivalent.", &lisp_ratio_to_real );
     bind_function( L"read", L"", &lisp_read );
     bind_function( L"read-char", L"", &lisp_read_char );
     bind_function( L"repl", L"", &lisp_repl );
@@ -405,11 +406,11 @@ int main( int argc, char *argv[] ) {
     bind_function( L"throw", L"", &lisp_exception );
     bind_function( L"time", L"", &lisp_time );
     bind_function( L"type", L"", &lisp_type );
-    bind_function( L"+", L"", &lisp_add );
+    bind_function( L"+", L"`(+ args...)`: If `args` are all numbers, return the sum of those numbers.", &lisp_add );
     bind_function( L"*", L"", &lisp_multiply );
     bind_function( L"-", L"", &lisp_subtract );
     bind_function( L"/", L"", &lisp_divide );
-    bind_function( L"=", L"", &lisp_equal );
+    bind_function( L"=", L"`(equal? args...)`: Return `t` if all args have logically equivalent value, else `nil`.", &lisp_equal );
     /*
      * primitive special forms
      */

@@ -870,12 +870,16 @@ struct cons_pointer lisp_keys( struct stack_frame *frame,
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
                              struct cons_pointer env ) {
-    if ( frame->args == 2) {
-        return eq( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
-    } else {
-        return throw_exception( c_string_to_lisp_string( L"Wrong number of args to `eq`."),
-            frame_pointer);
-    }
+    struct cons_pointer result = TRUE;   
+
+    if ( frame->args > 1) {
+        for (int b = 1; ( truep( result )) && (b < frame->args); b++)
+        {
+            result = eq( frame->arg[0], fetch_arg( frame, b)) ? TRUE : NIL;
+        }
+    } 
+    
+    return result;
 }
 
 /**
@@ -891,12 +895,54 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
 struct cons_pointer
 lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    if ( frame->args == 2) {
-        return equal( frame->arg[0], frame->arg[1] ) ? TRUE : NIL;
-    } else {    
-        return throw_exception( c_string_to_lisp_string( L"Wrong number of args to `equal`."),
-            frame_pointer);
+    struct cons_pointer result = TRUE;   
+
+    if ( frame->args > 1) {
+        for (int b = 1; ( truep( result )) && (b < frame->args); b++)
+        {
+            result = equal( frame->arg[0], fetch_arg( frame, b)) ? TRUE : NIL;
+        }
+    } 
+    
+    return result;
+}
+
+long int c_count (struct cons_pointer p) {
+    struct cons_space_object * cell = &pointer2cell( p);
+    int result = 0;
+
+    switch (cell->tag.value) {
+        case CONSTV:
+        case STRINGTV:
+        /* I think doctrine is that you cannot treat symbols or keywords as
+         * sequences, although internally, of course, they are. Integers are
+         * also internally sequences, but also should not be treated as such.
+         */
+        for (p; !nilp( p); p = c_cdr( p)) {
+            result ++;
+        }
     }
+
+    return result;
+}
+
+/**
+ * Function: return the number of top level forms in the object which is
+ * the first (and only) argument, if it is a sequence (which for current
+ * purposes means a list or a string)
+ *
+ * * (count l)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (ignored).
+ * @return the number of top level forms in a list, or characters in a
+ *         string, else 0.
+ */
+struct cons_pointer
+lisp_count( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    return acquire_integer( c_count( frame->arg[ 0]), NIL);
 }
 
 /**

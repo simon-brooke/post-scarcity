@@ -333,9 +333,11 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
     debug_print( L" = ", DEBUG_ARITH );
     debug_print_object( b, DEBUG_ARITH );
 
-    bool result = eq( a, b );
-
-    if ( !result && same_type( a, b ) ) {
+    bool result = false; 
+    
+    if ( eq( a, b )) {
+        result = true;
+    } else if ( !numberp( a ) && same_type( a, b ) ) {
         struct cons_space_object *cell_a = &pointer2cell( a );
         struct cons_space_object *cell_b = &pointer2cell( b );
 
@@ -377,30 +379,6 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                         cell_b->payload.string.cdr )
                       || ( end_of_string( cell_a->payload.string.cdr )
                            && end_of_string( cell_b->payload.string.cdr ) ) );
-                break;
-            case INTEGERTV:
-                result =
-                    ( cell_a->payload.integer.value ==
-                      cell_b->payload.integer.value ) &&
-                    equal( cell_a->payload.integer.more,
-                           cell_b->payload.integer.more );
-                break;
-            case RATIOTV:
-                result = equal_ratio_ratio( a, b );
-                break;
-            case REALTV:
-                {
-                    double num_a = to_long_double( a );
-                    double num_b = to_long_double( b );
-                    double max = fabs( num_a ) > fabs( num_b )
-                        ? fabs( num_a )
-                        : fabs( num_b );
-
-                    /*
-                     * not more different than one part in a million - close enough
-                     */
-                    result = fabs( num_a - num_b ) < ( max / 1000000.0 );
-                }
                 break;
             case VECTORPOINTTV:
                 if ( cell_b->tag.value == VECTORPOINTTV) {
