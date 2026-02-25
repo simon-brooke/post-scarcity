@@ -17,14 +17,14 @@
 
 #include <stdlib.h>
 
-#include "memory/consspaceobject.h"
-#include "memory/conspage.h"
 #include "debug.h"
-#include "memory/dump.h"
-#include "ops/lispops.h"
 #include "io/print.h"
+#include "memory/conspage.h"
+#include "memory/consspaceobject.h"
+#include "memory/dump.h"
 #include "memory/stack.h"
 #include "memory/vectorspace.h"
+#include "ops/lispops.h"
 
 /**
  * set a register in a stack frame. Alwaye use this to do so,
@@ -122,7 +122,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
     if ( nilp( result ) ) {
         /* i.e. out of memory */
         result =
-            make_exception( c_string_to_lisp_string( L"Memory exhausted." ),
+            make_exception( privileged_string_memory_exhausted,
                             previous );
     } else {
         struct stack_frame *frame = get_stack_frame( result );
@@ -163,11 +163,10 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 frame->more = more;
                 inc_ref( more );
             }
-
         }
+        debug_print( L"make_stack_frame: returning\n", DEBUG_STACK );
+        debug_dump_object( result, DEBUG_STACK );
     }
-    debug_print( L"make_stack_frame: returning\n", DEBUG_STACK );
-    debug_dump_object( result, DEBUG_STACK );
 
     return result;
 }
@@ -235,6 +234,40 @@ void free_stack_frame( struct stack_frame *frame ) {
     debug_print( L"Leaving free_stack_frame\n", DEBUG_ALLOC );
 }
 
+struct cons_pointer frame_get_previous( struct cons_pointer frame_pointer) {
+    struct stack_frame *frame = get_stack_frame( frame_pointer );
+    struct cons_pointer result = NIL;
+
+    if ( frame != NULL ) {
+        result = frame->previous;
+    }
+
+    return result;
+}
+
+void dump_frame_context_fragment( URL_FILE *output, struct cons_pointer frame_pointer) {
+    struct stack_frame *frame = get_stack_frame( frame_pointer );
+
+    if ( frame != NULL ) {
+        url_fwprintf( output, L" <= ");
+        print( output, frame->arg[0]);
+    }
+}
+
+void dump_frame_context( URL_FILE *output, struct cons_pointer frame_pointer, int depth ) {
+    struct stack_frame *frame = get_stack_frame( frame_pointer );
+
+    if ( frame != NULL ) {
+        url_fwprintf( output, L"\tContext: ");
+
+        int i = 0;
+        for (struct cons_pointer cursor = frame_pointer; i++ < depth && !nilp( cursor); cursor = frame_get_previous( cursor)) {
+            dump_frame_context_fragment( output, cursor);
+        }
+        
+        url_fwprintf( output, L"\n");
+    }
+}
 
 /**
  * Dump a stackframe to this stream for debugging
@@ -247,12 +280,13 @@ void dump_frame( URL_FILE *output, struct cons_pointer frame_pointer ) {
     if ( frame != NULL ) {
         url_fwprintf( output, L"Stack frame with %d arguments:\n",
                       frame->args );
+        dump_frame_context( output, frame_pointer, 4);
+
         for ( int arg = 0; arg < frame->args; arg++ ) {
             struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-            url_fwprintf( output, L"Arg %d:\t%c%c%c%c\tcount: %10u\tvalue: ",
-                          arg, cell.tag.bytes[0], cell.tag.bytes[1],
-                          cell.tag.bytes[2], cell.tag.bytes[3], cell.count );
+            url_fwprintf( output, L"Arg %d:\t%4.4s\tcount: %10u\tvalue: ",
+                          arg, cell.tag.bytes, cell.count );
 
             print( output, frame->arg[arg] );
             url_fputws( L"\n", output );

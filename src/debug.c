@@ -143,3 +143,19 @@ void debug_dump_object( struct cons_pointer pointer, int level ) {
     }
 #endif
 }
+
+/**
+ * Standardise printing of binding trace messages.
+ */
+void debug_print_binding( struct cons_pointer key, struct cons_pointer val, bool deep, int level) {
+#ifdef DEBUG
+    // wchar_t * depth = (deep ? L"Deep" : L"Shallow");
+
+    debug_print( (deep ? L"Deep" : L"Shallow"), level);
+    debug_print( L" binding `", level);
+    debug_print_object( key, level);
+    debug_print( L"` to `", level);
+    debug_print_object( val, level);
+    debug_print( L"`\n", level);
+#endif
+}

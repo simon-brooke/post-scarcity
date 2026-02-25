@@ -49,6 +49,8 @@ struct cons_page {
     struct cons_space_object cell[CONSPAGESIZE];
 };
 
+extern struct cons_pointer privileged_string_memory_exhausted;
+
 extern struct cons_pointer freelist;
 
 extern struct cons_page *conspages[NCONSPAGES];

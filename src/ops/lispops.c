@@ -109,7 +109,9 @@ struct cons_pointer eval_form( struct stack_frame *parent,
             break;
     }
 
-    debug_print( L"eval_form returning: ", DEBUG_EVAL );
+    debug_print( L"eval_form ", DEBUG_EVAL );
+    debug_print_object( form, DEBUG_EVAL );
+    debug_print( L" returning: ", DEBUG_EVAL );
     debug_print_object( result, DEBUG_EVAL );
     debug_println( DEBUG_EVAL );
 
@@ -241,12 +243,6 @@ lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
     return make_nlambda( frame->arg[0], compose_body( frame ) );
 }
 
-void log_binding( struct cons_pointer name, struct cons_pointer val ) {
-    debug_print( L"\n\tBinding ", DEBUG_LAMBDA );
-    debug_dump_object( name, DEBUG_LAMBDA  );
-    debug_print( L" to ", DEBUG_LAMBDA  );
-    debug_dump_object( val, DEBUG_LAMBDA  );
-}
 
 /**
  * Evaluate a lambda or nlambda expression.
@@ -255,8 +251,10 @@ struct cons_pointer
 eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
+#ifdef DEBUG    
     debug_print( L"eval_lambda called\n", DEBUG_LAMBDA );
     debug_println( DEBUG_LAMBDA );
+#endif
 
     struct cons_pointer new_env = env;
     struct cons_pointer names = cell.payload.lambda.args;
@@ -270,11 +268,11 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
             struct cons_pointer val = frame->arg[i];
 
             new_env = set( name, val, new_env );
-            log_binding( name, val );
+            debug_print_binding( name, val, false, DEBUG_BIND );
 
             names = c_cdr( names );
         }
-        inc_ref( new_env );
+//        inc_ref( new_env );
 
         /* \todo if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
@@ -295,7 +293,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         }
 
         new_env = set( names, vals, new_env );
-        inc_ref( new_env );
+//        inc_ref( new_env );
     }
 
     while ( !nilp( body ) ) {
@@ -311,7 +309,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
         /* if a result is not the terminal result in the lambda, it's a
          * side effect, and needs to be GCed */
         if ( !nilp( result ) ){
-            // dec_ref( result );
+            dec_ref( result );
         }
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
@@ -1157,6 +1155,46 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
+ * @brief evaluate a single cond clause; if the test part succeeds return a 
+ * pair whose car is TRUE and whose cdr is the value of the action part 
+ */
+struct cons_pointer eval_cond_clause( struct cons_pointer clause, 
+    struct stack_frame *frame, struct cons_pointer frame_pointer, 
+    struct cons_pointer env) {
+    struct cons_pointer result = NIL;
+
+#ifdef DEBUG
+    debug_print( L"\n\tCond clause: ", DEBUG_EVAL );
+    debug_print_object( clause, DEBUG_EVAL );
+    debug_println( DEBUG_EVAL);
+#endif
+
+    if (consp(clause)) {
+        struct cons_pointer val = eval_form( frame, frame_pointer, c_car( clause ),
+                           env );
+
+        if (!nilp( val)) {
+            result = make_cons( TRUE, c_progn( frame, frame_pointer, c_cdr( clause ),
+                             env ));
+
+#ifdef DEBUG
+                debug_print(L"\n\t\tclause succeeded; returning: ", DEBUG_EVAL);
+                debug_print_object( result, DEBUG_EVAL);
+                debug_println( DEBUG_EVAL);
+        } else {
+            debug_print(L"\n\t\tclause failed.\n", DEBUG_EVAL);
+#endif
+        }          
+    } else {
+        result = throw_exception( c_string_to_lisp_string
+                                    ( L"Arguments to `cond` must be lists" ),
+                                    frame_pointer );
+    }
+
+    return result;
+}
+
+/**
  * Special form: conditional. Each `clause` is expected to be a list; if the first
  * item in such a list evaluates to non-NIL, the remaining items in that list
  * are evaluated in turn and the value of the last returned. If no arg `clause`
@@ -1175,33 +1213,22 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
     struct cons_pointer result = NIL;
     bool done = false;
 
-    for ( int i = 0; i < args_in_frame && !done; i++ ) {
-        struct cons_pointer clause_pointer = frame->arg[i];
-        debug_print( L"Cond clause: ", DEBUG_EVAL );
-        debug_dump_object( clause_pointer, DEBUG_EVAL );
+    for ( int i = 0; (i < frame->args) && !done; i++ ) {
+        struct cons_pointer clause_pointer = fetch_arg( frame, i);
 
-        if ( consp( clause_pointer ) ) {
-            struct cons_space_object cell = pointer2cell( clause_pointer );
-            result =
-                eval_form( frame, frame_pointer, c_car( clause_pointer ),
-                           env );
+        result = eval_cond_clause( clause_pointer, frame, frame_pointer, env);
 
-            if ( !nilp( result ) ) {
-                result =
-                    c_progn( frame, frame_pointer, c_cdr( clause_pointer ),
-                             env );
-                done = true;
-            }
-        } else if ( nilp( clause_pointer ) ) {
+        if ( !nilp( result ) && truep( c_car( result)) ) {
+            result = c_cdr( result);
             done = true;
-        } else {
-            result = throw_exception( c_string_to_lisp_string
-                                      ( L"Arguments to `cond` must be lists" ),
-                                      frame_pointer );
-        }
+            break;
+        } 
     }
-    /* \todo if there are more than 8 clauses we need to continue into the
-     * remainder */
+#ifdef DEBUG
+    debug_print( L"\tCond returning: ", DEBUG_EVAL );
+    debug_print_object( result, DEBUG_EVAL );
+    debug_println( DEBUG_EVAL); 
+#endif
 
     return result;
 }
@@ -1540,6 +1567,8 @@ struct cons_pointer lisp_list( struct stack_frame *frame,
     return result;
 }
 
+
+
 /**
  * Special form: evaluate a series of forms in an environment in which
  * these bindings are bound.
@@ -1557,11 +1586,13 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
         struct cons_pointer symbol = c_car( pair );
 
         if ( symbolp( symbol ) ) {
+            struct cons_pointer val = eval_form( frame, frame_pointer, c_cdr( pair ),
+                                        bindings );
+
+            debug_print_binding( symbol, val, false, DEBUG_BIND);
+
             bindings =
-                make_cons( make_cons
-                           ( symbol,
-                             eval_form( frame, frame_pointer, c_cdr( pair ),
-                                        bindings ) ), bindings );
+                make_cons( make_cons( symbol, val ), bindings );
 
         } else {
             result =
@@ -1577,6 +1608,11 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
         result =
             eval_form( frame, frame_pointer, fetch_arg( frame, form ),
                        bindings );
+    }
+
+    // release the local bindings as they go out of scope!
+    for (struct cons_pointer cursor = bindings; !eq( cursor, env); cursor = c_cdr(cursor)) {
+        dec_ref( cursor);
     }
 
     return result;
@@ -1597,16 +1633,10 @@ struct cons_pointer lisp_and( struct stack_frame *frame,
     bool accumulator = true;                            
     struct cons_pointer result = frame->more;
 
-    for ( int a = 0; accumulator == true && a < args_in_frame; a++) {
-        accumulator = truthy( frame->arg[ a]);
+    for ( int a = 0; accumulator == true && a < frame->args; a++) {
+        accumulator = truthy( fetch_arg( frame, a));
     }
-
-    if ( accumulator && ! nilp( frame->more)) {
-        for ( struct cons_pointer rest = frame->more; accumulator == true && !nilp( rest); rest = c_cdr(rest)) {
-            accumulator = truthy( c_car( rest));
-        } 
-    }
-
+#
     return accumulator ? TRUE : NIL;
 }
 
@@ -1624,14 +1654,8 @@ struct cons_pointer lisp_or( struct stack_frame *frame,
     bool accumulator = false;                            
     struct cons_pointer result = frame->more;
 
-    for ( int a = 0; accumulator == false && a < args_in_frame; a++) {
-        accumulator = truthy( frame->arg[ a]);
-    }
-
-    if ( ! accumulator && ! nilp( frame->more)) {
-        for ( struct cons_pointer rest = frame->more; accumulator == false && !nilp( rest); rest = c_cdr(rest)) {
-            accumulator = truthy( c_car( rest));
-        } 
+    for ( int a = 0; accumulator == false && a < frame->args; a++) {
+        accumulator = truthy( fetch_arg( frame, a));
     }
 
     return accumulator ? TRUE : NIL;

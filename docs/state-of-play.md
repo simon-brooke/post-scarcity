@@ -1,5 +1,110 @@
 # State of Play
 
+## 20260224
+
+Found a bug in subtraction, which I hoped might be a clue into the bignum bug;
+but it proved just to be a careless bug in the small integer cache code (and
+therefore a new regression). Fixed this one, easily.
+
+In the process spotted a new bug in subtracting rationals, which I haven't yet
+looked at.
+
+Currently working on a bug which is either in `let` or `cond`, which is leading
+to non-terminating recursion...
+
+H'mmm, there are bugs in both.
+
+#### `let`
+
+The unit test for let is segfaulting. That's a new regression today, because in
+last night's buildv it doesn't segfault. I don't know what's wrong, but to be
+honest I haven't looked very hard because I'm trying to fix the bug in `cond`.
+
+#### `cond`
+
+The unit test for `cond` still passes, so the bug that I'm seeing is not 
+triggered by it. So it's not necessarily a new bug. What's happening? Well,
+`member` doesn't terminate.
+
+The definition is as follows:
+
+```lisp
+(set! nil? 
+    (lambda 
+        (o) 
+        "`(nil? object)`: Return `t` if object is `nil`, else `t`."
+        (= o nil)))
+
+(set! member 
+    (lambda
+        (item collection)
+        "`(member item collection)`: Return `t` if this `item` is a member of this `collection`, else `nil`."
+        (cond
+            ((nil? collection) nil)
+            ((= item (car collection)) t)
+            (t (member item (cdr collection))))))
+```
+
+In the execution trace, with tracing of bind, eval and lambda enabled, I'm 
+seeing this loop on the stack:
+
+```
+Stack frame with 1 arguments:
+	Context:  <= (member item (cdr collection)) <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA"
+Arg 0:	CONS	count:          6	value: (member item (cdr collection))
+Stack frame with 3 arguments:
+	Context:  <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA" <= (member item (cdr collection))
+Arg 0:	CONS	count:          7	value: ((nil? collection) nil)
+Arg 1:	CONS	count:          7	value: ((= item (car collection)) t)
+Arg 2:	CONS	count:          7	value: (t (member item (cdr collection)))
+Stack frame with 1 arguments:
+	Context:  <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA" <= (member item (cdr collection)) <= ((nil? collection) nil)
+Arg 0:	CONS	count:          8	value: (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection))))
+Stack frame with 2 arguments:
+	Context:  <= "LMDA" <= (member item (cdr collection)) <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection))))
+Arg 0:	STRG	count:         19	value: "LMDA"
+Arg 1:	NIL 	count: 4294967295	value: nil
+Stack frame with 1 arguments:
+	Context:  <= (member item (cdr collection)) <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA"
+Arg 0:	CONS	count:          6	value: (member item (cdr collection))
+Stack frame with 3 arguments:
+	Context:  <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA" <= (member item (cdr collection))
+Arg 0:	CONS	count:          7	value: ((nil? collection) nil)
+Arg 1:	CONS	count:          7	value: ((= item (car collection)) t)
+Arg 2:	CONS	count:          7	value: (t (member item (cdr collection)))
+Stack frame with 1 arguments:
+	Context:  <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection)))) <= "LMDA" <= (member item (cdr collection)) <= ((nil? collection) nil)
+Arg 0:	CONS	count:          8	value: (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection))))
+Stack frame with 2 arguments:
+	Context:  <= "LMDA" <= (member item (cdr collection)) <= ((nil? collection) nil) <= (cond ((nil? collection) nil) ((= item (car collection)) t) (t (member item (cdr collection))))
+Arg 0:	STRG	count:         19	value: "LMDA"
+Arg 1:	NIL 	count: 4294967295	value: nil
+```
+
+This then just goes on, and on, and on. The longest instance I've got the trace of wound up more than a third of a million stack frames before I killed it. What appears to be happening is that the cond clause
+
+```lisp
+((nil? collection) nil)
+```
+
+Executes correctly and returns nil; but that instead of terminating the cond expression at that point it continues and executes the following two clauses, resulting in (infinite) recursion.
+
+This is bad.
+
+But what's worse is that the clause
+
+```lisp
+((= item (car collection)) t)
+```
+
+also doesn't terminate the `cond` expression, even when it should.
+
+And the reason? From the trace, it appears that clauses *never* succeed. But if that's true, how come the unit tests are passing?
+
+Problem for another day.
+
+I'm not going to commit today's work to git, because I don't want to commit something I know segfaults.
+
 ## 20260220
 
 ### State of the build

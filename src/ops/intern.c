@@ -328,52 +328,62 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
     struct cons_pointer result = NIL;
+    
+    if (!nilp( key)) {
+        if ( consp( store ) ) {
+            for ( struct cons_pointer next = store;
+                nilp( result ) && ( consp( next ) || hashmapp( next ) );
+                next = pointer2cell( next ).payload.cons.cdr ) {
+                if ( consp( next ) ) {
+// #ifdef DEBUG
+//                     debug_print( L"\nc_assoc; key is `", DEBUG_BIND );
+//                     debug_print_object( key, DEBUG_BIND );
+//                     debug_print( L"`\n", DEBUG_BIND );
+// #endif
 
-    debug_print( L"c_assoc; key is `", DEBUG_BIND );
-    debug_print_object( key, DEBUG_BIND );
-    debug_print( L"`\n", DEBUG_BIND );
+                    struct cons_pointer entry_ptr = c_car( next );
+                    struct cons_space_object entry = pointer2cell( entry_ptr );
 
-    if ( consp( store ) ) {
-        for ( struct cons_pointer next = store;
-              nilp( result ) && ( consp( next ) || hashmapp( next ) );
-              next = pointer2cell( next ).payload.cons.cdr ) {
-            if ( consp( next ) ) {
-                struct cons_pointer entry_ptr = c_car( next );
-                struct cons_space_object entry = pointer2cell( entry_ptr );
+                    switch ( entry.tag.value ) {
+                        case CONSTV:
+                            if ( equal( key, entry.payload.cons.car ) ) {
+                                result = entry.payload.cons.cdr;
+                            }
+                            break;
+                        case VECTORPOINTTV:
+                            result = hashmap_get( entry_ptr, key );
+                            break;
+                        default:
+                            throw_exception( c_append
+                                            ( c_string_to_lisp_string
+                                            ( L"Store entry is of unknown type: " ),
+                                            c_type( entry_ptr ) ), NIL );
+                    }
 
-                switch ( entry.tag.value ) {
-                    case CONSTV:
-                        if ( equal( key, entry.payload.cons.car ) ) {
-                            result = entry.payload.cons.cdr;
-                        }
-                        break;
-                    case VECTORPOINTTV:
-                        result = hashmap_get( entry_ptr, key );
-                        break;
-                    default:
-                        throw_exception( c_append
-                                         ( c_string_to_lisp_string
-                                           ( L"Store entry is of unknown type: " ),
-                                           c_type( entry_ptr ) ), NIL );
+// #ifdef DEBUG
+//                     debug_print( L"c_assoc `", DEBUG_BIND );
+//                     debug_print_object( key, DEBUG_BIND );
+//                     debug_print( L"` returning: ", DEBUG_BIND );
+//                     debug_print_object( result, DEBUG_BIND );
+//                     debug_println( DEBUG_BIND );
+// #endif
                 }
             }
+        } else if ( hashmapp( store ) ) {
+            result = hashmap_get( store, key );
+        } else if ( !nilp( store ) ) {
+// #ifdef DEBUG        
+//             debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
+//             debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
+//             debug_print( L"`\n", DEBUG_BIND );
+// #endif
+            result =
+                throw_exception( c_append
+                                ( c_string_to_lisp_string
+                                ( L"Store is of unknown type: " ),
+                                c_type( store ) ), NIL );
         }
-    } else if ( hashmapp( store ) ) {
-        result = hashmap_get( store, key );
-    } else if ( !nilp( store ) ) {
-        debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
-        debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
-        debug_print( L"`\n", DEBUG_BIND );
-        result =
-            throw_exception( c_append
-                             ( c_string_to_lisp_string
-                               ( L"Store is of unknown type: " ),
-                               c_type( store ) ), NIL );
     }
-
-    debug_print( L"c_assoc returning ", DEBUG_BIND );
-    debug_print_object( result, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
 
     return result;
 }
@@ -415,35 +425,21 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
     struct cons_pointer result = NIL;
 
 #ifdef DEBUG
-    debug_print( L"set: binding `", DEBUG_BIND );
-    debug_print_object( key, DEBUG_BIND );
-    debug_print( L"` to `", DEBUG_BIND );
-    debug_print_object( value, DEBUG_BIND );
-    debug_print( L"` in store ", DEBUG_BIND );
-    debug_dump_object( store, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
+    bool deep = vectorpointp( store);
+    debug_print_binding( key, value, deep, DEBUG_BIND);
 
-    debug_printf( DEBUG_BIND, L"set: store is %4.4s",
-                  pointer2cell(store).tag.bytes );
-    if (strncmp(pointer2cell(store).tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
-        debug_printf( DEBUG_BIND, L" -> %4.4s\n",
+    if (deep) {
+        debug_printf( DEBUG_BIND, L"\t-> %4.4s\n",
                   pointer2cell(store).payload.vectorp.tag.bytes );
-    } else {
-        debug_println( DEBUG_BIND);
-    }
+    } 
 #endif
     if ( nilp( value ) ) {
         result = store;
     } else if ( nilp( store ) || consp( store ) ) {
         result = make_cons( make_cons( key, value ), store );
     } else if ( hashmapp( store ) ) {
-        debug_print( L"set: storing in hashmap\n", DEBUG_BIND );
         result = hashmap_put( store, key, value );
     }
-
-    debug_print( L"set returning ", DEBUG_BIND );
-    debug_print_object( result, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
 
     return result;
 }
@@ -457,18 +453,13 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
 
     struct cons_pointer old = oblist;
 
-    debug_print( L"deep_bind: binding `", DEBUG_BIND );
-    debug_print_object( key, DEBUG_BIND );
-    debug_print( L"` to ", DEBUG_BIND );
-    debug_print_object( value, DEBUG_BIND );
-    debug_println( DEBUG_BIND );
-
     oblist = set( key, value, oblist );
 
-    if ( consp( oblist ) ) {
-        inc_ref( oblist );
-        dec_ref( old );
-    }
+    // The oblist is not now an assoc list, and I don't think it will be again.
+    // if ( consp( oblist ) ) {
+    //     inc_ref( oblist );
+    //     dec_ref( old );
+    // }
 
     debug_print( L"deep_bind returning ", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
@@ -480,7 +471,7 @@ deep_bind( struct cons_pointer key, struct cons_pointer value ) {
 /**
  * Ensure that a canonical copy of this key is bound in this environment, and
  * return that canonical copy. If there is currently no such binding, create one
- * with the value NIL.
+ * with the value TRUE.
  */
 struct cons_pointer
 intern( struct cons_pointer key, struct cons_pointer environment ) {
@@ -490,7 +481,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
         /*
          * not currently bound
          */
-        result = set( key, NIL, environment );
+        result = set( key, TRUE, environment );
     }
 
     return result;

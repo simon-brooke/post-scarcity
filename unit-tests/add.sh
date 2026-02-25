@@ -86,7 +86,7 @@ then
     echo "OK"
 else
     echo "Fail: expected '${expected}', got '${actual}'"
-    result=`echo "${result} + 1" | bc `
+    result=`echo "${result} + 1" | bc`
 fi
 
 exit ${result}

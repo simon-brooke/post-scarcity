@@ -46,6 +46,12 @@ int initialised_cons_pages = 0;
 struct cons_pointer freelist = NIL;
 
 /**
+ * The exception message printed when the world blows up, initialised in
+ * `maybe_bind_init_symbols()` in `init.c`, q.v.
+ */
+struct cons_pointer privileged_string_memory_exhausted;
+
+/**
  * An array of pointers to cons pages.
  */
 struct cons_page *conspages[NCONSPAGES];

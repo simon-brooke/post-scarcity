@@ -20,23 +20,22 @@
 /* libcurl, used for io */
 #include <curl/curl.h>
 
+#include "arith/peano.h"
 #include "arith/ratio.h"
-#include "version.h"
+#include "debug.h"
+#include "io/fopen.h"
+#include "io/io.h"
+#include "io/print.h"
 #include "memory/conspage.h"
 #include "memory/consspaceobject.h"
-#include "memory/stack.h"
-#include "debug.h"
 #include "memory/hashmap.h"
+#include "memory/stack.h"
 #include "ops/intern.h"
-#include "io/io.h"
-#include "io/fopen.h"
 #include "ops/lispops.h"
 #include "ops/meta.h"
-#include "arith/peano.h"
-#include "io/print.h"
 #include "repl.h"
-#include "io/fopen.h"
 #include "time/psse_time.h"
+#include "version.h"
 
 /**
  * @brief If `pointer` is an exception, display that exception to stderr, 
@@ -83,6 +82,11 @@ void maybe_bind_init_symbols(  ) {
     }
     if ( nilp( privileged_symbol_nil ) ) {
         privileged_symbol_nil = c_string_to_lisp_symbol( L"nil" );
+    }
+    if ( nilp( privileged_string_memory_exhausted)) {
+        // we can't make this string when we need it, because memory is then 
+        // exhausted!
+        privileged_string_memory_exhausted = c_string_to_lisp_string( L"Memory exhausted." );
     }
 }
 
