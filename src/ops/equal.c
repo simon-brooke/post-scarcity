@@ -383,11 +383,11 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     }
 
 #ifdef DEBUG
-                    debug_print( L"Comparing '", DEBUG_LAMBDA);
-                    debug_print( a_buff, DEBUG_LAMBDA);
-                    debug_print( L"' to '", DEBUG_LAMBDA);
-                    debug_print( b_buff, DEBUG_LAMBDA);
-                    debug_print( L"'\n", DEBUG_LAMBDA);
+                    debug_print( L"Comparing '", DEBUG_ARITH);
+                    debug_print( a_buff, DEBUG_ARITH);
+                    debug_print( L"' to '", DEBUG_ARITH);
+                    debug_print( b_buff, DEBUG_ARITH);
+                    debug_print( L"'\n", DEBUG_ARITH);
 #endif
 
                     /* OK, now we have wchar string buffers loaded from the objects. We 
@@ -420,7 +420,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
      * I'll ignore them, too, for now.
      */
 
-    debug_printf( DEBUG_LAMBDA, L"\nequal returning %d\n", result );
+    debug_printf( DEBUG_ARITH, L"\nequal returning %d\n", result );
 
     return result;
 }
