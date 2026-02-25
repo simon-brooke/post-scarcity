@@ -1639,7 +1639,6 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
 
             bindings =
                 make_cons( make_cons( symbol, val ), bindings );
-
         } else {
             result =
                 throw_exception( c_string_to_lisp_string
@@ -1649,6 +1648,8 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
         }
     }
 
+    debug_print( L"\nlet: bindings complete.\n", DEBUG_BIND);
+
     /* i.e., no exception yet */
     for ( int form = 1; !exceptionp( result ) && form < frame->args; form++ ) {
         result =
@@ -1656,10 +1657,11 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
                        bindings );
     }
 
-    // release the local bindings as they go out of scope!
-    for (struct cons_pointer cursor = bindings; !eq( cursor, env); cursor = c_cdr(cursor)) {
-        dec_ref( cursor);
-    }
+    /* release the local bindings as they go out of scope! **BUT** 
+     * bindings were consed onto the front of env, so caution... */
+    // for (struct cons_pointer cursor = bindings; !eq( cursor, env); cursor = c_cdr(cursor)) {
+    //     dec_ref( cursor);
+    // }
 
     return result;
 
