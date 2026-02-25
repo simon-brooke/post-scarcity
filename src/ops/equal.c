@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "arith/integer.h"
 #include "arith/peano.h"
@@ -363,22 +364,38 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                 /* TODO: it is not OK to do this on the stack since list-like 
                  * structures can be of indefinite extent. It *must* be done by 
                  * iteration (and even that is problematic) */
+                if (cell_a->payload.string.hash == cell_b->payload.string.hash) {
+                    wchar_t a_buff[ STRING_SHIPYARD_SIZE], b_buff[ STRING_SHIPYARD_SIZE];
+                    uint32_t tag = cell_a->tag.value;
+                    int i = 0;
+
+                    memset(a_buff,0,sizeof(a_buff));
+                    memset(b_buff,0,sizeof(b_buff));
+
+                    for (; (i < (STRING_SHIPYARD_SIZE - 1)) && !nilp( a) && !nilp( b); i++) {
+                        a_buff[i] = cell_a->payload.string.character;
+                        a = c_cdr(a);
+                        cell_a = &pointer2cell( a );
+
+                        b_buff[i] = cell_b->payload.string.character;
+                        b = c_cdr( b);
+                        cell_b = &pointer2cell( b); 
+                    }
+
 #ifdef DEBUG
-                 debug_print( L"Comparing '", DEBUG_ARITH);
-                 debug_print_object( a, DEBUG_ARITH);
-                 debug_print( L"' to '", DEBUG_ARITH);
-                 debug_print_object( b, DEBUG_ARITH);
+                    debug_print( L"Comparing '", DEBUG_LAMBDA);
+                    debug_print( a_buff, DEBUG_LAMBDA);
+                    debug_print( L"' to '", DEBUG_LAMBDA);
+                    debug_print( b_buff, DEBUG_LAMBDA);
+                    debug_print( L"'\n", DEBUG_LAMBDA);
 #endif
-                result =
-                    cell_a->payload.string.hash == cell_b->payload.string.hash
-                    && cell_a->payload.string.character ==
-                    cell_b->payload.string.character
-                    &&
-                    ( equal
-                      ( cell_a->payload.string.cdr,
-                        cell_b->payload.string.cdr )
-                      || ( end_of_string( cell_a->payload.string.cdr )
-                           && end_of_string( cell_b->payload.string.cdr ) ) );
+
+                    /* OK, now we have wchar string buffers loaded from the objects. We 
+                     * may not have exhausted either string, so the buffers being equal
+                     * isn't sufficient. So we recurse at least once. */
+
+                    result = (wcsncmp( a_buff, b_buff, i) == 0) && equal( c_cdr(a), c_cdr(b));
+                }
                 break;
             case VECTORPOINTTV:
                 if ( cell_b->tag.value == VECTORPOINTTV) {
@@ -403,7 +420,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
      * I'll ignore them, too, for now.
      */
 
-    debug_printf( DEBUG_ARITH, L"\nequal returning %d\n", result );
+    debug_printf( DEBUG_LAMBDA, L"\nequal returning %d\n", result );
 
     return result;
 }

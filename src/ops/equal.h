@@ -15,6 +15,12 @@
 #ifndef __equal_h
 #define __equal_h
 
+/** 
+ * size of buffer for assembling strings. Likely to be useful to
+ * read, too.
+ */
+#define STRING_SHIPYARD_SIZE 1024
+
 /**
  * Shallow, and thus cheap, equality: true if these two objects are 
  * the same object, else false.

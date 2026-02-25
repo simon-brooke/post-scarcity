@@ -150,7 +150,7 @@ struct cons_pointer c_car( struct cons_pointer arg ) {
 
 /**
  * Implementation of cdr in C. If arg is not a sequence, or the current user is
- * not authorised to read it,does not error but returns nil.
+ * not authorised to read it, does not error but returns nil.
  */
 struct cons_pointer c_cdr( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
