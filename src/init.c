@@ -387,7 +387,7 @@ int main( int argc, char *argv[] ) {
         L"`(not arg)`: Return`t` only if `arg` is `nil`, else `nil`.",
         &lisp_not);
     bind_function( L"oblist", L"`(oblist)`: Return the current symbol bindings, as a map.", &lisp_oblist );
-    bind_function( L"open", L"`(open url read?)`: Open a stream to this `url`. If `read` is present and is non-nil, open it for reading, else writing.", &lisp_open );
+    bind_function( L"open", L"`(open url write?)`: Open a stream to this `url`. If `write?` is present and is non-nil, open it for writing, else reading.", &lisp_open );
     bind_function( L"or", 
         L"`(or args...)`: Return a logical `or` of all the arguments and return `t` if any is truthy, else `nil`.",
         &lisp_or);

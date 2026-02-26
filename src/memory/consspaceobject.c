@@ -114,11 +114,15 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
  * @return As a Lisp string, the tag of the object which is at that pointer.
  */
 struct cons_pointer c_type( struct cons_pointer pointer ) {
-    struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( pointer );
+    /* Strings read by `read` have the null character termination. This means 
+     * that for the same printable string, the hashcode is different from 
+     * strings made with NIL termination. The question is which should be 
+     * fixed, and actually that's probably strings read by `read`. However,
+     * for now, it was easier to add a null character here. */
+    struct cons_pointer result = make_string( (wchar_t) 0, NIL);
+    struct cons_space_object * cell = &pointer2cell( pointer );
 
-    if ( strncmp( ( char * ) &cell.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) ==
-         0 ) {
+    if ( cell->tag.value == VECTORPOINTTV ) {
         struct vector_space_object *vec = pointer_to_vso( pointer );
 
         for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
@@ -127,7 +131,7 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
         }
     } else {
         for ( int i = TAGLENGTH - 1; i >= 0; i-- ) {
-            result = make_string( ( wchar_t ) cell.tag.bytes[i], result );
+            result = make_string( ( wchar_t ) cell->tag.bytes[i], result );
         }
     }
 
@@ -333,6 +337,8 @@ struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
         cell->payload.string.cdr = tail;
 
         cell->payload.string.hash = calculate_hash( c, tail );
+        debug_dump_object( pointer, DEBUG_ALLOC);
+        debug_println( DEBUG_ALLOC);
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,

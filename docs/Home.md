@@ -115,7 +115,7 @@ The following functions are provided as of release 0.0.6:
 | not | FUNC | `(not arg)`: Return`t` only if `arg` is `nil`, else `nil`. |
 | nλ | SPFM | `(nlamda arg-list forms...)`: Construct an interpretable special form. When the form is interpreted, arguments specified in the `arg-list` will not be evaluated. |
 | oblist | FUNC | `(oblist)`: Return the current top-level symbol bindings, as a map. |
-| open | FUNC | `(open url read?)`: Open a stream to this `url`. If `read` is present and is non-nil, open it for reading, else writing. |
+| open | FUNC | `(open url write?)`: Open a stream to this `url`. If `write?` is present and is non-nil, open it for writing, else reading. |
 | or | FUNC | `(or args...)`: Return a logical `or` of all the arguments and return `t` if any is truthy, else `nil`. |
 | print | FUNC | `(print object stream)`: Print `object` to `stream`, if specified, else to `*out*`. |
 | progn | SPFM | `(progn forms...)`: Evaluate these `forms` sequentially, and return the value of the last. |
@@ -129,7 +129,7 @@ The following functions are provided as of release 0.0.6:
 | reverse | FUNC | `(reverse sequence)` Returns a sequence of the top level elements of this `sequence`, which may be a list or a string, in the reverse order. |
 | set | FUNC | null |
 | set! | SPFM | null |
-| slurp | FUNC | null |
+| slurp | FUNC | `(slurp read-stream)` Read all the characters from `read-stream` to the end of stream, and return them as a string. |
 | source | FUNC | `(source  object)`: If `object` is an interpreted function or interpreted special form, returns the source code; else nil. Once we get a compiler working, will also return the source code of compiled functions and special forms. |
 | subtract | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
 | throw | FUNC | null |

@@ -420,7 +420,7 @@ struct cons_pointer get_default_stream( bool inputp, struct cons_pointer env ) {
 
 /**
  * Function: return a stream open on the URL indicated by the first argument;
- * if a second argument is present and is non-nil, open it for reading. At
+ * if a second argument is present and is non-nil, open it for writing. At
  * present, further arguments are ignored and there is no mechanism to open
  * to append, or error if the URL is faulty or indicates an unavailable
  * resource.
