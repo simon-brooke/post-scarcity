@@ -8,7 +8,11 @@ Work towards the implementation of a software system like that described in [Pos
 
 ## State of Play
 
-You can read about the current [state of play](md_home_2simon_2workspace_2post-scarcity_2docs_2state-of-play.html).
+You can read about the current [state of play](State-of-play.md).
+
+## Roadmap
+
+There is now a [roadmap](Roadmap.md) for the project.
 
 ## AWFUL WARNING 1
 
@@ -17,8 +21,8 @@ This does not work. It isn't likely to work any time soon. If you want to learn 
 What it sets out to be is a Lisp-like system which:
 
 * Can make use (albeit not, at least at first, very efficiently) of machines with at least [Zettabytes](http://highscalability.com/blog/2012/9/11/how-big-is-a-petabyte-exabyte-zettabyte-or-a-yottabyte.html) of RAM;
-* Can make reasonable use of machines with at least tens of thousands of processors;
-* Can concurrently support significant numbers of concurrent users, all doing different things, without them ever interfering with one another;
+* Can make reasonable use of machines with at least billions of processors;
+* Can concurrently support significant numbers of users, all doing different things, without them ever interfering with one another;
 * Can ensure that users cannot escalate privilege;
 * Can ensure users private data remains private.
 
@@ -32,3 +36,41 @@ When Linus Torvalds sat down in his bedroom to write Linux, he had something usa
 
 This project is necessarily experimental and exploratory. I write code, it reveals new problems, I think about them, and I mutate the design. This documentation does not always keep up with the developing source code.
 
+## Building
+
+The substrate of this system is written in plain old fashioned C and built with a Makefile. I regret this decision; I think either Zig or Rust would have been better places to start; but neither of them were sufficiently well developed to support what I wanted to do when I did start.
+
+To build, you need a C compiler; I use GCC, others may work. You need a make utility; I use GNU Make. You need [libcurl](https://curl.se/libcurl/).
+
+With these dependencies in place, clone the repository from [here](https://git.journeyman.cc/simon/post-scarcity/), and run `make` in the resulting project directory. If all goes well you will find and executable, `psse`, in the target directory.
+
+## In use
+
+### Invoking
+
+When invoking the system, the following invokation arguments may be passed:
+```
+        -d      Dump memory to standard out at end of run (copious!);
+        -h      Print this message and exit;
+        -p      Show a prompt (default is no prompt);
+        -v LEVEL
+                Set verbosity to the specified level (0...512)
+                Where bits are interpreted as follows:
+                1       ALLOC;
+                2       ARITH;
+                4       BIND;
+                8       BOOTSTRAP;
+                16      EVAL;
+                32      INPUT/OUTPUT;
+                64      LAMBDA;
+                128     REPL;
+                256     STACK.
+```
+
+Note that any verbosity level produces a great deal of output, and although standardising the output to make it more legible is something I'm continually working on, it's still hard to read the output. It is printed to stderr, so can be redirected to a file for later analysis, which is the best plan.
+
+### Functions and symbols
+
+The following functions and keys are provided as of release 0.0.6:
+
+```

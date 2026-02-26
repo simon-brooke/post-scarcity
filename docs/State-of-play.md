@@ -1,5 +1,16 @@
 # State of Play
 
+## 20260225
+
+A productive day!
+
+I awoke with a plan to fix `cond`. This morning, I execoted it, and it worked.
+This afternoon, I fixed `let`. And this evening, I greatly improved `equal`.
+
+The bug in `member` is still unresolved.
+
+We're getting very close to the release of 0.0.6.
+
 ## 20260224
 
 Found a bug in subtraction, which I hoped might be a clue into the bignum bug;

@@ -1,4 +1,8 @@
-![HAL 9000 - a vision of the hardware of the deep future](https://vignette4.wikia.nocookie.net/2001/images/5/59/Hal_console.jpg/revision/latest?cb=20090823025755)In thinking about how to write a software architecture that won't quickly become obsolescent, I find that I'm thinking increasingly about the hardware on which it will run.
+# On the topology of the hardware of the deep future
+
+![HAL 9000 - a vision of the hardware of the deep future](https://vignette4.wikia.nocookie.net/2001/images/5/59/Hal_console.jpg/revision/latest?cb=20090823025755)
+
+In thinking about how to write a software architecture that won't quickly become obsolescent, I find that I'm thinking increasingly about the hardware on which it will run.
 
 In [Post Scarcity Hardware](Post-scarcity-hardware.html) I envisaged a single privileged node which managed main memory. Since then I've come to thing that this is a brittle design which will lead to bottle necks, and that each cons page will be managed by a separate node. So there needs to be a hardware architecture which provides the shortest possible paths between nodes.
 
@@ -14,7 +18,7 @@ If you take a square grid and place a processor at every intersection, it has at
 
 So far so good. Now, let's take square grids and stack them. This gives each node at most six proximal neighbours. We form a cube, and the longest distance between two nodes is `3x`. We can link the nodes on the left of the cube to the corresponding nodes on the right and form a (thick walled) cylinder, and the longest distance between two nodes is `2.5x`. Now join the nodes at the top of the cube to the corresponding nodes at the bottom, and we have a thick walled torus. The maximum distance between is now `2x`.
 
-Let's stop for a moment and think about the difference between logical and physical topology. Suppose we have a printed circuit board with 100 processors on it in a regular grid. We probably could physically bend the circuit board to form a cylinder, but there's no need to do so. We achieve exactly the same connection architecture simply by using wires to connect the left side to the right. And if we use wires to connect those at the top with those at the bottom, we've formed a logical torus even though the board is still flat.
+Let's stop for a moment and think about the difference between logical and physical topology. Suppose we have a printed circuit board with 199 processors on it in a regular grid. We probably could physically bend the circuit board to form a cylinder, but there's no need to do so. We achieve exactly the same connection architecture simply by using wires to connect the left side to the right. And if we use wires to connect those at the top with those at the bottom, we've formed a logical torus even though the board is still flat.
 
 It doesn't even need to be a square board. We could have each processor on a separate board in a rack, with each board having four connectors probably all along the same edge, and use patch wires to connect the boards together into a logical torus.
 
