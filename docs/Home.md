@@ -46,9 +46,11 @@ With these dependencies in place, clone the repository from [here](https://git.j
 
 ## In use
 
+What works just now is a not very good, not very efficient Lisp interpreter which does not conform to any existing Lisp standard. You can start a REPL, and you can write and evaluate functions. You can't yet save or load your functions. It's interesting mainly because of its architecture, and where it's intended to go, rather than where it is now.
+
 ### Invoking
 
-When invoking the system, the following invokation arguments may be passed:
+When invoking the system, the following invocation arguments may be passed:
 ```
         -d      Dump memory to standard out at end of run (copious!);
         -h      Print this message and exit;
@@ -71,6 +73,68 @@ Note that any verbosity level produces a great deal of output, and although stan
 
 ### Functions and symbols
 
-The following functions and keys are provided as of release 0.0.6:
+The following functions are provided as of release 0.0.6:
 
-```
+| Symbol | Type | Documentation |
+| ------ | ---- | ------------- |
+| * | FUNC | `(* args...)` Multiplies these `args`, all of which should be numbers, and return the product. |
+| + | FUNC | `(+ args...)`: If `args` are all numbers, returns the sum of those numbers. |
+| - | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
+| / | FUNC | `(/ a b)`: Divides `a` by `b` and returns the result. Expects both arguments to be numbers. |
+| = | FUNC | `(equal? args...)`: Return `t` if all args have logically equivalent value, else `nil`. |
+| absolute | FUNC | `(absolute arg)`: If `arg` is a number, return the absolute value of that number, else `nil`. |
+| add | FUNC | `(+ args...)`: If `args` are all numbers, return the sum of those numbers. |
+| and | FUNC | `(and args...)`: Return a logical `and` of all the arguments and return `t` only if all are truthy, else `nil`. |
+| append | FUNC | `(append args...)`: If `args` are all sequences, return the concatenation of those sequences. |
+| apply | FUNC | `(apply f args)`: If `f` is usable as a function, and `args` is a collection, apply `f` to `args` and return the value. |
+| assoc | FUNC | `(assoc key store)`: Return the value associated with this `key` in this `store`. |
+| car | FUNC | `(car arg)`: If `arg` is a sequence, return the item which is the head of that sequence. |
+| cdr | FUNC | `(cdr arg)`: If `arg` is a sequence, return the remainder of that sequence with the first item removed. |
+| close | FUNC | `(close stream)`: If `stream` is a stream, close that stream. |
+| cond | SPFM | null |
+| cons | FUNC | `(cons a b)`: Return a cons cell whose `car` is `a` and whose `cdr` is `b`. |
+| count | FUNC | `(count s)`: Return the number of items in the sequence `s`. |
+| divide | FUNC | `(/ a b)`: If `a` and `b` are both numbers, return the numeric result of dividing `a` by `b`. |
+| eq? | FUNC | `(eq? args...)`: Return `t` if all args are the exact same object, else `nil`. |
+| equal? | FUNC | `(equal? args...)`: Return `t` if all args have logically equivalent value, else `nil`. |
+| eval | FUNC | `(eval form)`: Evaluates `form` and returns the result. |
+| exception | FUNC | `(exception message)`: Return (throw) an exception with this `message`. |
+| get-hash | FUNC | `(get-hash arg)`: Returns the natural number hash value of `arg`. This is the default hash function used by hashmaps and namespaces, but obviously others can be supplied. |
+| hashmap | FUNC | `(hashmap n-buckets hashfn store write-acl)`: Return a new hashmap, with `n-buckets` buckets and this `hashfn`, containing the content of this `store`, and protected by the write access control list `write-acl`. All arguments are optional. The intended difference between a namespace and a hashmap is that a namespace has a write acl and a hashmap doesn't (is not writable), but currently (0.0.6) this functionality is not yet written. |
+| inspect | FUNC | `(inspect object ouput-stream)`: Print details of this `object` to this `output-stream`, or `*out*` if no `output-stream` is specified. |
+| keys | FUNC | `(keys store)`: Return a list of all keys in this `store`. |
+| lambda | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; funtion. |
+| let | SPFM | `(let bindings forms)`: Bind these `bindings`, which should be specified as an association list, into the local environment and evaluate these forms sequentially in that context, returning the value of the last. |
+| list | FUNC | `(list args...)`: Return a list of these `args`. |
+| mapcar | FUNC | `(mapcar function sequence)`: Apply `function` to each element of `sequence` in turn, and return a sequence of the results. |
+| meta | FUNC | `(meta symbol)`: If the binding of `symbol` has metadata, return that metadata, else `nil`. |
+| metadata | FUNC | `(metadata symbol)`: If the binding of `symbol` has metadata, return that metadata, else `nil`. |
+| multiply | FUNC | `(multiply args...)` Multiply these `args`, all of which should be numbers, and return the product. |
+| negative? | FUNC | `(negative? n)`: Return `t` if `n` is a negative number, else `nil`. |
+| nlambda | SPFM | `(nlamda arg-list forms...)`: Construct an interpretable special form. When the form is interpreted, arguments specified in the `arg-list` will not be evaluated. |
+| not | FUNC | `(not arg)`: Return`t` only if `arg` is `nil`, else `nil`. |
+| nλ | SPFM | `(nlamda arg-list forms...)`: Construct an interpretable special form. When the form is interpreted, arguments specified in the `arg-list` will not be evaluated. |
+| oblist | FUNC | `(oblist)`: Return the current top-level symbol bindings, as a map. |
+| open | FUNC | `(open url read?)`: Open a stream to this `url`. If `read` is present and is non-nil, open it for reading, else writing. |
+| or | FUNC | `(or args...)`: Return a logical `or` of all the arguments and return `t` if any is truthy, else `nil`. |
+| print | FUNC | `(print object stream)`: Print `object` to `stream`, if specified, else to `*out*`. |
+| progn | SPFM | `(progn forms...)`: Evaluate these `forms` sequentially, and return the value of the last. |
+| put! | FUNC | `(put! store key value)`: Stores a value in a namespace; currently (0.0.6), also stores a value in a hashmap, but in future if the `store` is a hashmap then `put!` will return a clone of that hashmap with this `key value` pair added.  Expects `store` to be a hashmap or namespace; `key` to be a symbol or a keyword; `value` to be  any value. |
+| put-all! | FUNC | `(put-all! store1 store2)`: If `store1` is a namespace and is writable, copies all key-value pairs from `store2` into `store1`. At present (0.0.6) it does this for hashmaps as well, but in future if `store1` is a hashmap or an namespace which the user does not have permission to write, will return a copy of `store1` with all the key-value pairs from `store2` added. `store1` must be a hashmap or a namespace; `store2` may be either of those or an association list. |
+| quote | SPFM | `(quote form)`: Returns `form`, unevaluated. More normally expressed `'form`, where the quote mark is a reader macro which is expanded to `(quote form)`. |
+| ratio->real | FUNC | `(ratio->real r)`: If `r` is a rational number, return the real number equivalent. |
+| read | FUNC | `(read stream)`: read one complete lisp form and return it. If `stream` is specified and is a read stream, then read from that stream, else the stream which is the value of  `*in*` in the environment. |
+| read-char | FUNC | `(read-char stream)`: Return the next character from the stream indicated by `stream`. |
+| repl | FUNC | `(repl prompt input output)`: Starts a new read-eval-print-loop. All arguments are optional. If `prompt` is present, it will be used as the prompt. If `input` is present and is a readable stream, takes input from that stream. If `output` is present and is a writable stream, prints output to that stream. |
+| reverse | FUNC | `(reverse sequence)` Returns a sequence of the top level elements of this `sequence`, which may be a list or a string, in the reverse order. |
+| set | FUNC | null |
+| set! | SPFM | null |
+| slurp | FUNC | null |
+| source | FUNC | `(source  object)`: If `object` is an interpreted function or interpreted special form, returns the source code; else nil. Once we get a compiler working, will also return the source code of compiled functions and special forms. |
+| subtract | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
+| throw | FUNC | null |
+| time | FUNC | `(time arg)`: Return a time object. If an `arg` is supplied, it should be an integer which will be interpreted as a number of microseconds since the big bang, which is assumed to have happened 441,806,400,000,000,000 seconds before the UNIX epoch. |
+| try | SPFM | null |
+| type | FUNC | `(type object)`: returns the type of the specified `object`. Currently (0.0.6) the type is returned as a four character string; this may change. |
+| λ | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; funtion. |
+

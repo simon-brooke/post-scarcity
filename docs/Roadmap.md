@@ -35,7 +35,7 @@ Doctrine is that the post scarcity computing environment doesn't have a file sys
 
 ### Better command line experience
 
-The current command line experience is embarrasingly poor. Recallable input history, input line editing, and a proper structure editor are all things that I will need for my comfort.
+The current command line experience is embarrassingly poor. Recallable input history, input line editing, and a proper structure editor are all things that I will need for my comfort.
 
 ### Users, groups and ACLs
 
