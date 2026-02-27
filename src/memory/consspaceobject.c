@@ -65,11 +65,16 @@ struct cons_pointer inc_ref( struct cons_pointer pointer ) {
     if ( cell->count < MAXREFERENCE ) {
         cell->count++;
 #ifdef DEBUG
-        debug_printf( DEBUG_ALLOC, L"\nIncremented cell of type %4.4s at page %d, offset %d to count %d", ((char *)cell->tag.bytes), pointer.page, pointer.offset, cell->count);
-        if ( strncmp( cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
-            debug_printf( DEBUG_ALLOC, L"; pointer to vector object of type %4.4s.\n", ((char *)(cell->payload.vectorp.tag.bytes)));
+        debug_printf( DEBUG_ALLOC,
+                      L"\nIncremented cell of type %4.4s at page %d, offset %d to count %d",
+                      ( ( char * ) cell->tag.bytes ), pointer.page,
+                      pointer.offset, cell->count );
+        if ( strncmp( cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
+            debug_printf( DEBUG_ALLOC,
+                          L"; pointer to vector object of type %4.4s.\n",
+                          ( ( char * ) ( cell->payload.vectorp.tag.bytes ) ) );
         } else {
-            debug_println( DEBUG_ALLOC);
+            debug_println( DEBUG_ALLOC );
         }
 #endif
     }
@@ -91,11 +96,17 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
     if ( cell->count > 0 && cell->count != UINT32_MAX ) {
         cell->count--;
 #ifdef DEBUG
-        debug_printf( DEBUG_ALLOC, L"\nDecremented cell of type %4.4s at page %d, offset %d to count %d", ((char *)cell->tag.bytes), pointer.page, pointer.offset, cell->count);
-        if ( strncmp( (char *)cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH) == 0) {
-            debug_printf( DEBUG_ALLOC, L"; pointer to vector object of type %4.4s.\n", ((char *)(cell->payload.vectorp.tag.bytes)));
+        debug_printf( DEBUG_ALLOC,
+                      L"\nDecremented cell of type %4.4s at page %d, offset %d to count %d",
+                      ( ( char * ) cell->tag.bytes ), pointer.page,
+                      pointer.offset, cell->count );
+        if ( strncmp( ( char * ) cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH )
+             == 0 ) {
+            debug_printf( DEBUG_ALLOC,
+                          L"; pointer to vector object of type %4.4s.\n",
+                          ( ( char * ) ( cell->payload.vectorp.tag.bytes ) ) );
         } else {
-            debug_println( DEBUG_ALLOC);
+            debug_println( DEBUG_ALLOC );
         }
 #endif
 
@@ -119,8 +130,8 @@ struct cons_pointer c_type( struct cons_pointer pointer ) {
      * strings made with NIL termination. The question is which should be 
      * fixed, and actually that's probably strings read by `read`. However,
      * for now, it was easier to add a null character here. */
-    struct cons_pointer result = make_string( (wchar_t) 0, NIL);
-    struct cons_space_object * cell = &pointer2cell( pointer );
+    struct cons_pointer result = make_string( ( wchar_t ) 0, NIL );
+    struct cons_space_object *cell = &pointer2cell( pointer );
 
     if ( cell->tag.value == VECTORPOINTTV ) {
         struct vector_space_object *vec = pointer_to_vso( pointer );
@@ -337,8 +348,8 @@ struct cons_pointer make_string_like_thing( wint_t c, struct cons_pointer tail,
         cell->payload.string.cdr = tail;
 
         cell->payload.string.hash = calculate_hash( c, tail );
-        debug_dump_object( pointer, DEBUG_ALLOC);
-        debug_println( DEBUG_ALLOC);
+        debug_dump_object( pointer, DEBUG_ALLOC );
+        debug_println( DEBUG_ALLOC );
     } else {
         // \todo should throw an exception!
         debug_printf( DEBUG_ALLOC,

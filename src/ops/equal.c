@@ -263,17 +263,18 @@ bool equal_number_number( struct cons_pointer a, struct cons_pointer b ) {
  * @return false otherwise.
  */
 bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
-    bool result=false;
+    bool result = false;
 
-    struct cons_pointer keys_a = hashmap_keys( a);
-    
-    if ( c_length( keys_a) == c_length( hashmap_keys( b))) {
+    struct cons_pointer keys_a = hashmap_keys( a );
+
+    if ( c_length( keys_a ) == c_length( hashmap_keys( b ) ) ) {
         result = true;
 
-        for ( struct cons_pointer i = keys_a; !nilp( i); i = c_cdr( i)) {
-            struct cons_pointer key = c_car( i);
-            if ( !equal( hashmap_get( a, key),hashmap_get( b, key))) {
-                result = false; break;
+        for ( struct cons_pointer i = keys_a; !nilp( i ); i = c_cdr( i ) ) {
+            struct cons_pointer key = c_car( i );
+            if ( !equal( hashmap_get( a, key ), hashmap_get( b, key ) ) ) {
+                result = false;
+                break;
             }
         }
     }
@@ -298,23 +299,23 @@ bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
 bool equal_vector_vector( struct cons_pointer a, struct cons_pointer b ) {
     bool result = false;
 
-    if ( eq( a, b)) {
-        result = true; // same 
+    if ( eq( a, b ) ) {
+        result = true;          // same 
         /* there shouldn't ever be two separate VECP cells which point to the
          * same address in vector space, so I don't believe it's worth checking
          * for this.
          */
-    } else if ( vectorp( a) && vectorp( b)) {
-        struct vector_space_object * va = pointer_to_vso( a);
-        struct vector_space_object * vb = pointer_to_vso( b);
+    } else if ( vectorp( a ) && vectorp( b ) ) {
+        struct vector_space_object *va = pointer_to_vso( a );
+        struct vector_space_object *vb = pointer_to_vso( b );
 
         /* what we're saying here is that a namespace is not equal to a map,
          * even if they have identical logical structure. Is this right? */
-        if ( va->header.tag.value == vb->header.tag.value) {
-            switch ( va->header.tag.value) {
+        if ( va->header.tag.value == vb->header.tag.value ) {
+            switch ( va->header.tag.value ) {
                 case HASHTV:
                 case NAMESPACETV:
-                    result = equal_map_map( a, b);
+                    result = equal_map_map( a, b );
                     break;
             }
         }
@@ -334,9 +335,9 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
     debug_print( L" = ", DEBUG_ARITH );
     debug_print_object( b, DEBUG_ARITH );
 
-    bool result = false; 
-    
-    if ( eq( a, b )) {
+    bool result = false;
+
+    if ( eq( a, b ) ) {
         result = true;
     } else if ( !numberp( a ) && same_type( a, b ) ) {
         struct cons_space_object *cell_a = &pointer2cell( a );
@@ -364,42 +365,47 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                 /* TODO: it is not OK to do this on the stack since list-like 
                  * structures can be of indefinite extent. It *must* be done by 
                  * iteration (and even that is problematic) */
-                if (cell_a->payload.string.hash == cell_b->payload.string.hash) {
-                    wchar_t a_buff[ STRING_SHIPYARD_SIZE], b_buff[ STRING_SHIPYARD_SIZE];
+                if ( cell_a->payload.string.hash ==
+                     cell_b->payload.string.hash ) {
+                    wchar_t a_buff[STRING_SHIPYARD_SIZE],
+                        b_buff[STRING_SHIPYARD_SIZE];
                     uint32_t tag = cell_a->tag.value;
                     int i = 0;
 
-                    memset(a_buff,0,sizeof(a_buff));
-                    memset(b_buff,0,sizeof(b_buff));
+                    memset( a_buff, 0, sizeof( a_buff ) );
+                    memset( b_buff, 0, sizeof( b_buff ) );
 
-                    for (; (i < (STRING_SHIPYARD_SIZE - 1)) && !nilp( a) && !nilp( b); i++) {
+                    for ( ;
+                          ( i < ( STRING_SHIPYARD_SIZE - 1 ) ) && !nilp( a )
+                          && !nilp( b ); i++ ) {
                         a_buff[i] = cell_a->payload.string.character;
-                        a = c_cdr(a);
+                        a = c_cdr( a );
                         cell_a = &pointer2cell( a );
 
                         b_buff[i] = cell_b->payload.string.character;
-                        b = c_cdr( b);
-                        cell_b = &pointer2cell( b); 
+                        b = c_cdr( b );
+                        cell_b = &pointer2cell( b );
                     }
 
 #ifdef DEBUG
-                    debug_print( L"Comparing '", DEBUG_ARITH);
-                    debug_print( a_buff, DEBUG_ARITH);
-                    debug_print( L"' to '", DEBUG_ARITH);
-                    debug_print( b_buff, DEBUG_ARITH);
-                    debug_print( L"'\n", DEBUG_ARITH);
+                    debug_print( L"Comparing '", DEBUG_ARITH );
+                    debug_print( a_buff, DEBUG_ARITH );
+                    debug_print( L"' to '", DEBUG_ARITH );
+                    debug_print( b_buff, DEBUG_ARITH );
+                    debug_print( L"'\n", DEBUG_ARITH );
 #endif
 
                     /* OK, now we have wchar string buffers loaded from the objects. We 
                      * may not have exhausted either string, so the buffers being equal
                      * isn't sufficient. So we recurse at least once. */
 
-                    result = (wcsncmp( a_buff, b_buff, i) == 0) && equal( c_cdr(a), c_cdr(b));
+                    result = ( wcsncmp( a_buff, b_buff, i ) == 0 )
+                        && equal( c_cdr( a ), c_cdr( b ) );
                 }
                 break;
             case VECTORPOINTTV:
-                if ( cell_b->tag.value == VECTORPOINTTV) {
-                    result = equal_vector_vector( a, b);
+                if ( cell_b->tag.value == VECTORPOINTTV ) {
+                    result = equal_vector_vector( a, b );
                 } else {
                     result = false;
                 }

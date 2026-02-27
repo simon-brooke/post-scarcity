@@ -91,7 +91,7 @@ The following functions are provided as of release 0.0.6:
 | car | FUNC | `(car arg)`: If `arg` is a sequence, return the item which is the head of that sequence. |
 | cdr | FUNC | `(cdr arg)`: If `arg` is a sequence, return the remainder of that sequence with the first item removed. |
 | close | FUNC | `(close stream)`: If `stream` is a stream, close that stream. |
-| cond | SPFM | null |
+| cond | SPFM | `(cond clauses...)`: Conditional evaluation, `clauses` is a sequence of lists of forms such that if evaluating the first form in any clause returns non-`nil`, the subsequent forms in that clause will be evaluated and the value of the last returned; but any subsequent clauses will not be evaluated. |
 | cons | FUNC | `(cons a b)`: Return a cons cell whose `car` is `a` and whose `cdr` is `b`. |
 | count | FUNC | `(count s)`: Return the number of items in the sequence `s`. |
 | divide | FUNC | `(/ a b)`: If `a` and `b` are both numbers, return the numeric result of dividing `a` by `b`. |
@@ -103,7 +103,7 @@ The following functions are provided as of release 0.0.6:
 | hashmap | FUNC | `(hashmap n-buckets hashfn store write-acl)`: Return a new hashmap, with `n-buckets` buckets and this `hashfn`, containing the content of this `store`, and protected by the write access control list `write-acl`. All arguments are optional. The intended difference between a namespace and a hashmap is that a namespace has a write acl and a hashmap doesn't (is not writable), but currently (0.0.6) this functionality is not yet written. |
 | inspect | FUNC | `(inspect object ouput-stream)`: Print details of this `object` to this `output-stream`, or `*out*` if no `output-stream` is specified. |
 | keys | FUNC | `(keys store)`: Return a list of all keys in this `store`. |
-| lambda | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; funtion. |
+| lambda | SPFM | `(lambda arg-list forms...)`: Construct an interpretable λ funtion. |
 | let | SPFM | `(let bindings forms)`: Bind these `bindings`, which should be specified as an association list, into the local environment and evaluate these forms sequentially in that context, returning the value of the last. |
 | list | FUNC | `(list args...)`: Return a list of these `args`. |
 | mapcar | FUNC | `(mapcar function sequence)`: Apply `function` to each element of `sequence` in turn, and return a sequence of the results. |
@@ -120,15 +120,15 @@ The following functions are provided as of release 0.0.6:
 | print | FUNC | `(print object stream)`: Print `object` to `stream`, if specified, else to `*out*`. |
 | progn | SPFM | `(progn forms...)`: Evaluate these `forms` sequentially, and return the value of the last. |
 | put! | FUNC | `(put! store key value)`: Stores a value in a namespace; currently (0.0.6), also stores a value in a hashmap, but in future if the `store` is a hashmap then `put!` will return a clone of that hashmap with this `key value` pair added.  Expects `store` to be a hashmap or namespace; `key` to be a symbol or a keyword; `value` to be  any value. |
-| put-all! | FUNC | `(put-all! store1 store2)`: If `store1` is a namespace and is writable, copies all key-value pairs from `store2` into `store1`. At present (0.0.6) it does this for hashmaps as well, but in future if `store1` is a hashmap or an namespace which the user does not have permission to write, will return a copy of `store1` with all the key-value pairs from `store2` added. `store1` must be a hashmap or a namespace; `store2` may be either of those or an association list. |
-| quote | SPFM | `(quote form)`: Returns `form`, unevaluated. More normally expressed `'form`, where the quote mark is a reader macro which is expanded to `(quote form)`. |
+| put-all! | FUNC | `(put-all! dest source)`: If `dest` is a namespace and is writable, copies all key-value pairs from `source` into `dest`. At present (0.0.6) it does this for hashmaps as well, but in future if `dest` is a hashmap or a namespace which the user does not have permission to write, will return a copy of `dest` with all the key-value pairs from `source` added. `dest` must be a hashmap or a namespace; `source` may be either of those or an association list. |
+| quote | SPFM | `(quote form)`: Returns `form`, unevaluated. More idiomatically expressed `'form`, where the quote mark is a reader macro which is expanded to `(quote form)`. |
 | ratio->real | FUNC | `(ratio->real r)`: If `r` is a rational number, return the real number equivalent. |
 | read | FUNC | `(read stream)`: read one complete lisp form and return it. If `stream` is specified and is a read stream, then read from that stream, else the stream which is the value of  `*in*` in the environment. |
-| read-char | FUNC | `(read-char stream)`: Return the next character from the stream indicated by `stream`. |
+| read-char | FUNC | `(read-char stream)`: Return the next character. If `stream` is specified and is a read stream, then read from that stream, else the stream which is the value of  `*in*` in the environment. |
 | repl | FUNC | `(repl prompt input output)`: Starts a new read-eval-print-loop. All arguments are optional. If `prompt` is present, it will be used as the prompt. If `input` is present and is a readable stream, takes input from that stream. If `output` is present and is a writable stream, prints output to that stream. |
 | reverse | FUNC | `(reverse sequence)` Returns a sequence of the top level elements of this `sequence`, which may be a list or a string, in the reverse order. |
 | set | FUNC | null |
-| set! | SPFM | null |
+| set! | SPFM | `(set! symbol value namespace)`: Binds `symbol` in  `namespace` to the value of `value`, altering the namespace in so doing, and returns `value`. If `namespace` is not specified, it defaults to the default namespace. |
 | slurp | FUNC | `(slurp read-stream)` Read all the characters from `read-stream` to the end of stream, and return them as a string. |
 | source | FUNC | `(source  object)`: If `object` is an interpreted function or interpreted special form, returns the source code; else nil. Once we get a compiler working, will also return the source code of compiled functions and special forms. |
 | subtract | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |

@@ -132,11 +132,11 @@ void dump_pages( URL_FILE *output ) {
         url_fwprintf( output, L"\nDUMPING PAGE %d\n", i );
 
         for ( int j = 0; j < CONSPAGESIZE; j++ ) {
-            struct cons_pointer pointer = ( struct cons_pointer ) { i, j};
-            if (!freep( pointer)) {
+            struct cons_pointer pointer = ( struct cons_pointer ) { i, j };
+            if ( !freep( pointer ) ) {
                 dump_object( output, ( struct cons_pointer ) {
-                            i, j
-                            } );
+                             i, j
+                             } );
             }
         }
     }

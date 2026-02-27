@@ -310,7 +310,8 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
         debug_print( L"`", DEBUG_BIND );
         debug_print_object( key, DEBUG_BIND );
         debug_print( L"` is a ", DEBUG_BIND );
-        debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
+        debug_printf( DEBUG_BIND, L"%4.4s",
+                      ( char * ) pointer2cell( key ).tag.bytes );
         debug_print( L", not a KEYW or SYMB", DEBUG_BIND );
     }
 
@@ -328,12 +329,12 @@ internedp( struct cons_pointer key, struct cons_pointer store ) {
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
     struct cons_pointer result = NIL;
-    
-    if (!nilp( key)) {
+
+    if ( !nilp( key ) ) {
         if ( consp( store ) ) {
             for ( struct cons_pointer next = store;
-                nilp( result ) && ( consp( next ) || hashmapp( next ) );
-                next = pointer2cell( next ).payload.cons.cdr ) {
+                  nilp( result ) && ( consp( next ) || hashmapp( next ) );
+                  next = pointer2cell( next ).payload.cons.cdr ) {
                 if ( consp( next ) ) {
 // #ifdef DEBUG
 //                     debug_print( L"\nc_assoc; key is `", DEBUG_BIND );
@@ -355,9 +356,9 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                             break;
                         default:
                             throw_exception( c_append
-                                            ( c_string_to_lisp_string
-                                            ( L"Store entry is of unknown type: " ),
-                                            c_type( entry_ptr ) ), NIL );
+                                             ( c_string_to_lisp_string
+                                               ( L"Store entry is of unknown type: " ),
+                                               c_type( entry_ptr ) ), NIL );
                     }
 
 // #ifdef DEBUG
@@ -379,9 +380,9 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 // #endif
             result =
                 throw_exception( c_append
-                                ( c_string_to_lisp_string
-                                ( L"Store is of unknown type: " ),
-                                c_type( store ) ), NIL );
+                                 ( c_string_to_lisp_string
+                                   ( L"Store is of unknown type: " ),
+                                   c_type( store ) ), NIL );
         }
     }
 
@@ -410,7 +411,7 @@ struct cons_pointer hashmap_put( struct cons_pointer mapp,
 
         map->payload.hashmap.buckets[bucket_no] =
             make_cons( make_cons( key, val ),
-                                map->payload.hashmap.buckets[bucket_no] );
+                       map->payload.hashmap.buckets[bucket_no] );
     }
 
     return mapp;
@@ -425,13 +426,13 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
     struct cons_pointer result = NIL;
 
 #ifdef DEBUG
-    bool deep = vectorpointp( store);
-    debug_print_binding( key, value, deep, DEBUG_BIND);
+    bool deep = vectorpointp( store );
+    debug_print_binding( key, value, deep, DEBUG_BIND );
 
-    if (deep) {
+    if ( deep ) {
         debug_printf( DEBUG_BIND, L"\t-> %4.4s\n",
-                  pointer2cell(store).payload.vectorp.tag.bytes );
-    } 
+                      pointer2cell( store ).payload.vectorp.tag.bytes );
+    }
 #endif
     if ( nilp( value ) ) {
         result = store;

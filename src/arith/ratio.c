@@ -72,7 +72,8 @@ struct cons_pointer simplify_ratio( struct cons_pointer pointer ) {
                                   ddrv, drrv, ddrv / gcd, drrv / gcd );
                     result =
                         make_ratio( acquire_integer( ddrv / gcd, NIL ),
-                                    acquire_integer( drrv / gcd, NIL ), false);
+                                    acquire_integer( drrv / gcd, NIL ),
+                                    false );
                 }
             }
         }
@@ -182,8 +183,8 @@ struct cons_pointer divide_ratio_ratio( struct cons_pointer arg1,
     // TODO: this now has to work if `arg1` is an integer
     struct cons_pointer i =
         make_ratio( pointer2cell( arg2 ).payload.ratio.divisor,
-                    pointer2cell( arg2 ).payload.ratio.dividend, false ), result =
-        multiply_ratio_ratio( arg1, i );
+                    pointer2cell( arg2 ).payload.ratio.dividend, false ),
+        result = multiply_ratio_ratio( arg1, i );
 
     dec_ref( i );
 
@@ -228,7 +229,7 @@ struct cons_pointer multiply_ratio_ratio( struct
         struct cons_pointer dividend = acquire_integer( ddrv, NIL );
         struct cons_pointer divisor = acquire_integer( drrv, NIL );
         result = make_ratio( dividend, divisor, true );
-        
+
         release_integer( dividend );
         release_integer( divisor );
     } else {
@@ -310,13 +311,12 @@ struct cons_pointer subtract_ratio_ratio( struct cons_pointer arg1,
  * @exception if either `dividend` or `divisor` is not an integer.
  */
 struct cons_pointer make_ratio( struct cons_pointer dividend,
-                                struct cons_pointer divisor,
-                                bool simplify ) {
-    debug_print( L"make_ratio: dividend = ", DEBUG_ALLOC);
-    debug_print_object( dividend, DEBUG_ALLOC);
-    debug_print( L"; divisor = ", DEBUG_ALLOC);
-    debug_print_object( divisor, DEBUG_ALLOC);
-    debug_printf( DEBUG_ALLOC, L"; simplify = %d\n", simplify);
+                                struct cons_pointer divisor, bool simplify ) {
+    debug_print( L"make_ratio: dividend = ", DEBUG_ALLOC );
+    debug_print_object( dividend, DEBUG_ALLOC );
+    debug_print( L"; divisor = ", DEBUG_ALLOC );
+    debug_print_object( divisor, DEBUG_ALLOC );
+    debug_printf( DEBUG_ALLOC, L"; simplify = %d\n", simplify );
 
     struct cons_pointer result;
     if ( integerp( dividend ) && integerp( divisor ) ) {
@@ -327,7 +327,7 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
         cell->payload.ratio.dividend = dividend;
         cell->payload.ratio.divisor = divisor;
 
-        if ( simplify) {
+        if ( simplify ) {
             result = simplify_ratio( unsimplified );
             if ( !eq( result, unsimplified ) ) {
                 dec_ref( unsimplified );
@@ -341,9 +341,9 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
                              ( L"Dividend and divisor of a ratio must be integers" ),
                              NIL );
     }
-    debug_print( L" => ", DEBUG_ALLOC);
+    debug_print( L" => ", DEBUG_ALLOC );
     debug_print_object( result, DEBUG_ALLOC );
-    debug_println( DEBUG_ALLOC);
+    debug_println( DEBUG_ALLOC );
 
     return result;
 }

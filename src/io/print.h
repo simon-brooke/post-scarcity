@@ -19,4 +19,12 @@
 struct cons_pointer print( URL_FILE * output, struct cons_pointer pointer );
 void println( URL_FILE * output );
 
+struct cons_pointer lisp_print( struct stack_frame *frame,
+                                struct cons_pointer frame_pointer,
+                                struct cons_pointer env );
+struct cons_pointer lisp_println( struct stack_frame *frame,
+                                  struct cons_pointer frame_pointer,
+                                  struct cons_pointer env );
+
+
 #endif

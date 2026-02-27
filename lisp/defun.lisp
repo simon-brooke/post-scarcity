@@ -2,13 +2,7 @@
 
 (set! defun!
       (nlambda
-       form
-       (cond ((symbol? (car form))
-              (set (car form) (apply 'lambda (cdr form))))
-         (t nil))))
-
-(set! defun!
-      (nlambda
+      "`(defun name arg-list forms...)`: Define an interpreted Lambda function with this `name` and this `arg-list`, whose body is comprised of these `forms`."
        form
        (eval (list 'set! (car form) (cons 'lambda (cdr form))))))
 
@@ -20,7 +14,7 @@
        (cond (symbol? (car form))
          (set! (car form) (apply nlambda (cdr form))))))
 
-(defsp! cube (x) ((* x x x)))
+(defun! cube (x) (* x x x))
 
 (set! p 5)
 

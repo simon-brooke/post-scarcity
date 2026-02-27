@@ -126,8 +126,9 @@ struct cons_pointer make_vso( uint32_t tag, uint64_t payload_size ) {
 void free_vso( struct cons_pointer pointer ) {
     struct cons_space_object cell = pointer2cell( pointer );
 
-    debug_printf( DEBUG_ALLOC, L"About to free vector-space object of type %s at 0x%lx\n",
-                  (char *) cell.payload.vectorp.tag.bytes,
+    debug_printf( DEBUG_ALLOC,
+                  L"About to free vector-space object of type %s at 0x%lx\n",
+                  ( char * ) cell.payload.vectorp.tag.bytes,
                   cell.payload.vectorp.address );
     struct vector_space_object *vso = cell.payload.vectorp.address;
 

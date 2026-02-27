@@ -251,7 +251,7 @@ struct cons_pointer
 eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-#ifdef DEBUG    
+#ifdef DEBUG
     debug_print( L"eval_lambda called\n", DEBUG_LAMBDA );
     debug_println( DEBUG_LAMBDA );
 #endif
@@ -308,7 +308,7 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 
         /* if a result is not the terminal result in the lambda, it's a
          * side effect, and needs to be GCed */
-        if ( !nilp( result ) ){
+        if ( !nilp( result ) ) {
             dec_ref( result );
         }
 
@@ -446,9 +446,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result =
-                            ( *fn_cell.payload.special.
-                              executable ) ( get_stack_frame( next_pointer ),
-                                             next_pointer, env );
+                            ( *fn_cell.payload.
+                              special.executable ) ( get_stack_frame
+                                                     ( next_pointer ),
+                                                     next_pointer, env );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -870,15 +871,14 @@ struct cons_pointer lisp_keys( struct stack_frame *frame,
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
                              struct cons_pointer env ) {
-    struct cons_pointer result = TRUE;   
+    struct cons_pointer result = TRUE;
 
-    if ( frame->args > 1) {
-        for (int b = 1; ( truep( result )) && (b < frame->args); b++)
-        {
-            result = eq( frame->arg[0], fetch_arg( frame, b)) ? TRUE : NIL;
+    if ( frame->args > 1 ) {
+        for ( int b = 1; ( truep( result ) ) && ( b < frame->args ); b++ ) {
+            result = eq( frame->arg[0], fetch_arg( frame, b ) ) ? TRUE : NIL;
         }
-    } 
-    
+    }
+
     return result;
 }
 
@@ -895,32 +895,32 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
 struct cons_pointer
 lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    struct cons_pointer result = TRUE;   
+    struct cons_pointer result = TRUE;
 
-    if ( frame->args > 1) {
-        for (int b = 1; ( truep( result )) && (b < frame->args); b++)
-        {
-            result = equal( frame->arg[0], fetch_arg( frame, b)) ? TRUE : NIL;
+    if ( frame->args > 1 ) {
+        for ( int b = 1; ( truep( result ) ) && ( b < frame->args ); b++ ) {
+            result =
+                equal( frame->arg[0], fetch_arg( frame, b ) ) ? TRUE : NIL;
         }
-    } 
-    
+    }
+
     return result;
 }
 
-long int c_count (struct cons_pointer p) {
-    struct cons_space_object * cell = &pointer2cell( p);
+long int c_count( struct cons_pointer p ) {
+    struct cons_space_object *cell = &pointer2cell( p );
     int result = 0;
 
-    switch (cell->tag.value) {
+    switch ( cell->tag.value ) {
         case CONSTV:
         case STRINGTV:
-        /* I think doctrine is that you cannot treat symbols or keywords as
-         * sequences, although internally, of course, they are. Integers are
-         * also internally sequences, but also should not be treated as such.
-         */
-        for (p; !nilp( p); p = c_cdr( p)) {
-            result ++;
-        }
+            /* I think doctrine is that you cannot treat symbols or keywords as
+             * sequences, although internally, of course, they are. Integers are
+             * also internally sequences, but also should not be treated as such.
+             */
+            for ( p; !nilp( p ); p = c_cdr( p ) ) {
+                result++;
+            }
     }
 
     return result;
@@ -942,7 +942,7 @@ long int c_count (struct cons_pointer p) {
 struct cons_pointer
 lisp_count( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    return acquire_integer( c_count( frame->arg[ 0]), NIL);
+    return acquire_integer( c_count( frame->arg[0] ), NIL );
 }
 
 /**
@@ -1079,54 +1079,6 @@ struct cons_pointer lisp_inspect( struct stack_frame *frame,
     return result;
 }
 
-/**
- * Function; print one complete lisp expression and return NIL. If write-stream is specified and
- * is a write stream, then print to that stream, else  the stream which is the value of
- * `*out*` in the environment.
- *
- * * (print expr)
- * * (print expr write-stream)
- *
- * @param frame my stack_frame.
- * @param frame_pointer a pointer to my stack_frame.
- * @param env my environment (from which the stream may be extracted).
- * @return NIL.
- */
-struct cons_pointer
-lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
-            struct cons_pointer env ) {
-    debug_print( L"Entering print\n", DEBUG_IO );
-    struct cons_pointer result = NIL;
-    URL_FILE *output;
-    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
-        frame->arg[1] : get_default_stream( false, env );
-
-    if ( writep( out_stream ) ) {
-        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
-        debug_dump_object( out_stream, DEBUG_IO );
-        output = pointer2cell( out_stream ).payload.stream.stream;
-        inc_ref( out_stream );
-    } else {
-        output = file_to_url_file( stderr );
-    }
-
-    debug_print( L"lisp_print: about to print\n", DEBUG_IO );
-    debug_dump_object( frame->arg[0], DEBUG_IO );
-
-    result = print( output, frame->arg[0] );
-
-    debug_print( L"lisp_print returning\n", DEBUG_IO );
-    debug_dump_object( result, DEBUG_IO );
-
-    if ( writep( out_stream ) ) {
-        dec_ref( out_stream );
-    } else {
-        free( output );
-    }
-
-    return result;
-}
-
 
 /**
  * Function: get the Lisp type of the single argument.
@@ -1204,37 +1156,41 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * @brief evaluate a single cond clause; if the test part succeeds return a 
  * pair whose car is TRUE and whose cdr is the value of the action part 
  */
-struct cons_pointer eval_cond_clause( struct cons_pointer clause, 
-    struct stack_frame *frame, struct cons_pointer frame_pointer, 
-    struct cons_pointer env) {
+struct cons_pointer eval_cond_clause( struct cons_pointer clause,
+                                      struct stack_frame *frame,
+                                      struct cons_pointer frame_pointer,
+                                      struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 
 #ifdef DEBUG
     debug_print( L"\n\tCond clause: ", DEBUG_EVAL );
     debug_print_object( clause, DEBUG_EVAL );
-    debug_println( DEBUG_EVAL);
+    debug_println( DEBUG_EVAL );
 #endif
 
-    if (consp(clause)) {
-        struct cons_pointer val = eval_form( frame, frame_pointer, c_car( clause ),
-                           env );
+    if ( consp( clause ) ) {
+        struct cons_pointer val =
+            eval_form( frame, frame_pointer, c_car( clause ),
+                       env );
 
-        if (!nilp( val)) {
-            result = make_cons( TRUE, c_progn( frame, frame_pointer, c_cdr( clause ),
-                             env ));
+        if ( !nilp( val ) ) {
+            result =
+                make_cons( TRUE,
+                           c_progn( frame, frame_pointer, c_cdr( clause ),
+                                    env ) );
 
 #ifdef DEBUG
-                debug_print(L"\n\t\tclause succeeded; returning: ", DEBUG_EVAL);
-                debug_print_object( result, DEBUG_EVAL);
-                debug_println( DEBUG_EVAL);
+            debug_print( L"\n\t\tclause succeeded; returning: ", DEBUG_EVAL );
+            debug_print_object( result, DEBUG_EVAL );
+            debug_println( DEBUG_EVAL );
         } else {
-            debug_print(L"\n\t\tclause failed.\n", DEBUG_EVAL);
+            debug_print( L"\n\t\tclause failed.\n", DEBUG_EVAL );
 #endif
-        }          
+        }
     } else {
         result = throw_exception( c_string_to_lisp_string
-                                    ( L"Arguments to `cond` must be lists" ),
-                                    frame_pointer );
+                                  ( L"Arguments to `cond` must be lists" ),
+                                  frame_pointer );
     }
 
     return result;
@@ -1259,21 +1215,21 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
     struct cons_pointer result = NIL;
     bool done = false;
 
-    for ( int i = 0; (i < frame->args) && !done; i++ ) {
-        struct cons_pointer clause_pointer = fetch_arg( frame, i);
+    for ( int i = 0; ( i < frame->args ) && !done; i++ ) {
+        struct cons_pointer clause_pointer = fetch_arg( frame, i );
 
-        result = eval_cond_clause( clause_pointer, frame, frame_pointer, env);
+        result = eval_cond_clause( clause_pointer, frame, frame_pointer, env );
 
-        if ( !nilp( result ) && truep( c_car( result)) ) {
-            result = c_cdr( result);
+        if ( !nilp( result ) && truep( c_car( result ) ) ) {
+            result = c_cdr( result );
             done = true;
             break;
-        } 
+        }
     }
 #ifdef DEBUG
     debug_print( L"\tCond returning: ", DEBUG_EVAL );
     debug_print_object( result, DEBUG_EVAL );
-    debug_println( DEBUG_EVAL); 
+    debug_println( DEBUG_EVAL );
 #endif
 
     return result;
@@ -1330,7 +1286,8 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
     return exceptionp( message ) ? message : throw_exception( message,
-                                                              frame->previous );
+                                                              frame->
+                                                              previous );
 }
 
 /**
@@ -1426,7 +1383,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
         if ( exceptionp( expr )
              && url_feof( pointer2cell( input ).payload.stream.stream ) ) {
             /* suppress printing end of stream exception */
-            dec_ref( expr);
+            dec_ref( expr );
             break;
         }
 
@@ -1513,13 +1470,14 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ), l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
+                                                l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }
@@ -1632,13 +1590,13 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
         struct cons_pointer symbol = c_car( pair );
 
         if ( symbolp( symbol ) ) {
-            struct cons_pointer val = eval_form( frame, frame_pointer, c_cdr( pair ),
-                                        bindings );
+            struct cons_pointer val =
+                eval_form( frame, frame_pointer, c_cdr( pair ),
+                           bindings );
 
-            debug_print_binding( symbol, val, false, DEBUG_BIND);
+            debug_print_binding( symbol, val, false, DEBUG_BIND );
 
-            bindings =
-                make_cons( make_cons( symbol, val ), bindings );
+            bindings = make_cons( make_cons( symbol, val ), bindings );
         } else {
             result =
                 throw_exception( c_string_to_lisp_string
@@ -1648,7 +1606,7 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
         }
     }
 
-    debug_print( L"\nlet: bindings complete.\n", DEBUG_BIND);
+    debug_print( L"\nlet: bindings complete.\n", DEBUG_BIND );
 
     /* i.e., no exception yet */
     for ( int form = 1; !exceptionp( result ) && form < frame->args; form++ ) {
@@ -1676,13 +1634,13 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
  * @return struct cons_pointer a pointer to the result
  */
 struct cons_pointer lisp_and( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env ) {
-    bool accumulator = true;                            
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env ) {
+    bool accumulator = true;
     struct cons_pointer result = frame->more;
 
-    for ( int a = 0; accumulator == true && a < frame->args; a++) {
-        accumulator = truthy( fetch_arg( frame, a));
+    for ( int a = 0; accumulator == true && a < frame->args; a++ ) {
+        accumulator = truthy( fetch_arg( frame, a ) );
     }
 #
     return accumulator ? TRUE : NIL;
@@ -1697,13 +1655,13 @@ struct cons_pointer lisp_and( struct stack_frame *frame,
  * @return struct cons_pointer a pointer to the result
  */
 struct cons_pointer lisp_or( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env ) {
-    bool accumulator = false;                            
+                             struct cons_pointer frame_pointer,
+                             struct cons_pointer env ) {
+    bool accumulator = false;
     struct cons_pointer result = frame->more;
 
-    for ( int a = 0; accumulator == false && a < frame->args; a++) {
-        accumulator = truthy( fetch_arg( frame, a));
+    for ( int a = 0; accumulator == false && a < frame->args; a++ ) {
+        accumulator = truthy( fetch_arg( frame, a ) );
     }
 
     return accumulator ? TRUE : NIL;
@@ -1718,7 +1676,7 @@ struct cons_pointer lisp_or( struct stack_frame *frame,
  * @return struct cons_pointer `t` if the first argument is `nil`, else `nil`.
  */
 struct cons_pointer lisp_not( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env ) {
-    return nilp( frame->arg[0]) ? TRUE : NIL;
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env ) {
+    return nilp( frame->arg[0] ) ? TRUE : NIL;
 }

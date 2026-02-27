@@ -17,15 +17,17 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#include "arith/integer.h"
+#include "debug.h"
+#include "io/io.h"
+#include "io/print.h"
 #include "memory/conspage.h"
 #include "memory/consspaceobject.h"
 #include "memory/hashmap.h"
-#include "arith/integer.h"
-#include "ops/intern.h"
 #include "memory/stack.h"
-#include "io/print.h"
-#include "time/psse_time.h"
 #include "memory/vectorspace.h"
+#include "ops/intern.h"
+#include "time/psse_time.h"
 
 /**
  * print all the characters in the symbol or string indicated by `pointer`
@@ -117,7 +119,7 @@ void print_vso( URL_FILE *output, struct cons_pointer pointer ) {
             print_map( output, pointer );
             break;
         case STACKFRAMETV:
-            dump_stack_trace( output, pointer);
+            dump_stack_trace( output, pointer );
             break;
             // \todo: others.
         default:
@@ -251,7 +253,7 @@ struct cons_pointer print( URL_FILE *output, struct cons_pointer pointer ) {
             url_fwprintf( output, L"<Time: " );
             print_string( output, time_to_string( pointer ) );
             url_fputws( L"; ", output );
-            print_128bit( output, pointer2cell( pointer ).payload.time.value );
+            print_128bit( output, cell.payload.time.value );
             url_fputwc( L'>', output );
             break;
         case TRUETV:
@@ -269,12 +271,95 @@ struct cons_pointer print( URL_FILE *output, struct cons_pointer pointer ) {
             fwprintf( stderr,
                       L"Error: Unrecognised tag value %d (%4.4s)\n",
                       cell.tag.value, &cell.tag.bytes[0] );
+            // dump_object( stderr, pointer);
             break;
     }
 
     return pointer;
 }
 
+/**
+ * Function; print one complete lisp expression and return NIL. If write-stream is specified and
+ * is a write stream, then print to that stream, else  the stream which is the value of
+ * `*out*` in the environment.
+ *
+ * * (print expr)
+ * * (print expr write-stream)
+ *
+ * @param frame my stack_frame.
+ * @param frame_pointer a pointer to my stack_frame.
+ * @param env my environment (from which the stream may be extracted).
+ * @return NIL.
+ */
+struct cons_pointer
+lisp_print( struct stack_frame *frame, struct cons_pointer frame_pointer,
+            struct cons_pointer env ) {
+    debug_print( L"Entering print\n", DEBUG_IO );
+    struct cons_pointer result = NIL;
+    URL_FILE *output;
+    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+        frame->arg[1] : get_default_stream( false, env );
+
+    if ( writep( out_stream ) ) {
+        debug_print( L"lisp_print: setting output stream\n", DEBUG_IO );
+        debug_dump_object( out_stream, DEBUG_IO );
+        output = pointer2cell( out_stream ).payload.stream.stream;
+        inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stderr );
+    }
+
+    debug_print( L"lisp_print: about to print\n", DEBUG_IO );
+    debug_dump_object( frame->arg[0], DEBUG_IO );
+
+    result = print( output, frame->arg[0] );
+
+    debug_print( L"lisp_print returning\n", DEBUG_IO );
+    debug_dump_object( result, DEBUG_IO );
+
+    if ( writep( out_stream ) ) {
+        dec_ref( out_stream );
+    } else {
+        free( output );
+    }
+
+    return result;
+}
+
 void println( URL_FILE *output ) {
     url_fputws( L"\n", output );
+}
+
+/**
+ * @brief `(prinln out-stream)`: Print a new line character to `out-stream`, if
+ * it is specified and is an output stream, else to `*out*`.
+ * 
+ * @param frame 
+ * @param frame_pointer 
+ * @param env 
+ * @return `nil`
+ */
+struct cons_pointer
+lisp_println( struct stack_frame *frame, struct cons_pointer frame_pointer,
+              struct cons_pointer env ) {
+    URL_FILE *output;
+    struct cons_pointer out_stream = writep( frame->arg[1] ) ?
+        frame->arg[1] : get_default_stream( false, env );
+
+    if ( writep( out_stream ) ) {
+        output = pointer2cell( out_stream ).payload.stream.stream;
+        inc_ref( out_stream );
+    } else {
+        output = file_to_url_file( stderr );
+    }
+
+    println( output );
+
+    if ( writep( out_stream ) ) {
+        dec_ref( out_stream );
+    } else {
+        free( output );
+    }
+
+    return NIL;
 }

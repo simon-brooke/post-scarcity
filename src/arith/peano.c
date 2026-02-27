@@ -69,7 +69,7 @@ bool zerop( struct cons_pointer arg ) {
 //     bool result = false;
 //     struct cons_space_object * cell_1 = & pointer2cell( arg_1 );
 //     struct cons_space_object * cell_2 = & pointer2cell( arg_2 );
-    
+
 //     if (cell_1->tag.value == cell_2->tag.value) {
 
 //     switch ( cell_1->tag.value ) {
@@ -90,7 +90,7 @@ bool zerop( struct cons_pointer arg ) {
 //     }
 
 //     return result;
-    
+
 // }
 
 /**
@@ -126,17 +126,18 @@ struct cons_pointer absolute( struct cons_pointer arg ) {
     struct cons_pointer result = NIL;
     struct cons_space_object cell = pointer2cell( arg );
 
-    if ( numberp( arg))  {
+    if ( numberp( arg ) ) {
         if ( is_negative( arg ) ) {
             switch ( cell.tag.value ) {
                 case INTEGERTV:
                     result =
                         make_integer( llabs( cell.payload.integer.value ),
-                                    cell.payload.integer.more );
+                                      cell.payload.integer.more );
                     break;
                 case RATIOTV:
-                    result = make_ratio( absolute( cell.payload.ratio.dividend ),
-                                        cell.payload.ratio.divisor, false );
+                    result =
+                        make_ratio( absolute( cell.payload.ratio.dividend ),
+                                    cell.payload.ratio.divisor, false );
                     break;
                 case REALTV:
                     result = make_real( 0 - cell.payload.real.value );
@@ -606,7 +607,8 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                 case RATIOTV:{
                         struct cons_pointer tmp = make_ratio( arg1,
                                                               make_integer( 1,
-                                                                            NIL ), false );
+                                                                            NIL ),
+                                                              false );
                         inc_ref( tmp );
                         result = subtract_ratio_ratio( tmp, arg2 );
                         dec_ref( tmp );
@@ -632,7 +634,8 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                 case INTEGERTV:{
                         struct cons_pointer tmp = make_ratio( arg2,
                                                               make_integer( 1,
-                                                                            NIL ), false );
+                                                                            NIL ),
+                                                              false );
                         inc_ref( tmp );
                         result = subtract_ratio_ratio( arg1, tmp );
                         dec_ref( tmp );
@@ -711,8 +714,7 @@ struct cons_pointer lisp_divide( struct
                     break;
                 case INTEGERTV:{
                         result =
-                            make_ratio( frame->arg[0],
-                                        frame->arg[1], true);
+                            make_ratio( frame->arg[0], frame->arg[1], true );
                     }
                     break;
                 case RATIOTV:{
@@ -744,8 +746,8 @@ struct cons_pointer lisp_divide( struct
                 case INTEGERTV:{
                         struct cons_pointer one = make_integer( 1, NIL );
                         struct cons_pointer ratio =
-                            make_ratio( frame->arg[1], one, false);
-                         result = divide_ratio_ratio( frame->arg[0], ratio );
+                            make_ratio( frame->arg[1], one, false );
+                        result = divide_ratio_ratio( frame->arg[0], ratio );
                         dec_ref( ratio );
                         dec_ref( one );
                     }

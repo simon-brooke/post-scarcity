@@ -370,7 +370,7 @@ struct cons_pointer read_number( struct stack_frame *frame,
                                                                ( to_long_double
                                                                  ( base ),
                                                                  places_of_decimals ),
-                                                               NIL ), true);
+                                                               NIL ), true );
         inc_ref( div );
 
         result = make_real( to_long_double( div ) );

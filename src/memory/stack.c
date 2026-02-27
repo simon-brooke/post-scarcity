@@ -122,8 +122,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
     if ( nilp( result ) ) {
         /* i.e. out of memory */
         result =
-            make_exception( privileged_string_memory_exhausted,
-                            previous );
+            make_exception( privileged_string_memory_exhausted, previous );
     } else {
         struct stack_frame *frame = get_stack_frame( result );
 
@@ -234,7 +233,7 @@ void free_stack_frame( struct stack_frame *frame ) {
     debug_print( L"Leaving free_stack_frame\n", DEBUG_ALLOC );
 }
 
-struct cons_pointer frame_get_previous( struct cons_pointer frame_pointer) {
+struct cons_pointer frame_get_previous( struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
     struct cons_pointer result = NIL;
 
@@ -245,27 +244,31 @@ struct cons_pointer frame_get_previous( struct cons_pointer frame_pointer) {
     return result;
 }
 
-void dump_frame_context_fragment( URL_FILE *output, struct cons_pointer frame_pointer) {
+void dump_frame_context_fragment( URL_FILE *output,
+                                  struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
-        url_fwprintf( output, L" <= ");
-        print( output, frame->arg[0]);
+        url_fwprintf( output, L" <= " );
+        print( output, frame->arg[0] );
     }
 }
 
-void dump_frame_context( URL_FILE *output, struct cons_pointer frame_pointer, int depth ) {
+void dump_frame_context( URL_FILE *output, struct cons_pointer frame_pointer,
+                         int depth ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
-        url_fwprintf( output, L"\tContext: ");
+        url_fwprintf( output, L"\tContext: " );
 
         int i = 0;
-        for (struct cons_pointer cursor = frame_pointer; i++ < depth && !nilp( cursor); cursor = frame_get_previous( cursor)) {
-            dump_frame_context_fragment( output, cursor);
+        for ( struct cons_pointer cursor = frame_pointer;
+              i++ < depth && !nilp( cursor );
+              cursor = frame_get_previous( cursor ) ) {
+            dump_frame_context_fragment( output, cursor );
         }
-        
-        url_fwprintf( output, L"\n");
+
+        url_fwprintf( output, L"\n" );
     }
 }
 
@@ -280,7 +283,7 @@ void dump_frame( URL_FILE *output, struct cons_pointer frame_pointer ) {
     if ( frame != NULL ) {
         url_fwprintf( output, L"Stack frame with %d arguments:\n",
                       frame->args );
-        dump_frame_context( output, frame_pointer, 4);
+        dump_frame_context( output, frame_pointer, 4 );
 
         for ( int arg = 0; arg < frame->args; arg++ ) {
             struct cons_space_object cell = pointer2cell( frame->arg[arg] );

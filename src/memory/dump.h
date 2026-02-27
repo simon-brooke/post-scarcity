@@ -19,6 +19,8 @@
 #ifndef __dump_h
 #define __dump_h
 
+void dump_string_cell( URL_FILE * output, wchar_t *prefix,
+                       struct cons_pointer pointer );
 
 void dump_object( URL_FILE * output, struct cons_pointer pointer );
 

@@ -137,9 +137,6 @@ struct cons_pointer lisp_eq( struct stack_frame *frame,
 struct cons_pointer lisp_equal( struct stack_frame *frame,
                                 struct cons_pointer frame_pointer,
                                 struct cons_pointer env );
-struct cons_pointer lisp_print( struct stack_frame *frame,
-                                struct cons_pointer frame_pointer,
-                                struct cons_pointer env );
 struct cons_pointer lisp_read( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env );
@@ -231,14 +228,14 @@ struct cons_pointer lisp_try( struct stack_frame *frame,
 
 
 struct cons_pointer lisp_and( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env );
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env );
 
 struct cons_pointer lisp_or( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env );
+                             struct cons_pointer frame_pointer,
+                             struct cons_pointer env );
 
 struct cons_pointer lisp_not( struct stack_frame *frame,
-                               struct cons_pointer frame_pointer,
-                               struct cons_pointer env );
+                              struct cons_pointer frame_pointer,
+                              struct cons_pointer env );
 #endif
