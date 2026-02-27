@@ -1,5 +1,18 @@
 # State of Play
 
+## 20260226
+
+The bug in `member` turned out to be because when a symbol is read by the reader, 
+it has a null character appended as its last character, after all the visibly 
+printing characters. When the type string is being generated, it doesn't. I've
+fudged this for now by giving the type strings an appended null character, but
+the right solution is almost certainly to not add the null character in either 
+case &mdash; i.e. revert today's 'fix' and instead fix the reader.
+
+I've also done a lot of documentation, and I've found the courage to do some 
+investigation on the bignum bug. However, I've workeg until 04:00, which is
+neither sane nor healthy, so I shall stop.
+
 ## 20260225
 
 A productive day!
