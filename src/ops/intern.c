@@ -278,19 +278,22 @@ struct cons_pointer interned( struct cons_pointer key,
                               struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
+    debug_print( L"interned: Checking for interned value of `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"`\n", DEBUG_BIND );
+
     if ( symbolp( key ) || keywordp( key ) ) {
         struct cons_space_object *cell = &pointer2cell( store );
 
         switch ( cell->tag.value ) {
             case CONSTV:
                 for ( struct cons_pointer next = store;
-                      nilp( result ) && consp( next );
-                      next = c_cdr( next) ) {
+                      nilp( result ) && consp( next ); next = c_cdr( next ) ) {
                     if ( !nilp( next ) ) {
                         // struct cons_space_object entry =
                         //     pointer2cell( c_car( next) );
 
-                        if ( equal( key, c_car(next) ) ) {
+                        if ( equal( key, c_car( next ) ) ) {
                             result = key;
                         }
                     }
@@ -329,6 +332,10 @@ struct cons_pointer interned( struct cons_pointer key,
                                ( L"Unexpected key type: " ), c_type( key ) ),
                              NIL );
     }
+
+    debug_print( L"interned: returning `", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_print( L"`\n", DEBUG_BIND );
 
     return result;
 }
@@ -441,19 +448,23 @@ struct cons_pointer hashmap_put( struct cons_pointer mapp,
                        map->payload.hashmap.buckets[bucket_no] );
     }
 
+    debug_print(L"hashmap_put:\n", DEBUG_BIND);
+    debug_dump_object( mapp, DEBUG_BIND);
+
     return mapp;
 }
 
-    /**
-     * Return a new key/value store containing all the key/value pairs in this
-     * store with this key/value pair added to the front.
-     */
+/**
+ * If this store is modifiable, add this key value pair to it. Otherwise,
+ * return a new key/value store containing all the key/value pairs in this
+ * store with this key/value pair added to the front.
+ */
 struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
                          struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
 #ifdef DEBUG
-    bool deep = eq( store, oblist);
+    bool deep = eq( store, oblist );
     debug_print_binding( key, value, deep, DEBUG_BIND );
 
     if ( deep ) {
@@ -461,9 +472,7 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
                       pointer2cell( store ).payload.vectorp.tag.bytes );
     }
 #endif
-    if ( nilp( value ) ) {
-        result = store;
-    } else if ( nilp( store ) || consp( store ) ) {
+    if ( nilp( store ) || consp( store ) ) {
         result = make_cons( make_cons( key, value ), store );
     } else if ( hashmapp( store ) ) {
         result = hashmap_put( store, key, value );
@@ -479,15 +488,7 @@ struct cons_pointer
 deep_bind( struct cons_pointer key, struct cons_pointer value ) {
     debug_print( L"Entering deep_bind\n", DEBUG_BIND );
 
-    struct cons_pointer old = oblist;
-
     oblist = set( key, value, oblist );
-
-    // The oblist is not now an assoc list, and I don't think it will be again.
-    // if ( consp( oblist ) ) {
-    //     inc_ref( oblist );
-    //     dec_ref( old );
-    // }
 
     debug_print( L"deep_bind returning ", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
