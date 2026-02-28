@@ -167,7 +167,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
 
     if ( url_feof( input ) ) {
         result =
-            throw_exception( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"read"),
+                            c_string_to_lisp_string
                              ( L"End of file while reading" ), frame_pointer );
     } else {
         switch ( c ) {
@@ -177,7 +178,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                 /* skip all characters from semi-colon to the end of the line */
                 break;
             case EOF:
-                result = throw_exception( c_string_to_lisp_string
+                result = throw_exception( c_string_to_lisp_symbol( L"read"),
+                            c_string_to_lisp_string
                                           ( L"End of input while reading" ),
                                           frame_pointer );
                 break;
@@ -266,7 +268,8 @@ struct cons_pointer read_continuation( struct stack_frame *frame,
                     result = read_symbol_or_key( input, SYMBOLTV, c );
                 } else {
                     result =
-                        throw_exception( make_cons( c_string_to_lisp_string
+                        throw_exception(c_string_to_lisp_symbol( L"read"),
+                             make_cons( c_string_to_lisp_string
                                                     ( L"Unrecognised start of input character" ),
                                                     make_string( c, NIL ) ),
                                          frame_pointer );
@@ -313,7 +316,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
         switch ( c ) {
             case LPERIOD:
                 if ( seen_period || !nilp( dividend ) ) {
-                    return throw_exception( c_string_to_lisp_string
+                    return throw_exception( c_string_to_lisp_symbol( L"read"),
+                            c_string_to_lisp_string
                                             ( L"Malformed number: too many periods" ),
                                             frame_pointer );
                 } else {
@@ -324,7 +328,8 @@ struct cons_pointer read_number( struct stack_frame *frame,
                 break;
             case LSLASH:
                 if ( seen_period || !nilp( dividend ) ) {
-                    return throw_exception( c_string_to_lisp_string
+                    return throw_exception( c_string_to_lisp_symbol( L"read"),
+                            c_string_to_lisp_string
                                             ( L"Malformed number: dividend of rational must be integer" ),
                                             frame_pointer );
                 } else {

@@ -28,6 +28,20 @@
 #include "ops/intern.h"
 
 /**
+ * Keywords used when constructing exceptions: `:location`. Instantiated in 
+ * `init.c`q.v.
+ */
+struct cons_pointer privileged_keyword_location = NIL;
+
+/**
+ * Keywords used when constructing exceptions: `:payload`. Instantiated in 
+ * `init.c`, q.v.
+ */
+struct cons_pointer privileged_keyword_payload = NIL;
+
+
+
+/**
  * True if the value of the tag on the cell at this `pointer` is this `value`,
  * or, if the tag of the cell is `VECP`, if the value of the tag of the
  * vectorspace object indicated by the cell is this `value`, else false.

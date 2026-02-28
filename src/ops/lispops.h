@@ -196,7 +196,8 @@ struct cons_pointer lisp_cond( struct stack_frame *frame,
  * signature of a lisp function; but it is nevertheless to be preferred to
  * make_exception. A real `throw_exception`, which does, will be needed.
  */
-struct cons_pointer throw_exception( struct cons_pointer message,
+struct cons_pointer throw_exception( struct cons_pointer location,
+                                     struct cons_pointer message,
                                      struct cons_pointer frame_pointer );
 
 struct cons_pointer lisp_exception( struct stack_frame *frame,

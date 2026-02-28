@@ -57,6 +57,18 @@
 #define EXCEPTIONTV 1346721861
 
 /**
+ * Keywords used when constructing exceptions: `:location`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_location;
+
+/**
+ * Keywords used when constructing exceptions: `:payload`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_payload;
+
+/**
  * An unallocated cell on the free list - should never be encountered by a Lisp
  * function.
  */
@@ -295,6 +307,11 @@
  * given a cons_pointer as argument, return the cell.
  */
 #define pointer2cell(pointer) ((conspages[pointer.page]->cell[pointer.offset]))
+
+/**
+ * given a cons_pointer as argument, return the tag.
+ */
+#define get_tag_value(conspoint) ((pointer2cell(conspoint)).tag.value)
 
 /**
  * true if `conspoint` points to the special cell NIL, else false

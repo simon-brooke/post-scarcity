@@ -84,11 +84,17 @@ void maybe_bind_init_symbols(  ) {
     if ( nilp( privileged_symbol_nil ) ) {
         privileged_symbol_nil = c_string_to_lisp_symbol( L"nil" );
     }
+    // we can't make this string when we need it, because memory is then 
+    // exhausted!
     if ( nilp( privileged_string_memory_exhausted ) ) {
-        // we can't make this string when we need it, because memory is then 
-        // exhausted!
         privileged_string_memory_exhausted =
             c_string_to_lisp_string( L"Memory exhausted." );
+    }
+    if ( nilp( privileged_keyword_location ) ) {
+        privileged_keyword_location = c_string_to_lisp_keyword( L"location" );
+    }
+    if ( nilp( privileged_keyword_payload ) ) {
+        privileged_keyword_location = c_string_to_lisp_keyword( L"payload" );
     }
 }
 

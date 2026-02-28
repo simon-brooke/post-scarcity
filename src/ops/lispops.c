@@ -248,7 +248,7 @@ lisp_nlambda( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * Evaluate a lambda or nlambda expression.
  */
 struct cons_pointer
-eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
+eval_lambda( struct cons_space_object *cell, struct stack_frame *frame,
              struct cons_pointer frame_pointer, struct cons_pointer env ) {
     struct cons_pointer result = NIL;
 #ifdef DEBUG
@@ -257,8 +257,8 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
 #endif
 
     struct cons_pointer new_env = env;
-    struct cons_pointer names = cell.payload.lambda.args;
-    struct cons_pointer body = cell.payload.lambda.body;
+    struct cons_pointer names = cell->payload.lambda.args;
+    struct cons_pointer body = cell->payload.lambda.body;
 
     if ( consp( names ) ) {
         /* if `names` is a list, bind successive items from that list
@@ -328,6 +328,57 @@ eval_lambda( struct cons_space_object cell, struct stack_frame *frame,
     return result;
 }
 
+/**
+ * if `r` is an exception, and it doesn't have a location, fix up its location from
+ * the name associated with this fn_pointer, if any. 
+ */
+struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
+                                                    struct cons_pointer
+                                                    fn_pointer ) {
+    struct cons_pointer result = r;
+        
+    if ( exceptionp( result ) && (functionp( fn_pointer) || specialp(fn_pointer))) {
+        struct cons_space_object *fn_cell = &pointer2cell( fn_pointer );
+
+        struct cons_pointer payload =
+            pointer2cell( result ).payload.exception.payload;
+        /* TODO: should name_key also be a privileged keyword? */
+        struct cons_pointer name_key =
+                        c_string_to_lisp_keyword( L"name" );
+
+        switch ( get_tag_value( payload ) ) {
+            case NILTV:
+            case CONSTV:
+            case HASHTV:
+                {
+                    if ( nilp( c_assoc( privileged_keyword_location ,
+                           payload ) )) {
+                        pointer2cell( result ).payload.exception.payload =
+                            set( privileged_keyword_location,
+                                    c_assoc( name_key,
+                                             fn_cell->payload.function.meta ),
+                                    payload );
+                    }
+                }
+                break;
+            default:
+                pointer2cell( result ).payload.exception.payload =
+                    make_cons( 
+                        make_cons( privileged_keyword_location,
+                                 c_assoc( name_key,
+                                          fn_cell->payload.function.meta ) ),
+                               make_cons( 
+                                    make_cons( privileged_keyword_payload,
+                                            payload ) , 
+                                            NIL ));
+        }
+
+        dec_ref( name_key);
+    }
+
+    return result;
+}
+
 
 /**
  * Internal guts of apply.
@@ -348,10 +399,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( exceptionp( fn_pointer ) ) {
         result = fn_pointer;
     } else {
-        struct cons_space_object fn_cell = pointer2cell( fn_pointer );
+        struct cons_space_object *fn_cell = &pointer2cell( fn_pointer );
         struct cons_pointer args = c_cdr( frame->arg[0] );
 
-        switch ( fn_cell.tag.value ) {
+        switch ( get_tag_value( fn_pointer ) ) {
             case EXCEPTIONTV:
                 /* just pass exceptions straight back */
                 result = fn_pointer;
@@ -369,10 +420,15 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         struct stack_frame *next =
                             get_stack_frame( next_pointer );
 
-                        result =
-                            ( *fn_cell.payload.function.executable ) ( next,
-                                                                       next_pointer,
-                                                                       env );
+                        result = maybe_fixup_exception_location( ( *
+                                                                   ( fn_cell->
+                                                                     payload.
+                                                                     function.
+                                                                     executable ) )
+                                                                 ( next,
+                                                                   next_pointer,
+                                                                   env ),
+                                                                 fn_pointer );
                         dec_ref( next_pointer );
                     }
                 }
@@ -406,18 +462,14 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 }
                 break;
 
-            case VECTORPOINTTV:
-                switch ( pointer_to_vso( fn_pointer )->header.tag.value ) {
-                    case HASHTV:
-                        /* \todo: if arg[0] is a CONS, treat it as a path */
-                        result = c_assoc( eval_form( frame,
-                                                     frame_pointer,
-                                                     c_car( c_cdr
-                                                            ( frame->arg
-                                                              [0] ) ), env ),
-                                          fn_pointer );
-                        break;
-                }
+            case HASHTV:
+                /* \todo: if arg[0] is a CONS, treat it as a path */
+                result = c_assoc( eval_form( frame,
+                                             frame_pointer,
+                                             c_car( c_cdr
+                                                    ( frame->arg
+                                                      [0] ) ), env ),
+                                  fn_pointer );
                 break;
 
             case NLAMBDATV:
@@ -441,14 +493,16 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 {
                     struct cons_pointer next_pointer =
                         make_special_frame( frame_pointer, args, env );
-                    inc_ref( next_pointer );
+                    // inc_ref( next_pointer );
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
-                        result =
-                            ( *fn_cell.payload.special.
-                              executable ) ( get_stack_frame( next_pointer ),
-                                             next_pointer, env );
+                        result = maybe_fixup_exception_location( ( *
+                                                                   ( fn_cell->
+                                                                     payload.
+                                                                     special.
+                                                                     executable ) )
+                                                                 ( get_stack_frame( next_pointer ), next_pointer, env ), fn_pointer );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
                         debug_println( DEBUG_EVAL );
@@ -464,13 +518,16 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     memset( buffer, '\0', bs );
                     swprintf( buffer, bs,
                               L"Unexpected cell with tag %d (%4.4s) in function position",
-                              fn_cell.tag.value, &fn_cell.tag.bytes[0] );
+                              fn_cell->tag.value, &( fn_cell->tag.bytes[0] ) );
                     struct cons_pointer message =
                         c_string_to_lisp_string( buffer );
                     free( buffer );
-                    result = throw_exception( message, frame_pointer );
+                    result =
+                        throw_exception( c_string_to_lisp_symbol( L"apply" ),
+                                         message, frame_pointer );
                 }
         }
+
     }
 
     debug_print( L"c_apply: returning: ", DEBUG_EVAL );
@@ -507,9 +564,9 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
     debug_dump_object( frame_pointer, DEBUG_EVAL );
 
     struct cons_pointer result = frame->arg[0];
-    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+    struct cons_space_object *cell = &pointer2cell( frame->arg[0] );
 
-    switch ( cell.tag.value ) {
+    switch ( cell->tag.value ) {
         case CONSTV:
             result = c_apply( frame, frame_pointer, env );
             break;
@@ -522,7 +579,9 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         make_cons( c_string_to_lisp_string
                                    ( L"Attempt to take value of unbound symbol." ),
                                    frame->arg[0] );
-                    result = throw_exception( message, frame_pointer );
+                    result =
+                        throw_exception( c_string_to_lisp_symbol( L"eval" ),
+                                         message, frame_pointer );
                 } else {
                     result = c_assoc( canonical, env );
                     inc_ref( result );
@@ -623,7 +682,8 @@ lisp_set( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = frame->arg[1];
     } else {
         result =
-            throw_exception( make_cons
+            throw_exception( c_string_to_lisp_symbol( L"set" ),
+                             make_cons
                              ( c_string_to_lisp_string
                                ( L"The first argument to `set` is not a symbol: " ),
                                make_cons( frame->arg[0], NIL ) ),
@@ -662,7 +722,8 @@ lisp_set_shriek( struct stack_frame *frame, struct cons_pointer frame_pointer,
         result = val;
     } else {
         result =
-            throw_exception( make_cons
+            throw_exception( c_string_to_lisp_symbol( L"set!" ),
+                             make_cons
                              ( c_string_to_lisp_string
                                ( L"The first argument to `set!` is not a symbol: " ),
                                make_cons( frame->arg[0], NIL ) ),
@@ -734,24 +795,25 @@ struct cons_pointer
 lisp_car( struct stack_frame *frame, struct cons_pointer frame_pointer,
           struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+    struct cons_space_object *cell = &pointer2cell( frame->arg[0] );
 
-    switch ( cell.tag.value ) {
+    switch ( cell->tag.value ) {
         case CONSTV:
-            result = cell.payload.cons.car;
+            result = cell->payload.cons.car;
             break;
         case NILTV:
             break;
         case READTV:
             result =
-                make_string( url_fgetwc( cell.payload.stream.stream ), NIL );
+                make_string( url_fgetwc( cell->payload.stream.stream ), NIL );
             break;
         case STRINGTV:
-            result = make_string( cell.payload.string.character, NIL );
+            result = make_string( cell->payload.string.character, NIL );
             break;
         default:
             result =
-                throw_exception( c_string_to_lisp_string
+                throw_exception( c_string_to_lisp_symbol( L"car" ),
+                                 c_string_to_lisp_string
                                  ( L"Attempt to take CAR of non sequence" ),
                                  frame_pointer );
     }
@@ -778,24 +840,25 @@ struct cons_pointer
 lisp_cdr( struct stack_frame *frame, struct cons_pointer frame_pointer,
           struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+    struct cons_space_object *cell = &pointer2cell( frame->arg[0] );
 
-    switch ( cell.tag.value ) {
+    switch ( cell->tag.value ) {
         case CONSTV:
-            result = cell.payload.cons.cdr;
+            result = cell->payload.cons.cdr;
             break;
         case NILTV:
             break;
         case READTV:
-            url_fgetwc( cell.payload.stream.stream );
+            url_fgetwc( cell->payload.stream.stream );
             result = frame->arg[0];
             break;
         case STRINGTV:
-            result = cell.payload.string.cdr;
+            result = cell->payload.string.cdr;
             break;
         default:
             result =
-                throw_exception( c_string_to_lisp_string
+                throw_exception( c_string_to_lisp_symbol( L"cdr" ),
+                                 c_string_to_lisp_string
                                  ( L"Attempt to take CDR of non sequence" ),
                                  frame_pointer );
     }
@@ -856,7 +919,8 @@ lisp_internedp( struct stack_frame *frame, struct cons_pointer frame_pointer,
         struct cons_pointer old = result;
         struct cons_space_object *cell = &( pointer2cell( result ) );
         result =
-            throw_exception( cell->payload.exception.payload, frame_pointer );
+            throw_exception( c_string_to_lisp_symbol( L"interned?" ),
+                             cell->payload.exception.payload, frame_pointer );
         dec_ref( old );
     }
 
@@ -1213,7 +1277,8 @@ struct cons_pointer eval_cond_clause( struct cons_pointer clause,
 #endif
         }
     } else {
-        result = throw_exception( c_string_to_lisp_string
+        result = throw_exception( c_string_to_lisp_symbol( L"cond" ),
+                                  c_string_to_lisp_string
                                   ( L"Arguments to `cond` must be lists" ),
                                   frame_pointer );
     }
@@ -1271,18 +1336,25 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
  * pointer to the frame in which the exception occurred.
  */
 struct cons_pointer
-throw_exception( struct cons_pointer message,
+throw_exception( struct cons_pointer location,
+                 struct cons_pointer message,
                  struct cons_pointer frame_pointer ) {
     debug_print( L"\nERROR: ", DEBUG_EVAL );
     debug_dump_object( message, DEBUG_EVAL );
     struct cons_pointer result = NIL;
 
-    struct cons_space_object cell = pointer2cell( message );
+    struct cons_space_object *cell = &pointer2cell( message );
 
-    if ( cell.tag.value == EXCEPTIONTV ) {
+    if ( cell->tag.value == EXCEPTIONTV ) {
         result = message;
     } else {
-        result = make_exception( message, frame_pointer );
+        result =
+            make_exception( make_cons
+                            ( make_cons( privileged_keyword_location,
+                                         location ),
+                              make_cons( make_cons
+                                         ( privileged_keyword_payload,
+                                           message ), NIL ) ), frame_pointer );
     }
 
     return result;
@@ -1295,7 +1367,7 @@ throw_exception( struct cons_pointer message,
  * normally return. A function which detects a problem it cannot resolve
  * *should* return an exception.
  *
- * * (exception message frame)
+ * * (exception message location)
  *
  * @param frame my stack frame.
  * @param frame_pointer a pointer to my stack_frame.
@@ -1310,7 +1382,9 @@ struct cons_pointer
 lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
+
     return exceptionp( message ) ? message : throw_exception( message,
+                                                              frame->arg[1],
                                                               frame->previous );
 }
 
@@ -1444,24 +1518,24 @@ struct cons_pointer lisp_source( struct stack_frame *frame,
                                  struct cons_pointer frame_pointer,
                                  struct cons_pointer env ) {
     struct cons_pointer result = NIL;
-    struct cons_space_object cell = pointer2cell( frame->arg[0] );
+    struct cons_space_object *cell = &pointer2cell( frame->arg[0] );
     struct cons_pointer source_key = c_string_to_lisp_keyword( L"source" );
-    switch ( cell.tag.value ) {
+    switch ( cell->tag.value ) {
         case FUNCTIONTV:
-            result = c_assoc( source_key, cell.payload.function.meta );
+            result = c_assoc( source_key, cell->payload.function.meta );
             break;
         case SPECIALTV:
-            result = c_assoc( source_key, cell.payload.special.meta );
+            result = c_assoc( source_key, cell->payload.special.meta );
             break;
         case LAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"lambda" ),
-                                make_cons( cell.payload.lambda.args,
-                                           cell.payload.lambda.body ) );
+                                make_cons( cell->payload.lambda.args,
+                                           cell->payload.lambda.body ) );
             break;
         case NLAMBDATV:
             result = make_cons( c_string_to_lisp_symbol( L"nlambda" ),
-                                make_cons( cell.payload.lambda.args,
-                                           cell.payload.lambda.body ) );
+                                make_cons( cell->payload.lambda.args,
+                                           cell->payload.lambda.body ) );
             break;
     }
     // \todo suffers from premature GC, and I can't see why!
@@ -1484,7 +1558,8 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
                                       c_append( c_cdr( l1 ), l2 ) );
                 }
             } else {
-                throw_exception( c_string_to_lisp_string
+                throw_exception( c_string_to_lisp_symbol( L"append" ),
+                                 c_string_to_lisp_string
                                  ( L"Can't append: not same type" ), NIL );
             }
             break;
@@ -1505,12 +1580,14 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
                                                 pointer2cell( l1 ).tag.value );
                 }
             } else {
-                throw_exception( c_string_to_lisp_string
+                throw_exception( c_string_to_lisp_symbol( L"append" ),
+                                 c_string_to_lisp_string
                                  ( L"Can't append: not same type" ), NIL );
             }
             break;
         default:
-            throw_exception( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"append" ),
+                             c_string_to_lisp_string
                              ( L"Can't append: not a sequence" ), NIL );
             break;
     }
@@ -1622,7 +1699,8 @@ struct cons_pointer lisp_let( struct stack_frame *frame,
             bindings = make_cons( make_cons( symbol, val ), bindings );
         } else {
             result =
-                throw_exception( c_string_to_lisp_string
+                throw_exception( c_string_to_lisp_symbol( L"let" ),
+                                 c_string_to_lisp_string
                                  ( L"Let: cannot bind, not a symbol" ),
                                  frame_pointer );
             break;

@@ -311,7 +311,8 @@ struct cons_pointer interned( struct cons_pointer key,
                                   map->payload.hashmap.buckets[bucket_no] );
                 } else {
                     result =
-                        throw_exception( make_cons
+                        throw_exception( c_string_to_lisp_symbol( L"interned?"),
+                            make_cons
                                          ( c_string_to_lisp_string
                                            ( L"Unexpected store type: " ),
                                            c_type( store ) ), NIL );
@@ -319,7 +320,8 @@ struct cons_pointer interned( struct cons_pointer key,
                 break;
             default:
                 result =
-                    throw_exception( make_cons
+                    throw_exception( c_string_to_lisp_symbol( L"interned?"),
+                            make_cons
                                      ( c_string_to_lisp_string
                                        ( L"Unexpected store type: " ),
                                        c_type( store ) ), NIL );
@@ -327,7 +329,8 @@ struct cons_pointer interned( struct cons_pointer key,
         }
     } else {
         result =
-            throw_exception( make_cons
+            throw_exception( c_string_to_lisp_symbol( L"interned?"),
+                make_cons
                              ( c_string_to_lisp_string
                                ( L"Unexpected key type: " ), c_type( key ) ),
                              NIL );
@@ -389,7 +392,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                             result = hashmap_get( entry_ptr, key );
                             break;
                         default:
-                            throw_exception( c_append
+                            throw_exception( c_string_to_lisp_symbol( L"assoc"),
+                            c_append
                                              ( c_string_to_lisp_string
                                                ( L"Store entry is of unknown type: " ),
                                                c_type( entry_ptr ) ), NIL );
@@ -413,7 +417,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 //             debug_print( L"`\n", DEBUG_BIND );
 // #endif
             result =
-                throw_exception( c_append
+                throw_exception( c_string_to_lisp_symbol(L"assoc"),
+                    c_append
                                  ( c_string_to_lisp_string
                                    ( L"Store is of unknown type: " ),
                                    c_type( store ) ), NIL );
@@ -448,8 +453,8 @@ struct cons_pointer hashmap_put( struct cons_pointer mapp,
                        map->payload.hashmap.buckets[bucket_no] );
     }
 
-    debug_print(L"hashmap_put:\n", DEBUG_BIND);
-    debug_dump_object( mapp, DEBUG_BIND);
+    debug_print( L"hashmap_put:\n", DEBUG_BIND );
+    debug_dump_object( mapp, DEBUG_BIND );
 
     return mapp;
 }
@@ -508,7 +513,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
     struct cons_pointer canonical = internedp( key, environment );
     if ( nilp( canonical ) ) {
         /*
-         * not currently bound. TODO: should this bind to NIL?
+         * not currently bound. TODO: this should bind to NIL?
          */
         result = set( key, TRUE, environment );
     }
