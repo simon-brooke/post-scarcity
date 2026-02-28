@@ -131,6 +131,9 @@ struct cons_pointer lisp_cdr( struct stack_frame *frame,
 struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env );
+struct cons_pointer lisp_internedp( struct stack_frame *frame,
+                                    struct cons_pointer frame_pointer,
+                                    struct cons_pointer env );
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
                              struct cons_pointer env );

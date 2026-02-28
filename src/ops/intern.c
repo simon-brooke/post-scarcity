@@ -270,52 +270,79 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
 // (keys set let quote read equal *out* *log* oblist cons source cond close meta mapcar negative? open subtract eval nλ *in* *sink* cdr set! reverse slurp try assoc eq add list time car t *prompt* absolute append apply divide exception get-hash hashmap inspect metadata multiply print put! put-all! read-char repl throw type + * - / = lambda λ nlambda progn)
 
 /**
- * Implementation of interned? in C. The final implementation if interned? will
- * deal with stores which can be association lists or hashtables or hybrids of
- * the two, but that will almost certainly be implemented in lisp.
- *
  * If this key is lexically identical to a key in this store, return the key
  * from the store (so that later when we want to retrieve a value, an eq test
  * will work); otherwise return NIL.
  */
-struct cons_pointer
-internedp( struct cons_pointer key, struct cons_pointer store ) {
+struct cons_pointer interned( struct cons_pointer key,
+                              struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
     if ( symbolp( key ) || keywordp( key ) ) {
-        // TODO: I see what I was doing here and it would be the right thing to 
-        // do for stores which are old-fashioned assoc lists, but it will not work
-        // for my new hybrid stores.
-        // for ( struct cons_pointer next = store;
-        //       nilp( result ) && consp( next );
-        //       next = pointer2cell( next ).payload.cons.cdr ) {
-        //     struct cons_space_object entry =
-        //         pointer2cell( pointer2cell( next ).payload.cons.car );
+        struct cons_space_object *cell = &pointer2cell( store );
 
-        //     debug_print( L"Internedp: checking whether `", DEBUG_BIND );
-        //     debug_print_object( key, DEBUG_BIND );
-        //     debug_print( L"` equals `", DEBUG_BIND );
-        //     debug_print_object( entry.payload.cons.car, DEBUG_BIND );
-        //     debug_print( L"`\n", DEBUG_BIND );
+        switch ( cell->tag.value ) {
+            case CONSTV:
+                for ( struct cons_pointer next = store;
+                      nilp( result ) && consp( next );
+                      next = c_cdr( next) ) {
+                    if ( !nilp( next ) ) {
+                        // struct cons_space_object entry =
+                        //     pointer2cell( c_car( next) );
 
-        //     if ( equal( key, entry.payload.cons.car ) ) {
-        //         result = entry.payload.cons.car;
-        //     }
-        if ( !nilp( c_assoc( key, store ) ) ) {
-            result = key;
-        } else if ( equal( key, privileged_symbol_nil ) ) {
-            result = privileged_symbol_nil;
+                        if ( equal( key, c_car(next) ) ) {
+                            result = key;
+                        }
+                    }
+                }
+                break;
+            case VECTORPOINTTV:
+                if ( hashmapp( store ) || namespacep( store ) ) {
+                    // get the right hash bucket and recursively call interned on that.
+                    struct vector_space_object *map = pointer_to_vso( store );
+                    uint32_t bucket_no =
+                        get_hash( key ) % map->payload.hashmap.n_buckets;
+
+                    result =
+                        interned( key,
+                                  map->payload.hashmap.buckets[bucket_no] );
+                } else {
+                    result =
+                        throw_exception( make_cons
+                                         ( c_string_to_lisp_string
+                                           ( L"Unexpected store type: " ),
+                                           c_type( store ) ), NIL );
+                }
+                break;
+            default:
+                result =
+                    throw_exception( make_cons
+                                     ( c_string_to_lisp_string
+                                       ( L"Unexpected store type: " ),
+                                       c_type( store ) ), NIL );
+                break;
         }
     } else {
-        debug_print( L"`", DEBUG_BIND );
-        debug_print_object( key, DEBUG_BIND );
-        debug_print( L"` is a ", DEBUG_BIND );
-        debug_printf( DEBUG_BIND, L"%4.4s",
-                      ( char * ) pointer2cell( key ).tag.bytes );
-        debug_print( L", not a KEYW or SYMB", DEBUG_BIND );
+        result =
+            throw_exception( make_cons
+                             ( c_string_to_lisp_string
+                               ( L"Unexpected key type: " ), c_type( key ) ),
+                             NIL );
     }
 
     return result;
+}
+
+/**
+ * @brief Implementation of `interned?` in C: predicate wrapped around interned.
+ * 
+ * @param key the key to search for.
+ * @param store the store to search in.
+ * @return struct cons_pointer `t` if the key was found, else `nil`.
+ */
+struct cons_pointer internedp( struct cons_pointer key,
+                               struct cons_pointer store ) {
+    return nilp( interned( key, store ) ) ? NIL : TRUE;
 }
 
 /**
@@ -370,7 +397,7 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 // #endif
                 }
             }
-        } else if ( hashmapp( store ) ) {
+        } else if ( hashmapp( store ) || namespacep( store ) ) {
             result = hashmap_get( store, key );
         } else if ( !nilp( store ) ) {
 // #ifdef DEBUG        
@@ -426,7 +453,7 @@ struct cons_pointer set( struct cons_pointer key, struct cons_pointer value,
     struct cons_pointer result = NIL;
 
 #ifdef DEBUG
-    bool deep = vectorpointp( store );
+    bool deep = eq( store, oblist);
     debug_print_binding( key, value, deep, DEBUG_BIND );
 
     if ( deep ) {
@@ -480,7 +507,7 @@ intern( struct cons_pointer key, struct cons_pointer environment ) {
     struct cons_pointer canonical = internedp( key, environment );
     if ( nilp( canonical ) ) {
         /*
-         * not currently bound
+         * not currently bound. TODO: should this bind to NIL?
          */
         result = set( key, TRUE, environment );
     }

@@ -49,6 +49,9 @@ struct cons_pointer make_hashmap( uint32_t n_buckets,
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store );
 
+struct cons_pointer interned( struct cons_pointer key,
+                              struct cons_pointer environment );
+
 struct cons_pointer internedp( struct cons_pointer key,
                                struct cons_pointer environment );
 

@@ -517,8 +517,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
         case SYMBOLTV:
             {
-                struct cons_pointer canonical =
-                    internedp( frame->arg[0], env );
+                struct cons_pointer canonical = interned( frame->arg[0], env );
                 if ( nilp( canonical ) ) {
                     struct cons_pointer message =
                         make_cons( c_string_to_lisp_string
@@ -835,7 +834,35 @@ struct cons_pointer lisp_length( struct stack_frame *frame,
 struct cons_pointer
 lisp_assoc( struct stack_frame *frame, struct cons_pointer frame_pointer,
             struct cons_pointer env ) {
-    return c_assoc( frame->arg[0], frame->arg[1] );
+    return c_assoc( frame->arg[0],
+                    nilp( frame->arg[1] ) ? oblist : frame->arg[1] );
+}
+
+/**
+ * @brief `(interned? key store)`: Return `t` if the symbol or keyword `key` is bound in this `store`, else `nil`.
+ * 
+ * @param frame 
+ * @param frame_pointer 
+ * @param env 
+ * @return struct cons_pointer 
+ */
+struct cons_pointer
+lisp_internedp( struct stack_frame *frame, struct cons_pointer frame_pointer,
+                struct cons_pointer env ) {
+    struct cons_pointer result = internedp( frame->arg[0],
+                                            nilp( frame->
+                                                  arg[1] ) ? oblist : frame->
+                                            arg[1] );
+
+    if ( exceptionp( result ) ) {
+        struct cons_pointer old = result;
+        struct cons_space_object *cell = &( pointer2cell( result ) );
+        result =
+            throw_exception( cell->payload.exception.payload, frame_pointer );
+        dec_ref( old );
+    }
+
+    return result;
 }
 
 struct cons_pointer c_keys( struct cons_pointer store ) {

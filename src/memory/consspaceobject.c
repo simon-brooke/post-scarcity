@@ -388,7 +388,7 @@ struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
         result = make_string_like_thing( c, tail, tag );
 
         if ( tag == KEYTV ) {
-            struct cons_pointer r = internedp( result, oblist );
+            struct cons_pointer r = interned( result, oblist );
 
             if ( nilp( r ) ) {
                 intern( result, oblist );

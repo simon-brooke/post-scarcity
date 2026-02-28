@@ -401,6 +401,9 @@ int main( int argc, char *argv[] ) {
     bind_function( L"inspect",
                    L"`(inspect object ouput-stream)`: Print details of this `object` to this `output-stream` or `*out*`.",
                    &lisp_inspect );
+    bind_function( L"interned?",
+                   L"`(interned? key store)`: Return `t` if the symbol or keyword `key` is bound in this `store`, else `nil`.",
+                   &lisp_internedp );
     bind_function( L"keys",
                    L"`(keys store)`: Return a list of all keys in this `store`.",
                    &lisp_keys );

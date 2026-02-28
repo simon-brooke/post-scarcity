@@ -375,8 +375,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     memset( a_buff, 0, sizeof( a_buff ) );
                     memset( b_buff, 0, sizeof( b_buff ) );
 
-                    for ( ;
-                          ( i < ( STRING_SHIPYARD_SIZE - 1 ) ) && !nilp( a )
+                    for ( ; ( i < ( STRING_SHIPYARD_SIZE - 1 ) ) && !nilp( a )
                           && !nilp( b ); i++ ) {
                         a_buff[i] = cell_a->payload.string.character;
                         a = c_cdr( a );
