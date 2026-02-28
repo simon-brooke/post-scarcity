@@ -161,6 +161,10 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                                 env );
                 frame->more = more;
                 inc_ref( more );
+
+                for ( ; !nilp( args ); args = c_cdr( args ) ) {
+                    frame->args++;
+                }
             }
         }
         debug_print( L"make_stack_frame: returning\n", DEBUG_STACK );

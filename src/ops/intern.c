@@ -311,17 +311,17 @@ struct cons_pointer interned( struct cons_pointer key,
                                   map->payload.hashmap.buckets[bucket_no] );
                 } else {
                     result =
-                        throw_exception( c_string_to_lisp_symbol( L"interned?"),
-                            make_cons
-                                         ( c_string_to_lisp_string
-                                           ( L"Unexpected store type: " ),
-                                           c_type( store ) ), NIL );
+                        throw_exception( c_string_to_lisp_symbol
+                                         ( L"interned?" ),
+                                         make_cons( c_string_to_lisp_string
+                                                    ( L"Unexpected store type: " ),
+                                                    c_type( store ) ), NIL );
                 }
                 break;
             default:
                 result =
-                    throw_exception( c_string_to_lisp_symbol( L"interned?"),
-                            make_cons
+                    throw_exception( c_string_to_lisp_symbol( L"interned?" ),
+                                     make_cons
                                      ( c_string_to_lisp_string
                                        ( L"Unexpected store type: " ),
                                        c_type( store ) ), NIL );
@@ -329,8 +329,8 @@ struct cons_pointer interned( struct cons_pointer key,
         }
     } else {
         result =
-            throw_exception( c_string_to_lisp_symbol( L"interned?"),
-                make_cons
+            throw_exception( c_string_to_lisp_symbol( L"interned?" ),
+                             make_cons
                              ( c_string_to_lisp_string
                                ( L"Unexpected key type: " ), c_type( key ) ),
                              NIL );
@@ -392,11 +392,12 @@ struct cons_pointer c_assoc( struct cons_pointer key,
                             result = hashmap_get( entry_ptr, key );
                             break;
                         default:
-                            throw_exception( c_string_to_lisp_symbol( L"assoc"),
-                            c_append
-                                             ( c_string_to_lisp_string
-                                               ( L"Store entry is of unknown type: " ),
-                                               c_type( entry_ptr ) ), NIL );
+                            throw_exception( c_string_to_lisp_symbol
+                                             ( L"assoc" ),
+                                             c_append( c_string_to_lisp_string
+                                                       ( L"Store entry is of unknown type: " ),
+                                                       c_type( entry_ptr ) ),
+                                             NIL );
                     }
 
 // #ifdef DEBUG
@@ -417,8 +418,8 @@ struct cons_pointer c_assoc( struct cons_pointer key,
 //             debug_print( L"`\n", DEBUG_BIND );
 // #endif
             result =
-                throw_exception( c_string_to_lisp_symbol(L"assoc"),
-                    c_append
+                throw_exception( c_string_to_lisp_symbol( L"assoc" ),
+                                 c_append
                                  ( c_string_to_lisp_string
                                    ( L"Store is of unknown type: " ),
                                    c_type( store ) ), NIL );

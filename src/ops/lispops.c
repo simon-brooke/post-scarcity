@@ -336,44 +336,43 @@ struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
                                                     struct cons_pointer
                                                     fn_pointer ) {
     struct cons_pointer result = r;
-        
-    if ( exceptionp( result ) && (functionp( fn_pointer) || specialp(fn_pointer))) {
+
+    if ( exceptionp( result )
+         && ( functionp( fn_pointer ) || specialp( fn_pointer ) ) ) {
         struct cons_space_object *fn_cell = &pointer2cell( fn_pointer );
 
         struct cons_pointer payload =
             pointer2cell( result ).payload.exception.payload;
         /* TODO: should name_key also be a privileged keyword? */
-        struct cons_pointer name_key =
-                        c_string_to_lisp_keyword( L"name" );
+        struct cons_pointer name_key = c_string_to_lisp_keyword( L"name" );
 
         switch ( get_tag_value( payload ) ) {
             case NILTV:
             case CONSTV:
             case HASHTV:
                 {
-                    if ( nilp( c_assoc( privileged_keyword_location ,
-                           payload ) )) {
+                    if ( nilp( c_assoc( privileged_keyword_location,
+                                        payload ) ) ) {
                         pointer2cell( result ).payload.exception.payload =
                             set( privileged_keyword_location,
-                                    c_assoc( name_key,
-                                             fn_cell->payload.function.meta ),
-                                    payload );
+                                 c_assoc( name_key,
+                                          fn_cell->payload.function.meta ),
+                                 payload );
                     }
                 }
                 break;
             default:
                 pointer2cell( result ).payload.exception.payload =
-                    make_cons( 
-                        make_cons( privileged_keyword_location,
-                                 c_assoc( name_key,
-                                          fn_cell->payload.function.meta ) ),
-                               make_cons( 
-                                    make_cons( privileged_keyword_payload,
-                                            payload ) , 
-                                            NIL ));
+                    make_cons( make_cons( privileged_keyword_location,
+                                          c_assoc( name_key,
+                                                   fn_cell->payload.function.
+                                                   meta ) ),
+                               make_cons( make_cons
+                                          ( privileged_keyword_payload,
+                                            payload ), NIL ) );
         }
 
-        dec_ref( name_key);
+        dec_ref( name_key );
     }
 
     return result;
@@ -421,10 +420,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                             get_stack_frame( next_pointer );
 
                         result = maybe_fixup_exception_location( ( *
-                                                                   ( fn_cell->
-                                                                     payload.
-                                                                     function.
-                                                                     executable ) )
+                                                                   ( fn_cell->payload.function.executable ) )
                                                                  ( next,
                                                                    next_pointer,
                                                                    env ),
@@ -498,10 +494,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result = maybe_fixup_exception_location( ( *
-                                                                   ( fn_cell->
-                                                                     payload.
-                                                                     special.
-                                                                     executable ) )
+                                                                   ( fn_cell->payload.special.executable ) )
                                                                  ( get_stack_frame( next_pointer ), next_pointer, env ), fn_pointer );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
@@ -1385,7 +1378,8 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     return exceptionp( message ) ? message : throw_exception( message,
                                                               frame->arg[1],
-                                                              frame->previous );
+                                                              frame->
+                                                              previous );
 }
 
 /**
@@ -1569,13 +1563,14 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ), l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
+                                                l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).payload.
-                                                  string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).
+                                                  payload.string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }

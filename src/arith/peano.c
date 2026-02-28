@@ -296,10 +296,11 @@ struct cons_pointer add_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_symbol( L"+"),
-                            c_string_to_lisp_string
-                                                  ( L"Cannot add: not a number" ),
-                                                  frame_pointer );
+                        result =
+                            throw_exception( c_string_to_lisp_symbol( L"+" ),
+                                             c_string_to_lisp_string
+                                             ( L"Cannot add: not a number" ),
+                                             frame_pointer );
                         break;
                 }
                 break;
@@ -320,10 +321,11 @@ struct cons_pointer add_2( struct stack_frame *frame,
                                        to_long_double( arg2 ) );
                         break;
                     default:
-                        result = throw_exception( c_string_to_lisp_symbol( L"+"),
-                            c_string_to_lisp_string
-                                                  ( L"Cannot add: not a number" ),
-                                                  frame_pointer );
+                        result =
+                            throw_exception( c_string_to_lisp_symbol( L"+" ),
+                                             c_string_to_lisp_string
+                                             ( L"Cannot add: not a number" ),
+                                             frame_pointer );
                         break;
                 }
                 break;
@@ -334,8 +336,8 @@ struct cons_pointer add_2( struct stack_frame *frame,
                 break;
             default:
                 result = exceptionp( arg2 ) ? arg2 :
-                    throw_exception( c_string_to_lisp_symbol( L"+"),
-                            c_string_to_lisp_string
+                    throw_exception( c_string_to_lisp_symbol( L"+" ),
+                                     c_string_to_lisp_string
                                      ( L"Cannot add: not a number" ),
                                      frame_pointer );
         }
@@ -431,8 +433,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     default:
                         result =
-                            throw_exception( c_string_to_lisp_symbol( L"*"),
-                            make_cons
+                            throw_exception( c_string_to_lisp_symbol( L"*" ),
+                                             make_cons
                                              ( c_string_to_lisp_string
                                                ( L"Cannot multiply: argument 2 is not a number: " ),
                                                c_type( arg2 ) ),
@@ -458,8 +460,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                         break;
                     default:
                         result =
-                            throw_exception( c_string_to_lisp_symbol( L"*"),
-                            make_cons
+                            throw_exception( c_string_to_lisp_symbol( L"*" ),
+                                             make_cons
                                              ( c_string_to_lisp_string
                                                ( L"Cannot multiply: argument 2 is not a number" ),
                                                c_type( arg2 ) ),
@@ -472,8 +474,8 @@ struct cons_pointer multiply_2( struct stack_frame *frame,
                                to_long_double( arg2 ) );
                 break;
             default:
-                result = throw_exception( c_string_to_lisp_symbol( L"*"),
-                            make_cons( c_string_to_lisp_string
+                result = throw_exception( c_string_to_lisp_symbol( L"*" ),
+                                          make_cons( c_string_to_lisp_string
                                                      ( L"Cannot multiply: argument 1 is not a number" ),
                                                      c_type( arg1 ) ),
                                           frame_pointer );
@@ -626,8 +628,8 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                                    to_long_double( arg2 ) );
                     break;
                 default:
-                    result = throw_exception( c_string_to_lisp_symbol( L"-"),
-                            c_string_to_lisp_string
+                    result = throw_exception( c_string_to_lisp_symbol( L"-" ),
+                                              c_string_to_lisp_string
                                               ( L"Cannot subtract: not a number" ),
                                               frame_pointer );
                     break;
@@ -657,8 +659,8 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                                    to_long_double( arg2 ) );
                     break;
                 default:
-                    result = throw_exception( c_string_to_lisp_symbol( L"-"),
-                            c_string_to_lisp_string
+                    result = throw_exception( c_string_to_lisp_symbol( L"-" ),
+                                              c_string_to_lisp_string
                                               ( L"Cannot subtract: not a number" ),
                                               frame_pointer );
                     break;
@@ -669,8 +671,8 @@ struct cons_pointer subtract_2( struct stack_frame *frame,
                 make_real( to_long_double( arg1 ) - to_long_double( arg2 ) );
             break;
         default:
-            result = throw_exception( c_string_to_lisp_symbol( L"-"),
-                            c_string_to_lisp_string
+            result = throw_exception( c_string_to_lisp_symbol( L"-" ),
+                                      c_string_to_lisp_string
                                       ( L"Cannot subtract: not a number" ),
                                       frame_pointer );
             break;
@@ -741,8 +743,8 @@ struct cons_pointer lisp_divide( struct
                                    to_long_double( frame->arg[1] ) );
                     break;
                 default:
-                    result = throw_exception( c_string_to_lisp_symbol( L"/"),
-                            c_string_to_lisp_string
+                    result = throw_exception( c_string_to_lisp_symbol( L"/" ),
+                                              c_string_to_lisp_string
                                               ( L"Cannot divide: not a number" ),
                                               frame_pointer );
                     break;
@@ -772,8 +774,8 @@ struct cons_pointer lisp_divide( struct
                                    to_long_double( frame->arg[1] ) );
                     break;
                 default:
-                    result = throw_exception( c_string_to_lisp_symbol( L"/"),
-                            c_string_to_lisp_string
+                    result = throw_exception( c_string_to_lisp_symbol( L"/" ),
+                                              c_string_to_lisp_string
                                               ( L"Cannot divide: not a number" ),
                                               frame_pointer );
                     break;
@@ -785,8 +787,8 @@ struct cons_pointer lisp_divide( struct
                            to_long_double( frame->arg[1] ) );
             break;
         default:
-            result = throw_exception( c_string_to_lisp_symbol( L"/"),
-                            c_string_to_lisp_string
+            result = throw_exception( c_string_to_lisp_symbol( L"/" ),
+                                      c_string_to_lisp_string
                                       ( L"Cannot divide: not a number" ),
                                       frame_pointer );
             break;

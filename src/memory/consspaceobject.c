@@ -39,8 +39,6 @@ struct cons_pointer privileged_keyword_location = NIL;
  */
 struct cons_pointer privileged_keyword_payload = NIL;
 
-
-
 /**
  * True if the value of the tag on the cell at this `pointer` is this `value`,
  * or, if the tag of the cell is `VECP`, if the value of the tag of the
@@ -49,11 +47,11 @@ struct cons_pointer privileged_keyword_payload = NIL;
 bool check_tag( struct cons_pointer pointer, uint32_t value ) {
     bool result = false;
 
-    struct cons_space_object cell = pointer2cell( pointer );
-    result = cell.tag.value == value;
+    struct cons_space_object *cell = &pointer2cell( pointer );
+    result = cell->tag.value == value;
 
     if ( result == false ) {
-        if ( cell.tag.value == VECTORPOINTTV ) {
+        if ( cell->tag.value == VECTORPOINTTV ) {
             struct vector_space_object *vec = pointer_to_vso( pointer );
 
             if ( vec != NULL ) {

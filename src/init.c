@@ -293,6 +293,8 @@ int main( int argc, char *argv[] ) {
      */
     bind_symbol_value( privileged_symbol_nil, NIL, true );
     bind_value( L"t", TRUE, true );
+    bind_symbol_value( privileged_keyword_location, TRUE, true );
+    bind_symbol_value( privileged_keyword_payload, TRUE, true );
 
     /*
      * standard input, output, error and sink streams
@@ -413,7 +415,8 @@ int main( int argc, char *argv[] ) {
     bind_function( L"keys",
                    L"`(keys store)`: Return a list of all keys in this `store`.",
                    &lisp_keys );
-    bind_function( L"list", L"`(list args...): Return a list of these `args`.",
+    bind_function( L"list",
+                   L"`(list args...)`: Return a list of these `args`.",
                    &lisp_list );
     bind_function( L"mapcar",
                    L"`(mapcar function sequence)`: Apply `function` to each element of `sequence` in turn, and return a sequence of the results.",
