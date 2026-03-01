@@ -348,16 +348,9 @@ lisp_println( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( writep( out_stream ) ) {
         output = pointer2cell( out_stream ).payload.stream.stream;
-        inc_ref( out_stream );
-    } else {
-        output = file_to_url_file( stderr );
-    }
 
-    println( output );
+        println( output );
 
-    if ( writep( out_stream ) ) {
-        dec_ref( out_stream );
-    } else {
         free( output );
     }
 

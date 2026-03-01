@@ -11,10 +11,10 @@
 (set! member? (lambda
             (item collection)
             "`(member item collection)`: Return `t` if this `item` is a member of this `collection`, else `nil`."
-            ;; (print (list "In member? item is " item "; collection is " collection))
+            (print (list "In member? item is " item "; collection is " collection))
             ;; (println)
             (cond
-              ((= nil collection) nil)
+              ((= 0 (count collection)) nil)
               ((= item (car collection)) t)
               (t (member? item (cdr collection))))))
 

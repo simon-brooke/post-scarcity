@@ -94,7 +94,7 @@ void maybe_bind_init_symbols(  ) {
         privileged_keyword_location = c_string_to_lisp_keyword( L"location" );
     }
     if ( nilp( privileged_keyword_payload ) ) {
-        privileged_keyword_location = c_string_to_lisp_keyword( L"payload" );
+        privileged_keyword_payload = c_string_to_lisp_keyword( L"payload" );
     }
 }
 
