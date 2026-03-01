@@ -272,7 +272,9 @@ bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
 
         for ( struct cons_pointer i = keys_a; !nilp( i ); i = c_cdr( i ) ) {
             struct cons_pointer key = c_car( i );
-            if ( !equal( hashmap_get( a, key ), hashmap_get( b, key ) ) ) {
+            if ( !equal
+                 ( hashmap_get( a, key, false ),
+                   hashmap_get( b, key, false ) ) ) {
                 result = false;
                 break;
             }

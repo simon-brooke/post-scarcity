@@ -101,7 +101,7 @@ void print_map( URL_FILE *output, struct cons_pointer map ) {
             struct cons_pointer key = c_car( ks );
             print( output, key );
             url_fputwc( btowc( ' ' ), output );
-            print( output, hashmap_get( map, key ) );
+            print( output, hashmap_get( map, key, false ) );
 
             if ( !nilp( c_cdr( ks ) ) ) {
                 url_fputws( L", ", output );

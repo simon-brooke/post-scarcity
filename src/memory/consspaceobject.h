@@ -309,11 +309,6 @@ extern struct cons_pointer privileged_keyword_payload;
 #define pointer2cell(pointer) ((conspages[pointer.page]->cell[pointer.offset]))
 
 /**
- * given a cons_pointer as argument, return the tag.
- */
-#define get_tag_value(conspoint) ((pointer2cell(conspoint)).tag.value)
-
-/**
  * true if `conspoint` points to the special cell NIL, else false
  * (there should only be one of these so it's slightly redundant).
  */
@@ -726,6 +721,11 @@ bool check_tag( struct cons_pointer pointer, uint32_t value );
 struct cons_pointer inc_ref( struct cons_pointer pointer );
 
 struct cons_pointer dec_ref( struct cons_pointer pointer );
+
+/**
+ * given a cons_pointer as argument, return the tag.
+ */
+uint32_t get_tag_value( struct cons_pointer pointer );
 
 struct cons_pointer c_type( struct cons_pointer pointer );
 

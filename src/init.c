@@ -325,7 +325,7 @@ int main( int argc, char *argv[] ) {
                                                   ( c_string_to_lisp_keyword
                                                     ( L"url" ),
                                                     c_string_to_lisp_string
-                                                    ( L"system:standard output]" ) ),
+                                                    ( L"system:standard output" ) ),
                                                   NIL ) ), false );
     bind_value( L"*log*",
                 make_write_stream( file_to_url_file( stderr ),

@@ -205,7 +205,7 @@ struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
             for ( struct cons_pointer keys = hashmap_keys( assoc );
                   !nilp( keys ); keys = c_cdr( keys ) ) {
                 struct cons_pointer key = c_car( keys );
-                hashmap_put( mapp, key, hashmap_get( assoc, key ) );
+                hashmap_put( mapp, key, hashmap_get( assoc, key, false ) );
             }
         }
     }
@@ -216,17 +216,33 @@ struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
 /** Get a value from a hashmap. 
   *
   * Note that this is here, rather than in memory/hashmap.c, because it is 
-  * closely tied in with c_assoc, q.v.
+  * closely tied in with search_store, q.v.
   */
 struct cons_pointer hashmap_get( struct cons_pointer mapp,
-                                 struct cons_pointer key ) {
+                                 struct cons_pointer key, bool return_key ) {
+#ifdef DEBUG
+    debug_print( L"\nhashmap_get: key is `", DEBUG_BIND );
+    debug_print_object( key, DEBUG_BIND );
+    debug_print( L"`; store of type `", DEBUG_BIND );
+    debug_print_object( c_type( mapp ), DEBUG_BIND );
+    debug_printf( DEBUG_BIND, L"`; returning `%s`.\n",
+                  return_key ? "key" : "value" );
+#endif
+
     struct cons_pointer result = NIL;
     if ( hashmapp( mapp ) && truep( authorised( mapp, NIL ) ) && !nilp( key ) ) {
         struct vector_space_object *map = pointer_to_vso( mapp );
         uint32_t bucket_no = get_hash( key ) % map->payload.hashmap.n_buckets;
 
-        result = c_assoc( key, map->payload.hashmap.buckets[bucket_no] );
+        result =
+            search_store( key, map->payload.hashmap.buckets[bucket_no],
+                          return_key );
     }
+#ifdef DEBUG
+    debug_print( L"\nhashmap_get returning: `", DEBUG_BIND );
+    debug_print_object( result, DEBUG_BIND );
+    debug_print( L"`\n", DEBUG_BIND );
+#endif
 
     return result;
 }
@@ -267,80 +283,132 @@ struct cons_pointer clone_hashmap( struct cons_pointer ptr ) {
     return result;
 }
 
-// (keys set let quote read equal *out* *log* oblist cons source cond close meta mapcar negative? open subtract eval nλ *in* *sink* cdr set! reverse slurp try assoc eq add list time car t *prompt* absolute append apply divide exception get-hash hashmap inspect metadata multiply print put! put-all! read-char repl throw type + * - / = lambda λ nlambda progn)
-
 /**
- * If this key is lexically identical to a key in this store, return the key
- * from the store (so that later when we want to retrieve a value, an eq test
- * will work); otherwise return NIL.
+ * @brief `(search-store key store return-key?)` Search this `store` for this
+ * a key lexically identical to this `key`. 
+ *
+ * If found, then, if `return-key?` is non-nil, return the copy found in the 
+ * `store`, else return the value associated with it.
+ *
+ * At this stage the following structures are legal stores:
+ * 1. an association list comprising (key . value) dotted pairs;
+ * 2. a hashmap;
+ * 3. a namespace (which for these purposes is identical to a hashmap);
+ * 4. a hybrid list comprising both (key . value) pairs and hashmaps as first
+ *    level items;
+ * 5. such a hybrid list, but where the last CDR pointer is to a hashmap
+ *    rather than to a cons sell or to `nil`.
+ *
+ * This is over-complex and type 5 should be disallowed, but it will do for 
+ * now.
  */
-struct cons_pointer interned( struct cons_pointer key,
-                              struct cons_pointer store ) {
+struct cons_pointer search_store( struct cons_pointer key,
+                                  struct cons_pointer store,
+                                  bool return_key ) {
     struct cons_pointer result = NIL;
 
-    debug_print( L"interned: Checking for interned value of `", DEBUG_BIND );
+#ifdef DEBUG
+    debug_print( L"\nsearch_store; key is `", DEBUG_BIND );
     debug_print_object( key, DEBUG_BIND );
-    debug_print( L"`\n", DEBUG_BIND );
+    debug_print( L"`; store of type `", DEBUG_BIND );
+    debug_print_object( c_type( store ), DEBUG_BIND );
+    debug_printf( DEBUG_BIND, L"`; returning `%s`.\n",
+                  return_key ? "key" : "value" );
+#endif
 
     if ( symbolp( key ) || keywordp( key ) ) {
-        struct cons_space_object *cell = &pointer2cell( store );
+        struct cons_space_object *store_cell = &pointer2cell( store );
 
-        switch ( cell->tag.value ) {
+        switch ( get_tag_value( store ) ) {
             case CONSTV:
-                for ( struct cons_pointer next = store;
-                      nilp( result ) && consp( next ); next = c_cdr( next ) ) {
-                    if ( !nilp( next ) ) {
-                        // struct cons_space_object entry =
-                        //     pointer2cell( c_car( next) );
+                for ( struct cons_pointer cursor = store;
+                      nilp( result ) && ( consp( cursor )
+                                          || hashmapp( cursor ) );
+                      cursor = pointer2cell( cursor ).payload.cons.cdr ) {
+                    switch ( get_tag_value( cursor ) ) {
+                        case CONSTV:
+                            struct cons_pointer entry_ptr = c_car( cursor );
 
-                        if ( equal( key, c_car( next ) ) ) {
-                            result = key;
-                        }
+                            switch ( get_tag_value( entry_ptr ) ) {
+                                case CONSTV:
+                                    if ( equal( key, c_car( entry_ptr ) ) ) {
+                                        result =
+                                            return_key ? c_car( entry_ptr ) :
+                                            c_cdr( entry_ptr );
+                                    }
+                                    break;
+                                case HASHTV:
+                                case NAMESPACETV:
+                                    // TODO: I think this should be impossible, and we should maybe
+                                    // throw an exception.
+                                    result =
+                                        hashmap_get( entry_ptr, key,
+                                                     return_key );
+                                    break;
+                                default:
+                                    result =
+                                        throw_exception
+                                        ( c_string_to_lisp_symbol
+                                          ( L"search-store (entry)" ),
+                                          make_cons( c_string_to_lisp_string
+                                                     ( L"Unexpected store type: " ),
+                                                     c_type( c_car
+                                                             ( entry_ptr ) ) ),
+                                          NIL );
+
+                            }
+                            break;
+                        case HASHTV:
+                        case NAMESPACETV:
+                            debug_print
+                                ( L"\n\tHashmap as top-level value in list",
+                                  DEBUG_BIND );
+                            result = hashmap_get( cursor, key, return_key );
+                            break;
+                        default:
+                            result =
+                                throw_exception( c_string_to_lisp_symbol
+                                                 ( L"search-store (cursor)" ),
+                                                 make_cons
+                                                 ( c_string_to_lisp_string
+                                                   ( L"Unexpected store type: " ),
+                                                   c_type( cursor ) ), NIL );
                     }
                 }
                 break;
-            case VECTORPOINTTV:
-                if ( hashmapp( store ) || namespacep( store ) ) {
-                    // get the right hash bucket and recursively call interned on that.
-                    struct vector_space_object *map = pointer_to_vso( store );
-                    uint32_t bucket_no =
-                        get_hash( key ) % map->payload.hashmap.n_buckets;
-
-                    result =
-                        interned( key,
-                                  map->payload.hashmap.buckets[bucket_no] );
-                } else {
-                    result =
-                        throw_exception( c_string_to_lisp_symbol
-                                         ( L"interned?" ),
-                                         make_cons( c_string_to_lisp_string
-                                                    ( L"Unexpected store type: " ),
-                                                    c_type( store ) ), NIL );
-                }
+            case HASHTV:
+            case NAMESPACETV:
+                result = hashmap_get( store, key, return_key );
                 break;
             default:
                 result =
-                    throw_exception( c_string_to_lisp_symbol( L"interned?" ),
-                                     make_cons
-                                     ( c_string_to_lisp_string
-                                       ( L"Unexpected store type: " ),
-                                       c_type( store ) ), NIL );
+                    throw_exception( c_string_to_lisp_symbol
+                                     ( L"search-store (store)" ),
+                                     make_cons( c_string_to_lisp_string
+                                                ( L"Unexpected store type: " ),
+                                                c_type( store ) ), NIL );
                 break;
         }
     } else {
+        // failing with key type NIL here (?). Probably worth dumping the stack?
         result =
-            throw_exception( c_string_to_lisp_symbol( L"interned?" ),
+            throw_exception( c_string_to_lisp_symbol( L"search-store (key)" ),
                              make_cons
                              ( c_string_to_lisp_string
                                ( L"Unexpected key type: " ), c_type( key ) ),
                              NIL );
     }
 
-    debug_print( L"interned: returning `", DEBUG_BIND );
+    debug_print( L"search-store: returning `", DEBUG_BIND );
     debug_print_object( result, DEBUG_BIND );
     debug_print( L"`\n", DEBUG_BIND );
 
     return result;
+}
+
+struct cons_pointer interned( struct cons_pointer key,
+                              struct cons_pointer store ) {
+    return search_store( key, store, true );
 }
 
 /**
@@ -365,68 +433,7 @@ struct cons_pointer internedp( struct cons_pointer key,
  */
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store ) {
-    struct cons_pointer result = NIL;
-
-    if ( !nilp( key ) ) {
-        if ( consp( store ) ) {
-            for ( struct cons_pointer next = store;
-                  nilp( result ) && ( consp( next ) || hashmapp( next ) );
-                  next = pointer2cell( next ).payload.cons.cdr ) {
-                if ( consp( next ) ) {
-// #ifdef DEBUG
-//                     debug_print( L"\nc_assoc; key is `", DEBUG_BIND );
-//                     debug_print_object( key, DEBUG_BIND );
-//                     debug_print( L"`\n", DEBUG_BIND );
-// #endif
-
-                    struct cons_pointer entry_ptr = c_car( next );
-                    struct cons_space_object entry = pointer2cell( entry_ptr );
-
-                    switch ( entry.tag.value ) {
-                        case CONSTV:
-                            if ( equal( key, entry.payload.cons.car ) ) {
-                                result = entry.payload.cons.cdr;
-                            }
-                            break;
-                        case VECTORPOINTTV:
-                            result = hashmap_get( entry_ptr, key );
-                            break;
-                        default:
-                            throw_exception( c_string_to_lisp_symbol
-                                             ( L"assoc" ),
-                                             c_append( c_string_to_lisp_string
-                                                       ( L"Store entry is of unknown type: " ),
-                                                       c_type( entry_ptr ) ),
-                                             NIL );
-                    }
-
-// #ifdef DEBUG
-//                     debug_print( L"c_assoc `", DEBUG_BIND );
-//                     debug_print_object( key, DEBUG_BIND );
-//                     debug_print( L"` returning: ", DEBUG_BIND );
-//                     debug_print_object( result, DEBUG_BIND );
-//                     debug_println( DEBUG_BIND );
-// #endif
-                }
-            }
-        } else if ( hashmapp( store ) || namespacep( store ) ) {
-            result = hashmap_get( store, key );
-        } else if ( !nilp( store ) ) {
-// #ifdef DEBUG        
-//             debug_print( L"c_assoc; store is of unknown type `", DEBUG_BIND );
-//             debug_printf( DEBUG_BIND, L"%4.4s", (char *)pointer2cell(key).tag.bytes);
-//             debug_print( L"`\n", DEBUG_BIND );
-// #endif
-            result =
-                throw_exception( c_string_to_lisp_symbol( L"assoc" ),
-                                 c_append
-                                 ( c_string_to_lisp_string
-                                   ( L"Store is of unknown type: " ),
-                                   c_type( store ) ), NIL );
-        }
-    }
-
-    return result;
+    return search_store( key, store, false );
 }
 
 /**

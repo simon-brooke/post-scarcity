@@ -365,8 +365,8 @@ struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
                 pointer2cell( result ).payload.exception.payload =
                     make_cons( make_cons( privileged_keyword_location,
                                           c_assoc( name_key,
-                                                   fn_cell->payload.function.
-                                                   meta ) ),
+                                                   fn_cell->payload.
+                                                   function.meta ) ),
                                make_cons( make_cons
                                           ( privileged_keyword_payload,
                                             payload ), NIL ) );
@@ -420,7 +420,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                             get_stack_frame( next_pointer );
 
                         result = maybe_fixup_exception_location( ( *
-                                                                   ( fn_cell->payload.function.executable ) )
+                                                                   ( fn_cell->
+                                                                     payload.
+                                                                     function.
+                                                                     executable ) )
                                                                  ( next,
                                                                    next_pointer,
                                                                    env ),
@@ -494,7 +497,10 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                         result = next_pointer;
                     } else {
                         result = maybe_fixup_exception_location( ( *
-                                                                   ( fn_cell->payload.special.executable ) )
+                                                                   ( fn_cell->
+                                                                     payload.
+                                                                     special.
+                                                                     executable ) )
                                                                  ( get_stack_frame( next_pointer ), next_pointer, env ), fn_pointer );
                         debug_print( L"Special form returning: ", DEBUG_EVAL );
                         debug_print_object( result, DEBUG_EVAL );
@@ -1052,11 +1058,15 @@ lisp_read( struct stack_frame *frame, struct cons_pointer frame_pointer,
         frame->arg[0] : get_default_stream( true, env );
 
     if ( readp( in_stream ) ) {
-        debug_print( L"lisp_read: setting input stream\n", DEBUG_IO );
+        debug_print( L"lisp_read: setting input stream\n",
+                     DEBUG_IO | DEBUG_REPL );
         debug_dump_object( in_stream, DEBUG_IO );
         input = pointer2cell( in_stream ).payload.stream.stream;
         inc_ref( in_stream );
     } else {
+        /* should not happen, but has done. */
+        debug_print( L"WARNING: invalid input stream; defaulting!\n",
+                     DEBUG_IO | DEBUG_REPL );
         input = file_to_url_file( stdin );
     }
 
@@ -1332,9 +1342,16 @@ struct cons_pointer
 throw_exception( struct cons_pointer location,
                  struct cons_pointer message,
                  struct cons_pointer frame_pointer ) {
-    debug_print( L"\nERROR: ", DEBUG_EVAL );
-    debug_dump_object( message, DEBUG_EVAL );
     struct cons_pointer result = NIL;
+
+#ifdef DEBUG
+    debug_print( L"\nERROR: `", 511 );
+    debug_print_object( message, 511 );
+    debug_print( L"` at `", 511 );
+    debug_print_object( location, 511 );
+    debug_print( L"`\n", 511 );
+    debug_print_object( location, 511 );
+#endif
 
     struct cons_space_object *cell = &pointer2cell( message );
 
@@ -1378,8 +1395,7 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     return exceptionp( message ) ? message : throw_exception( message,
                                                               frame->arg[1],
-                                                              frame->
-                                                              previous );
+                                                              frame->previous );
 }
 
 /**
@@ -1399,7 +1415,11 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
                                struct cons_pointer env ) {
     struct cons_pointer expr = NIL;
 
-    debug_printf( DEBUG_REPL, L"Entering new inner REPL\n" );
+#ifdef DEBUG
+    debug_print( L"Entering new inner REPL\n\tenv is `", DEBUG_REPL );
+    debug_print_object( env, DEBUG_REPL );
+    debug_print( L"`\n", DEBUG_REPL );
+#endif
 
     struct cons_pointer input = get_default_stream( true, env );
     struct cons_pointer output = get_default_stream( false, env );
@@ -1414,7 +1434,7 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
             set( c_string_to_lisp_symbol( L"*in*" ), frame->arg[1], new_env );
         input = frame->arg[1];
     }
-    if ( readp( frame->arg[2] ) ) {
+    if ( writep( frame->arg[2] ) ) {
         new_env =
             set( c_string_to_lisp_symbol( L"*out*" ), frame->arg[2], new_env );
         output = frame->arg[2];
@@ -1424,8 +1444,16 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
     inc_ref( output );
     inc_ref( prompt_name );
 
-    URL_FILE *os = pointer2cell( output ).payload.stream.stream;
-
+    /* output should NEVER BE nil; but during development it has happened.
+     * To allow debugging under such circumstances, we need an emergency 
+     * default. */
+    URL_FILE *os =
+        !writep( output ) ? file_to_url_file( stdout ) :
+        pointer2cell( output ).payload.stream.stream;
+    if ( !writep( output ) ) {
+        debug_print( L"WARNING: invalid output; defaulting!\n",
+                     DEBUG_IO | DEBUG_REPL );
+    }
 
     /* \todo this is subtly wrong. If we were evaluating
      *   (print (eval (read)))
@@ -1442,7 +1470,10 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
          * \todo the whole process of resolving symbol values needs to be revisited
          * when we get onto namespaces. */
         /* OK, there's something even more subtle here if the root namespace is a map.
-         * H'mmmm... */
+         * H'mmmm... 
+         * I think that now the oblist is a hashmap masquerading as a namespace,
+         * we should no longer have to do this. TODO: test, and if so, delete this
+         * statement. */
         if ( !eq( oblist, old_oblist ) ) {
             struct cons_pointer cursor = oblist;
 
@@ -1486,6 +1517,9 @@ struct cons_pointer lisp_repl( struct stack_frame *frame,
         dec_ref( expr );
     }
 
+    if ( nilp( output ) ) {
+        free( os );
+    }
     dec_ref( input );
     dec_ref( output );
     dec_ref( prompt_name );
@@ -1563,14 +1597,13 @@ struct cons_pointer c_append( struct cons_pointer l1, struct cons_pointer l2 ) {
             if ( pointer2cell( l1 ).tag.value == pointer2cell( l2 ).tag.value ) {
                 if ( nilp( c_cdr( l1 ) ) ) {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
-                                                l2,
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ), l2,
                                                 pointer2cell( l1 ).tag.value );
                 } else {
                     return
-                        make_string_like_thing( ( pointer2cell( l1 ).
-                                                  payload.string.character ),
+                        make_string_like_thing( ( pointer2cell( l1 ).payload.
+                                                  string.character ),
                                                 c_append( c_cdr( l1 ), l2 ),
                                                 pointer2cell( l1 ).tag.value );
                 }

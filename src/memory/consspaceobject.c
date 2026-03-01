@@ -78,7 +78,7 @@ struct cons_pointer inc_ref( struct cons_pointer pointer ) {
         cell->count++;
 #ifdef DEBUG
         debug_printf( DEBUG_ALLOC,
-                      L"\nIncremented cell of type %4.4s at page %d, offset %d to count %d",
+                      L"\nIncremented cell of type %4.4s at page %u, offset %u to count %u",
                       ( ( char * ) cell->tag.bytes ), pointer.page,
                       pointer.offset, cell->count );
         if ( strncmp( cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
@@ -129,6 +129,19 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
     }
 
     return pointer;
+}
+
+/**
+ * given a cons_pointer as argument, return the tag.
+ */
+uint32_t get_tag_value( struct cons_pointer pointer ) {
+    uint32_t result = pointer2cell( pointer ).tag.value;
+
+    if ( result == VECTORPOINTTV ) {
+        result = pointer_to_vso( pointer )->header.tag.value;
+    }
+
+    return result;
 }
 
 /**
@@ -399,15 +412,15 @@ struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
     if ( tag == SYMBOLTV || tag == KEYTV ) {
         result = make_string_like_thing( c, tail, tag );
 
-        if ( tag == KEYTV ) {
-            struct cons_pointer r = interned( result, oblist );
+        // if ( tag == KEYTV ) {
+        //     struct cons_pointer r = interned( result, oblist );
 
-            if ( nilp( r ) ) {
-                intern( result, oblist );
-            } else {
-                result = r;
-            }
-        }
+        //     if ( nilp( r ) ) {
+        //         intern( result, oblist );
+        //     } else {
+        //         result = r;
+        //     }
+        // }
     } else {
         result =
             make_exception( c_string_to_lisp_string
