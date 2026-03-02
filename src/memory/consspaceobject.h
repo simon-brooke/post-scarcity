@@ -69,6 +69,12 @@ extern struct cons_pointer privileged_keyword_location;
 extern struct cons_pointer privileged_keyword_payload;
 
 /**
+ * Keywords used when constructing exceptions: `:cause`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_cause;
+
+/**
  * An unallocated cell on the free list - should never be encountered by a Lisp
  * function.
  */
@@ -456,6 +462,8 @@ struct stack_frame {
     struct cons_pointer function;
     /** the number of arguments provided. */
     int args;
+    /** the depth of the stack below this frame */
+    int depth;
 };
 
 /**

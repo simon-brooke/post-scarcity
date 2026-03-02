@@ -1329,18 +1329,18 @@ lisp_cond( struct stack_frame *frame, struct cons_pointer frame_pointer,
 }
 
 /**
- * Throw an exception.
+ * Throw an exception with a cause.
  * `throw_exception` is a misnomer, because it doesn't obey the calling signature of a
  * lisp function; but it is nevertheless to be preferred to make_exception. A
  * real `throw_exception`, which does, will be needed.
  * object pointing to it. Then this should become a normal lisp function
  * which expects a normally bound frame and environment, such that
- * frame->arg[0] is the message, and frame->arg[1] is the cons-space
+ * frame->arg[0] is the payload, frame->arg[1] is the cause, and frame->arg[2] is the cons-space
  * pointer to the frame in which the exception occurred.
  */
-struct cons_pointer
-throw_exception( struct cons_pointer location,
+struct cons_pointer throw_exception_with_cause( struct cons_pointer location,
                  struct cons_pointer message,
+                 struct cons_pointer cause,
                  struct cons_pointer frame_pointer ) {
     struct cons_pointer result = NIL;
 
@@ -1350,9 +1350,13 @@ throw_exception( struct cons_pointer location,
     debug_print( L"` at `", 511 );
     debug_print_object( location, 511 );
     debug_print( L"`\n", 511 );
-    debug_print_object( location, 511 );
+    if (!nilp( cause)) {
+        debug_print( L"\tCaused by: ", 511)
+        ;
+        debug_print_object( cause, 511);
+        debug_print( L"`\n", 511 );
+    }
 #endif
-
     struct cons_space_object *cell = &pointer2cell( message );
 
     if ( cell->tag.value == EXCEPTIONTV ) {
@@ -1364,10 +1368,31 @@ throw_exception( struct cons_pointer location,
                                          location ),
                               make_cons( make_cons
                                          ( privileged_keyword_payload,
-                                           message ), NIL ) ), frame_pointer );
+                                           message ), 
+                                        (nilp( cause) ? NIL :
+                                    make_cons( make_cons( privileged_keyword_cause,
+                                    cause), NIL)) ) ), frame_pointer );
     }
 
     return result;
+
+}
+
+/**
+ * Throw an exception.
+ * `throw_exception` is a misnomer, because it doesn't obey the calling signature of a
+ * lisp function; but it is nevertheless to be preferred to make_exception. A
+ * real `throw_exception`, which does, will be needed.
+ * object pointing to it. Then this should become a normal lisp function
+ * which expects a normally bound frame and environment, such that
+ * frame->arg[0] is the payload, frame->arg[1] is the cause, and frame->arg[2] is the cons-space
+ * pointer to the frame in which the exception occurred.
+ */
+struct cons_pointer
+throw_exception( struct cons_pointer location,
+                 struct cons_pointer payload,
+                 struct cons_pointer frame_pointer ) {
+    return throw_exception_with_cause( location, payload, NIL, frame_pointer);
 }
 
 /**
@@ -1393,8 +1418,9 @@ lisp_exception( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 struct cons_pointer env ) {
     struct cons_pointer message = frame->arg[0];
 
-    return exceptionp( message ) ? message : throw_exception( message,
+    return exceptionp( message ) ? message : throw_exception_with_cause( message,
                                                               frame->arg[1],
+                                                              frame->arg[2],
                                                               frame->previous );
 }
 

@@ -96,6 +96,9 @@ void maybe_bind_init_symbols(  ) {
     if ( nilp( privileged_keyword_payload ) ) {
         privileged_keyword_payload = c_string_to_lisp_keyword( L"payload" );
     }
+    if ( nilp( privileged_keyword_cause)) {
+        privileged_keyword_cause = c_string_to_lisp_keyword(L"cause");
+    }
 }
 
 void free_init_symbols(  ) {

@@ -98,6 +98,8 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
         for ( int i = 0; i < args_in_frame; i++ ) {
             frame->arg[i] = NIL;
         }
+
+        frame->depth = (nilp(previous)) ? 0 : (get_stack_frame(previous))->depth + 1;
     }
     debug_print( L"Leaving make_empty_frame\n", DEBUG_ALLOC );
     debug_dump_object( result, DEBUG_ALLOC );
@@ -285,7 +287,8 @@ void dump_frame( URL_FILE *output, struct cons_pointer frame_pointer ) {
     struct stack_frame *frame = get_stack_frame( frame_pointer );
 
     if ( frame != NULL ) {
-        url_fwprintf( output, L"Stack frame with %d arguments:\n",
+        url_fwprintf( output, L"Stack frame %d with %d arguments:\n",
+                      frame->depth;
                       frame->args );
         dump_frame_context( output, frame_pointer, 4 );
 
