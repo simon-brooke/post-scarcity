@@ -316,7 +316,7 @@ struct cons_pointer search_store( struct cons_pointer key,
                   return_key ? "key" : "value" );
 #endif
 
-    switch ( get_tag_value( key) ) {
+    switch ( get_tag_value( key ) ) {
         case SYMBOLTV:
         case KEYTV:
             struct cons_space_object *store_cell = &pointer2cell( store );
@@ -324,19 +324,20 @@ struct cons_pointer search_store( struct cons_pointer key,
             switch ( get_tag_value( store ) ) {
                 case CONSTV:
                     for ( struct cons_pointer cursor = store;
-                        nilp( result ) && ( consp( cursor )
-                                            || hashmapp( cursor ) );
-                        cursor = pointer2cell( cursor ).payload.cons.cdr ) {
+                          nilp( result ) && ( consp( cursor )
+                                              || hashmapp( cursor ) );
+                          cursor = pointer2cell( cursor ).payload.cons.cdr ) {
                         switch ( get_tag_value( cursor ) ) {
                             case CONSTV:
-                                struct cons_pointer entry_ptr = c_car( cursor );
+                                struct cons_pointer entry_ptr =
+                                    c_car( cursor );
 
                                 switch ( get_tag_value( entry_ptr ) ) {
                                     case CONSTV:
                                         if ( equal( key, c_car( entry_ptr ) ) ) {
                                             result =
-                                                return_key ? c_car( entry_ptr ) :
-                                                c_cdr( entry_ptr );
+                                                return_key ? c_car( entry_ptr )
+                                                : c_cdr( entry_ptr );
                                         }
                                         break;
                                     case HASHTV:
@@ -345,18 +346,18 @@ struct cons_pointer search_store( struct cons_pointer key,
                                         // throw an exception.
                                         result =
                                             hashmap_get( entry_ptr, key,
-                                                        return_key );
+                                                         return_key );
                                         break;
                                     default:
                                         result =
                                             throw_exception
                                             ( c_string_to_lisp_symbol
-                                            ( L"search-store (entry)" ),
-                                            make_cons( c_string_to_lisp_string
-                                                        ( L"Unexpected store type: " ),
-                                                        c_type( c_car
-                                                                ( entry_ptr ) ) ),
-                                            NIL );
+                                              ( L"search-store (entry)" ),
+                                              make_cons
+                                              ( c_string_to_lisp_string
+                                                ( L"Unexpected store type: " ),
+                                                c_type( c_car( entry_ptr ) ) ),
+                                              NIL );
 
                                 }
                                 break;
@@ -364,17 +365,19 @@ struct cons_pointer search_store( struct cons_pointer key,
                             case NAMESPACETV:
                                 debug_print
                                     ( L"\n\tHashmap as top-level value in list",
-                                    DEBUG_BIND );
-                                result = hashmap_get( cursor, key, return_key );
+                                      DEBUG_BIND );
+                                result =
+                                    hashmap_get( cursor, key, return_key );
                                 break;
                             default:
                                 result =
                                     throw_exception( c_string_to_lisp_symbol
-                                                    ( L"search-store (cursor)" ),
-                                                    make_cons
-                                                    ( c_string_to_lisp_string
-                                                    ( L"Unexpected store type: " ),
-                                                    c_type( cursor ) ), NIL );
+                                                     ( L"search-store (cursor)" ),
+                                                     make_cons
+                                                     ( c_string_to_lisp_string
+                                                       ( L"Unexpected store type: " ),
+                                                       c_type( cursor ) ),
+                                                     NIL );
                         }
                     }
                     break;
@@ -385,29 +388,29 @@ struct cons_pointer search_store( struct cons_pointer key,
                 default:
                     result =
                         throw_exception( c_string_to_lisp_symbol
-                                        ( L"search-store (store)" ),
-                                        make_cons( c_string_to_lisp_string
+                                         ( L"search-store (store)" ),
+                                         make_cons( c_string_to_lisp_string
                                                     ( L"Unexpected store type: " ),
                                                     c_type( store ) ), NIL );
                     break;
             }
             break;
-    case EXCEPTIONTV:
+        case EXCEPTIONTV:
             result =
-            throw_exception( c_string_to_lisp_symbol( L"search-store (exception)" ),
-                             make_cons
-                             ( c_string_to_lisp_string
-                               ( L"Unexpected key type: " ), c_type( key ) ),
-                             NIL );
+                throw_exception( c_string_to_lisp_symbol
+                                 ( L"search-store (exception)" ),
+                                 make_cons( c_string_to_lisp_string
+                                            ( L"Unexpected key type: " ),
+                                            c_type( key ) ), NIL );
 
             break;
-    default:
-        result =
-            throw_exception( c_string_to_lisp_symbol( L"search-store (key)" ),
-                             make_cons
-                             ( c_string_to_lisp_string
-                               ( L"Unexpected key type: " ), c_type( key ) ),
-                             NIL );
+        default:
+            result =
+                throw_exception( c_string_to_lisp_symbol
+                                 ( L"search-store (key)" ),
+                                 make_cons( c_string_to_lisp_string
+                                            ( L"Unexpected key type: " ),
+                                            c_type( key ) ), NIL );
     }
 
     debug_print( L"search-store: returning `", DEBUG_BIND );

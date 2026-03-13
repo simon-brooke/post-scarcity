@@ -96,8 +96,8 @@ void maybe_bind_init_symbols(  ) {
     if ( nilp( privileged_keyword_payload ) ) {
         privileged_keyword_payload = c_string_to_lisp_keyword( L"payload" );
     }
-    if ( nilp( privileged_keyword_cause)) {
-        privileged_keyword_cause = c_string_to_lisp_keyword(L"cause");
+    if ( nilp( privileged_keyword_cause ) ) {
+        privileged_keyword_cause = c_string_to_lisp_keyword( L"cause" );
     }
 }
 
@@ -217,6 +217,8 @@ void print_options( FILE *stream ) {
               L"\t-d\tDump memory to standard out at end of run (copious!);\n" );
     fwprintf( stream, L"\t-h\tPrint this message and exit;\n" );
     fwprintf( stream, L"\t-p\tShow a prompt (default is no prompt);\n" );
+    fwprintf( stream,
+              L"\t-s LIMIT\n\t\tSet the maximum stack depth to this LIMIT (int)\n" );
 #ifdef DEBUG
     fwprintf( stream,
               L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n" );
@@ -249,7 +251,7 @@ int main( int argc, char *argv[] ) {
         exit( 1 );
     }
 
-    while ( ( option = getopt( argc, argv, "phdv:i:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "dhi:ps:v:" ) ) != -1 ) {
         switch ( option ) {
             case 'd':
                 dump_at_end = true;
@@ -264,6 +266,9 @@ int main( int argc, char *argv[] ) {
                 break;
             case 'p':
                 show_prompt = true;
+                break;
+            case 's':
+                stack_limit = atoi( optarg );
                 break;
             case 'v':
                 verbosity = atoi( optarg );

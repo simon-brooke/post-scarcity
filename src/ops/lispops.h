@@ -191,9 +191,10 @@ struct cons_pointer lisp_cond( struct stack_frame *frame,
                                struct cons_pointer env );
 
 struct cons_pointer throw_exception_with_cause( struct cons_pointer location,
-                 struct cons_pointer message,
-                 struct cons_pointer cause,
-                 struct cons_pointer frame_pointer );
+                                                struct cons_pointer message,
+                                                struct cons_pointer cause,
+                                                struct cons_pointer
+                                                frame_pointer );
 /**
  * Throw an exception.
  * `throw_exception` is a misnomer, because it doesn't obey the calling

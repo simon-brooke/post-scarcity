@@ -207,7 +207,7 @@ extern struct cons_pointer privileged_keyword_cause;
 #define READTV      1145128274
 
 /**
- * A real number, represented internally as an IEEE 754-2008 `binary64`.
+ * A real number, represented internally as an IEEE 754-2008 `binary128`.
  */
 #define REALTAG     "REAL"
 
@@ -239,7 +239,7 @@ extern struct cons_pointer privileged_keyword_cause;
 #define STRINGTV    1196577875
 
 /**
- * A symbol is just like a string except not self-evaluating.
+ * A symbol is just like a keyword except not self-evaluating.
  */
 #define SYMBOLTAG   "SYMB"
 

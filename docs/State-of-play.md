@@ -1,5 +1,16 @@
 # State of Play
 
+## 20260311
+
+I've still been having trouble with runaway recursion &mdash; in `member`, but
+due to a primitive bug I haven't identified &mdash; so this morning I've tried
+to implement a stack limit feature. This has been a real fail at this stage. 
+Many more tests are breaking.
+
+However, I think having a configurable stack limit would be a good thing, so 
+I'm not yet ready to abandon this feature. I need to work out why it's breaking
+things.
+
 ## 20260226
 
 The bug in `member` turned out to be because when a symbol is read by the reader, 
