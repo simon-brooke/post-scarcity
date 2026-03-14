@@ -79,6 +79,13 @@
  */
 #define DEBUG_STACK 256
 
+/**
+ * @brief Print messages about equality tests.
+ * 
+ * Flag interpretation for the value of `verbosity`, defined in `debug.c`, q.v.
+ */
+ #define DEBUG_EQUAL 512
+
 extern int verbosity;
 
 void debug_print_exception( struct cons_pointer ex_ptr );

@@ -231,7 +231,8 @@ void print_options( FILE *stream ) {
     fwprintf( stream, L"\t\t32\tINPUT/OUTPUT;\n" );
     fwprintf( stream, L"\t\t64\tLAMBDA;\n" );
     fwprintf( stream, L"\t\t128\tREPL;\n" );
-    fwprintf( stream, L"\t\t256\tSTACK.\n" );
+    fwprintf( stream, L"\t\t256\tSTACK;\n" );
+    fwprintf( stream, L"\t\t512\tEQUAL.\n" );
 #endif
 }
 

@@ -210,7 +210,7 @@ __int128_t int128_to_integer( __int128_t val,
 
     if ( integerp( less_significant ) ) {
         struct cons_space_object *lsc = &pointer2cell( less_significant );
-        inc_ref( new );
+        // inc_ref( new );
         lsc->payload.integer.more = new;
     }
 
@@ -226,57 +226,43 @@ struct cons_pointer add_integers( struct cons_pointer a,
     struct cons_pointer result = NIL;
     struct cons_pointer cursor = NIL;
 
-    debug_print( L"add_integers: a = ", DEBUG_ARITH );
-    debug_print_object( a, DEBUG_ARITH );
-    debug_print( L"; b = ", DEBUG_ARITH );
-    debug_print_object( b, DEBUG_ARITH );
-    debug_println( DEBUG_ARITH );
-
     __int128_t carry = 0;
     bool is_first_cell = true;
 
-    if ( integerp( a ) && integerp( b ) ) {
-        debug_print( L"add_integers: \n", DEBUG_ARITH );
-        debug_dump_object( a, DEBUG_ARITH );
-        debug_print( L" plus \n", DEBUG_ARITH );
-        debug_dump_object( b, DEBUG_ARITH );
-        debug_println( DEBUG_ARITH );
+    while ( integerp( a ) || integerp( b ) || carry != 0 ) {
+        __int128_t av = cell_value( a, '+', is_first_cell );
+        __int128_t bv = cell_value( b, '+', is_first_cell );
+        __int128_t rv = ( av + bv ) + carry;
 
-        while ( !nilp( a ) || !nilp( b ) || carry != 0 ) {
-            __int128_t av = cell_value( a, '+', is_first_cell );
-            __int128_t bv = cell_value( b, '+', is_first_cell );
-            __int128_t rv = ( av + bv ) + carry;
+        debug_print( L"add_integers: av = ", DEBUG_ARITH );
+        debug_print_128bit( av, DEBUG_ARITH );
+        debug_print( L"; bv = ", DEBUG_ARITH );
+        debug_print_128bit( bv, DEBUG_ARITH );
+        debug_print( L"; carry = ", DEBUG_ARITH );
+        debug_print_128bit( carry, DEBUG_ARITH );
+        debug_print( L"; rv = ", DEBUG_ARITH );
+        debug_print_128bit( rv, DEBUG_ARITH );
+        debug_print( L"\n", DEBUG_ARITH );
 
-            debug_print( L"add_integers: av = ", DEBUG_ARITH );
-            debug_print_128bit( av, DEBUG_ARITH );
-            debug_print( L"; bv = ", DEBUG_ARITH );
-            debug_print_128bit( bv, DEBUG_ARITH );
-            debug_print( L"; carry = ", DEBUG_ARITH );
-            debug_print_128bit( carry, DEBUG_ARITH );
-            debug_print( L"; rv = ", DEBUG_ARITH );
-            debug_print_128bit( rv, DEBUG_ARITH );
-            debug_print( L"\n", DEBUG_ARITH );
+        if ( carry == 0 && rv >= 0 && rv < SMALL_INT_LIMIT && is_first_cell ) {
+            result =
+                acquire_integer( ( int64_t ) ( rv & MAX_INTEGER ), NIL ); 
+            break;
+        } else {
+            struct cons_pointer new = make_integer( 0, NIL );
+            carry = int128_to_integer( rv, cursor, new );
+            cursor = new;
 
-            if ( carry == 0 && rv >= 0 && rv < SMALL_INT_LIMIT ) {
-                result =
-                    acquire_integer( ( int64_t ) ( rv & MAX_INTEGER ), NIL );
-                break;
-            } else {
-                struct cons_pointer new = make_integer( 0, NIL );
-                carry = int128_to_integer( rv, cursor, new );
-                cursor = new;
-
-                if ( nilp( result ) ) {
-                    result = cursor;
-                }
-
-                a = pointer2cell( a ).payload.integer.more;
-                b = pointer2cell( b ).payload.integer.more;
-                is_first_cell = false;
+            if ( nilp( result ) ) {
+                result = cursor;
             }
+
+            a = pointer2cell( a ).payload.integer.more;
+            b = pointer2cell( b ).payload.integer.more;
+            is_first_cell = false;
         }
     }
-
+    
     debug_print( L"add_integers returning: ", DEBUG_ARITH );
     debug_print_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );
