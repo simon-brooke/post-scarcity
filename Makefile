@@ -44,7 +44,7 @@ test: $(TESTS) Makefile $(TARGET)
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ $(TMP_DIR)/* *~ core
+	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ $(TMP_DIR)/* *~ core.*
 
 repl:
 	$(TARGET) -p 2> psse.log

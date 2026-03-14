@@ -130,7 +130,7 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
     uint32_t depth =
         ( nilp( previous ) ) ? 0 : ( get_stack_frame( previous ) )->depth + 1;
 
-    if ( stack_limit > 0 && stack_limit > depth ) {
+    if ( stack_limit == 0 || stack_limit > depth ) {
         result = in_make_empty_frame( previous, depth );
     } else {
         result =

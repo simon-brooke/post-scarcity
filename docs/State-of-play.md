@@ -1,5 +1,16 @@
 # State of Play
 
+## 20260314
+
+When I put a debugger on it, the stack limit bug proved shallow. 
+
+I'm tempted to further exercise my debugging skills by having another go at 
+the bignum arithmetic problems.
+
+However, I've been rethinking the roadmap of the project, and written a long
+[blog post about it](https://www.journeyman.cc/blog/posts-output/2026-03-13-The-worlds-slowest-ever-rapid-prototype/). 
+This isn't a finalised decision yet, but it is something I'm thinking about.
+
 ## 20260311
 
 I've still been having trouble with runaway recursion &mdash; in `member`, but
