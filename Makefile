@@ -46,6 +46,9 @@ test: $(TESTS) Makefile $(TARGET)
 clean:
 	$(RM) $(TARGET) $(OBJS) $(DEPS) $(SRC_DIRS)/*~ $(SRC_DIRS)/*/*~ $(TMP_DIR)/* *~ core.*
 
+coredumps:
+	ulimit -c unlimited
+
 repl:
 	$(TARGET) -p 2> psse.log
 

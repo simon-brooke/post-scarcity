@@ -75,6 +75,24 @@ extern struct cons_pointer privileged_keyword_payload;
 extern struct cons_pointer privileged_keyword_cause;
 
 /**
+ * @brief keywords used in documentation: `:documentation`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_documentation;
+
+/**
+ * @brief keywords used in documentation: `:name`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_name;
+
+/**
+ * @brief keywords used in documentation: `:primitive`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_primitive;
+
+/**
  * An unallocated cell on the free list - should never be encountered by a Lisp
  * function.
  */

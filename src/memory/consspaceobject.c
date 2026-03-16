@@ -46,6 +46,26 @@ struct cons_pointer privileged_keyword_payload = NIL;
 struct cons_pointer privileged_keyword_cause = NIL;
 
 /**
+ * @brief keywords used in documentation: `:documentation`. Instantiated in 
+ * `init.c`, q. v.
+ * 
+ */
+struct cons_pointer privileged_keyword_documentation = NIL;
+
+/**
+ * @brief keywords used in documentation: `:name`. Instantiated in 
+ * `init.c`, q. v.
+ */
+struct cons_pointer privileged_keyword_name = NIL;
+
+/**
+ * @brief keywords used in documentation: `:primitive`. Instantiated in 
+ * `init.c`, q. v.
+ */
+struct cons_pointer privileged_keyword_primitive = NIL;
+
+
+/**
  * True if the value of the tag on the cell at this `pointer` is this `value`,
  * or, if the tag of the cell is `VECP`, if the value of the tag of the
  * vectorspace object indicated by the cell is this `value`, else false.

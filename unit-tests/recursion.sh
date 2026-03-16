@@ -1,7 +1,7 @@
 #!/bin/bash
 
 expected='nil 3,628,800'
-output=`target/psse 2>/dev/null <<EOF
+output=`target/psse <<EOF
 (progn
   (set! fact
     (lambda (n)

@@ -5,7 +5,7 @@
 
 (set! member? (lambda
             (item collection)
-            "`(member item collection)`: Return `t` if this `item` is a member of this `collection`, else `nil`."
+            "`(member? item collection)`: Return `t` if this `item` is a member of this `collection`, else `nil`."
             (cond
               ((nil? collection) nil)
               ((= item (car collection)) t)

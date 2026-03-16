@@ -1,5 +1,14 @@
 # State of Play
 
+## 20260316
+
+OK, where we're at: 
+* The garbage collector is doing *even worse* than it was on 4th 
+February, when I did the last serious look at it. 
+* The bignum bugs are not fixed.
+* You can (optionally) limit runaway stack crashes with a new command line option.
+* If you enable the stack limiter feature, `(member? 5 '(1 2 3 4))` returns `nil`, as it should, and does not throw a stack limit exception, but if you do not enable it, `(member? 5 '(1 2 3 4))` causes a segfault. WTAF?
+
 ## 20260314
 
 When I put a debugger on it, the stack limit bug proved shallow. 

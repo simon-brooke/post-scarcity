@@ -91,7 +91,7 @@ struct cons_pointer eval_form( struct stack_frame *parent,
             {
                 struct cons_pointer next_pointer =
                     make_empty_frame( parent_pointer );
-                // inc_ref( next_pointer );
+
                 if ( exceptionp( next_pointer ) ) {
                     result = next_pointer;
                 } else {
@@ -275,7 +275,6 @@ eval_lambda( struct cons_space_object *cell, struct stack_frame *frame,
 
             names = c_cdr( names );
         }
-//        inc_ref( new_env );
 
         /* \todo if there's more than `args_in_frame` arguments, bind those too. */
     } else if ( symbolp( names ) ) {
@@ -296,7 +295,6 @@ eval_lambda( struct cons_space_object *cell, struct stack_frame *frame,
         }
 
         new_env = set( names, vals, new_env );
-//        inc_ref( new_env );
     }
 
     while ( !nilp( body ) ) {
@@ -311,9 +309,7 @@ eval_lambda( struct cons_space_object *cell, struct stack_frame *frame,
 
         /* if a result is not the terminal result in the lambda, it's a
          * side effect, and needs to be GCed */
-        if ( !nilp( result ) ) {
-            dec_ref( result );
-        }
+        dec_ref( result );
 
         result = eval_form( frame, frame_pointer, sexpr, new_env );
 
@@ -322,6 +318,7 @@ eval_lambda( struct cons_space_object *cell, struct stack_frame *frame,
         }
     }
 
+    // TODO: I think we do need to dec_ref everything on new_env back to env    
     // dec_ref( new_env );
 
     debug_print( L"eval_lambda returning: \n", DEBUG_LAMBDA );
@@ -346,8 +343,6 @@ struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
 
         struct cons_pointer payload =
             pointer2cell( result ).payload.exception.payload;
-        /* TODO: should name_key also be a privileged keyword? */
-        struct cons_pointer name_key = c_string_to_lisp_keyword( L"name" );
 
         switch ( get_tag_value( payload ) ) {
             case NILTV:
@@ -358,7 +353,7 @@ struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
                                         payload ) ) ) {
                         pointer2cell( result ).payload.exception.payload =
                             set( privileged_keyword_location,
-                                 c_assoc( name_key,
+                                 c_assoc( privileged_keyword_name,
                                           fn_cell->payload.function.meta ),
                                  payload );
                     }
@@ -367,15 +362,13 @@ struct cons_pointer maybe_fixup_exception_location( struct cons_pointer r,
             default:
                 pointer2cell( result ).payload.exception.payload =
                     make_cons( make_cons( privileged_keyword_location,
-                                          c_assoc( name_key,
+                                          c_assoc( privileged_keyword_name,
                                                    fn_cell->payload.function.
                                                    meta ) ),
                                make_cons( make_cons
                                           ( privileged_keyword_payload,
                                             payload ), NIL ) );
         }
-
-        dec_ref( name_key );
     }
 
     return result;
@@ -415,7 +408,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     struct cons_pointer exep = NIL;
                     struct cons_pointer next_pointer =
                         make_stack_frame( frame_pointer, args, env );
-//                    inc_ref( next_pointer );
+
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -446,7 +439,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                     struct cons_pointer exep = NIL;
                     struct cons_pointer next_pointer =
                         make_stack_frame( frame_pointer, args, env );
-//                    inc_ref( next_pointer );
+
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -475,7 +468,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 {
                     struct cons_pointer next_pointer =
                         make_special_frame( frame_pointer, args, env );
-//                    inc_ref( next_pointer );
+
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -492,7 +485,7 @@ c_apply( struct stack_frame *frame, struct cons_pointer frame_pointer,
                 {
                     struct cons_pointer next_pointer =
                         make_special_frame( frame_pointer, args, env );
-                    // inc_ref( next_pointer );
+
                     if ( exceptionp( next_pointer ) ) {
                         result = next_pointer;
                     } else {
@@ -580,7 +573,7 @@ lisp_eval( struct stack_frame *frame, struct cons_pointer frame_pointer,
                                          message, frame_pointer );
                 } else {
                     result = c_assoc( canonical, env );
-                    inc_ref( result );
+//                    inc_ref( result );
                 }
             }
             break;
@@ -1196,7 +1189,7 @@ c_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     while ( consp( expressions ) ) {
         struct cons_pointer r = result;
-        inc_ref( r );
+
         result = eval_form( frame, frame_pointer, c_car( expressions ), env );
         dec_ref( r );
 
@@ -1227,7 +1220,6 @@ lisp_progn( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     for ( int i = 0; i < args_in_frame && !nilp( frame->arg[i] ); i++ ) {
         struct cons_pointer r = result;
-        inc_ref( r );
 
         result = eval_form( frame, frame_pointer, frame->arg[i], env );
 
@@ -1672,7 +1664,6 @@ struct cons_pointer lisp_mapcar( struct stack_frame *frame,
     for ( struct cons_pointer c = frame->arg[1]; truep( c ); c = c_cdr( c ) ) {
         struct cons_pointer expr =
             make_cons( frame->arg[0], make_cons( c_car( c ), NIL ) );
-        inc_ref( expr );
 
         debug_printf( DEBUG_EVAL, L"Mapcar %d, evaluating ", i );
         debug_print_object( expr, DEBUG_EVAL );

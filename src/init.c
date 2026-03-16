@@ -47,11 +47,12 @@
  */
 struct cons_pointer check_exception( struct cons_pointer pointer,
                                      char *location_descriptor ) {
-    struct cons_pointer result = NIL;
-
-    struct cons_space_object *object = &pointer2cell( pointer );
+    struct cons_pointer result = pointer;
 
     if ( exceptionp( pointer ) ) {
+        struct cons_space_object * object = &pointer2cell( pointer);
+        result = NIL;
+        
         fprintf( stderr, "ERROR: Exception at %s: ", location_descriptor );
         URL_FILE *ustderr = file_to_url_file( stderr );
         fwide( stderr, 1 );
@@ -59,27 +60,21 @@ struct cons_pointer check_exception( struct cons_pointer pointer,
         free( ustderr );
 
         dec_ref( pointer );
-    } else {
-        result = pointer;
     }
 
     return result;
 }
 
-struct cons_pointer init_documentation_symbol = NIL;
-struct cons_pointer init_name_symbol = NIL;
-struct cons_pointer init_primitive_symbol = NIL;
-
 void maybe_bind_init_symbols(  ) {
-    if ( nilp( init_documentation_symbol ) ) {
-        init_documentation_symbol =
+    if ( nilp( privileged_keyword_documentation ) ) {
+        privileged_keyword_documentation =
             c_string_to_lisp_keyword( L"documentation" );
     }
-    if ( nilp( init_name_symbol ) ) {
-        init_name_symbol = c_string_to_lisp_keyword( L"name" );
+    if ( nilp( privileged_keyword_name ) ) {
+        privileged_keyword_name = c_string_to_lisp_keyword( L"name" );
     }
-    if ( nilp( init_primitive_symbol ) ) {
-        init_primitive_symbol = c_string_to_lisp_keyword( L"primitive" );
+    if ( nilp( privileged_keyword_primitive ) ) {
+        privileged_keyword_primitive = c_string_to_lisp_keyword( L"primitive" );
     }
     if ( nilp( privileged_symbol_nil ) ) {
         privileged_symbol_nil = c_string_to_lisp_symbol( L"nil" );
@@ -102,9 +97,9 @@ void maybe_bind_init_symbols(  ) {
 }
 
 void free_init_symbols(  ) {
-    dec_ref( init_documentation_symbol );
-    dec_ref( init_name_symbol );
-    dec_ref( init_primitive_symbol );
+    dec_ref( privileged_keyword_documentation );
+    dec_ref( privileged_keyword_name );
+    dec_ref( privileged_keyword_primitive );
 }
 
 /**
@@ -124,10 +119,10 @@ struct cons_pointer bind_function( wchar_t *name,
     struct cons_pointer d = c_string_to_lisp_string( doc );
 
     struct cons_pointer meta =
-        make_cons( make_cons( init_primitive_symbol, TRUE ),
-                   make_cons( make_cons( init_name_symbol, n ),
+        make_cons( make_cons( privileged_keyword_primitive, TRUE ),
+                   make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( init_documentation_symbol, d ),
+                                         ( privileged_keyword_documentation, d ),
                                          NIL ) ) );
 
     struct cons_pointer r =
@@ -153,10 +148,10 @@ struct cons_pointer bind_special( wchar_t *name,
     struct cons_pointer d = c_string_to_lisp_string( doc );
 
     struct cons_pointer meta =
-        make_cons( make_cons( init_primitive_symbol, TRUE ),
-                   make_cons( make_cons( init_name_symbol, n ),
+        make_cons( make_cons( privileged_keyword_primitive, TRUE ),
+                   make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( init_documentation_symbol, d ),
+                                         ( privileged_keyword_documentation, d ),
                                          NIL ) ) );
 
     struct cons_pointer r =
