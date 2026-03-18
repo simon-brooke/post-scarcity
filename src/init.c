@@ -454,7 +454,7 @@ int main( int argc, char *argv[] ) {
                    &lisp_print );
     bind_function( L"println",
                    L"`(println stream)`: Print a new line character to `stream`, if specified, else to `*out*`.",
-                   &lisp_print );
+                   &lisp_println );
     bind_function( L"put!", L"", lisp_hashmap_put );
     bind_function( L"put-all!",
                    L"`(put-all! dest source)`: If `dest` is a namespace and is writable, copies all key-value pairs from `source` into `dest`.",

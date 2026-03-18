@@ -60,6 +60,7 @@ output=`target/psse $1 <<EOF
   (set! member? 
     (lambda
       (item collection)
+      (progn (print (list "In member; collection is:" collection)) (println))
       (cond
         ((nil? collection) nil)
         ((= item (car collection)) t)

@@ -97,8 +97,8 @@ struct cons_pointer in_make_empty_frame( struct cons_pointer previous,
         frame->depth = depth;
 
         /*
-         * clearing the frame with memset would probably be slightly quicker, but
-         * this is clear.
+         * The frame has already been cleared with memset in make_vso, but our
+         * NIL is not the same as C's NULL.
          */
         frame->more = NIL;
         frame->function = NIL;

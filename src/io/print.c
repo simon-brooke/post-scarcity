@@ -350,8 +350,6 @@ lisp_println( struct stack_frame *frame, struct cons_pointer frame_pointer,
         output = pointer2cell( out_stream ).payload.stream.stream;
 
         println( output );
-
-        free( output );
     }
 
     return NIL;
