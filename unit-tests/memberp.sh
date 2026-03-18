@@ -3,7 +3,7 @@
 result=0
 
 expected='t'
-output=`target/psse <<EOF
+output=`target/psse $1 <<EOF
 (progn
   (set! nil? (lambda (o) (= (type o) "NIL ")))
   (set! member? 
@@ -17,7 +17,7 @@ output=`target/psse <<EOF
 EOF`
 actual=`echo $output | tail -1`
 
-echo -n "$?: (member? 1 '(1 2 3 4))... "
+echo -n "$0 $1: (member? 1 '(1 2 3 4))... "
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -28,7 +28,7 @@ else
 fi
 
 expected='t'
-output=`target/psse <<EOF
+output=`target/psse $1 <<EOF
 (progn
   (set! nil? (lambda (o) (= (type o) "NIL ")))
   (set! member? 
@@ -42,7 +42,7 @@ output=`target/psse <<EOF
 EOF`
 actual=`echo $output | tail -1`
 
-echo -n "$?: (member? 4 '(1 2 3 4))... "
+echo -n "$0: (member? 4 '(1 2 3 4))... "
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -54,7 +54,7 @@ fi
 
 
 expected='nil'
-output=`target/psse <<EOF
+output=`target/psse $1 <<EOF
 (progn
   (set! nil? (lambda (o) (= (type o) "NIL ")))
   (set! member? 
@@ -68,7 +68,7 @@ output=`target/psse <<EOF
 EOF`
 actual=`echo $output | tail -1`
 
-echo -n "$?: (member? 5 '(1 2 3 4))... "
+echo -n "$0: (member? 5 '(1 2 3 4))... "
 
 if [ "${expected}" = "${actual}" ]
 then
@@ -79,13 +79,13 @@ else
 fi
 
 expected='nil'
-output=`target/psse -s100<<EOF
+output=`target/psse $1 -s100<<EOF
 (progn
   (set! nil? (lambda (o) (= (type o) "NIL ")))
   (set! member? 
     (lambda
       (item collection)
-      (print (list "in member?: " 'item item 'collection collection))
+      ;; (print (list "in member?: " 'item item 'collection collection))
       (cond
         ((nil? collection) nil)
         ((= item (car collection)) t)
@@ -94,7 +94,7 @@ output=`target/psse -s100<<EOF
 EOF`
 actual=`echo $output | tail -1`
 
-echo -n "$?: (member? 5 '(1 2 3 4)) with stack limit... "
+echo -n "$0: (member? 5 '(1 2 3 4)) with stack limit... "
 
 if [ "${expected}" = "${actual}" ]
 then

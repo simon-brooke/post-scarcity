@@ -1261,11 +1261,15 @@ struct cons_pointer eval_cond_clause( struct cons_pointer clause,
                                     env ) );
 
 #ifdef DEBUG
-            debug_print( L"\n\t\tclause succeeded; returning: ", DEBUG_EVAL );
+            debug_print( L"\n\t\tCond clause ", DEBUG_EVAL);
+            debug_print_object( clause, DEBUG_EVAL);
+            debug_print( L" succeeded; returning: ", DEBUG_EVAL );
             debug_print_object( result, DEBUG_EVAL );
             debug_println( DEBUG_EVAL );
         } else {
-            debug_print( L"\n\t\tclause failed.\n", DEBUG_EVAL );
+            debug_print( L"\n\t\tCond clause ", DEBUG_EVAL);
+            debug_print_object( clause, DEBUG_EVAL);
+            debug_print( L" failed.\n", DEBUG_EVAL );
 #endif
         }
     } else {

@@ -37,7 +37,7 @@ uint32_t stack_limit = 0;
  * because that way we can be sure the inc_ref happens!
  */
 void set_reg( struct stack_frame *frame, int reg, struct cons_pointer value ) {
-    debug_printf( DEBUG_STACK, L"Setting register %d to ", reg );
+    debug_printf( DEBUG_STACK, L"\tSetting register %d to ", reg );
     debug_print_object( value, DEBUG_STACK );
     debug_println( DEBUG_STACK );
     dec_ref( frame->arg[reg] ); /* if there was anything in that slot
@@ -63,10 +63,10 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
 
     if ( vectorpointp( pointer ) && stackframep( vso ) ) {
         result = ( struct stack_frame * ) &( vso->payload );
-        debug_printf( DEBUG_STACK,
-                      L"get_stack_frame: all good, returning %p\n", result );
+        // debug_printf( DEBUG_STACK,
+        //               L"\nget_stack_frame: all good, returning %p\n", result );
     } else {
-        debug_print( L"get_stack_frame: fail, returning NULL\n", DEBUG_STACK );
+        debug_print( L"\nget_stack_frame: fail, returning NULL\n", DEBUG_STACK );
     }
 
     return result;
@@ -133,6 +133,8 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
     if ( stack_limit == 0 || stack_limit > depth ) {
         result = in_make_empty_frame( previous, depth );
     } else {
+        debug_printf( DEBUG_STACK, 
+            L"WARNING: Exceeded stack limit of %d\n", stack_limit);
         result =
             make_exception( c_string_to_lisp_string
                             ( L"Stack limit exceeded." ), previous );
@@ -182,9 +184,10 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 result = val;
                 break;
             } else {
-                debug_printf( DEBUG_STACK, L"Setting argument %d to ",
+                debug_printf( DEBUG_STACK, L"\tSetting argument %d to ",
                               frame->args );
                 debug_print_object( cell.payload.cons.car, DEBUG_STACK );
+                debug_print(L"\n", DEBUG_STACK);
                 set_reg( frame, frame->args, val );
             }
 
@@ -325,7 +328,7 @@ void dump_frame( URL_FILE *output, struct cons_pointer frame_pointer ) {
         for ( int arg = 0; arg < frame->args; arg++ ) {
             struct cons_space_object cell = pointer2cell( frame->arg[arg] );
 
-            url_fwprintf( output, L"Arg %d:\t%4.4s\tcount: %10u\tvalue: ",
+            url_fwprintf( output, L"\tArg %d:\t%4.4s\tcount: %10u\tvalue: ",
                           arg, cell.tag.bytes, cell.count );
 
             print( output, frame->arg[arg] );
