@@ -191,7 +191,7 @@ struct cons_pointer hashmap_put_all( struct cons_pointer mapp,
             for ( struct cons_pointer pair = c_car( assoc ); !nilp( pair );
                   pair = c_car( assoc ) ) {
                 /* TODO: this is really hammering the memory management system, because
-                 * it will make a new lone for every key/value pair added. Fix. */
+                 * it will make a new clone for every key/value pair added. Fix. */
                 if ( consp( pair ) ) {
                     mapp = hashmap_put( mapp, c_car( pair ), c_cdr( pair ) );
                 } else if ( hashmapp( pair ) ) {
@@ -338,6 +338,7 @@ struct cons_pointer search_store( struct cons_pointer key,
                                             result =
                                                 return_key ? c_car( entry_ptr )
                                                 : c_cdr( entry_ptr );
+                                            break;
                                         }
                                         break;
                                     case HASHTV:
@@ -426,7 +427,7 @@ struct cons_pointer interned( struct cons_pointer key,
 }
 
 /**
- * @brief Implementation of `interned?` in C: predicate wrapped around interned.
+ * @brief Implementation of `interned?` in C.
  * 
  * @param key the key to search for.
  * @param store the store to search in.
@@ -434,7 +435,36 @@ struct cons_pointer interned( struct cons_pointer key,
  */
 struct cons_pointer internedp( struct cons_pointer key,
                                struct cons_pointer store ) {
-    return nilp( interned( key, store ) ) ? NIL : TRUE;
+    struct cons_pointer result = NIL;
+
+    if ( consp( store ) ) {
+        for ( struct cons_pointer pair = c_car( store ); eq( result, NIL) && !nilp( pair );
+                pair = c_car( store ) ) {
+            if ( consp( pair ) ) {
+                if ( equal( c_car( pair), key)) {
+                    // yes, this should be `eq`, but if symbols are correctly 
+                    // interned this will work efficiently, and if not it will
+                    // still work.
+                    result = TRUE; 
+                }
+            } else if ( hashmapp( pair ) ) {
+                result=internedp( key, pair); 
+            } 
+            
+            store = c_cdr( store );
+        }
+    } else if ( hashmapp( store ) ) {
+        struct vector_space_object *map = pointer_to_vso( store );
+
+        for ( int i = 0; i < map->payload.hashmap.n_buckets; i++ ) {
+            for ( struct cons_pointer c = map->payload.hashmap.buckets[i];
+                  !nilp( c ); c = c_cdr( c ) ) {
+                result = internedp( key, c);
+            }
+        }
+    }
+
+    return result;
 }
 
 /**

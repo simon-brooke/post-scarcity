@@ -919,16 +919,25 @@ lisp_internedp( struct stack_frame *frame, struct cons_pointer frame_pointer,
 struct cons_pointer c_keys( struct cons_pointer store ) {
     struct cons_pointer result = NIL;
 
-    if ( hashmapp( store ) ) {
-        result = hashmap_keys( store );
-    } else if ( consp( store ) ) {
-        for ( struct cons_pointer c = store; !nilp( c ); c = c_cdr( c ) ) {
-            result = make_cons( c_car( c ), result );
+    if ( consp( store ) ) {
+        for ( struct cons_pointer pair = c_car( store ); !nilp( pair );
+                pair = c_car( store ) ) {
+            if ( consp( pair ) ) {
+                result = make_cons( c_car( pair), result);
+            } else if ( hashmapp( pair ) ) {
+                result=c_append( hashmap_keys( pair), result);
+            } 
+            
+            store = c_cdr( store );
         }
+    } else if ( hashmapp( store ) ) {
+        result = hashmap_keys( store );
     }
 
     return result;
 }
+
+
 
 struct cons_pointer lisp_keys( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
