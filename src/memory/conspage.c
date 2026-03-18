@@ -67,7 +67,7 @@ struct cons_page *conspages[NCONSPAGES];
 void make_cons_page(  ) {
     struct cons_page *result = NULL;
 
-    if ( initialised_cons_pages < NCONSPAGES) {
+    if ( initialised_cons_pages < NCONSPAGES ) {
         result = malloc( sizeof( struct cons_page ) );
     }
 
@@ -121,7 +121,9 @@ void make_cons_page(  ) {
         initialised_cons_pages++;
     } else {
         fwide( stderr, 1 );
-        fwprintf( stderr, L"FATAL: Failed to allocate memory for cons page %d\n", initialised_cons_pages );
+        fwprintf( stderr,
+                  L"FATAL: Failed to allocate memory for cons page %d\n",
+                  initialised_cons_pages );
         exit( 1 );
     }
 }

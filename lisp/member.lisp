@@ -11,8 +11,8 @@
 (set! member? 
   (lambda
     (item collection)
-    (print (list "in member?: " 'item item 'collection collection) *log*)(println *log*)
+    ;; (print (list "in member?: " 'item item 'collection collection) *log*)(println *log*)
     (cond
       ((nil? collection) nil)
       ((= item (car collection)) t)
-      (t (member? item (CDR collection))))))
+      (t (member? item (cdr collection))))))

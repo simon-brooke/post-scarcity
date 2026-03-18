@@ -84,7 +84,7 @@
  * 
  * Flag interpretation for the value of `verbosity`, defined in `debug.c`, q.v.
  */
- #define DEBUG_EQUAL 512
+#define DEBUG_EQUAL 512
 
 extern int verbosity;
 

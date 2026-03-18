@@ -245,8 +245,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
         debug_print( L"\n", DEBUG_ARITH );
 
         if ( carry == 0 && rv >= 0 && rv < SMALL_INT_LIMIT && is_first_cell ) {
-            result =
-                acquire_integer( ( int64_t ) ( rv & MAX_INTEGER ), NIL ); 
+            result = acquire_integer( ( int64_t ) ( rv & MAX_INTEGER ), NIL );
             break;
         } else {
             struct cons_pointer new = make_integer( 0, NIL );
@@ -262,7 +261,7 @@ struct cons_pointer add_integers( struct cons_pointer a,
             is_first_cell = false;
         }
     }
-    
+
     debug_print( L"add_integers returning: ", DEBUG_ARITH );
     debug_print_object( result, DEBUG_ARITH );
     debug_println( DEBUG_ARITH );

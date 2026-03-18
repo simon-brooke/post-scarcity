@@ -66,7 +66,8 @@ struct stack_frame *get_stack_frame( struct cons_pointer pointer ) {
         // debug_printf( DEBUG_STACK,
         //               L"\nget_stack_frame: all good, returning %p\n", result );
     } else {
-        debug_print( L"\nget_stack_frame: fail, returning NULL\n", DEBUG_STACK );
+        debug_print( L"\nget_stack_frame: fail, returning NULL\n",
+                     DEBUG_STACK );
     }
 
     return result;
@@ -133,8 +134,8 @@ struct cons_pointer make_empty_frame( struct cons_pointer previous ) {
     if ( stack_limit == 0 || stack_limit > depth ) {
         result = in_make_empty_frame( previous, depth );
     } else {
-        debug_printf( DEBUG_STACK, 
-            L"WARNING: Exceeded stack limit of %d\n", stack_limit);
+        debug_printf( DEBUG_STACK,
+                      L"WARNING: Exceeded stack limit of %d\n", stack_limit );
         result =
             make_exception( c_string_to_lisp_string
                             ( L"Stack limit exceeded." ), previous );
@@ -187,7 +188,7 @@ struct cons_pointer make_stack_frame( struct cons_pointer previous,
                 debug_printf( DEBUG_STACK, L"\tSetting argument %d to ",
                               frame->args );
                 debug_print_object( cell.payload.cons.car, DEBUG_STACK );
-                debug_print(L"\n", DEBUG_STACK);
+                debug_print( L"\n", DEBUG_STACK );
                 set_reg( frame, frame->args, val );
             }
 

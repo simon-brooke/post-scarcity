@@ -50,9 +50,9 @@ struct cons_pointer check_exception( struct cons_pointer pointer,
     struct cons_pointer result = pointer;
 
     if ( exceptionp( pointer ) ) {
-        struct cons_space_object * object = &pointer2cell( pointer);
+        struct cons_space_object *object = &pointer2cell( pointer );
         result = NIL;
-        
+
         fprintf( stderr, "ERROR: Exception at %s: ", location_descriptor );
         URL_FILE *ustderr = file_to_url_file( stderr );
         fwide( stderr, 1 );
@@ -74,7 +74,8 @@ void maybe_bind_init_symbols(  ) {
         privileged_keyword_name = c_string_to_lisp_keyword( L"name" );
     }
     if ( nilp( privileged_keyword_primitive ) ) {
-        privileged_keyword_primitive = c_string_to_lisp_keyword( L"primitive" );
+        privileged_keyword_primitive =
+            c_string_to_lisp_keyword( L"primitive" );
     }
     if ( nilp( privileged_symbol_nil ) ) {
         privileged_symbol_nil = c_string_to_lisp_symbol( L"nil" );
@@ -122,7 +123,8 @@ struct cons_pointer bind_function( wchar_t *name,
         make_cons( make_cons( privileged_keyword_primitive, TRUE ),
                    make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( privileged_keyword_documentation, d ),
+                                         ( privileged_keyword_documentation,
+                                           d ),
                                          NIL ) ) );
 
     struct cons_pointer r =
@@ -151,7 +153,8 @@ struct cons_pointer bind_special( wchar_t *name,
         make_cons( make_cons( privileged_keyword_primitive, TRUE ),
                    make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( privileged_keyword_documentation, d ),
+                                         ( privileged_keyword_documentation,
+                                           d ),
                                          NIL ) ) );
 
     struct cons_pointer r =

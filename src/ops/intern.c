@@ -338,13 +338,11 @@ struct cons_pointer search_store( struct cons_pointer key,
                                             result =
                                                 return_key ? c_car( entry_ptr )
                                                 : c_cdr( entry_ptr );
-                                            break;
+                                            goto found;
                                         }
                                         break;
                                     case HASHTV:
                                     case NAMESPACETV:
-                                        // TODO: I think this should be impossible, and we should maybe
-                                        // throw an exception.
                                         result =
                                             hashmap_get( entry_ptr, key,
                                                          return_key );
@@ -414,6 +412,8 @@ struct cons_pointer search_store( struct cons_pointer key,
                                             c_type( key ) ), NIL );
     }
 
+  found:
+
     debug_print( L"search-store: returning `", DEBUG_BIND );
     debug_print_object( result, DEBUG_BIND );
     debug_print( L"`\n", DEBUG_BIND );
@@ -438,19 +438,19 @@ struct cons_pointer internedp( struct cons_pointer key,
     struct cons_pointer result = NIL;
 
     if ( consp( store ) ) {
-        for ( struct cons_pointer pair = c_car( store ); eq( result, NIL) && !nilp( pair );
-                pair = c_car( store ) ) {
+        for ( struct cons_pointer pair = c_car( store );
+              eq( result, NIL ) && !nilp( pair ); pair = c_car( store ) ) {
             if ( consp( pair ) ) {
-                if ( equal( c_car( pair), key)) {
+                if ( equal( c_car( pair ), key ) ) {
                     // yes, this should be `eq`, but if symbols are correctly 
                     // interned this will work efficiently, and if not it will
                     // still work.
-                    result = TRUE; 
+                    result = TRUE;
                 }
             } else if ( hashmapp( pair ) ) {
-                result=internedp( key, pair); 
-            } 
-            
+                result = internedp( key, pair );
+            }
+
             store = c_cdr( store );
         }
     } else if ( hashmapp( store ) ) {
@@ -459,7 +459,7 @@ struct cons_pointer internedp( struct cons_pointer key,
         for ( int i = 0; i < map->payload.hashmap.n_buckets; i++ ) {
             for ( struct cons_pointer c = map->payload.hashmap.buckets[i];
                   !nilp( c ); c = c_cdr( c ) ) {
-                result = internedp( key, c);
+                result = internedp( key, c );
             }
         }
     }

@@ -76,6 +76,6 @@ struct cons_pointer intern( struct cons_pointer key,
                             struct cons_pointer environment );
 
 struct cons_pointer internedp( struct cons_pointer key,
-                               struct cons_pointer store );                            
+                               struct cons_pointer store );
 
 #endif
