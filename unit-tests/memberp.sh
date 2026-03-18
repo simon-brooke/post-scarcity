@@ -53,7 +53,7 @@ else
 fi
 
 
-expected='nil'
+expected='nil'(CDR )
 output=`target/psse $1 <<EOF
 (progn
   (set! nil? (lambda (o) (= (type o) "NIL ")))
@@ -86,7 +86,7 @@ output=`target/psse $1 -s100<<EOF
   (set! member? 
     (lambda
       (item collection)
-      ;; (print (list "in member?: " 'item item 'collection collection))
+      ;; (print (list "in member?: " 'item item 'collection collection) *log*)(println *log*)
       (cond
         ((nil? collection) nil)
         ((= item (car collection)) t)
