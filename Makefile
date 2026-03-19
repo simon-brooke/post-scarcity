@@ -1,5 +1,5 @@
 TARGET ?= target/psse
-SRC_DIRS ?= ./src
+SRC_DIRS ?= ./src/c
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
 HDRS := $(shell find $(SRC_DIRS) -name *.h)
