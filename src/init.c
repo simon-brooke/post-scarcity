@@ -537,7 +537,9 @@ int main( int argc, char *argv[] ) {
     bind_special( L"set!",
                   L"`(set! symbol value namespace)`: Binds `symbol` in  `namespace` to the value of `value`, altering the namespace in so doing, and returns `value`. If `namespace` is not specified, it defaults to the default namespace.",
                   &lisp_set_shriek );
-    bind_special( L"try", L"", &lisp_try );
+    bind_special( L"try",
+                  L"`(try forms... (catch catch-forms...))`: Evaluate `forms` sequentially, and return the value of the last. If an exception is thrown in any, evaluate `catch-forms` sequentially in an environment in which `*exception*` is bound to that exception, and return the value of the last of these.",
+                  &lisp_try );
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 
