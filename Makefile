@@ -50,7 +50,7 @@ coredumps:
 	ulimit -c unlimited
 
 repl:
-	$(TARGET) -p 2> psse.log
+	$(TARGET) -ps1000 2> tmp/psse.log
 
 
 -include $(DEPS)

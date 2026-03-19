@@ -38,25 +38,59 @@ This project is necessarily experimental and exploratory. I write code, it revea
 
 ## Building
 
-The substrate of this system is written in plain old fashioned C and built with a Makefile. I regret this decision; I think either Zig or Rust would have been better places to start; but neither of them were sufficiently well developed to support what I wanted to do when I did start.
+The substrate of this version is written in plain old fashioned C and built with a Makefile. I regret this decision; I think either Zig or Rust would have been better places to start; but neither of them were sufficiently well developed to support what I wanted to do when I did start.
 
 To build, you need a C compiler; I use GCC, others may work. You need a make utility; I use GNU Make. You need [libcurl](https://curl.se/libcurl/).
 
 With these dependencies in place, clone the repository from [here](https://git.journeyman.cc/simon/post-scarcity/), and run `make` in the resulting project directory. If all goes well you will find and executable, `psse`, in the target directory.
 
+This has been developed on Debian but probably builds on any 64 bit UN*X; however I do **not** guarantee this.
+
+### Make targets
+
+#### default
+
+The default `make` target will produce an executable as `target/psse`.
+
+#### clean
+
+`make clean` will remove all compilation detritus; it will also remove temporary files.
+
+#### doc
+
+`make doc` will generate documentation in the `doc` directory. Depends on `doxygen` being present on your system.
+
+#### format
+
+`make format` will standardise the formay of C code. Depends on the GNU `indent` program being present on your system.
+
+#### REPL
+
+`make repl` will start a read-eval-print loop. `*log*` is directed to `tmp/psse.log`.
+
+#### test
+
+`make test` will run all unit tests.
+
 ## In use
 
 What works just now is a not very good, not very efficient Lisp interpreter which does not conform to any existing Lisp standard. You can start a REPL, and you can write and evaluate functions. You can't yet save or load your functions. It's interesting mainly because of its architecture, and where it's intended to go, rather than where it is now.
 
+### Documentation
+
+There is [documentation](https://www.journeyman.cc/post-scarcity/doc/html/).
+
 ### Invoking
 
-When invoking the system, the following invocation arguments may be passed:
+The binary is canonically named `psse`. When invoking the system, the following invocation arguments may be passed:
 ```
         -d      Dump memory to standard out at end of run (copious!);
         -h      Print this message and exit;
         -p      Show a prompt (default is no prompt);
+        -s LIMIT
+                Set a limit to the depth the stack can extend to;
         -v LEVEL
-                Set verbosity to the specified level (0...512)
+                Set verbosity to the specified level (0...1024)
                 Where bits are interpreted as follows:
                 1       ALLOC;
                 2       ARITH;
@@ -66,7 +100,8 @@ When invoking the system, the following invocation arguments may be passed:
                 32      INPUT/OUTPUT;
                 64      LAMBDA;
                 128     REPL;
-                256     STACK.
+                256     STACK;
+                512     EQUAL.
 ```
 
 Note that any verbosity level produces a great deal of output, and although standardising the output to make it more legible is something I'm continually working on, it's still hard to read the output. It is printed to stderr, so can be redirected to a file for later analysis, which is the best plan.
@@ -77,7 +112,10 @@ The following functions are provided as of release 0.0.6:
 
 | Symbol | Type | Documentation |
 | ------ | ---- | ------------- |
-| * | FUNC | `(* args...)` Multiplies these `args`, all of which should be numbers, and return the product. |
+| `*` | FUNC | `(* args...)` Multiplies these `args`, all of which should be numbers, and return the product. |
+| `*in*` | READ | The standard input stream. |
+| `*log*` | WRIT | The standard logging stream (stderr). |
+| `*out*` | WRIT | The standard output stream. |
 | + | FUNC | `(+ args...)`: If `args` are all numbers, returns the sum of those numbers. |
 | - | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
 | / | FUNC | `(/ a b)`: Divides `a` by `b` and returns the result. Expects both arguments to be numbers. |
@@ -112,7 +150,7 @@ The following functions are provided as of release 0.0.6:
 | multiply | FUNC | `(multiply args...)` Multiply these `args`, all of which should be numbers, and return the product. |
 | negative? | FUNC | `(negative? n)`: Return `t` if `n` is a negative number, else `nil`. |
 | nlambda | SPFM | `(nlamda arg-list forms...)`: Construct an interpretable special form. When the form is interpreted, arguments specified in the `arg-list` will not be evaluated. |
-| not | FUNC | `(not arg)`: Return`t` only if `arg` is `nil`, else `nil`. |
+| not | FUNC | `(not arg)`: Return `t` only if `arg` is `nil`, else `nil`. |
 | nλ | SPFM | `(nlamda arg-list forms...)`: Construct an interpretable special form. When the form is interpreted, arguments specified in the `arg-list` will not be evaluated. |
 | oblist | FUNC | `(oblist)`: Return the current top-level symbol bindings, as a map. |
 | open | FUNC | `(open url write?)`: Open a stream to this `url`. If `write?` is present and is non-nil, open it for writing, else reading. |
@@ -127,14 +165,26 @@ The following functions are provided as of release 0.0.6:
 | read-char | FUNC | `(read-char stream)`: Return the next character. If `stream` is specified and is a read stream, then read from that stream, else the stream which is the value of  `*in*` in the environment. |
 | repl | FUNC | `(repl prompt input output)`: Starts a new read-eval-print-loop. All arguments are optional. If `prompt` is present, it will be used as the prompt. If `input` is present and is a readable stream, takes input from that stream. If `output` is present and is a writable stream, prints output to that stream. |
 | reverse | FUNC | `(reverse sequence)` Returns a sequence of the top level elements of this `sequence`, which may be a list or a string, in the reverse order. |
-| set | FUNC | null |
+| set | FUNC | `(set symbol value namespace)`: Binds the value `symbol` in the specified  `namespace` to the value of `value`, altering the namespace in so doing, and returns `value`. If `namespace` is not specified, it defaults to the default namespace. |
 | set! | SPFM | `(set! symbol value namespace)`: Binds `symbol` in  `namespace` to the value of `value`, altering the namespace in so doing, and returns `value`. If `namespace` is not specified, it defaults to the default namespace. |
 | slurp | FUNC | `(slurp read-stream)` Read all the characters from `read-stream` to the end of stream, and return them as a string. |
 | source | FUNC | `(source  object)`: If `object` is an interpreted function or interpreted special form, returns the source code; else nil. Once we get a compiler working, will also return the source code of compiled functions and special forms. |
 | subtract | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
-| throw | FUNC | null |
+| throw | FUNC | `(throw message cause)`: Throw an exception with this `message`, and, if specified, this `cause` (which is expected to be an exception but need not be).|
 | time | FUNC | `(time arg)`: Return a time object. If an `arg` is supplied, it should be an integer which will be interpreted as a number of microseconds since the big bang, which is assumed to have happened 441,806,400,000,000,000 seconds before the UNIX epoch. |
-| try | SPFM | null |
+| try | SPFM | `(try forms... (catch symbol forms...))`: Doesn't work yet! |
 | type | FUNC | `(type object)`: returns the type of the specified `object`. Currently (0.0.6) the type is returned as a four character string; this may change. |
-| λ | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; funtion. |
+| λ | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; function. |
+
+## Known bugs 
+
+The following bugs are known in 0.0.6:
+
+1. bignum arithmetic does not work (returns wrong answers, does not throw exception);
+2. subtraction of ratios is broken (returns wrong answers, does not throw exception);
+3. equality of hashmaps is broken (returns wrong answers, does not throw exception);
+4. The garbage collector doesn't work at all well.
+
+There are certainly very many unknown bugs.
+
 

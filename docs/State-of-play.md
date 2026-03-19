@@ -1,5 +1,19 @@
 # State of Play
 
+## 20260319
+
+Right, the `member?` bug [is fixed](https://git.journeyman.cc/simon/post-scarcity/issues/11).
+There are, of course, lots more bugs. But I nevertheless propose to release
+0.0.6 **now**, because there will always be more bugs, quite a lot works, and
+I'm thinking about completely rearchitecting the memory system and, at the same
+time, trying once more to move away from C.
+
+The reasons are given in [this essay](The-worlds-slowest-ever-rapid-prototype.md).
+
+This, of course, completely invalidates the [roadmap](Roadmap.md) that I wrote 
+less than a month ago, but that's because I really have been thinking seriously
+about the future of this project. 
+
 ## 20260316
 
 OK, where we're at: 

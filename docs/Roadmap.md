@@ -15,6 +15,41 @@ However, while I will fix bugs where I can, it's good enough for other people to
 
 ## Next major milestones
 
+### New substrate language?
+
+I really don't feel competent to write the substrate in C, and I don't think 
+that what exists of the substrate is of sufficient quality. It's too big and
+too complex. I think what the system needs is a smaller substrate written in
+a more modern language. 
+
+I propose to evaluate both [Zig](https://ziglang.org/) and 
+[Rust](https://rust-lang.org/), and see whether I can feel more productive in
+either of those. 
+
+### Smaller substrate
+
+However, I also think the substrate ought to be smaller. I
+do not think the substrate should include things like bignum or ratio 
+arithmetic, for example. I'm not convinced that it should include things like
+hashmaps. If these things are to be written in Lisp, though, it means that 
+there have to be Lisp functions which manipulate memory a long way below the
+'[don't know, don't care](Post-scarcity-software.md#store-name-and-value)' 
+dictum; this means that these functions have to be system private. But they
+can be, because access control lists on arbitrary objects have always been
+part of this architecture.
+
+### The 0.1.0 branch
+
+I'm therefore proposing, immediately, to upversion the `develop` branch to
+0.1.0, and restart pretty much from scratch. For now, the C code will remain in
+the development tree, and I may fix bugs which annoy me (and possibly other
+people), but I doubt there now will be a 0.0.7 release, unless I decide that
+the new substrate languages are a bust. 
+
+So release 0.1.0, which I'll target for 1<sup>st</sup> January 2027, will 
+essentially be a Lisp interpreter running on the new substrate and memory
+architecture, without any significant new features.
+
 ### Simulated hypercube
 
 There is really no point to this whole project while it remains a single thread running on a single processor. Until I can pass off computation to peer neighbours, I can't begin to understand what the right strategies are for when to do so.
@@ -27,11 +62,11 @@ For most other things, my hunch is that you pass args which are not self-evaluat
 
 But before that can happen, we need a router on each node which can monitor concurrent traffic on six bidirectional links. I think at least initially what gets written across those links is just S-expressions.
 
-I think a working simulated hypercube is the key milestone for version 0.0.7.
+I think a working simulated hypercube is the key milestone for version 0.1.1.
 
 ### Sysout, sysin, and system persistance
 
-Doctrine is that the post scarcity computing environment doesn't have a file system, but nevertheless we need some way of making an image of a working system so that, after a catastrophic crash or a power outage, it can be brought back up to a known good state. This also really needs to be in 0.0.7. 
+Doctrine is that the post scarcity computing environment doesn't have a file system, but nevertheless we need some way of making an image of a working system so that, after a catastrophic crash or a power outage, it can be brought back up to a known good state. This also really needs to be in 0.1.1. 
 
 ### Better command line experience
 
@@ -39,7 +74,7 @@ The current command line experience is embarrassingly poor. Recallable input his
 
 ### Users, groups and ACLs
 
-Allowing multiple users to work together within the same post scarcity computing environment while retaining security and privacy is a major goal. So working out ways for users to sign on and be authenticated, and to configure their own environment, and to set up their own access control lists on objects they create, needs to be another nearish term goal. Probably 0.0.8.
+Allowing multiple users to work together within the same post scarcity computing environment while retaining security and privacy is a major goal. So working out ways for users to sign on and be authenticated, and to configure their own environment, and to set up their own access control lists on objects they create, needs to be another nearish term goal. Probably 0.1.2.
 
 ### Homogeneities, regularities, slots, migration, permeability
 

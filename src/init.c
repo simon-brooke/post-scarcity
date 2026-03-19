@@ -487,7 +487,9 @@ int main( int argc, char *argv[] ) {
     bind_function( L"subtract",
                    L"`(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers.",
                    &lisp_subtract );
-    bind_function( L"throw", L"", &lisp_exception );
+    bind_function( L"throw",
+                   L"`(throw message cause)`: Throw an exception with this `message`, and, if specified, this `cause` (which is expected to be an exception but need not be).",
+                   &lisp_exception );
     bind_function( L"time",
                    L"`(time arg)`: Return a time object. If an `arg` is supplied, it should be an integer which will be interpreted as a number of microseconds since the big bang, which is assumed to have happened 441,806,400,000,000,000 seconds before the UNIX epoch.",
                    &lisp_time );
