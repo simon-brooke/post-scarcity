@@ -3,7 +3,7 @@
 *Antecedents for this essay:
 
 1. [Reference counting, and the garbage collection of equal sized objects](https://www.journeyman.cc/blog/posts-output/2013-08-25-reference-counting-and-the-garbage-collection-of-equal-sized-objects/);
-2. [Vector space, Pages, Mark-but-don't-sweep, and the world's slowest ever rapid prototype](https://www.journeyman.cc/blog/posts-output/2026-03-13-The-worlds-slowest-ever-rapid-prototype/).
+2. [Vector space, Pages, Mark-but-don't-sweep, and the world's slowest ever rapid prototype](https://www.journeyman.cc/blog/posts-output/2026-03-13-The-worlds-slowest-ever-rapid-prototype/).*
 
 The post-scarcity software environment needs to store data in objects. Much of the data will be in objects which will fit in the memory footpring ot a cons cell, but some won't, and those that won't will be in a variety of sizes. 
 
