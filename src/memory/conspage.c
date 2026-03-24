@@ -65,7 +65,11 @@ struct cons_page *conspages[NCONSPAGES];
  * that exception would have to have been pre-built.
  */
 void make_cons_page(  ) {
-    struct cons_page *result = malloc( sizeof( struct cons_page ) );
+    struct cons_page *result = NULL;
+
+    if ( initialised_cons_pages < NCONSPAGES ) {
+        result = malloc( sizeof( struct cons_page ) );
+    }
 
     if ( result != NULL ) {
         conspages[initialised_cons_pages] = result;
@@ -116,12 +120,12 @@ void make_cons_page(  ) {
 
         initialised_cons_pages++;
     } else {
-        debug_printf( DEBUG_ALLOC,
-                      L"FATAL: Failed to allocate memory for cons page %d\n",
-                      initialised_cons_pages );
+        fwide( stderr, 1 );
+        fwprintf( stderr,
+                  L"FATAL: Failed to allocate memory for cons page %d\n",
+                  initialised_cons_pages );
         exit( 1 );
     }
-
 }
 
 /**
@@ -250,8 +254,9 @@ struct cons_pointer allocate_cell( uint32_t tag ) {
             total_cells_allocated++;
 
             debug_printf( DEBUG_ALLOC,
-                          L"Allocated cell of type '%4.4s' at %d, %d \n",
-                          cell->tag.bytes, result.page, result.offset );
+                          L"Allocated cell of type %4.4s at %u, %u \n",
+                          ( ( char * ) cell->tag.bytes ), result.page,
+                          result.offset );
         } else {
             debug_printf( DEBUG_ALLOC, L"WARNING: Allocating non-free cell!" );
         }

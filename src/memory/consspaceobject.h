@@ -57,6 +57,42 @@
 #define EXCEPTIONTV 1346721861
 
 /**
+ * Keywords used when constructing exceptions: `:location`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_location;
+
+/**
+ * Keywords used when constructing exceptions: `:payload`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_payload;
+
+/**
+ * Keywords used when constructing exceptions: `:cause`. Instantiated in 
+ * `init.c`.
+ */
+extern struct cons_pointer privileged_keyword_cause;
+
+/**
+ * @brief keywords used in documentation: `:documentation`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_documentation;
+
+/**
+ * @brief keywords used in documentation: `:name`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_name;
+
+/**
+ * @brief keywords used in documentation: `:primitive`. Instantiated in 
+ * `init.c`, q. v.
+ */
+extern struct cons_pointer privileged_keyword_primitive;
+
+/**
  * An unallocated cell on the free list - should never be encountered by a Lisp
  * function.
  */
@@ -189,7 +225,7 @@
 #define READTV      1145128274
 
 /**
- * A real number, represented internally as an IEEE 754-2008 `binary64`.
+ * A real number, represented internally as an IEEE 754-2008 `binary128`.
  */
 #define REALTAG     "REAL"
 
@@ -221,7 +257,7 @@
 #define STRINGTV    1196577875
 
 /**
- * A symbol is just like a string except not self-evaluating.
+ * A symbol is just like a keyword except not self-evaluating.
  */
 #define SYMBOLTAG   "SYMB"
 
@@ -444,6 +480,8 @@ struct stack_frame {
     struct cons_pointer function;
     /** the number of arguments provided. */
     int args;
+    /** the depth of the stack below this frame */
+    int depth;
 };
 
 /**
@@ -709,6 +747,11 @@ bool check_tag( struct cons_pointer pointer, uint32_t value );
 struct cons_pointer inc_ref( struct cons_pointer pointer );
 
 struct cons_pointer dec_ref( struct cons_pointer pointer );
+
+/**
+ * given a cons_pointer as argument, return the tag.
+ */
+uint32_t get_tag_value( struct cons_pointer pointer );
 
 struct cons_pointer c_type( struct cons_pointer pointer );
 

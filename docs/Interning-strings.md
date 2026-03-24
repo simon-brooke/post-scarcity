@@ -12,57 +12,49 @@ causes an unbound variable exception to be thrown, while
 
 returns the value **"froboz"**. This begs the question of whether there's any difference between **"froboz"** and **'froboz**, and the answer is that at this point I don't know.
 
-There will be a concept of a root [namespace](Namespace.html), in which other namespaces may be bound recursively to form a directed graph. Because at least some namespaces are mutable, the graph is not necessarily acyclic. There will be a concept of a current namespace, that is to say the namespace in which the user is currently working. 
+There will be a concept of a root [namespace](Namespace.md), in which other namespaces may be bound recursively to form a directed graph. Because at least some namespaces are mutable, the graph is not necessarily acyclic. There will be a concept of a current namespace, that is to say the namespace in which the user is currently working. 
 
 There must be some notation to say distinguish a request for the value of a name in the root namespace and the value of a name in the current namespace. For now I'm proposing that:
 
-    (eval froboz)
+    (eval 'froboz)
 
 will return the value that **froboz** is bound to in the current namespace;
 
-    (eval .froboz)
+    (eval ::/froboz)
 
 will return the value that **froboz** is bound to in the root namespace;
 
-    (eval foobar.froboz)
+    (eval 'foobar/froboz)
 
 will return the value that **froboz** is bound to in a namespace which is the value of the name **foobar** in the current namespace; and that
 
-    (eval .system.users.simon.environment.froboz)
+    (eval ::users:simon:environment/froboz)
 
-will return the value that **froboz** is bound to in the environment of the user of the system called **simon**.
+will return the value that **froboz** is bound to in the environment of the user of the system called **simon** (if that is readable by you).
 
-The exact path separator syntax may change, but the principal that when interning a symbol it is broken down into a path of tokens, and that the value of each token is sought in a namespace bound to the previous token, is likely to remain.
+The [exact path separator syntax](Paths.md) may change, but the principal that when interning a symbol it is broken down into a path of tokens, and that the value of each token is sought in a namespace bound to the previous token, is likely to remain.
 
-Obviously if **froboz** is interned in one namespace it is not necessarily interned in another, and vice versa. There's a potentially nasty problem here that two lexically identical strings might be bound in different namespaces, so that there is not one canonical interned **froboz**; if this turns out to cause problems in practice there will need to be a separate canonical [hashtable](Hashtable.html) of individual path elements.
+Obviously if **froboz** is interned in one namespace it is not necessarily interned in another, and vice versa. There's a potentially nasty problem here that two lexically identical strings might be bound in different namespaces, so that there is not one canonical interned **froboz**; if this turns out to cause problems in practice there will need to be a separate canonical [hashtable](Hashtable.md) of individual path elements.
 
 Obviously this means there may be arbitrarily many paths which reference the same data item. This is intended.
 
 ## Related functions
 
-### (intern! string)
+### (intern! path)
 
-Binds *string*, considered as a path, to **NIL**. If some namespace along the path doesn't exist, throws an exception. Obviously if the current user is not entitled to write to the terminal namespace, also throws an exception.
+Binds *path* to **NIL**. If some namespace along the path doesn't exist, throws an exception. Obviously if the current user is not entitled to write to the terminal namespace, also throws an exception.
 
-### (intern! string T)
+### (intern! path T)
 
-Binds *string*, considered as a path, to **NIL**. If some namespace along the path doesn't exist, create it as the current user with both read and write [access control](Access-control.html) lists taken from the current binding of **friends** in the current environment. Obviously if the current user is not entitled to write to the last pre-existing namespace, throws an exception.
-
-### (intern! string T write-access-list)
-
-Binds *string*, considered as a path, to **NIL**. If some namespace along the path doesn't exist, create it as the current user with the read [access control](https://www.journeyman.cc/blog/posts-output/2006-02-20-postscarcity-software/) list taken from the current binding of **friends** in the current environment, and the write access control list taken from the value of *write-access-list*. Obviously if the current user is not entitled to write to the last pre-existing namespace, throws an exception.
+Binds *path* to **NIL**. If some namespace along the path doesn't exist, create it as the current user with both read and write [access control](Access-control.html) lists taken from the current binding of **:friends** in the current environment. Obviously if the current user is not entitled to write to the last pre-existing namespace, throws an exception.
 
 ### (set! string value)
 
-Binds *string*, considered as a path, to *value*. If some namespace along the path doesn't exist, throws an exception. Obviously if the current user is not entitled to write to the terminal namespace, also throws an exception.
+Binds *path* to *value*. If some namespace along the path doesn't exist, throws an exception. Obviously if the current user is not entitled to write to the terminal namespace, also throws an exception.
 
 ### (set! string value T)
 
 Binds *string*, considered as a path, to *value*. If some namespace along the path doesn't exist, create it as the current user with both read and write [access control](Access-control.html) lists taken from the current binding of **friends** in the current environment. Obviously if the current user is not entitled to write to the last pre-existing namespace, throws an exception.
-
-### (set! string value T write-access-list)
-
-Binds *string*, considered as a path, to *value*. If some namespace along the path doesn't exist, create it as the current user with the read [access control](Access-control.html) list taken from the current binding of **friends** in the current environment, and the write access control list taken from the value of *write-access-list*. Obviously if the current user is not entitled to write to the last pre-existing namespace, throws an exception.
 
 ### (put! string token value)
 
@@ -71,16 +63,16 @@ Considers *string* as the path to some namespace, and binds *token* in that name
 ### (string-to-path string)
 
 Behaviour as follows:
-    (string-to-path "foo.bar.ban") => ("foo" "bar" "ban")
-    (string-to-path ".foo.bar.ban") => ("" "foo" "bar" "ban")
+    (string-to-path ":foo:bar/ban") => (-> (environment) :foo :bar 'ban)
+    (string-to-path "::foo:bar/ban") => (-> (oblist) :foo :bar 'ban)
 
-Obviously if the current user can't read the string, throws an exception.
+Obviously if the current user can't read the string, throws an exception. `(oblist)` is currently (version 0.0.6) a function which returns the current value of the root namespace; `(environment)` is a proposed function which returns the current value of the environment of current user (with possibly `(environmnt user-name)` returning the value of the environment of the user indicated by `user-name`, if that is readable by you). The symbol `->` represents a threading macro [similar to Clojure's](https://clojuredocs.org/clojure.core/-%3E).
 
 ### (path-to-string list-of-strings)
 
 Behaviour as follows:
-    (path-to-string '("foo" "bar" "ban")) => "foo.bar.ban"
-    (path-to-string '("" "foo" "bar" "ban")) => ".foo.bar.ban"
+    (path-to-string '(:foo :bar 'ban)) => ":foo:bar/ban"
+    (path-to-string '("" :foo :bar 'ban)) => "::foo:bar/ban"
 
 Obviously if the current user can't read some element of *list-of-strings*, throws an exception.
 

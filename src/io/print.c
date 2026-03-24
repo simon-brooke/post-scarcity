@@ -101,7 +101,7 @@ void print_map( URL_FILE *output, struct cons_pointer map ) {
             struct cons_pointer key = c_car( ks );
             print( output, key );
             url_fputwc( btowc( ' ' ), output );
-            print( output, hashmap_get( map, key ) );
+            print( output, hashmap_get( map, key, false ) );
 
             if ( !nilp( c_cdr( ks ) ) ) {
                 url_fputws( L", ", output );
@@ -348,17 +348,8 @@ lisp_println( struct stack_frame *frame, struct cons_pointer frame_pointer,
 
     if ( writep( out_stream ) ) {
         output = pointer2cell( out_stream ).payload.stream.stream;
-        inc_ref( out_stream );
-    } else {
-        output = file_to_url_file( stderr );
-    }
 
-    println( output );
-
-    if ( writep( out_stream ) ) {
-        dec_ref( out_stream );
-    } else {
-        free( output );
+        println( output );
     }
 
     return NIL;

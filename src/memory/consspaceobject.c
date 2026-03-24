@@ -28,6 +28,44 @@
 #include "ops/intern.h"
 
 /**
+ * Keywords used when constructing exceptions: `:location`. Instantiated in 
+ * `init.c`q.v.
+ */
+struct cons_pointer privileged_keyword_location = NIL;
+
+/**
+ * Keywords used when constructing exceptions: `:payload`. Instantiated in 
+ * `init.c`, q.v.
+ */
+struct cons_pointer privileged_keyword_payload = NIL;
+
+/**
+ * Keywords used when constructing exceptions: `:payload`. Instantiated in 
+ * `init.c`, q.v.
+ */
+struct cons_pointer privileged_keyword_cause = NIL;
+
+/**
+ * @brief keywords used in documentation: `:documentation`. Instantiated in 
+ * `init.c`, q. v.
+ * 
+ */
+struct cons_pointer privileged_keyword_documentation = NIL;
+
+/**
+ * @brief keywords used in documentation: `:name`. Instantiated in 
+ * `init.c`, q. v.
+ */
+struct cons_pointer privileged_keyword_name = NIL;
+
+/**
+ * @brief keywords used in documentation: `:primitive`. Instantiated in 
+ * `init.c`, q. v.
+ */
+struct cons_pointer privileged_keyword_primitive = NIL;
+
+
+/**
  * True if the value of the tag on the cell at this `pointer` is this `value`,
  * or, if the tag of the cell is `VECP`, if the value of the tag of the
  * vectorspace object indicated by the cell is this `value`, else false.
@@ -35,11 +73,11 @@
 bool check_tag( struct cons_pointer pointer, uint32_t value ) {
     bool result = false;
 
-    struct cons_space_object cell = pointer2cell( pointer );
-    result = cell.tag.value == value;
+    struct cons_space_object *cell = &pointer2cell( pointer );
+    result = cell->tag.value == value;
 
     if ( result == false ) {
-        if ( cell.tag.value == VECTORPOINTTV ) {
+        if ( cell->tag.value == VECTORPOINTTV ) {
             struct vector_space_object *vec = pointer_to_vso( pointer );
 
             if ( vec != NULL ) {
@@ -66,7 +104,7 @@ struct cons_pointer inc_ref( struct cons_pointer pointer ) {
         cell->count++;
 #ifdef DEBUG
         debug_printf( DEBUG_ALLOC,
-                      L"\nIncremented cell of type %4.4s at page %d, offset %d to count %d",
+                      L"\nIncremented cell of type %4.4s at page %u, offset %u to count %u",
                       ( ( char * ) cell->tag.bytes ), pointer.page,
                       pointer.offset, cell->count );
         if ( strncmp( cell->tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
@@ -117,6 +155,19 @@ struct cons_pointer dec_ref( struct cons_pointer pointer ) {
     }
 
     return pointer;
+}
+
+/**
+ * given a cons_pointer as argument, return the tag.
+ */
+uint32_t get_tag_value( struct cons_pointer pointer ) {
+    uint32_t result = pointer2cell( pointer ).tag.value;
+
+    if ( result == VECTORPOINTTV ) {
+        result = pointer_to_vso( pointer )->header.tag.value;
+    }
+
+    return result;
 }
 
 /**
@@ -387,15 +438,15 @@ struct cons_pointer make_symbol_or_key( wint_t c, struct cons_pointer tail,
     if ( tag == SYMBOLTV || tag == KEYTV ) {
         result = make_string_like_thing( c, tail, tag );
 
-        if ( tag == KEYTV ) {
-            struct cons_pointer r = internedp( result, oblist );
+        // if ( tag == KEYTV ) {
+        //     struct cons_pointer r = interned( result, oblist );
 
-            if ( nilp( r ) ) {
-                intern( result, oblist );
-            } else {
-                result = r;
-            }
-        }
+        //     if ( nilp( r ) ) {
+        //         intern( result, oblist );
+        //     } else {
+        //         result = r;
+        //     }
+        // }
     } else {
         result =
             make_exception( c_string_to_lisp_string

@@ -20,6 +20,9 @@
 #ifndef __intern_h
 #define __intern_h
 
+#include <stdbool.h>
+
+
 extern struct cons_pointer privileged_symbol_nil;
 
 extern struct cons_pointer oblist;
@@ -31,7 +34,7 @@ void free_hashmap( struct cons_pointer ptr );
 void dump_map( URL_FILE * output, struct cons_pointer pointer );
 
 struct cons_pointer hashmap_get( struct cons_pointer mapp,
-                                 struct cons_pointer key );
+                                 struct cons_pointer key, bool return_key );
 
 struct cons_pointer hashmap_put( struct cons_pointer mapp,
                                  struct cons_pointer key,
@@ -46,14 +49,17 @@ struct cons_pointer make_hashmap( uint32_t n_buckets,
                                   struct cons_pointer hash_fn,
                                   struct cons_pointer write_acl );
 
+struct cons_pointer search_store( struct cons_pointer key,
+                                  struct cons_pointer store, bool return_key );
+
 struct cons_pointer c_assoc( struct cons_pointer key,
                              struct cons_pointer store );
 
+struct cons_pointer interned( struct cons_pointer key,
+                              struct cons_pointer environment );
+
 struct cons_pointer internedp( struct cons_pointer key,
                                struct cons_pointer environment );
-
-struct cons_pointer hashmap_get( struct cons_pointer mapp,
-                                 struct cons_pointer key );
 
 struct cons_pointer hashmap_put( struct cons_pointer mapp,
                                  struct cons_pointer key,
@@ -68,5 +74,8 @@ struct cons_pointer deep_bind( struct cons_pointer key,
 
 struct cons_pointer intern( struct cons_pointer key,
                             struct cons_pointer environment );
+
+struct cons_pointer internedp( struct cons_pointer key,
+                               struct cons_pointer store );
 
 #endif

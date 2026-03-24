@@ -21,6 +21,8 @@
 #ifndef __psse_stack_h
 #define __psse_stack_h
 
+#include <stdint.h>
+
 #include "consspaceobject.h"
 #include "conspage.h"
 
@@ -34,6 +36,8 @@
  * is this vector-space object a stack frame?
  */
 #define stackframep(vso)(((struct vector_space_object *)vso)->header.tag.value == STACKFRAMETV)
+
+extern uint32_t stack_limit;
 
 void set_reg( struct stack_frame *frame, int reg, struct cons_pointer value );
 

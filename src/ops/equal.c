@@ -74,7 +74,7 @@ bool equal_ld_ld( long double a, long double b ) {
 
     bool result = ( fabsl( a - b ) < tolerance );
 
-    debug_printf( DEBUG_ARITH, L"\nequal_ld_ld returning %d\n", result );
+    debug_printf( DEBUG_EQUAL, L"\nequal_ld_ld returning %d\n", result );
 
     return result;
 }
@@ -272,7 +272,9 @@ bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
 
         for ( struct cons_pointer i = keys_a; !nilp( i ); i = c_cdr( i ) ) {
             struct cons_pointer key = c_car( i );
-            if ( !equal( hashmap_get( a, key ), hashmap_get( b, key ) ) ) {
+            if ( !equal
+                 ( hashmap_get( a, key, false ),
+                   hashmap_get( b, key, false ) ) ) {
                 result = false;
                 break;
             }
@@ -330,10 +332,10 @@ bool equal_vector_vector( struct cons_pointer a, struct cons_pointer b ) {
  * identical structure, else false.
  */
 bool equal( struct cons_pointer a, struct cons_pointer b ) {
-    debug_print( L"\nequal: ", DEBUG_ARITH );
-    debug_print_object( a, DEBUG_ARITH );
-    debug_print( L" = ", DEBUG_ARITH );
-    debug_print_object( b, DEBUG_ARITH );
+    debug_print( L"\nequal: ", DEBUG_EQUAL );
+    debug_print_object( a, DEBUG_EQUAL );
+    debug_print( L" = ", DEBUG_EQUAL );
+    debug_print_object( b, DEBUG_EQUAL );
 
     bool result = false;
 
@@ -375,8 +377,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     memset( a_buff, 0, sizeof( a_buff ) );
                     memset( b_buff, 0, sizeof( b_buff ) );
 
-                    for ( ;
-                          ( i < ( STRING_SHIPYARD_SIZE - 1 ) ) && !nilp( a )
+                    for ( ; ( i < ( STRING_SHIPYARD_SIZE - 1 ) ) && !nilp( a )
                           && !nilp( b ); i++ ) {
                         a_buff[i] = cell_a->payload.string.character;
                         a = c_cdr( a );
@@ -388,11 +389,11 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                     }
 
 #ifdef DEBUG
-                    debug_print( L"Comparing '", DEBUG_ARITH );
-                    debug_print( a_buff, DEBUG_ARITH );
-                    debug_print( L"' to '", DEBUG_ARITH );
-                    debug_print( b_buff, DEBUG_ARITH );
-                    debug_print( L"'\n", DEBUG_ARITH );
+                    debug_print( L"Comparing '", DEBUG_EQUAL );
+                    debug_print( a_buff, DEBUG_EQUAL );
+                    debug_print( L"' to '", DEBUG_EQUAL );
+                    debug_print( b_buff, DEBUG_EQUAL );
+                    debug_print( L"'\n", DEBUG_EQUAL );
 #endif
 
                     /* OK, now we have wchar string buffers loaded from the objects. We 
@@ -426,7 +427,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
      * I'll ignore them, too, for now.
      */
 
-    debug_printf( DEBUG_ARITH, L"\nequal returning %d\n", result );
+    debug_printf( DEBUG_EQUAL, L"\nequal returning %d\n", result );
 
     return result;
 }

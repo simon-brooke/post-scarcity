@@ -40,7 +40,7 @@ else
 fi
 
 echo -n "$0: the exception is bound to the symbol \`*exception*\` in the catch environment... "
-expected='Exception: "Cannot divide: not a number"'
+expected='Exception: ((:location . /) (:payload . "Cannot divide: not a number"))'
 actual=`echo "(try (:body (+ 2 (/ 1 'a))) (:catch *exception*))" | target/psse 2>&1 | grep Exception`
 
 if [ "${expected}" = "${actual}" ]

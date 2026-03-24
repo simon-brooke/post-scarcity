@@ -33,6 +33,25 @@
 int verbosity = 0;
 
 /**
+ * When debugging, we want to see exceptions as they happen, because they may
+ * not make their way back down the stack to whatever is expected to handle
+ * them.
+ */
+void debug_print_exception( struct cons_pointer ex_ptr ) {
+#ifdef DEBUG
+    if ( ( verbosity != 0 ) && exceptionp( ex_ptr ) ) {
+        fwide( stderr, 1 );
+        fputws( L"EXCEPTION: ", stderr );
+
+        URL_FILE *ustderr = file_to_url_file( stderr );
+        fwide( stderr, 1 );
+        print( ustderr, ex_ptr );
+        free( ustderr );
+    }
+#endif
+}
+
+/**
  * @brief print this debug `message` to stderr, if `verbosity` matches `level`.
  *
  * `verbosity` is a set of flags, see debug_print.h; so you can

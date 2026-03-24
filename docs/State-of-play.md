@@ -1,5 +1,50 @@
 # State of Play
 
+## 20260319
+
+Right, the `member?` bug [is fixed](https://git.journeyman.cc/simon/post-scarcity/issues/11).
+There are, of course, lots more bugs. But I nevertheless propose to release
+0.0.6 **now**, because there will always be more bugs, quite a lot works, and
+I'm thinking about completely rearchitecting the memory system and, at the same
+time, trying once more to move away from C.
+
+The reasons are given in [this essay](The-worlds-slowest-ever-rapid-prototype.md).
+
+This, of course, completely invalidates the [roadmap](Roadmap.md) that I wrote 
+less than a month ago, but that's because I really have been thinking seriously
+about the future of this project. 
+
+## 20260316
+
+OK, where we're at: 
+* The garbage collector is doing *even worse* than it was on 4th 
+February, when I did the last serious look at it. 
+* The bignum bugs are not fixed.
+* You can (optionally) limit runaway stack crashes with a new command line option.
+* If you enable the stack limiter feature, `(member? 5 '(1 2 3 4))` returns `nil`, as it should, and does not throw a stack limit exception, but if you do not enable it, `(member? 5 '(1 2 3 4))` causes a segfault. WTAF?
+
+## 20260314
+
+When I put a debugger on it, the stack limit bug proved shallow. 
+
+I'm tempted to further exercise my debugging skills by having another go at 
+the bignum arithmetic problems.
+
+However, I've been rethinking the roadmap of the project, and written a long
+[blog post about it](https://www.journeyman.cc/blog/posts-output/2026-03-13-The-worlds-slowest-ever-rapid-prototype/). 
+This isn't a finalised decision yet, but it is something I'm thinking about.
+
+## 20260311
+
+I've still been having trouble with runaway recursion &mdash; in `member`, but
+due to a primitive bug I haven't identified &mdash; so this morning I've tried
+to implement a stack limit feature. This has been a real fail at this stage. 
+Many more tests are breaking.
+
+However, I think having a configurable stack limit would be a good thing, so 
+I'm not yet ready to abandon this feature. I need to work out why it's breaking
+things.
+
 ## 20260226
 
 The bug in `member` turned out to be because when a symbol is read by the reader, 

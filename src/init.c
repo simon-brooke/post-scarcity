@@ -47,11 +47,12 @@
  */
 struct cons_pointer check_exception( struct cons_pointer pointer,
                                      char *location_descriptor ) {
-    struct cons_pointer result = NIL;
-
-    struct cons_space_object *object = &pointer2cell( pointer );
+    struct cons_pointer result = pointer;
 
     if ( exceptionp( pointer ) ) {
+        struct cons_space_object *object = &pointer2cell( pointer );
+        result = NIL;
+
         fprintf( stderr, "ERROR: Exception at %s: ", location_descriptor );
         URL_FILE *ustderr = file_to_url_file( stderr );
         fwide( stderr, 1 );
@@ -59,43 +60,47 @@ struct cons_pointer check_exception( struct cons_pointer pointer,
         free( ustderr );
 
         dec_ref( pointer );
-    } else {
-        result = pointer;
     }
 
     return result;
 }
 
-struct cons_pointer init_documentation_symbol = NIL;
-struct cons_pointer init_name_symbol = NIL;
-struct cons_pointer init_primitive_symbol = NIL;
-
 void maybe_bind_init_symbols(  ) {
-    if ( nilp( init_documentation_symbol ) ) {
-        init_documentation_symbol =
+    if ( nilp( privileged_keyword_documentation ) ) {
+        privileged_keyword_documentation =
             c_string_to_lisp_keyword( L"documentation" );
     }
-    if ( nilp( init_name_symbol ) ) {
-        init_name_symbol = c_string_to_lisp_keyword( L"name" );
+    if ( nilp( privileged_keyword_name ) ) {
+        privileged_keyword_name = c_string_to_lisp_keyword( L"name" );
     }
-    if ( nilp( init_primitive_symbol ) ) {
-        init_primitive_symbol = c_string_to_lisp_keyword( L"primitive" );
+    if ( nilp( privileged_keyword_primitive ) ) {
+        privileged_keyword_primitive =
+            c_string_to_lisp_keyword( L"primitive" );
     }
     if ( nilp( privileged_symbol_nil ) ) {
         privileged_symbol_nil = c_string_to_lisp_symbol( L"nil" );
     }
+    // we can't make this string when we need it, because memory is then 
+    // exhausted!
     if ( nilp( privileged_string_memory_exhausted ) ) {
-        // we can't make this string when we need it, because memory is then 
-        // exhausted!
         privileged_string_memory_exhausted =
             c_string_to_lisp_string( L"Memory exhausted." );
+    }
+    if ( nilp( privileged_keyword_location ) ) {
+        privileged_keyword_location = c_string_to_lisp_keyword( L"location" );
+    }
+    if ( nilp( privileged_keyword_payload ) ) {
+        privileged_keyword_payload = c_string_to_lisp_keyword( L"payload" );
+    }
+    if ( nilp( privileged_keyword_cause ) ) {
+        privileged_keyword_cause = c_string_to_lisp_keyword( L"cause" );
     }
 }
 
 void free_init_symbols(  ) {
-    dec_ref( init_documentation_symbol );
-    dec_ref( init_name_symbol );
-    dec_ref( init_primitive_symbol );
+    dec_ref( privileged_keyword_documentation );
+    dec_ref( privileged_keyword_name );
+    dec_ref( privileged_keyword_primitive );
 }
 
 /**
@@ -115,10 +120,11 @@ struct cons_pointer bind_function( wchar_t *name,
     struct cons_pointer d = c_string_to_lisp_string( doc );
 
     struct cons_pointer meta =
-        make_cons( make_cons( init_primitive_symbol, TRUE ),
-                   make_cons( make_cons( init_name_symbol, n ),
+        make_cons( make_cons( privileged_keyword_primitive, TRUE ),
+                   make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( init_documentation_symbol, d ),
+                                         ( privileged_keyword_documentation,
+                                           d ),
                                          NIL ) ) );
 
     struct cons_pointer r =
@@ -144,10 +150,11 @@ struct cons_pointer bind_special( wchar_t *name,
     struct cons_pointer d = c_string_to_lisp_string( doc );
 
     struct cons_pointer meta =
-        make_cons( make_cons( init_primitive_symbol, TRUE ),
-                   make_cons( make_cons( init_name_symbol, n ),
+        make_cons( make_cons( privileged_keyword_primitive, TRUE ),
+                   make_cons( make_cons( privileged_keyword_name, n ),
                               make_cons( make_cons
-                                         ( init_documentation_symbol, d ),
+                                         ( privileged_keyword_documentation,
+                                           d ),
                                          NIL ) ) );
 
     struct cons_pointer r =
@@ -208,6 +215,8 @@ void print_options( FILE *stream ) {
               L"\t-d\tDump memory to standard out at end of run (copious!);\n" );
     fwprintf( stream, L"\t-h\tPrint this message and exit;\n" );
     fwprintf( stream, L"\t-p\tShow a prompt (default is no prompt);\n" );
+    fwprintf( stream,
+              L"\t-s LIMIT\n\t\tSet the maximum stack depth to this LIMIT (int)\n" );
 #ifdef DEBUG
     fwprintf( stream,
               L"\t-v LEVEL\n\t\tSet verbosity to the specified level (0...512)\n" );
@@ -220,7 +229,8 @@ void print_options( FILE *stream ) {
     fwprintf( stream, L"\t\t32\tINPUT/OUTPUT;\n" );
     fwprintf( stream, L"\t\t64\tLAMBDA;\n" );
     fwprintf( stream, L"\t\t128\tREPL;\n" );
-    fwprintf( stream, L"\t\t256\tSTACK.\n" );
+    fwprintf( stream, L"\t\t256\tSTACK;\n" );
+    fwprintf( stream, L"\t\t512\tEQUAL.\n" );
 #endif
 }
 
@@ -240,7 +250,7 @@ int main( int argc, char *argv[] ) {
         exit( 1 );
     }
 
-    while ( ( option = getopt( argc, argv, "phdv:i:" ) ) != -1 ) {
+    while ( ( option = getopt( argc, argv, "dhi:ps:v:" ) ) != -1 ) {
         switch ( option ) {
             case 'd':
                 dump_at_end = true;
@@ -255,6 +265,9 @@ int main( int argc, char *argv[] ) {
                 break;
             case 'p':
                 show_prompt = true;
+                break;
+            case 's':
+                stack_limit = atoi( optarg );
                 break;
             case 'v':
                 verbosity = atoi( optarg );
@@ -287,6 +300,8 @@ int main( int argc, char *argv[] ) {
      */
     bind_symbol_value( privileged_symbol_nil, NIL, true );
     bind_value( L"t", TRUE, true );
+    bind_symbol_value( privileged_keyword_location, TRUE, true );
+    bind_symbol_value( privileged_keyword_payload, TRUE, true );
 
     /*
      * standard input, output, error and sink streams
@@ -317,7 +332,7 @@ int main( int argc, char *argv[] ) {
                                                   ( c_string_to_lisp_keyword
                                                     ( L"url" ),
                                                     c_string_to_lisp_string
-                                                    ( L"system:standard output]" ) ),
+                                                    ( L"system:standard output" ) ),
                                                   NIL ) ), false );
     bind_value( L"*log*",
                 make_write_stream( file_to_url_file( stderr ),
@@ -401,10 +416,14 @@ int main( int argc, char *argv[] ) {
     bind_function( L"inspect",
                    L"`(inspect object ouput-stream)`: Print details of this `object` to this `output-stream` or `*out*`.",
                    &lisp_inspect );
+    bind_function( L"interned?",
+                   L"`(interned? key store)`: Return `t` if the symbol or keyword `key` is bound in this `store`, else `nil`.",
+                   &lisp_internedp );
     bind_function( L"keys",
                    L"`(keys store)`: Return a list of all keys in this `store`.",
                    &lisp_keys );
-    bind_function( L"list", L"`(list args...): Return a list of these `args`.",
+    bind_function( L"list",
+                   L"`(list args...)`: Return a list of these `args`.",
                    &lisp_list );
     bind_function( L"mapcar",
                    L"`(mapcar function sequence)`: Apply `function` to each element of `sequence` in turn, and return a sequence of the results.",
@@ -438,7 +457,7 @@ int main( int argc, char *argv[] ) {
                    &lisp_print );
     bind_function( L"println",
                    L"`(println stream)`: Print a new line character to `stream`, if specified, else to `*out*`.",
-                   &lisp_print );
+                   &lisp_println );
     bind_function( L"put!", L"", lisp_hashmap_put );
     bind_function( L"put-all!",
                    L"`(put-all! dest source)`: If `dest` is a namespace and is writable, copies all key-value pairs from `source` into `dest`.",
@@ -468,7 +487,9 @@ int main( int argc, char *argv[] ) {
     bind_function( L"subtract",
                    L"`(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers.",
                    &lisp_subtract );
-    bind_function( L"throw", L"", &lisp_exception );
+    bind_function( L"throw",
+                   L"`(throw message cause)`: Throw an exception with this `message`, and, if specified, this `cause` (which is expected to be an exception but need not be).",
+                   &lisp_exception );
     bind_function( L"time",
                    L"`(time arg)`: Return a time object. If an `arg` is supplied, it should be an integer which will be interpreted as a number of microseconds since the big bang, which is assumed to have happened 441,806,400,000,000,000 seconds before the UNIX epoch.",
                    &lisp_time );
@@ -516,7 +537,9 @@ int main( int argc, char *argv[] ) {
     bind_special( L"set!",
                   L"`(set! symbol value namespace)`: Binds `symbol` in  `namespace` to the value of `value`, altering the namespace in so doing, and returns `value`. If `namespace` is not specified, it defaults to the default namespace.",
                   &lisp_set_shriek );
-    bind_special( L"try", L"", &lisp_try );
+    bind_special( L"try",
+                  L"`(try forms... (catch catch-forms...))`: Evaluate `forms` sequentially, and return the value of the last. If an exception is thrown in any, evaluate `catch-forms` sequentially in an environment in which `*exception*` is bound to that exception, and return the value of the last of these.",
+                  &lisp_try );
     debug_print( L"Initialised oblist\n", DEBUG_BOOTSTRAP );
     debug_dump_object( oblist, DEBUG_BOOTSTRAP );
 

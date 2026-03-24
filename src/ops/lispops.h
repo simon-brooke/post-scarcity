@@ -131,6 +131,9 @@ struct cons_pointer lisp_cdr( struct stack_frame *frame,
 struct cons_pointer lisp_inspect( struct stack_frame *frame,
                                   struct cons_pointer frame_pointer,
                                   struct cons_pointer env );
+struct cons_pointer lisp_internedp( struct stack_frame *frame,
+                                    struct cons_pointer frame_pointer,
+                                    struct cons_pointer env );
 struct cons_pointer lisp_eq( struct stack_frame *frame,
                              struct cons_pointer frame_pointer,
                              struct cons_pointer env );
@@ -187,13 +190,19 @@ struct cons_pointer lisp_cond( struct stack_frame *frame,
                                struct cons_pointer frame_pointer,
                                struct cons_pointer env );
 
+struct cons_pointer throw_exception_with_cause( struct cons_pointer location,
+                                                struct cons_pointer message,
+                                                struct cons_pointer cause,
+                                                struct cons_pointer
+                                                frame_pointer );
 /**
  * Throw an exception.
  * `throw_exception` is a misnomer, because it doesn't obey the calling
  * signature of a lisp function; but it is nevertheless to be preferred to
  * make_exception. A real `throw_exception`, which does, will be needed.
  */
-struct cons_pointer throw_exception( struct cons_pointer message,
+struct cons_pointer throw_exception( struct cons_pointer location,
+                                     struct cons_pointer message,
                                      struct cons_pointer frame_pointer );
 
 struct cons_pointer lisp_exception( struct stack_frame *frame,

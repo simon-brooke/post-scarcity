@@ -114,7 +114,8 @@ struct cons_pointer add_ratio_ratio( struct cons_pointer arg1,
                                              cell1->payload.ratio.divisor ) );
         r = make_ratio( dividend, divisor, true );
     } else {
-        r = throw_exception( make_cons( c_string_to_lisp_string
+        r = throw_exception( c_string_to_lisp_symbol( L"+" ),
+                             make_cons( c_string_to_lisp_string
                                         ( L"Shouldn't happen: bad arg to add_ratio_ratio" ),
                                         make_cons( arg1,
                                                    make_cons( arg2, NIL ) ) ),
@@ -154,7 +155,8 @@ struct cons_pointer add_integer_ratio( struct cons_pointer intarg,
         dec_ref( ratio );
     } else {
         result =
-            throw_exception( make_cons( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"+" ),
+                             make_cons( c_string_to_lisp_string
                                         ( L"Shouldn't happen: bad arg to add_integer_ratio" ),
                                         make_cons( intarg,
                                                    make_cons( ratarg,
@@ -234,7 +236,8 @@ struct cons_pointer multiply_ratio_ratio( struct
         release_integer( divisor );
     } else {
         result =
-            throw_exception( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"*" ),
+                             c_string_to_lisp_string
                              ( L"Shouldn't happen: bad arg to multiply_ratio_ratio" ),
                              NIL );
     }
@@ -269,7 +272,8 @@ struct cons_pointer multiply_integer_ratio( struct cons_pointer intarg,
         release_integer( one );
     } else {
         result =
-            throw_exception( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"*" ),
+                             c_string_to_lisp_string
                              ( L"Shouldn't happen: bad arg to multiply_integer_ratio" ),
                              NIL );
     }
@@ -337,7 +341,8 @@ struct cons_pointer make_ratio( struct cons_pointer dividend,
         }
     } else {
         result =
-            throw_exception( c_string_to_lisp_string
+            throw_exception( c_string_to_lisp_symbol( L"make_ratio" ),
+                             c_string_to_lisp_string
                              ( L"Dividend and divisor of a ratio must be integers" ),
                              NIL );
     }
