@@ -79,7 +79,9 @@ encoding is as in this table:
 | 1110 |          14 |   E |           16384 |          131072 |
 | 1111 |          15 |   F |           32768 |          262144 |
 
-Consequently, an object of size class F will have an allocation size of 32,768 words, but a payload size of 32,766 words. This obviously means that size classes 0 and 1 will not exist, since they would not have any payload.
+Consequently, an object of size class F will have an allocation size of 32,768 
+words, but a payload size of 32,766 words. This obviously means that size 
+classes 0 and 1 will not exist, since they would not have any payload.
 
 ## Page size
 
@@ -87,23 +89,30 @@ Every page will be 1,048,576 bytes.
 
 ## Namespaces
 
-Namespaces will be implemented; in addition to the root namespace, there will be at least the following namespaces:
+Namespaces will be implemented; in addition to the root namespace, there will 
+be at least the following namespaces:
 
 ### :bootstrap
 
-Functions written in the substrate language, intended to be replaced for all normal purposes by functions written in Lisp which may call these bootstrap functions. Not ever available to user code.
+Functions written in the substrate language, intended to be replaced for all 
+normal purposes by functions written in Lisp which may call these bootstrap 
+functions. Not ever available to user code.
 
 ### :substrate
 
-Functions written in the substrate language which *may* be available to user-written code.
+Functions written in the substrate language which *may* be available to 
+user-written code.
 
 ### :system
 
-Functions, written either in Lisp or in the substrate language, which modify system memory in ways that only trusted and privileged users are permitted to do.
+Functions, written either in Lisp or in the substrate language, which modify 
+system memory in ways that only trusted and privileged users are permitted to 
+do.
 
 ## Access control
 
-Obviously, for this to work, access control lists must be implemented and must work.
+Obviously, for this to work, access control lists must be implemented and must 
+work.
 
 ## Router is deferred to 0.2.X
 
