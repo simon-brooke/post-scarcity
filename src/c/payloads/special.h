@@ -1,0 +1,43 @@
+/**
+ *  payloads/special.h
+ *
+ *  A special form.
+ *
+ *  (c) 2026 Simon Brooke <simon@journeyman.cc>
+ *  Licensed under GPL version 2.0, or, at your option, any later version.
+ */
+
+#ifndef __psse_payloads_special_h
+#define __psse_payloads_special_h
+
+#include "memory/pointer.h"
+
+/**
+ * A special form - one whose arguments are not pre-evaluated but passed as
+ * provided.
+ * \see NLAMBDATAG.
+ */
+#define SPECIALTAG  "SFM"
+
+/**
+ * @brief Payload of a special form cell. 
+ *
+ * Currently identical to the payload of a function cell.
+ * \see function_payload
+ */
+struct special_payload {
+    /**
+     * pointer to the source from which the special form was compiled, or NIL
+     * if it is a primitive.
+     */
+    struct cons_pointer meta;
+    /**  pointer to a function which takes a cons pointer (representing
+     * its argument list) and a cons pointer (representing its environment) and a
+     * stack frame (representing the previous stack frame) as arguments and returns
+     * a cons pointer (representing its result). */
+    struct cons_pointer ( *executable ) ( struct stack_frame *,
+                                          struct cons_pointer,
+                                          struct cons_pointer );
+};
+
+#endif
