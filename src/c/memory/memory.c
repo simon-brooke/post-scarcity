@@ -7,8 +7,13 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
- #include <stdio.h>
+#include <stdio.h>
 
- int initialise_memory() {
+#include "memory/pointer.h"
+
+
+
+int initialise_memory( int node) {
     fprintf( stderr, "TODO: Implement initialise_memory()");
+
  }
