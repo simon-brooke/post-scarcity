@@ -37,3 +37,5 @@ struct pso_pointer {
      */
     uint16_t offset;
 };
+
+#endif

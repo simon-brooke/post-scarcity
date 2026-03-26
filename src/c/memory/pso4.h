@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #include "memory/header.h"
-#include "payloads/stack_frame.h"
+#include "memory/stack.h"
 
 /**
  * @brief A paged space object of size class 4, 16 words total, 14 words

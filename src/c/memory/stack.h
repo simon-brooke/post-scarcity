@@ -1,7 +1,7 @@
 /**
- *  payloads/stack_frame.h
+ *  memory/stack.h
  *
- *  A stack frame.
+ *  The execution stack.
  *
  *  (c) 2026 Simon Brooke <simon@journeyman.cc>
  *  Licensed under GPL version 2.0, or, at your option, any later version.
@@ -17,18 +17,25 @@
  */
 #define args_in_frame 8
 
+/** 
+ * @brief The maximum depth of stack before we throw an exception.
+ *
+ * `0` is interpeted as `unlimited`.
+ */
+extern uint32_t stack_limit;
+
 /**
  * A stack frame.
  */
 struct stack_frame_payload {
     /** the previous frame. */
-    struct cons_pointer previous;
+    struct pso_pointer previous;
     /** first 8 arument bindings. */
-    struct cons_pointer arg[args_in_frame];
+    struct pso_pointer arg[args_in_frame];
     /** list of any further argument bindings. */
-    struct cons_pointer more;
+    struct pso_pointer more;
     /** the function to be called. */
-    struct cons_pointer function;
+    struct pso_pointer function;
     /** the number of arguments provided. */
     int args;
     /** the depth of the stack below this frame */
