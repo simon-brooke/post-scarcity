@@ -1,6 +1,6 @@
 # Post Scarcity Software Environment: general documentation
 
-Work towards the implementation of a software system like that described in [Post Scarcity Software](https://www.journeyman.cc/blog/posts-output/2006-02-20-postscarcity-software/).
+Work towards the implementation of a software system for the hardware of the deep future.
 
 ## Note on canonicity
 
@@ -172,7 +172,7 @@ The following functions are provided as of release 0.0.6:
 | subtract | FUNC | `(- a b)`: Subtracts `b` from `a` and returns the result. Expects both arguments to be numbers. |
 | throw | FUNC | `(throw message cause)`: Throw an exception with this `message`, and, if specified, this `cause` (which is expected to be an exception but need not be).|
 | time | FUNC | `(time arg)`: Return a time object. If an `arg` is supplied, it should be an integer which will be interpreted as a number of microseconds since the big bang, which is assumed to have happened 441,806,400,000,000,000 seconds before the UNIX epoch. |
-| try | SPFM | `(try forms... (catch catch-forms...))`: Evaluate `forms` sequentially, and return the value of the last. If an exception is thrown in any, evaluate `catch-forms` sequentially in an environment in which `*exception*` is bound to that exception, and return the value of the last of these. |
+| try | SPFM | `(try forms... (catch symbol forms...))`: Doesn't work yet! |
 | type | FUNC | `(type object)`: returns the type of the specified `object`. Currently (0.0.6) the type is returned as a four character string; this may change. |
 | λ | SPFM | `(lamda arg-list forms...)`: Construct an interpretable &lambda; function. |
 

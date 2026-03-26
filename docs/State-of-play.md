@@ -1,5 +1,36 @@
 # State of Play
 
+## 20260326
+
+Most of the memory architecture of the new prototype is now roughed out, but
+in C, not in a more modern language. It doesn't compile yet.
+
+My C is getting better... but it needed to!
+
+## 20260323
+
+I started an investigastion of the [Zig language](https://ziglang.org/) and 
+come away frustrated. It's definitely an interesting language, and *I think*
+one capable of doing what I want. But in trying to learn, I checked out 
+someone else's [Lisp interpreter in Zig](https://github.com/cryptocode/bio). 
+The last commit to this project is six months ago, so fairly current; project
+documentation is polished, implying the project is well advanced and by someone
+competent.
+
+It won't build.
+
+It won't build because there are breaking changes to the build system in the
+current version of Zig, and, according to helpful people on the Zig language
+Discord, breaking changes in Zig versions are quite frequent.
+
+Post-scarcity is a project which procedes slowly, and is very large indeed. I 
+will certainly not complete it before I die.
+
+I don't feel unstable tools are a good choice.
+
+I have, however, done more thinking about [Paged space objects], and think I
+now have a buildable specification.
+
 ## 20260319
 
 Right, the `member?` bug [is fixed](https://git.journeyman.cc/simon/post-scarcity/issues/11).
