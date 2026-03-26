@@ -1,5 +1,12 @@
 # State of Play
 
+## 20260326
+
+Most of the memory architecture of the new prototype is now roughed out, but
+in C, not in a more modern language. It doesn't compile yet.
+
+My C is getting better... but it needed to!
+
 ## 20260323
 
 I started an investigastion of the [Zig language](https://ziglang.org/) and 

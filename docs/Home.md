@@ -1,6 +1,6 @@
 # Post Scarcity Software Environment: general documentation
 
-Work towards the implementation of a software system like that described in [Post Scarcity Software](https://www.journeyman.cc/blog/posts-output/2006-02-20-postscarcity-software/).
+Work towards the implementation of a software system for the hardware of the deep future.
 
 ## Note on canonicity
 
@@ -12,7 +12,7 @@ You can read about the current [state of play](State-of-play.md).
 
 ## Roadmap
 
-There is now a [roadmap](Roadmap.md) for the project.
+There is now a [roadmap](https://www.journeyman.cc/post-scarcity/html/md_workspace_2post-scarcity_2docs_2_roadmap.html) for the project.
 
 ## AWFUL WARNING 1
 
