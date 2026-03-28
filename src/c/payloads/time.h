@@ -15,7 +15,8 @@
 /**
  * @brief Tag for a time stamp.
  */
-#define TIMETAG     "TIME"
+#define TIMETAG     "TIM"
+#define TIMETV      5065044
 
 /**
  * The payload of a time cell: an unsigned 128 bit value representing micro-

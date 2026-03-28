@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TAGLENGTH 4
+#define TAGLENGTH 3
 
 struct dummy {
   union {
@@ -21,6 +21,6 @@ int main( int argc, char *argv[] ) {
 
     strncpy( &buffer.tag.bytes[0], argv[i], TAGLENGTH );
 
-    printf( "%4.4s:\t%d\n", argv[i], buffer.tag.value);
+    printf( "%4.4s:\t%d\n", argv[i], buffer.tag.value & 0xffffff);
   }
 }

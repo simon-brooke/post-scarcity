@@ -9,6 +9,7 @@
 
 #ifndef __psse_payloads_cons_h
 #define __psse_payloads_cons_h
+#include <stdbool.h>
 
 #include "memory/pointer.h"
 
@@ -16,6 +17,7 @@
  * An ordinary cons cell:
  */
 #define CONSTAG     "CNS"
+#define CONSTV      5459523
 
 /**
  * @brief A cons cell.
@@ -28,5 +30,12 @@ struct cons_payload {
     struct pso_pointer cdr;
 };
 
+struct pso_pointer car( struct pso_pointer cons);
+
+struct pso_pointer cdr( struct pso_pointer cons);
+
+struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr);
+
+bool consp( struct pso_pointer ptr);
 
 #endif

@@ -12,6 +12,9 @@
 
 #include <stdint.h>
 
+#define INTEGERTAG "INT"
+#define INTEGERTV  5525065
+
 /**
  * @brief An integer .
  *
@@ -20,7 +23,7 @@
  * in the Lisp layer, not the substrate.
  */
 struct integer_payload {
-    int128_t value;
+    __int128_t value;
 };
 
 

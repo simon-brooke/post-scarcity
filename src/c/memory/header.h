@@ -12,6 +12,8 @@
 
 #include <bits/stdint-uintn.h>
 
+#include "memory/pointer.h"
+
 #define TAGLENGTH 3
 
 /**
@@ -20,7 +22,7 @@
  */
 struct pso_header {
     union {
-        /** the tag (type) of this cell,
+        /** the tag (type) of this object,
          * considered as bytes */
         struct {
             /** mnemonic for this type; */
@@ -31,10 +33,10 @@ struct pso_header {
         /** the tag considered as a number */
         uint32_t value;
     } tag;
-    /** the count of the number of references to this cell */
+    /** the count of the number of references to this object */
     uint32_t count;
-    /** cons pointer to the access control list of this cell */
-    struct cons_pointer access;
+    /** pointer to the access control list of this object */
+    struct pso_pointer access;
 };
 
 #endif

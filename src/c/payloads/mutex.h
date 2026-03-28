@@ -20,6 +20,7 @@
  * \see FUNCTIONTAG.
  */
 #define MUTEXTAG  "MTX"
+#define MUTEXTV   5788749
 
 /**
  * @brief payload for mutex objects.
@@ -29,7 +30,7 @@
  */
 struct mutex_payload {
     pthread_mutex_t mutex;
-}
+};
 
 struct pso_pointer make_mutex();
 
@@ -64,3 +65,5 @@ struct pso_pointer with_lock( struct pso_pointer lock, struct pso_pointer forms)
  * @return struct pso_pointer the result.
  */
 struct pso_pointer attempt_with_lock( struct pso_pointer lock, struct pso_pointer forms);
+
+#endif

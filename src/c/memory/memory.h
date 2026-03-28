@@ -10,6 +10,8 @@
 #ifndef __psse_memory_memory_h
 #define __psse_memory_memory_h
 
+#include "memory/pointer.h"
+
 /**
  * @brief Maximum size class
  * 

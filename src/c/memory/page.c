@@ -44,15 +44,27 @@ struct page * pages[NPAGES];
  */
 uint32_t npages_allocated = 0
 
-struct cons_pointer initialise_page( struct page * result, uint16_t page_index, uint8_t size_class, pso_pointer freelist) {
+/**
+ * @brief private to allocate_page; do not use.
+ * 
+ * @param page_addr address of the newly allocated page to be initialised;
+ * @param page_index its location in the pages[] array;
+ * @param size_class the size class of objects in this page;
+ * @param freelist the freelist for objects of this size class.
+ * @return struct cons_pointer the new head for the freelist for this size_class,
+ */
+struct cons_pointer initialise_page( struct page * page_addr, uint16_t page_index, uint8_t size_class, pso_pointer freelist) {
     struct cons_pointer result = freelist;
     int obj_size = pow(2, size_class);
     int obj_bytes = obj_size  * sizeof(uint64_t);
     int objs_in_page = PAGE_BYTES/obj_bytes;
 
+    // we do this backwards (i--) so that object {0, 0, 0} will be first on the
+    // freelist when the first page is initiated, so we can grab that one for 
+    // `nil` and the next on for `t`.
     for (int i = objs_in_page - 1; i >= 0; i--) {
         // it should be safe to cast any pso object to a pso2
-        struct pso2* object = (pso2 *)(result + (i * obj_bytes)); 
+        struct pso2* object = (pso2 *)(page_addr + (i * obj_bytes)); 
 
         object->header.tag.size_class = size_class;
         strncpy( (char *)(object->header.tag.mnemonic), FREETAG, TAGLENGTH);
@@ -75,10 +87,10 @@ struct cons_pointer initialise_page( struct page * result, uint16_t page_index, 
  * cast it back.
  *
  * @param size_class an integer in the range 0...MAX_SIZE_CLASS.
- * @return a pointer to the page, or NULL if an error occurred.
+ * @return t on success, an exception if an error occurred.
  */
-void *allocate_page( uint8_t size_class ) {
-    void *result = NULL;
+struct cons_pointer allocate_page( uint8_t size_class ) {
+    struct cons_pointer result = t;
 
     if ( npages_allocated == 0) {
         for (int i = 0; i < NPAGES; i++) {
@@ -108,22 +120,28 @@ void *allocate_page( uint8_t size_class ) {
 
                 npages_allocated ++;
             } else {
+                // TODO: exception when we have one.
+                result = nil;
                 fwide( stderr, 1 );
                 fwprintf( stderr, 
                     L"\nCannot allocate page: heap exhausted,\n",
                     size_class, MAX_SIZE_CLASS );
             }
         } else {
+            // TODO: exception when we have one.
+            result = nil;
             fwide( stderr, 1 );
             fwprintf( stderr, 
                 L"\nCannot allocate page for size class %x, min is 2 max is %x.\n",
                 size_class, MAX_SIZE_CLASS );
         }
     } else {
-            fwide( stderr, 1 );
-            fwprintf( stderr, 
-                L"\nCannot allocate page: page space exhausted.\n",
-                size_class, MAX_SIZE_CLASS );
+        // TODO: exception when we have one.
+            result = nil;
+        fwide( stderr, 1 );
+        fwprintf( stderr, 
+            L"\nCannot allocate page: page space exhausted.\n",
+            size_class, MAX_SIZE_CLASS );
     }
 
     return result;

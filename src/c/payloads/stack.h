@@ -1,17 +1,19 @@
 /**
- *  memory/stack.h
+ *  payloads/stack.h
  *
- *  The execution stack.
+ *  a Lisp stack frame.
+ *
+ *  Sits in a pso4.
  *
  *  (c) 2026 Simon Brooke <simon@journeyman.cc>
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#ifndef __psse_payloads_stack_frame_h
-#define __psse_payloads_stack_frame_h
-#include <stdint.h>
+#ifndef __psse_payloads_stack_h
+#define __psse_payloads_stack_h
 
 #include "memory/pointer.h"
+
 /*
  * number of arguments stored in a stack frame
  */
@@ -25,7 +27,7 @@
 extern uint32_t stack_limit;
 
 /**
- * A stack frame.
+ * A stack frame. 
  */
 struct stack_frame_payload {
     /** the previous frame. */
@@ -37,9 +39,9 @@ struct stack_frame_payload {
     /** the function to be called. */
     struct pso_pointer function;
     /** the number of arguments provided. */
-    int args;
+    uint32_t args;
     /** the depth of the stack below this frame */
-    int depth;
+    uint32_t depth;
 };
 
 #endif

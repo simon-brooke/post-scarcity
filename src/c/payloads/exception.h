@@ -12,6 +12,9 @@
 
 #include "memory/pointer.h"
 
+#define EXCEPTIONTAG "EXP"
+#define EXCEPTIONTV  5265477
+
 /**
  * @brief An exception; required three pointers, so use object of size class 3.
  */
@@ -21,7 +24,7 @@ struct exception_payload {
   /** @brief the stack frame at which the exception was thrown. */
     struct pso_pointer stack;
     /** @brief the cause; expected to be another exception, or (usually) `nil`. */
-    struct cons_pointer cause;
+    struct pso_pointer cause;
 };
 
 

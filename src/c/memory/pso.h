@@ -13,13 +13,17 @@
 #include <stdint.h>
 
 #include "memory/header.h"
+#include "memory/pointer.h"
 #include "payloads/cons.h"
+#include "payloads/exception.h"
 #include "payloads/free.h"
 #include "payloads/function.h"
+#include "payloads/hashtable.h"
 #include "payloads/integer.h"
-#include "payloads/ketwod.h"
+#include "payloads/keyword.h"
 #include "payloads/lambda.h"
 #include "payloads/mutex.h"
+#include "payloads/namespace.h"
 #include "payloads/nlambda.h"
 #include "payloads/read_stream.h"
 #include "payloads/special.h"
@@ -38,8 +42,8 @@
 struct pso2 {
     struct pso_header header;
     union {
-        char[16] bytes;
-         uint64_t[2] words;
+        char bytes[16];
+        uint64_t words[2];
         struct cons_payload cons;
         struct free_payload free;
         struct function_payload function;
@@ -60,8 +64,8 @@ struct pso2 {
 struct pso3 {
     struct pso_header header;
     union {
-        char[48] bytes;
-         uint64_t[6] words;
+        char bytes[48];
+        uint64_t words[6];
         struct exception_payload exception;
         struct free_payload free;
         struct mutex_payload mutex;
@@ -76,8 +80,8 @@ struct pso3 {
 struct pso4 {
     struct pso_header header;
     union {
-        char[112] bytes;
-        uint64_t[14] words;
+        char bytes[112];
+        uint64_t words[14];
         struct free_payload free;
         struct stack_frame_payload stack_frame;
     } payload;
@@ -91,8 +95,8 @@ struct pso4 {
 struct pso5 {
     struct pso_header header;
     union {
-        char[240] bytes;
-        uint64_t[30] words;
+        char bytes[240];
+        uint64_t words[30];
         struct free_payload free;
     } payload;
 };
@@ -105,8 +109,8 @@ struct pso5 {
 struct pso6 {
     struct pso_header header;
     union {
-        char[496] bytes;
-        uint64_t[62] words;
+        char bytes[496];
+        uint64_t words[62];
         struct free_payload free;
         struct hashtable_payload hashtable;
         struct namespace_payload namespace;
@@ -121,8 +125,8 @@ struct pso6 {
 struct pso7 {
     struct pso_header header;
     union {
-        char[1008] bytes;
-        uint64_t[126] words;
+        char bytes[1008];
+        uint64_t words[126];
         struct free_payload free;
     } payload;
 };
@@ -135,8 +139,8 @@ struct pso7 {
 struct pso8 {
     struct pso_header header;
     union {
-        char[2032] bytes;
-        uint64_t[254] words;
+        char bytes[2032];
+        uint64_t words[254];
         struct free_payload free;
     } payload;
 };
@@ -149,8 +153,8 @@ struct pso8 {
 struct pso9 {
     struct pso_header header;
     union {
-        char[4080] bytes;
-        uint64_t[510] words;
+        char bytes[4080];
+        uint64_t words[510];
         struct free_payload free;
     } payload;
 };
@@ -163,8 +167,8 @@ struct pso9 {
 struct psoa {
     struct pso_header header;
     union {
-        char[8176] bytes;
-        uint64_t[1022] words;
+        char bytes[8176];
+        uint64_t words[1022];
         struct free_payload free;
     } payload;
 };
@@ -177,8 +181,8 @@ struct psoa {
 struct psob {
     struct pso_header header;
     union {
-        char[16368] bytes;
-        uint64_t[2046] words;
+        char bytes[16368];
+        uint64_t words[2046];
         struct free_payload free;
     } payload;
 };
@@ -191,8 +195,8 @@ struct psob {
 struct psoc {
     struct pso_header header;
     union {
-        char[32752] bytes;
-        uint64_t[4094] words;
+        char bytes[32752];
+        uint64_t words[4094];
         struct free_payload free;
     } payload;
 };
@@ -205,8 +209,8 @@ struct psoc {
 struct psod {
     struct pso_header header;
     union {
-        char[65520] bytes;
-        uint64_t[8190] words;
+        char bytes[65520];
+        uint64_t words[8190];
         struct free_payload free;
     } payload;
 };
@@ -219,8 +223,8 @@ struct psod {
 struct psoe {
     struct pso_header header;
     union {
-        char[131056] bytes;
-        uint64_t[16382] words;
+        char bytes[131056];
+        uint64_t words[16382];
         struct free_payload free;
     } payload;
 };
@@ -233,8 +237,18 @@ struct psoe {
 struct psof {
     struct pso_header header;
     union {
-        char[262128] bytes;
-        uint64_t[32766] words;
+        char bytes[262128];
+        uint64_t words[32766];
         struct free_payload free;
     } payload;
 };
+
+struct pso_pointer allocate( char* tag, uint8_t size_class);
+
+struct pso_pointer dec_ref( struct pso_pointer pointer );
+
+struct pso_pointer inc_ref( struct pso_pointer pointer );
+
+void lock_object( struct pso_pointer pointer);
+
+#endif

@@ -11,6 +11,7 @@
 #define __psse_payloads_function_h
 
 #include "memory/pointer.h"
+#include "memory/pso.h"
 
 /**
  * @brief Tag for an ordinary Lisp function - one whose arguments are pre-evaluated.
@@ -18,6 +19,7 @@
  * \see SPECIALTAG for functions whose arguments are not pre-evaluated.
  */
 #define FUNCTIONTAG "FUN"
+#define FUNCTIONTV  5133638
 
 /**
  * @brief Payload of a function cell.
@@ -32,16 +34,16 @@ struct function_payload {
     /**
      * pointer to metadata (e.g. the source from which the function was compiled).
      */
-    struct cons_pointer meta;
+    struct pso_pointer meta;
     /**  pointer to a function which takes a cons pointer (representing
      * its argument list) and a cons pointer (representing its environment) and a
      * stack frame (representing the previous stack frame) as arguments and returns
      * a cons pointer (representing its result).
      * \todo check this documentation is current!
      */
-    struct cons_pointer ( *executable ) ( struct stack_frame *,
-                                          struct cons_pointer,
-                                          struct cons_pointer );
+    struct pso_pointer ( *executable ) ( struct pso4 *,
+                                          struct pso_pointer,
+                                          struct pso_pointer );
 };
 
 #endif

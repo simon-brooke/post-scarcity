@@ -15,7 +15,8 @@
 /**
  * An ordinary nlambda cell:
  */
-#define CONSTAG     "CNS"
+#define NLAMBDATAG     "NLM"
+#define NLAMBDATV      5065806
 
 /* nlambda shares a payload with lambda */
 

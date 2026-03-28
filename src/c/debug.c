@@ -1,7 +1,7 @@
 /**
- *  debug.h
+ *  debug.c
  *
- *  Post Scarcity Software Environment: entry point.
+ *  Post Scarcity Software Environment: debugging messages.
  *
  *  Print debugging output.
  *
@@ -9,6 +9,8 @@
  *  (c) 2026 Simon Brooke <simon@journeyman.cc>
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
+
+#include <stdarg.h>
 
 #include "debug.h"
 

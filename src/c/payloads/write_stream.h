@@ -16,6 +16,7 @@
  * @brief Tag for an open write stream.
  */
 #define WRITETAG    "WRT"
+#define WRITETV     5264214
 
 /* write stream shares a payload with /see read_streem.h */
 #endif

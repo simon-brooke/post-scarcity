@@ -16,6 +16,7 @@
  * @brief Tag for an unassigned object; may be of any size class.
  */
 #define FREETAG     "FRE"
+#define FREETV      4543046
 
 /**
  * @brief An unassigned object, on a freelist; may be of any size class.

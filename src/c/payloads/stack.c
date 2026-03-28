@@ -1,5 +1,5 @@
 /**
- *  memory/stack.c
+ *  payloads/stack.c
  *
  *  The execution stack.
  *
@@ -7,7 +7,9 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "memory/stack.h"
+#include "memory/node.h"
+#include "memory/pso.h"
+#include "payloads/stack.h"
 
 /** 
  * @brief The maximum depth of stack before we throw an exception.
@@ -19,19 +21,20 @@ uint32_t stack_limit = 0;
 /**
  * Fetch a pointer to the value of the local variable at this index.
  */
-struct cons_pointer fetch_arg( struct stack_frame *frame, unsigned int index ) {
-    struct cons_pointer result = NIL;
+struct pso_pointer fetch_arg( struct pso4 *frame, unsigned int index ) {
+    struct pso_pointer result = nil;
 
+    // TODO check that the frame is indeed a frame!
     if ( index < args_in_frame ) {
-        result = frame->arg[index];
+        result = frame->payload.stack_frame.arg[index];
     } else {
-        struct cons_pointer p = frame->more;
+        struct pso_pointer p = frame->payload.stack_frame.more;
 
         for ( int i = args_in_frame; i < index; i++ ) {
-            p = pointer2cell( p ).payload.cons.cdr;
+            p = pointer_to_object( p)->payload.cons.cdr;
         }
 
-        result = pointer2cell( p ).payload.cons.car;
+        result = pointer_to_object( p)->payload.cons.car;
     }
 
     return result;

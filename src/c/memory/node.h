@@ -11,12 +11,13 @@
 #ifndef __psse_memory_node_h
 #define __psse_memory_node_h
 
+#include <stdint.h>
 
 /**
  * @brief The index of this node in the hypercube.
  * 
  */
-extern int node_index;
+extern uint32_t node_index;
 
 /**
  * @brief The canonical `nil` pointer
@@ -29,5 +30,7 @@ extern struct pso_pointer nil;
  * 
  */
 extern struct pso_pointer t;
+
+struct pso_pointer initialise_node( uint32_t index );
 
 #endif

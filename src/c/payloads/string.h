@@ -22,6 +22,7 @@
  * @brief Tag for string of characters, organised as a linked list.
  */
 #define STRINGTAG   "STR"
+#define STRINGTV    5395539
 
 /**
  * @brief payload of a string cell. 
@@ -36,7 +37,7 @@ struct string_payload {
     /** a hash of the string value, computed at store time. */
     uint32_t hash;
     /** the remainder of the string following this character. */
-    struct cons_pointer cdr;
+    struct pso_pointer cdr;
 };
 
 #endif

@@ -18,6 +18,7 @@
  * \see NLAMBDATAG.
  */
 #define SPECIALTAG  "SFM"
+#define SPECIALTV   5064275
 
 /**
  * @brief Payload of a special form cell. 
@@ -30,14 +31,14 @@ struct special_payload {
      * pointer to the source from which the special form was compiled, or NIL
      * if it is a primitive.
      */
-    struct cons_pointer meta;
+    struct pso_pointer meta;
     /**  pointer to a function which takes a cons pointer (representing
      * its argument list) and a cons pointer (representing its environment) and a
      * stack frame (representing the previous stack frame) as arguments and returns
      * a cons pointer (representing its result). */
-    struct cons_pointer ( *executable ) ( struct stack_frame *,
-                                          struct cons_pointer,
-                                          struct cons_pointer );
+    struct pso_pointer ( *executable ) ( struct pso4 *,
+                                          struct pso_pointer,
+                                          struct pso_pointer );
 };
 
 #endif

@@ -19,9 +19,8 @@ struct pso_pointer freelists[MAX_SIZE_CLASS + 1];
 
 
 int initialise_memory( int node ) {
-    fprintf( stderr, "TODO: Implement initialise_memory()" );
-
     for (uint8_t i = 0; i <= MAX_SIZE_CLASS; i++) {
-        freelists[i] = nil;S
+        freelists[i] = nil;
     }
+    
 }

@@ -17,6 +17,7 @@
  * \see FUNCTIONTAG.
  */
 #define LAMBDATAG  "LMD"
+#define LAMBDATV   4345164
 
 /**
  * @brief payload for lambda and nlambda cells.

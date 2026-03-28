@@ -16,6 +16,7 @@
  * Tag for a keyword - an interned, self-evaluating string.
  */
 #define KEYTAG	    "KEY"
+#define KEYTV       5850443
 
 /* TODO: for now, Keyword shares a payload with String, but this may change.
  * Strings are of indefinite length, but keywords are really not, and might

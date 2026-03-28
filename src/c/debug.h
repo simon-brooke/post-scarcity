@@ -14,7 +14,9 @@
 #define __psse_debug_h
 #include <ctype.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
+
 
 /**
  * @brief Print messages debugging memory allocation. 
