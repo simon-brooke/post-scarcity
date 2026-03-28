@@ -38,4 +38,6 @@ struct pso_pointer {
     uint16_t offset;
 };
 
+struct pso_pointer make_pointer( uint32_t node, uint16_t page, uint16_t offset);
+
 #endif

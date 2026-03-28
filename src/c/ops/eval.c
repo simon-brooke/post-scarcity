@@ -26,8 +26,9 @@
  * @param env the evaluation environment.
  * @return struct pso_pointer 
  */
-struct pso_pointer eval_despatch( struct stack_frame *frame, struct pso_pointer frame_pointer,
-           struct pso_pointer env ) {
+struct pso_pointer eval_despatch( struct stack_frame *frame,
+                                  struct pso_pointer frame_pointer,
+                                  struct pso_pointer env ) {
     struct pso_pointer result = frame->arg[0];
 
     // switch ( get_tag_value( result)) {
@@ -52,11 +53,12 @@ struct pso_pointer eval_despatch( struct stack_frame *frame, struct pso_pointer 
     return result;
 }
 
-struct pso_pointer lisp_eval( struct stack_frame *frame, struct pso_pointer frame_pointer,
-           struct pso_pointer env ) {
-    struct pso_pointer result = eval_despatch( frame, frame_pointer, env);
+struct pso_pointer lisp_eval( struct stack_frame *frame,
+                              struct pso_pointer frame_pointer,
+                              struct pso_pointer env ) {
+    struct pso_pointer result = eval_despatch( frame, frame_pointer, env );
 
-    if (exceptionp( result)) {
+    if ( exceptionp( result ) ) {
         // todo: if result doesn't have a stack frame, create a new exception wrapping
         // result with this stack frame.
     }

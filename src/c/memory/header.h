@@ -10,7 +10,7 @@
 #ifndef __psse_memory_header_h
 #define __psse_memory_header_h
 
-#include <stdint.h>
+#include <bits/stdint-uintn.h>
 
 #define TAGLENGTH 3
 
@@ -25,8 +25,8 @@ struct pso_header {
         struct {
             /** mnemonic for this type; */
             char mnemonic[TAGLENGTH];
-            /** sizetag for this object */
-            uint8_t sizetag;
+            /** size class for this object */
+            uint8_t size_class;
         } tag;
         /** the tag considered as a number */
         uint32_t value;

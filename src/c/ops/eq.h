@@ -12,10 +12,10 @@
 #ifndef __psse_ops_eq_h
 #define __psse_ops_eq_h
 
-bool eq( struct pso_pointer a, struct pso_pointer b);
+bool eq( struct pso_pointer a, struct pso_pointer b );
 
 struct pso_pointer lisp_eq( struct stack_frame *frame,
-                             struct pso_pointer frame_pointer,
-                             struct pso_pointer env );
+                            struct pso_pointer frame_pointer,
+                            struct pso_pointer env );
 
 #endif

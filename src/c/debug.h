@@ -93,4 +93,12 @@
  */
 extern int verbosity;
 
+void debug_print( wchar_t *message, int level, int indent );
+
+void debug_print_128bit( __int128_t n, int level );
+
+void debug_println( int level );
+
+void debug_printf( int level, int indent, wchar_t *format, ... );
+
 #endif

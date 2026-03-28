@@ -8,8 +8,13 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "memory/memory.h"
-#include "memory/pointer.h"
+#include "node.h"
+
+#include <bits/stdint-uintn.h>
+
+#include "ops/equal.h"
+#include "memory.h"
+#include "pointer.h"
 
 /**
  * @brief Flag to prevent the node being initialised more than once.
@@ -20,6 +25,9 @@ bool node_initialised = false;
 /**
  * @brief The index of this node in the hypercube.
  * 
+ * TODO: once we have a hypercube, this must be set to the correct value
+ * IMMEDIATELY on startup, before starting to initalise any other part of
+ * the Lisp system.
  */
 uint32_t node_index = 0;
 
@@ -27,28 +35,29 @@ uint32_t node_index = 0;
  * @brief The canonical `nil` pointer
  * 
  */
-struct pso_pointer nil = struct pso_pointer{ 0, 0, 0};
+struct pso_pointer nil = struct pso_pointer { 0, 0, 0 };
 
 /**
  * @brief the canonical `t` (true) pointer.
  * 
  */
-struct pso_pointer t = struct pso_pointer{ 0, 0, 1};
+struct pso_pointer t = struct pso_pointer { 0, 0, 1 };
 
 /**
- * @brief Set up the basic informetion about this node
+ * @brief Set up the basic informetion about this node.
  * 
  * @param index 
  * @return struct pso_pointer 
  */
-struct pso_pointer initialise_node( uint32_t index) {
+struct pso_pointer initialise_node( uint32_t index ) {
     node_index = index;
-    nil = pso_pointer{ index, 0, 0};
-    t = pso_pointer( index, 0, 1);
-    pso_pointer result = initialise_memory(index);
+    nil = pso_pointer { index, 0, 0};
+    t = pso_pointer( index, 0, 1 );
 
-    if ( eq( result, t)) {
-        result = initialise_environment();
+    pso_pointer result = initialise_memory( index );
+
+    if ( eq( result, t ) ) {
+        result = initialise_environment( index );
     }
 
     return result;

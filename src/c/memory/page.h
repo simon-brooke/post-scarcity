@@ -25,7 +25,20 @@
 #include "memory/psoe.h"
 #include "memory/psof.h"
 
-#define PAGE_SIZE 1048576
+/** 
+ * the size of a page, **in bytes**.
+ */
+#define PAGE_BYTES 1048576
+
+/**
+ * the number of pages we will initially allow for. For
+ * convenience we'll set up an array of cons pages this big; however,
+ * TODO: later we will want a mechanism for this to be able to grow
+ * dynamically to the maximum we can allow.
+ */
+#define NPAGES 64
+
+extern struct page *pages[NPAGES];
 
 /**
  * @brief A page is a megabyte of memory which contains objects all of which 
@@ -40,22 +53,22 @@
  * collection they will be returned to that freelist. 
  */
 union page {
-    uint8_t[PAGE_SIZE] bytes;
-    uint64_t[PAGE_SIZE / 8] words;
-    struct pso2[PAGE_SIZE / 32] pso2s;
-    struct pso3[PAGE_SIZE / 64] pso3s;
-    struct pso4[PAGE_SIZE / 128] pso4s;
-    struct pso5[PAGE_SIZE / 256] pso5s;
-    struct pso6[PAGE_SIZE / 512] pso6s;
-    struct pso7[PAGE_SIZE / 1024] pso7s;
-    struct pso8[PAGE_SIZE / 2048] pso8s;
-    struct pso9[PAGE_SIZE / 4096] pso9s;
-    struct psoa[PAGE_SIZE / 8192] psoas;
-    struct psob[PAGE_SIZE / 16384] psobs;
-    struct psoc[PAGE_SIZE / 32768] psocs;
-    struct psod[PAGE_SIZE / 65536] psods;
-    struct psoe[PAGE_SIZE / 131072] psoes;
-    struct psof[PAGE_SIZE / 262144] psofs;
+    uint8_t[PAGE_BYTES] bytes;
+    uint64_t[PAGE_BYTES / 8] words;
+    struct pso2[PAGE_BYTES / 32] pso2s;
+    struct pso3[PAGE_BYTES / 64] pso3s;
+    struct pso4[PAGE_BYTES / 128] pso4s;
+    struct pso5[PAGE_BYTES / 256] pso5s;
+    struct pso6[PAGE_BYTES / 512] pso6s;
+    struct pso7[PAGE_BYTES / 1024] pso7s;
+    struct pso8[PAGE_BYTES / 2048] pso8s;
+    struct pso9[PAGE_BYTES / 4096] pso9s;
+    struct psoa[PAGE_BYTES / 8192] psoas;
+    struct psob[PAGE_BYTES / 16384] psobs;
+    struct psoc[PAGE_BYTES / 32768] psocs;
+    struct psod[PAGE_BYTES / 65536] psods;
+    struct psoe[PAGE_BYTES / 131072] psoes;
+    struct psof[PAGE_BYTES / 262144] psofs;
 };
 
 #endif

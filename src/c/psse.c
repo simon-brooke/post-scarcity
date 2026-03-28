@@ -97,9 +97,9 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    initialise_node( 0);
+    initialise_node( 0 );
 
-    repl();
+    repl(  );
 
-    exit( 0);
+    exit( 0 );
 }

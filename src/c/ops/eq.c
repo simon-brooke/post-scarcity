@@ -25,8 +25,8 @@
  * @param b another pointer;
  * @return `true` if they are the same, else `false`
  */
-bool eq( struct pso_pointer a, struct pso_pointer b) {
-    return ( a.node == b.node && a.page == b.page && a.offset == b.offset);
+bool eq( struct pso_pointer a, struct pso_pointer b ) {
+    return ( a.node == b.node && a.page == b.page && a.offset == b.offset );
 }
 
 /**
@@ -42,8 +42,8 @@ bool eq( struct pso_pointer a, struct pso_pointer b) {
  * @return `t` if all args are pointers to the same object, else `nil`;
  */
 struct pso_pointer lisp_eq( struct stack_frame *frame,
-                             struct pso_pointer frame_pointer,
-                             struct pso_pointer env ) {
+                            struct pso_pointer frame_pointer,
+                            struct pso_pointer env ) {
     struct pso_pointer result = t;
 
     if ( frame->args > 1 ) {
