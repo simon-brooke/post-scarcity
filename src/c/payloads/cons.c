@@ -12,6 +12,7 @@
 #include "memory/node.h"
 #include "memory/pointer.h"
 #include "memory/pso.h"
+#include "memory/pso2.h"
 #include "payloads/cons.h"
 
 /**

@@ -17,6 +17,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
+/*
+ * wide characters
+ */
+#include <wchar.h>
+#include <wctype.h>
 
 /**
  * @brief Print messages debugging memory allocation. 

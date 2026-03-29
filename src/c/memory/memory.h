@@ -21,7 +21,7 @@
  * since managed objects require a two word header; it's unlikely that
  * these undersized size classes will be used at all.
  */
-#define MAX_SIZE_CLASS = 0xf
+#define MAX_SIZE_CLASS 0xf
 
 int initialise_memory(  );
 

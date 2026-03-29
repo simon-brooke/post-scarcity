@@ -10,6 +10,7 @@
 #ifndef __psse_memory_page_h
 #define __psse_memory_page_h
 
+#include "memory/pointer.h"
 #include "memory/pso2.h"
 #include "memory/pso3.h"
 #include "memory/pso4.h"
@@ -38,7 +39,7 @@
  */
 #define NPAGES 64
 
-extern struct page *pages[NPAGES];
+extern union page *pages[NPAGES];
 
 /**
  * @brief A page is a megabyte of memory which contains objects all of which 
@@ -53,22 +54,25 @@ extern struct page *pages[NPAGES];
  * collection they will be returned to that freelist. 
  */
 union page {
-    uint8_t[PAGE_BYTES] bytes;
-    uint64_t[PAGE_BYTES / 8] words;
-    struct pso2[PAGE_BYTES / 32] pso2s;
-    struct pso3[PAGE_BYTES / 64] pso3s;
-    struct pso4[PAGE_BYTES / 128] pso4s;
-    struct pso5[PAGE_BYTES / 256] pso5s;
-    struct pso6[PAGE_BYTES / 512] pso6s;
-    struct pso7[PAGE_BYTES / 1024] pso7s;
-    struct pso8[PAGE_BYTES / 2048] pso8s;
-    struct pso9[PAGE_BYTES / 4096] pso9s;
-    struct psoa[PAGE_BYTES / 8192] psoas;
-    struct psob[PAGE_BYTES / 16384] psobs;
-    struct psoc[PAGE_BYTES / 32768] psocs;
-    struct psod[PAGE_BYTES / 65536] psods;
-    struct psoe[PAGE_BYTES / 131072] psoes;
-    struct psof[PAGE_BYTES / 262144] psofs;
+    uint8_t bytes[PAGE_BYTES];
+    uint64_t words[PAGE_BYTES / 8];
+    struct pso2 pso2s[PAGE_BYTES / 32];
+    struct pso3 pso3s[PAGE_BYTES / 64];
+    struct pso4 pso4s[PAGE_BYTES / 128];
+    struct pso5 pso5s[PAGE_BYTES / 256];
+    struct pso6 pso6s[PAGE_BYTES / 512];
+    struct pso7 pso7s[PAGE_BYTES / 1024];
+    struct pso8 pso8s[PAGE_BYTES / 2048];
+    struct pso9 pso9s[PAGE_BYTES / 4096];
+    struct psoa psoas[PAGE_BYTES / 8192];
+    struct psob psobs[PAGE_BYTES / 16384];
+    struct psoc psocs[PAGE_BYTES / 32768];
+    struct psod psods[PAGE_BYTES / 65536];
+    struct psoe psoes[PAGE_BYTES / 131072];
+    struct psof psofs[PAGE_BYTES / 262144];
 };
+
+struct pso_pointer initialise_page( union page * page_addr, uint16_t page_index, 
+    uint8_t size_class, struct pso_pointer freelist);
 
 #endif

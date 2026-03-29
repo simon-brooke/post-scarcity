@@ -24,7 +24,7 @@
 
 #include "debug.h"
 #include "memory/memory.h"
-#include "memory/stack.h"
+#include "payloads/stack.h"
 #include "version.h"
 
 #endif

@@ -26,7 +26,7 @@
  * convenience, 14Bn years before 1st Jan 1970 (the UNIX epoch))
  */
 struct time_payload {
-    unsigned __int128 value;
+    unsigned __int128_t value;
 };
 
 #endif

@@ -29,7 +29,7 @@ struct pso_header {
             char mnemonic[TAGLENGTH];
             /** size class for this object */
             uint8_t size_class;
-        } tag;
+        } bytes;
         /** the tag considered as a number */
         uint32_t value;
     } tag;

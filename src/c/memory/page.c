@@ -9,7 +9,10 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "debug.h"
 #include "memory/memory.h"
 #include "memory/node.h"
 #include "memory/page.h"
@@ -36,13 +39,13 @@
  * to hold the number of pages we *might* create at start up time. We need a
  * way to grow the number of pages, while keeping access to them cheap.
  */
-struct page * pages[NPAGES];
+union page * pages[NPAGES];
 
 /**
  * @brief the number of pages which have thus far been allocated.
  * 
  */
-uint32_t npages_allocated = 0
+uint32_t npages_allocated = 0;
 
 /**
  * @brief private to allocate_page; do not use.
@@ -51,10 +54,11 @@ uint32_t npages_allocated = 0
  * @param page_index its location in the pages[] array;
  * @param size_class the size class of objects in this page;
  * @param freelist the freelist for objects of this size class.
- * @return struct cons_pointer the new head for the freelist for this size_class,
+ * @return struct pso_pointer the new head for the freelist for this size_class,
  */
-struct cons_pointer initialise_page( struct page * page_addr, uint16_t page_index, uint8_t size_class, pso_pointer freelist) {
-    struct cons_pointer result = freelist;
+struct pso_pointer initialise_page( union page* page_addr, uint16_t page_index, 
+    uint8_t size_class, struct pso_pointer freelist) {
+    struct pso_pointer result = freelist;
     int obj_size = pow(2, size_class);
     int obj_bytes = obj_size  * sizeof(uint64_t);
     int objs_in_page = PAGE_BYTES/obj_bytes;
@@ -64,16 +68,14 @@ struct cons_pointer initialise_page( struct page * page_addr, uint16_t page_inde
     // `nil` and the next on for `t`.
     for (int i = objs_in_page - 1; i >= 0; i--) {
         // it should be safe to cast any pso object to a pso2
-        struct pso2* object = (pso2 *)(page_addr + (i * obj_bytes)); 
+        struct pso2* object = (struct pso2 *)(page_addr + (i * obj_bytes)); 
 
-        object->header.tag.size_class = size_class;
-        strncpy( (char *)(object->header.tag.mnemonic), FREETAG, TAGLENGTH);
+        object->header.tag.bytes.size_class = size_class;
+        strncpy( (char *)(object->header.tag.bytes.mnemonic), FREETAG, TAGLENGTH);
         object->payload.free.next = result;
 
         result = make_pointer( node_index, page_index, (uint16_t)( i * obj_size));
     }
-
-    return result;
 }
 
 /** 
@@ -89,8 +91,8 @@ struct cons_pointer initialise_page( struct page * page_addr, uint16_t page_inde
  * @param size_class an integer in the range 0...MAX_SIZE_CLASS.
  * @return t on success, an exception if an error occurred.
  */
-struct cons_pointer allocate_page( uint8_t size_class ) {
-    struct cons_pointer result = t;
+struct pso_pointer allocate_page( uint8_t size_class ) {
+    struct pso_pointer result = t;
 
     if ( npages_allocated == 0) {
         for (int i = 0; i < NPAGES; i++) {
@@ -101,17 +103,17 @@ struct cons_pointer allocate_page( uint8_t size_class ) {
 
     if ( npages_allocated < NPAGES) {    
         if ( size_class >= 2 && size_class <= MAX_SIZE_CLASS ) {
-            result = malloc( sizeof( page ) );
+            void* pg = malloc( sizeof( union page ) );
 
-            if ( result != NULL ) {
-                memset( result, 0, sizeof( page ) );
-                pages[ npages_allocated] = result;
+            if ( pg != NULL ) {
+                memset( pg, 0, sizeof( union page ) );
+                pages[ npages_allocated] = pg;
                 debug_printf( DEBUG_ALLOC, 0, 
                     L"Allocated page %d for objects of size class %x.\n", 
                     npages_allocated, size_class);
 
                 freelists[size_class] =
-                    initialise_page( result, npages_allocated, size_class, freelists[size_class] );
+                    initialise_page( (union page*)pg, npages_allocated, size_class, freelists[size_class] );
 
                 debug_printf( DEBUG_ALLOC, 0, 
                     L"Initialised page %d; freelist for size class %x updated.\n", 

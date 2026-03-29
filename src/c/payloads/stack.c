@@ -8,11 +8,9 @@
  */
 
 #include "memory/node.h"
-#include "memory/pso.h"
+#include "memory/pso2.h"
+#include "memory/pso4.h"
 #include "payloads/stack.h"
-
-#define STACKTAG "STK"
-#define STACKTV  4936787
 
 /** 
  * @brief The maximum depth of stack before we throw an exception.
