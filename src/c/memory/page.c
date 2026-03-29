@@ -71,11 +71,13 @@ struct pso_pointer initialise_page( union page* page_addr, uint16_t page_index,
         struct pso2* object = (struct pso2 *)(page_addr + (i * obj_bytes)); 
 
         object->header.tag.bytes.size_class = size_class;
-        strncpy( (char *)(object->header.tag.bytes.mnemonic), FREETAG, TAGLENGTH);
+        strncpy( &(object->header.tag.bytes.mnemonic[0]), FREETAG, TAGLENGTH);
         object->payload.free.next = result;
 
         result = make_pointer( node_index, page_index, (uint16_t)( i * obj_size));
     }
+
+    return result;
 }
 
 /** 
