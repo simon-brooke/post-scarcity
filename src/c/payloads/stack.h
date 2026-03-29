@@ -13,6 +13,8 @@
 #define __psse_payloads_stack_h
 
 #include "memory/pointer.h"
+#include "memory/pso2.h"
+#include "memory/pso4.h"
 
 /*
  * number of arguments stored in a stack frame

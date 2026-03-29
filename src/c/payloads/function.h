@@ -11,7 +11,7 @@
 #define __psse_payloads_function_h
 
 #include "memory/pointer.h"
-#include "memory/pso.h"
+#include "memory/pso4.h"
 
 /**
  * @brief Tag for an ordinary Lisp function - one whose arguments are pre-evaluated.
@@ -41,7 +41,7 @@ struct function_payload {
      * a cons pointer (representing its result).
      * \todo check this documentation is current!
      */
-    struct pso_pointer ( *executable ) ( struct pso4 *,
+    struct pso_pointer ( *executable ) ( struct pso4*,
                                           struct pso_pointer,
                                           struct pso_pointer );
 };

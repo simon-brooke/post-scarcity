@@ -16,6 +16,7 @@
  * A pointer to an object in vector space.
  */
 #define VECTORPOINTTAG  "VSP"
+#define VECTORPOINTTV   5264214
 
 /**
  * @brief payload of a vector pointer cell.

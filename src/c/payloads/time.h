@@ -10,6 +10,8 @@
 #ifndef __psse_payloads_cons_h
 #define __psse_payloads_cons_h
 
+#include <stdint.h>
+
 #include "memory/pointer.h"
 
 /**

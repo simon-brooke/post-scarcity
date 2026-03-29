@@ -10,6 +10,7 @@
 #ifndef __psse_payloads_write_stream_h
 #define __psse_payloads_write_stream_h
 
+#include "io/fopen.h"
 #include "memory/pointer.h"
 
 /**

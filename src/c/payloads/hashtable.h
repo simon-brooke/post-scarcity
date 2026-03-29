@@ -45,10 +45,10 @@
  * i.e. either an assoc list or a further hashtable.
  */
 struct hashtable_payload {
-    struct cons_pointer hash_fn;    /* function for hashing values in this hashtable, or `NIL` to use
+    struct pso_pointer hash_fn;    /* function for hashing values in this hashtable, or `NIL` to use
                                      the default hashing function */
     uint32_t n_buckets;             /* number of hash buckets */
-    struct cons_pointer buckets[];  /* actual hash buckets, which should be `NIL`
+    struct pso_pointer buckets[];  /* actual hash buckets, which should be `NIL`
                                      * or assoc lists or (possibly) further hashtables. */
 };
 

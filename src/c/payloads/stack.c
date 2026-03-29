@@ -11,6 +11,9 @@
 #include "memory/pso.h"
 #include "payloads/stack.h"
 
+#define STACKTAG "STK"
+#define STACKTV  4936787
+
 /** 
  * @brief The maximum depth of stack before we throw an exception.
  *

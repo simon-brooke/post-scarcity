@@ -14,6 +14,7 @@
 
 #include <curl/curl.h>
 
+#include "io/fopen.h"
 #include "memory/pointer.h"
 
 /**
@@ -31,7 +32,7 @@ struct stream_payload {
     /** metadata on the stream (e.g. its file attributes if a file, its HTTP
      * headers if a URL, etc). Expected to be an association, or nil. Not yet
      * implemented. */
-    struct cons_pointer meta;
+    struct pso_pointer meta;
 };
 
 #endif
