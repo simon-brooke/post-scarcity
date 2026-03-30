@@ -72,7 +72,6 @@ union page {
     struct psof psofs[PAGE_BYTES / 262144];
 };
 
-struct pso_pointer initialise_page( union page * page_addr, uint16_t page_index, 
-    uint8_t size_class, struct pso_pointer freelist);
+struct pso_pointer allocate_page( uint8_t size_class );
 
 #endif

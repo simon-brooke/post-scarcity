@@ -11,10 +11,14 @@
 
 #ifndef __psse_ops_eq_h
 #define __psse_ops_eq_h
+#include <stdbool.h>
+
+#include "memory/pointer.h"
+#include "memory/pso4.h"
 
 bool eq( struct pso_pointer a, struct pso_pointer b );
 
-struct pso_pointer lisp_eq( struct stack_frame *frame,
+struct pso_pointer lisp_eq( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env );
 

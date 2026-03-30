@@ -12,21 +12,21 @@
 #ifndef __psse_ops_truth_h
 #define __psse_ops_truth_h
 
-bool nilp( struct pso_pointer a, struct pso_pointer b );
+bool nilp( struct pso_pointer p );
 
-struct pso_pointer lisp_nilp( struct stack_frame *frame,
+struct pso_pointer lisp_nilp( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env );
 
-bool not( struct pso_pointer a, struct pso_pointer b );
+bool not( struct pso_pointer p );
 
-struct pso_pointer lisp_not( struct stack_frame *frame,
+struct pso_pointer lisp_not( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env );
 
-bool truep( struct pso_pointer a, struct pso_pointer b );
+bool truep( struct pso_pointer p );
 
-struct pso_pointer lisp_truep( struct stack_frame *frame,
+struct pso_pointer lisp_truep( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env );
 

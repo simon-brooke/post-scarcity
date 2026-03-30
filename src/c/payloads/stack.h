@@ -13,6 +13,7 @@
 #define __psse_payloads_stack_h
 
 #include "memory/pointer.h"
+#include "memory/pso4.h"
 
 #define STACKTAG "STK"
 #define STACKTV  4936787
@@ -46,5 +47,7 @@ struct stack_frame_payload {
     /** the depth of the stack below this frame */
     uint32_t depth;
 };
+
+struct pso_pointer fetch_arg( struct pso4 *frame, unsigned int index );
 
 #endif

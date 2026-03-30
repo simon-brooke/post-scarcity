@@ -14,9 +14,17 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
- #include "memory/page.h"
- #include "memory/pointer.h"
- #include "memory/pso.h"
+#include <stdbool.h>
+#include <string.h>
+
+#include "debug.h"
+#include "memory/header.h"
+#include "memory/memory.h"
+#include "memory/node.h"
+#include "memory/page.h"
+#include "memory/pointer.h"
+#include "memory/pso.h"
+#include "ops/truth.h"
 
  /**
   * @brief Allocate an object of this size_class with this tag.
@@ -29,8 +37,8 @@ struct pso_pointer allocate( char* tag, uint8_t size_class) {
     struct pso_pointer result = nil;
 
     if (size_class <= MAX_SIZE_CLASS) {
-        if (freelists[size_class] == nil) {
-            result = allocate_page(size_class)
+        if (nilp( freelists[size_class])) {
+            result = allocate_page(size_class);
         }
 
         if ( !exceptionp( result) && not( freelists[size_class] ) ) {
@@ -38,16 +46,16 @@ struct pso_pointer allocate( char* tag, uint8_t size_class) {
             struct pso2* object = pointer_to_object( result);
             freelists[size_class] = object->payload.free.next;
 
-            strncpy( (char *)(object->header.tag.mnemonic), tag, TAGLENGTH);
+            strncpy( (char *)(object->header.tag.bytes.mnemonic), tag, TAGLENGTH);
 
             /* the object ought already to have the right size class in its tag
              * because it was popped off the freelist for that size class. */
-            if ( object->header.tag.size_class != size_class) {
+            if ( object->header.tag.bytes.size_class != size_class) {
                 // TODO: return an exception instead? Or warn, set it, and continue?
             }
             /* the objext ought to have a reference count ot zero, because it's 
              * on the freelist, but again we should sanity check. */
-            if ( object->header.header.count != 0) {
+            if ( object->header.count != 0) {
                 // TODO: return an exception instead? Or warn, set it, and continue?
             }
 
@@ -55,6 +63,28 @@ struct pso_pointer allocate( char* tag, uint8_t size_class) {
     } // TODO: else throw exception
 
     return result;
+}
+
+uint32_t payload_size( struct pso2* object) {
+	// TODO: Unit tests DEFINITELY needed!
+	return ((1 << object->header.tag.bytes.size_class) - sizeof( struct pso_header));
+}
+
+void free_cell( struct pso_pointer p) {
+	struct pso2* p2 = pointer_to_object( p);
+	uint32_t array_size = payload_size(p2);
+	uint8_t size_class = p2->header.tag.bytes.size_class;
+
+    strncpy( (char *)(p2->header.tag.bytes.mnemonic), FREETAG, TAGLENGTH);
+
+	/* will C just let me cheerfully walk off the end of the array I've declared? */
+	for (int i = 0; i < array_size; i++) {
+		p2->payload.words[i] = 0;
+	}
+
+	/* TODO: obtain mutex on freelist */
+	p2->payload.free.next = freelists[size_class];
+	freelists[size_class] = p;
 }
 
 /**
@@ -71,14 +101,14 @@ struct pso_pointer inc_ref( struct pso_pointer pointer ) {
     if ( object->header.count < MAXREFERENCE ) {
         object->header.count++;
 #ifdef DEBUG
-        debug_printf( DEBUG_ALLOC,
-                      L"\nIncremented object of type %4.4s at page %u, offset %u to count %u",
-                      ( ( char * ) object->header.tag.bytes ), pointer.page,
+        debug_printf( DEBUG_ALLOC, 0,
+                      L"\nIncremented object of type %3.3s at page %u, offset %u to count %u",
+                      ( ( char * ) &object->header.tag.bytes.mnemonic[0] ), pointer.page,
                       pointer.offset, object->header.count );
-        if ( strncmp( object->header.tag.bytes, VECTORPOINTTAG, TAGLENGTH ) == 0 ) {
-            debug_printf( DEBUG_ALLOC,
-                          L"; pointer to vector object of type %4.4s.\n",
-                          ( ( char * ) ( object->header.payload.vectorp.tag.bytes ) ) );
+        if ( vectorpointp( pointer) ) {
+            debug_printf( DEBUG_ALLOC, 0,
+                          L"; pointer to vector object of type %3.3s.\n",
+                          ( ( char * ) &( object->payload.vectorp.tag.bytes[0] ) ) );
         } else {
             debug_println( DEBUG_ALLOC );
         }
@@ -99,18 +129,17 @@ struct pso_pointer inc_ref( struct pso_pointer pointer ) {
 struct pso_pointer dec_ref( struct pso_pointer pointer ) {
     struct pso2 *object = pointer_to_object( pointer );
 
-    if ( object->count > 0 && object->count != MAXREFERENCE ) {
-        object->count--;
+    if ( object->header.count > 0 && object->header.count != MAXREFERENCE ) {
+        object->header.count--;
 #ifdef DEBUG
-        debug_printf( DEBUG_ALLOC,
+        debug_printf( DEBUG_ALLOC, 0,
                       L"\nDecremented object of type %4.4s at page %d, offset %d to count %d",
-                      ( ( char * ) object->tag.bytes ), pointer.page,
-                      pointer.offset, object->count );
-        if ( strncmp( ( char * ) object->tag.bytes, VECTORPOINTTAG, TAGLENGTH )
-             == 0 ) {
-            debug_printf( DEBUG_ALLOC,
-                          L"; pointer to vector object of type %4.4s.\n",
-                          ( ( char * ) ( object->payload.vectorp.tag.bytes ) ) );
+                      ( ( char * ) (object->header.tag.bytes.mnemonic )), pointer.page,
+                      pointer.offset, object->header.count );
+        if ( vectorpointp( pointer)) {
+            debug_printf( DEBUG_ALLOC, 0,
+                          L"; pointer to vector object of type %3.3s.\n",
+                          ( ( char * ) &( object->payload.vectorp.tag.bytes ) ) );
         } else {
             debug_println( DEBUG_ALLOC );
         }
@@ -118,7 +147,7 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
 
         if ( object->header.count == 0 ) {
             free_cell( pointer );
-            pointer = NIL;
+            pointer = nil;
         }
     }
 
@@ -133,7 +162,7 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
 void lock_object( struct pso_pointer pointer) {
     struct pso2* object = pointer_to_object( pointer );
 
-    object->header.header.count = MAXREFERENCE;
+    object->header.count = MAXREFERENCE;
 }
 
 
@@ -145,9 +174,12 @@ void lock_object( struct pso_pointer pointer) {
  * @return the tag value of the object indicated.
  */
 uint32_t get_tag_value( struct pso_pointer pointer) {
-    result = (pointer_to_object( pointer)->tag.value & 0xffffff;
+	struct pso2* object = pointer_to_object( pointer);
+	uint32_t result = (object->header.tag.value & 0xffffff);
 
-    // TODO: deal with the vector pointer issue
+    if (vectorpointp( pointer)) {
+    	result = (object->payload.vectorp.tag.value & 0xffffff);
+    }
 
     return result;
 }

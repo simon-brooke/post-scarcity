@@ -9,6 +9,7 @@
 
 #ifndef __psse_payloads_exception_h
 #define __psse_payloads_exception_h
+#include <stdbool.h>
 
 #include "memory/pointer.h"
 
@@ -27,5 +28,6 @@ struct exception_payload {
     struct pso_pointer cause;
 };
 
+bool exceptionp( struct pso_pointer p);
 
 #endif

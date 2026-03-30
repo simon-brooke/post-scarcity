@@ -23,7 +23,7 @@
  */
 #define MAX_SIZE_CLASS 0xf
 
-int initialise_memory(  );
+struct pso_pointer initialise_memory(  );
 
 extern struct pso_pointer out_of_memory_exception;
 extern struct pso_pointer freelists[];

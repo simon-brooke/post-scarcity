@@ -58,10 +58,10 @@ bool truep( struct pso_pointer p) {
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is `nil`, else `t`
  */
-pso_pointer lisp_nilp( struct stack_frame *frame,
+pso_pointer lisp_nilp( struct pso4 *frame,
                                   struct pso_pointer frame_pointer,
                                   struct pso_pointer env ){
-    return (nilp(frame->arg[0]) ? t : nil);
+    return (nilp(frame->payload.stack_frame.arg[0]) ? t : nil);
 }
 
 /**
@@ -72,10 +72,10 @@ pso_pointer lisp_nilp( struct stack_frame *frame,
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is `t`, else `nil`.
  */
-pso_pointer lisp_truep( struct stack_frame *frame,
+pso_pointer lisp_truep( struct pso4 *frame,
                                   struct pso_pointer frame_pointer,
                                   struct pso_pointer env ){
-    return (truep(frame->arg[0]) ? t : nil);
+    return (truep(frame->payload.stack_frame.arg[0]) ? t : nil);
 }
 
 /**
@@ -87,8 +87,8 @@ pso_pointer lisp_truep( struct stack_frame *frame,
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is not `nil`, else `t`.
  */
-pso_pointer lisp_not( struct stack_frame *frame,
+pso_pointer lisp_not( struct pso4 *frame,
                                   struct pso_pointer frame_pointer,
                                   struct pso_pointer env ){
-    return (not(frame->arg[0]) ? t : nil);
+    return (not(frame->payload.stack_frame.arg[0]) ? t : nil);
 }

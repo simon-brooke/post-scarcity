@@ -251,4 +251,6 @@ struct pso_pointer inc_ref( struct pso_pointer pointer );
 
 void lock_object( struct pso_pointer pointer);
 
+uint32_t get_tag_value( struct pso_pointer pointer);
+
 #endif

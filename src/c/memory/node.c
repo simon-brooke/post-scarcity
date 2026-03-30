@@ -12,9 +12,10 @@
 
 #include <bits/stdint-uintn.h>
 
-#include "ops/equal.h"
-#include "memory.h"
-#include "pointer.h"
+#include "environment/environment.h"
+#include "memory/memory.h"
+#include "memory/pointer.h"
+#include "ops/eq.h"
 
 /**
  * @brief Flag to prevent the node being initialised more than once.
@@ -31,17 +32,19 @@ bool node_initialised = false;
  */
 uint32_t node_index = 0;
 
+
 /**
  * @brief The canonical `nil` pointer
- * 
+ *
  */
-struct pso_pointer nil = struct pso_pointer { 0, 0, 0 };
+struct pso_pointer nil = (struct pso_pointer) { 0, 0, 0};
 
 /**
  * @brief the canonical `t` (true) pointer.
- * 
+ *
  */
-struct pso_pointer t = struct pso_pointer { 0, 0, 1 };
+struct pso_pointer t = (struct pso_pointer) { 0, 0, 1 };
+
 
 /**
  * @brief Set up the basic informetion about this node.
@@ -51,10 +54,8 @@ struct pso_pointer t = struct pso_pointer { 0, 0, 1 };
  */
 struct pso_pointer initialise_node( uint32_t index ) {
     node_index = index;
-    nil = pso_pointer { index, 0, 0};
-    t = pso_pointer( index, 0, 1 );
 
-    pso_pointer result = initialise_memory( index );
+    struct pso_pointer result = initialise_memory( index );
 
     if ( eq( result, t ) ) {
         result = initialise_environment( index );

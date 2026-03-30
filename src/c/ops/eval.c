@@ -9,14 +9,16 @@
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#include "memory/pointer"
-#include "memory/stack.h"
+#include "memory/pointer.h"
+#include "memory/pso4.h"
 #include "payloads/cons.h"
+#include "payloads/exception.h"
 #include "payloads/function.h"
 #include "payloads/keyword.h"
 #include "payloads/lambda.h"
 #include "payloads/nlambda.h"
 #include "payloads/special.h"
+#include "payloads/stack.h"
 
 /**
  * @brief Despatch eval based on tag of the form in the first position.
@@ -26,10 +28,10 @@
  * @param env the evaluation environment.
  * @return struct pso_pointer 
  */
-struct pso_pointer eval_despatch( struct stack_frame *frame,
+struct pso_pointer eval_despatch( struct pso4 *frame,
                                   struct pso_pointer frame_pointer,
                                   struct pso_pointer env ) {
-    struct pso_pointer result = frame->arg[0];
+    struct pso_pointer result = frame->payload.stack_frame.arg[0];
 
     // switch ( get_tag_value( result)) {
     //     case CONSTV:
@@ -53,7 +55,7 @@ struct pso_pointer eval_despatch( struct stack_frame *frame,
     return result;
 }
 
-struct pso_pointer lisp_eval( struct stack_frame *frame,
+struct pso_pointer lisp_eval( struct pso4 *frame,
                               struct pso_pointer frame_pointer,
                               struct pso_pointer env ) {
     struct pso_pointer result = eval_despatch( frame, frame_pointer, env );

@@ -10,6 +10,8 @@
 #ifndef __psse_payloads_vector_pointer_h
 #define __psse_payloads_vector_pointer_h
 
+#include <stdbool.h>
+
 #include "memory/pointer.h"
 
 /**
@@ -36,5 +38,7 @@ struct vectorp_payload {
     /** the address of the actual vector space object */
     void *address;
 };
+
+bool vectorpointp( struct pso_pointer p);
 
 #endif

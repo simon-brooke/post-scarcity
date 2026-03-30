@@ -1,13 +1,16 @@
 /**
- *  memory/pointer.h
+ *  memory/node.h
  *
- *  A pointer to a paged space object.
+ *  The node on which this instance resides.
  *
  *  (c) 2026 Simon Brooke <simon@journeyman.cc>
  *  Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
+#include <stddef.h>
+
 #include "memory/node.h"
+#include "memory/page.h"
 #include "memory/pointer.h"
 #include "memory/pso.h"
 
@@ -20,7 +23,7 @@
  * @return struct pso_pointer a pointer referencing the specified object.
  */
 struct pso_pointer make_pointer( uint32_t node, uint16_t page, uint16_t offset) {
-    return struct pso_pointer{ node, page, pointer};
+    return (struct pso_pointer){ node, page, offset};
 }
 
 /**
@@ -37,11 +40,12 @@ struct pso2* pointer_to_object( struct pso_pointer pointer) {
     struct pso2* result = NULL;
 
     if ( pointer.node == node_index) {
-        result = (struct pso2*) &(pages[pointer.node] + (pointer.offset * sizeof( uint64_t)));
-    } 
+    	union page* pg = pages[pointer.page];
+        result = (struct pso2*) &pg->words[pointer.offset];
+    }
     // TODO: else if we have a copy of the object in cache, return that;
     // else request a copy of the object from the node which curates it.
 
     return result;
 }
- 
+

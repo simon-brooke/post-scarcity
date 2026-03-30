@@ -10,8 +10,10 @@
  */
 
 #include "memory/memory.h"
+#include "memory/node.h"
 #include "memory/pointer.h"
-#include "memory/stack.h"
+#include "payloads/stack.h"
+#include "ops/truth.h"
 
 /**
  * @brief Function; do these two pointers point to the same object? 
@@ -41,14 +43,14 @@ bool eq( struct pso_pointer a, struct pso_pointer b ) {
  * @param env my environment (ignored).
  * @return `t` if all args are pointers to the same object, else `nil`;
  */
-struct pso_pointer lisp_eq( struct stack_frame *frame,
+struct pso_pointer lisp_eq( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env ) {
     struct pso_pointer result = t;
 
     if ( frame->args > 1 ) {
         for ( int b = 1; ( truep( result ) ) && ( b < frame->args ); b++ ) {
-            result = eq( frame->arg[0], fetch_arg( frame, b ) ) ? t : nil;
+            result = eq( fetch_arg(frame, 0), fetch_arg( frame, b ) ) ? t : nil;
         }
     }
 

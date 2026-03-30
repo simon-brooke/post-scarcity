@@ -16,6 +16,8 @@
 
 #define TAGLENGTH 3
 
+#define MAXREFERENCE 4294967295
+
 /**
  * @brief Header for all paged space objects.
  * 

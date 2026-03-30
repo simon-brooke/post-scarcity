@@ -8,10 +8,9 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
-
 #include "debug.h"
 #include "memory/memory.h"
 #include "memory/node.h"
@@ -83,12 +82,6 @@ struct pso_pointer initialise_page( union page* page_addr, uint16_t page_index,
 /** 
  * @brief Allocate a page for objects of this size class, initialise it, and
  * link the objects in it into the freelist for this size class.
- *
- * Because we can't return an exception at this low level, and because there 
- * are multiple possible causes of failure, for the present this function will
- * print errors to stderr. We cast the error stream to wide, since we've 
- * probably (but not certainly) already cast it to wide, and we can't reliably
- * cast it back.
  *
  * @param size_class an integer in the range 0...MAX_SIZE_CLASS.
  * @return t on success, an exception if an error occurred.
