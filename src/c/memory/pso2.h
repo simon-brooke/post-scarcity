@@ -12,8 +12,8 @@
 
 #include <stdint.h>
 
-#include "../payloads/psse-string.h"
 #include "memory/header.h"
+#include "payloads/character.h"
 #include "payloads/cons.h"
 #include "payloads/free.h"
 #include "payloads/function.h"
@@ -22,9 +22,9 @@
 #include "payloads/lambda.h"
 #include "payloads/nlambda.h"
 #include "payloads/read_stream.h"
-#include "payloads/special.h"
+#include "payloads/psse-string.h"
 #include "payloads/symbol.h"
-// #include "payloads/time.h"
+#include "payloads/time.h"
 #include "payloads/vector_pointer.h"
 #include "payloads/write_stream.h"
 
@@ -38,13 +38,16 @@ struct pso2 {
     union {
         char bytes[16];
         uint64_t words[2];
+        struct character_payload character;
         struct cons_payload cons;
         struct free_payload free;
         struct function_payload function;
         struct integer_payload integer;
         struct lambda_payload lambda;
-//        struct special_payload special;
+        struct function_payload special;
         struct stream_payload stream;
+        struct string_payload string;
+// TODO: this isn't working and I don't know why (error: field ‘time’ has incomplete type)
 //        struct time_payload time;
         struct vectorp_payload vectorp;
     } payload;

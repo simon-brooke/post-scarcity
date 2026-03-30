@@ -10,7 +10,9 @@
 #ifndef __psse_payloads_cons_h
 #define __psse_payloads_cons_h
 
+#include <ctype.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "memory/pointer.h"
 
@@ -26,7 +28,7 @@
  * convenience, 14Bn years before 1st Jan 1970 (the UNIX epoch))
  */
 struct time_payload {
-    unsigned __int128_t value;
+    unsigned __int128 value;
 };
 
 #endif
