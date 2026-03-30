@@ -48,17 +48,17 @@
  * i.e. either an assoc list or a further namespace.
  */
 struct namespace_payload {
-    struct pso_pointer hash_fn;    /* function for hashing values in this namespace, or 
-                                     * `NIL` to use the default hashing function */
-    uint32_t n_buckets;             /* number of hash buckets */
-    uint32_t unused;                /* for word alignment and possible later expansion */
-    struct pso_pointer write_acl;  /* it seems to me that it is likely that the
-                                     * principal difference between a hashtable and a
-                                     * namespace is that a hashtable has a write ACL
-                                     * of `NIL`, meaning not writeable by anyone */
-    struct pso_pointer mutex;      /* the mutex to lock when modifying this namespace.*/
-    struct pso_pointer buckets[];  /* actual hash buckets, which should be `NIL`
-                                     * or assoc lists or (possibly) further hashtables. */
+    struct pso_pointer hash_fn; /* function for hashing values in this namespace, or 
+                                 * `NIL` to use the default hashing function */
+    uint32_t n_buckets;         /* number of hash buckets */
+    uint32_t unused;            /* for word alignment and possible later expansion */
+    struct pso_pointer write_acl; /* it seems to me that it is likely that the
+                                   * principal difference between a hashtable and a
+                                   * namespace is that a hashtable has a write ACL
+                                   * of `NIL`, meaning not writeable by anyone */
+    struct pso_pointer mutex;   /* the mutex to lock when modifying this namespace. */
+    struct pso_pointer buckets[]; /* actual hash buckets, which should be `NIL`
+                                   * or assoc lists or (possibly) further hashtables. */
 };
 
 #endif

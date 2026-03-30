@@ -38,7 +38,7 @@
  * to hold the number of pages we *might* create at start up time. We need a
  * way to grow the number of pages, while keeping access to them cheap.
  */
-union page * pages[NPAGES];
+union page *pages[NPAGES];
 
 /**
  * @brief the number of pages which have thus far been allocated.
@@ -55,25 +55,30 @@ uint32_t npages_allocated = 0;
  * @param freelist the freelist for objects of this size class.
  * @return struct pso_pointer the new head for the freelist for this size_class,
  */
-struct pso_pointer initialise_page( union page* page_addr, uint16_t page_index, 
-    uint8_t size_class, struct pso_pointer freelist) {
+struct pso_pointer initialise_page( union page *page_addr, uint16_t page_index,
+                                    uint8_t size_class,
+                                    struct pso_pointer freelist ) {
     struct pso_pointer result = freelist;
-    int obj_size = pow(2, size_class);
-    int obj_bytes = obj_size  * sizeof(uint64_t);
-    int objs_in_page = PAGE_BYTES/obj_bytes;
+    int obj_size = pow( 2, size_class );
+    int obj_bytes = obj_size * sizeof( uint64_t );
+    int objs_in_page = PAGE_BYTES / obj_bytes;
 
     // we do this backwards (i--) so that object {0, 0, 0} will be first on the
     // freelist when the first page is initiated, so we can grab that one for 
     // `nil` and the next on for `t`.
-    for (int i = objs_in_page - 1; i >= 0; i--) {
+    for ( int i = objs_in_page - 1; i >= 0; i-- ) {
         // it should be safe to cast any pso object to a pso2
-        struct pso2* object = (struct pso2 *)(page_addr + (i * obj_bytes)); 
+        struct pso2 *object =
+            ( struct pso2 * ) ( page_addr + ( i * obj_bytes ) );
 
         object->header.tag.bytes.size_class = size_class;
-        strncpy( &(object->header.tag.bytes.mnemonic[0]), FREETAG, TAGLENGTH);
+        strncpy( &( object->header.tag.bytes.mnemonic[0] ), FREETAG,
+                 TAGLENGTH );
         object->payload.free.next = result;
 
-        result = make_pointer( node_index, page_index, (uint16_t)( i * obj_size));
+        result =
+            make_pointer( node_index, page_index,
+                          ( uint16_t ) ( i * obj_size ) );
     }
 
     return result;
@@ -89,56 +94,56 @@ struct pso_pointer initialise_page( union page* page_addr, uint16_t page_index,
 struct pso_pointer allocate_page( uint8_t size_class ) {
     struct pso_pointer result = t;
 
-    if ( npages_allocated == 0) {
-        for (int i = 0; i < NPAGES; i++) {
+    if ( npages_allocated == 0 ) {
+        for ( int i = 0; i < NPAGES; i++ ) {
             pages[i] = NULL;
         }
-        debug_print( L"Pages array zeroed.\n", DEBUG_ALLOC, 0);
+        debug_print( L"Pages array zeroed.\n", DEBUG_ALLOC, 0 );
     }
 
-    if ( npages_allocated < NPAGES) {    
+    if ( npages_allocated < NPAGES ) {
         if ( size_class >= 2 && size_class <= MAX_SIZE_CLASS ) {
-            void* pg = malloc( sizeof( union page ) );
+            void *pg = malloc( sizeof( union page ) );
 
             if ( pg != NULL ) {
                 memset( pg, 0, sizeof( union page ) );
-                pages[ npages_allocated] = pg;
-                debug_printf( DEBUG_ALLOC, 0, 
-                    L"Allocated page %d for objects of size class %x.\n", 
-                    npages_allocated, size_class);
+                pages[npages_allocated] = pg;
+                debug_printf( DEBUG_ALLOC, 0,
+                              L"Allocated page %d for objects of size class %x.\n",
+                              npages_allocated, size_class );
 
                 freelists[size_class] =
-                    initialise_page( (union page*)pg, npages_allocated, size_class, freelists[size_class] );
+                    initialise_page( ( union page * ) pg, npages_allocated,
+                                     size_class, freelists[size_class] );
 
-                debug_printf( DEBUG_ALLOC, 0, 
-                    L"Initialised page %d; freelist for size class %x updated.\n", 
-                    npages_allocated,
-                    size_class);    
+                debug_printf( DEBUG_ALLOC, 0,
+                              L"Initialised page %d; freelist for size class %x updated.\n",
+                              npages_allocated, size_class );
 
-                npages_allocated ++;
+                npages_allocated++;
             } else {
                 // TODO: exception when we have one.
                 result = nil;
                 fwide( stderr, 1 );
-                fwprintf( stderr, 
-                    L"\nCannot allocate page: heap exhausted,\n",
-                    size_class, MAX_SIZE_CLASS );
+                fwprintf( stderr,
+                          L"\nCannot allocate page: heap exhausted,\n",
+                          size_class, MAX_SIZE_CLASS );
             }
         } else {
             // TODO: exception when we have one.
             result = nil;
             fwide( stderr, 1 );
-            fwprintf( stderr, 
-                L"\nCannot allocate page for size class %x, min is 2 max is %x.\n",
-                size_class, MAX_SIZE_CLASS );
+            fwprintf( stderr,
+                      L"\nCannot allocate page for size class %x, min is 2 max is %x.\n",
+                      size_class, MAX_SIZE_CLASS );
         }
     } else {
         // TODO: exception when we have one.
-            result = nil;
+        result = nil;
         fwide( stderr, 1 );
-        fwprintf( stderr, 
-            L"\nCannot allocate page: page space exhausted.\n",
-            size_class, MAX_SIZE_CLASS );
+        fwprintf( stderr,
+                  L"\nCannot allocate page: page space exhausted.\n",
+                  size_class, MAX_SIZE_CLASS );
     }
 
     return result;

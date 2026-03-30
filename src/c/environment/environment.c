@@ -23,10 +23,10 @@ bool environment_initialised = false;
  * @param node theindex of the node we are initialising.
  * @return struct pso_pointer t on success, else an exception.
  */
- 
-struct pso_pointer initialise_environment( uint32_t node) {
+
+struct pso_pointer initialise_environment( uint32_t node ) {
     struct pso_pointer result = t;
-    if (environment_initialised) {
+    if ( environment_initialised ) {
         // TODO: throw an exception "Attempt to reinitialise environment"
     } else {
         // TODO: actually initialise it.

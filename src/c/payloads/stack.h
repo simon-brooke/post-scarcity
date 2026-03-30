@@ -13,7 +13,7 @@
 #define __psse_payloads_stack_h
 
 #include "memory/pointer.h"
-#include "memory/pso4.h"
+// #include "memory/pso4.h"
 
 #define STACKTAG "STK"
 #define STACKTV  4936787
@@ -22,13 +22,6 @@
  * number of arguments stored in a stack frame
  */
 #define args_in_frame 8
-
-/** 
- * @brief The maximum depth of stack before we throw an exception.
- *
- * `0` is interpeted as `unlimited`.
- */
-extern uint32_t stack_limit;
 
 /**
  * A stack frame. 
@@ -47,7 +40,5 @@ struct stack_frame_payload {
     /** the depth of the stack below this frame */
     uint32_t depth;
 };
-
-struct pso_pointer fetch_arg( struct pso4 *frame, unsigned int index );
 
 #endif

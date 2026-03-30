@@ -14,6 +14,7 @@
 
 #include "psse.h"
 #include "memory/node.h"
+#include "ops/stack_ops.h"
 
 void print_banner(  ) {
     fwprintf( stdout, L"Post-Scarcity Software Environment version %s\n\n",

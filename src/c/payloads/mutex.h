@@ -32,7 +32,7 @@ struct mutex_payload {
     pthread_mutex_t mutex;
 };
 
-struct pso_pointer make_mutex();
+struct pso_pointer make_mutex(  );
 
 /**
  * @brief evaluates these forms within the context of a thread-safe lock.
@@ -50,7 +50,8 @@ struct pso_pointer make_mutex();
  * @param forms a list of arbitrary Lisp forms.
  * @return struct pso_pointer the result.
  */
-struct pso_pointer with_lock( struct pso_pointer lock, struct pso_pointer forms);
+struct pso_pointer with_lock( struct pso_pointer lock,
+                              struct pso_pointer forms );
 
 /**
  * @brief as with_lock, q.v. but attempts to obtain a lock and returns an
@@ -64,6 +65,7 @@ struct pso_pointer with_lock( struct pso_pointer lock, struct pso_pointer forms)
  * @param forms a list of arbitrary Lisp forms.
  * @return struct pso_pointer the result.
  */
-struct pso_pointer attempt_with_lock( struct pso_pointer lock, struct pso_pointer forms);
+struct pso_pointer attempt_with_lock( struct pso_pointer lock,
+                                      struct pso_pointer forms );
 
 #endif

@@ -13,6 +13,7 @@
 #include "memory/node.h"
 #include "memory/pointer.h"
 #include "payloads/stack.h"
+#include "ops/stack_ops.h"
 #include "ops/truth.h"
 
 /**
@@ -48,9 +49,12 @@ struct pso_pointer lisp_eq( struct pso4 *frame,
                             struct pso_pointer env ) {
     struct pso_pointer result = t;
 
-    if ( frame->args > 1 ) {
-        for ( int b = 1; ( truep( result ) ) && ( b < frame->args ); b++ ) {
-            result = eq( fetch_arg(frame, 0), fetch_arg( frame, b ) ) ? t : nil;
+    if ( frame->payload.stack_frame.args > 1 ) {
+        for ( int b = 1;
+              ( truep( result ) ) && ( b < frame->payload.stack_frame.args );
+              b++ ) {
+            result =
+                eq( fetch_arg( frame, 0 ), fetch_arg( frame, b ) ) ? t : nil;
         }
     }
 

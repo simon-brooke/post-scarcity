@@ -37,13 +37,13 @@ uint32_t node_index = 0;
  * @brief The canonical `nil` pointer
  *
  */
-struct pso_pointer nil = (struct pso_pointer) { 0, 0, 0};
+struct pso_pointer nil = ( struct pso_pointer ) { 0, 0, 0 };
 
 /**
  * @brief the canonical `t` (true) pointer.
  *
  */
-struct pso_pointer t = (struct pso_pointer) { 0, 0, 1 };
+struct pso_pointer t = ( struct pso_pointer ) { 0, 0, 1 };
 
 
 /**

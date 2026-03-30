@@ -13,6 +13,6 @@
 #include "memory/pso.h"
 #include "payloads/vector_pointer.h"
 
-bool vectorpointp( struct pso_pointer p) {
-	return (get_tag_value( p) == VECTORPOINTTV);
+bool vectorpointp( struct pso_pointer p ) {
+    return ( get_tag_value( p ) == VECTORPOINTTV );
 }

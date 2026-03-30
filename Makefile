@@ -8,8 +8,9 @@ DEPS := $(OBJS:.o=.d)
 
 TESTS := $(shell find unit-tests -name *.sh)
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+# INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+# INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_FLAGS := -I $(SRC_DIRS)
 
 TMP_DIR ?= ./tmp
 

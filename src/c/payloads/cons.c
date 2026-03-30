@@ -23,15 +23,15 @@
  * @param cdr the pointer which should form the cdr of this cons cell.
  * @return struct pso_pointer a pointer to the newly allocated cons cell.
  */
-struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr) {
-    struct pso_pointer result = allocate( CONSTAG, 2);
+struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr ) {
+    struct pso_pointer result = allocate( CONSTAG, 2 );
 
     struct pso2 *object = pointer_to_object( result );
     object->payload.cons.car = car;
     object->payload.cons.cdr = cdr;
 
-    inc_ref( car);
-    inc_ref( cdr);
+    inc_ref( car );
+    inc_ref( cdr );
 
     return result;
 }
@@ -43,7 +43,7 @@ struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr) {
  * @return true if `ptr` indicates a cons cell.
  * @return false otherwise
  */
-bool consp( struct pso_pointer ptr) {
+bool consp( struct pso_pointer ptr ) {
     // TODO: make it actually work!
     return false;
 }
@@ -55,11 +55,11 @@ bool consp( struct pso_pointer ptr) {
  * @return the car of the indicated cell.
  * @exception if the pointer does not indicate a cons cell.
  */
-struct pso_pointer car( struct pso_pointer cons) {
+struct pso_pointer car( struct pso_pointer cons ) {
     struct pso_pointer result = nil;
     struct pso2 *object = pointer_to_object( result );
 
-    if ( consp( cons)) {
+    if ( consp( cons ) ) {
         result = object->payload.cons.car;
     }
     // TODO: else throw an exception
@@ -74,11 +74,11 @@ struct pso_pointer car( struct pso_pointer cons) {
  * @return the cdr of the indicated cell.
  * @exception if the pointer does not indicate a cons cell.
  */
-struct pso_pointer cdr( struct pso_pointer cons) {
+struct pso_pointer cdr( struct pso_pointer cons ) {
     struct pso_pointer result = nil;
     struct pso2 *object = pointer_to_object( result );
 
-    if ( consp( cons)) {
+    if ( consp( cons ) ) {
         result = object->payload.cons.cdr;
     }
     // TODO: else throw an exception

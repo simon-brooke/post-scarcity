@@ -39,6 +39,6 @@ struct vectorp_payload {
     void *address;
 };
 
-bool vectorpointp( struct pso_pointer p);
+bool vectorpointp( struct pso_pointer p );
 
 #endif

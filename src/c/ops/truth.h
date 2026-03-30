@@ -11,6 +11,10 @@
 
 #ifndef __psse_ops_truth_h
 #define __psse_ops_truth_h
+#include <stdbool.h>
+
+#include "memory/pointer.h"
+#include "memory/pso4.h"
 
 bool nilp( struct pso_pointer p );
 

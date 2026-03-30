@@ -32,10 +32,10 @@ struct pso_pointer fetch_arg( struct pso4 *frame, unsigned int index ) {
         struct pso_pointer p = frame->payload.stack_frame.more;
 
         for ( int i = args_in_frame; i < index; i++ ) {
-            p = pointer_to_object( p)->payload.cons.cdr;
+            p = pointer_to_object( p )->payload.cons.cdr;
         }
 
-        result = pointer_to_object( p)->payload.cons.car;
+        result = pointer_to_object( p )->payload.cons.car;
     }
 
     return result;

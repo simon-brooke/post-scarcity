@@ -34,10 +34,10 @@ bool memory_initialised = false;
  * @return int 
  */
 struct pso_pointer initialise_memory( uint32_t node ) {
-    if (memory_initialised) {
+    if ( memory_initialised ) {
         // TODO: throw an exception
     } else {
-        for (uint8_t i = 0; i <= MAX_SIZE_CLASS; i++) {
+        for ( uint8_t i = 0; i <= MAX_SIZE_CLASS; i++ ) {
             freelists[i] = nil;
         }
         memory_initialised = true;

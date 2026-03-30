@@ -41,9 +41,9 @@ struct function_payload {
      * a cons pointer (representing its result).
      * \todo check this documentation is current!
      */
-    struct pso_pointer ( *executable ) ( struct pso4*,
-                                          struct pso_pointer,
-                                          struct pso_pointer );
+    struct pso_pointer ( *executable ) ( struct pso4 *,
+                                         struct pso_pointer,
+                                         struct pso_pointer );
 };
 
 #endif

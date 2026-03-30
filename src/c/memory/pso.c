@@ -33,58 +33,61 @@
   * @param size_class The size class for the object to be allocated;
   * @return struct pso_pointer a pointer to the newly allocated object
   */
-struct pso_pointer allocate( char* tag, uint8_t size_class) {
+struct pso_pointer allocate( char *tag, uint8_t size_class ) {
     struct pso_pointer result = nil;
 
-    if (size_class <= MAX_SIZE_CLASS) {
-        if (nilp( freelists[size_class])) {
-            result = allocate_page(size_class);
+    if ( size_class <= MAX_SIZE_CLASS ) {
+        if ( nilp( freelists[size_class] ) ) {
+            result = allocate_page( size_class );
         }
 
-        if ( !exceptionp( result) && not( freelists[size_class] ) ) {
+        if ( !exceptionp( result ) && not( freelists[size_class] ) ) {
             result = freelists[size_class];
-            struct pso2* object = pointer_to_object( result);
+            struct pso2 *object = pointer_to_object( result );
             freelists[size_class] = object->payload.free.next;
 
-            strncpy( (char *)(object->header.tag.bytes.mnemonic), tag, TAGLENGTH);
+            strncpy( ( char * ) ( object->header.tag.bytes.mnemonic ), tag,
+                     TAGLENGTH );
 
             /* the object ought already to have the right size class in its tag
              * because it was popped off the freelist for that size class. */
-            if ( object->header.tag.bytes.size_class != size_class) {
+            if ( object->header.tag.bytes.size_class != size_class ) {
                 // TODO: return an exception instead? Or warn, set it, and continue?
             }
             /* the objext ought to have a reference count ot zero, because it's 
              * on the freelist, but again we should sanity check. */
-            if ( object->header.count != 0) {
+            if ( object->header.count != 0 ) {
                 // TODO: return an exception instead? Or warn, set it, and continue?
             }
 
         }
-    } // TODO: else throw exception
+    }                           // TODO: else throw exception
 
     return result;
 }
 
-uint32_t payload_size( struct pso2* object) {
-	// TODO: Unit tests DEFINITELY needed!
-	return ((1 << object->header.tag.bytes.size_class) - sizeof( struct pso_header));
+uint32_t payload_size( struct pso2 *object ) {
+    // TODO: Unit tests DEFINITELY needed!
+    return ( ( 1 << object->header.tag.bytes.size_class ) -
+             sizeof( struct pso_header ) );
 }
 
-void free_cell( struct pso_pointer p) {
-	struct pso2* p2 = pointer_to_object( p);
-	uint32_t array_size = payload_size(p2);
-	uint8_t size_class = p2->header.tag.bytes.size_class;
+void free_cell( struct pso_pointer p ) {
+    struct pso2 *p2 = pointer_to_object( p );
+    uint32_t array_size = payload_size( p2 );
+    uint8_t size_class = p2->header.tag.bytes.size_class;
 
-    strncpy( (char *)(p2->header.tag.bytes.mnemonic), FREETAG, TAGLENGTH);
+    strncpy( ( char * ) ( p2->header.tag.bytes.mnemonic ), FREETAG,
+             TAGLENGTH );
 
-	/* will C just let me cheerfully walk off the end of the array I've declared? */
-	for (int i = 0; i < array_size; i++) {
-		p2->payload.words[i] = 0;
-	}
+    /* will C just let me cheerfully walk off the end of the array I've declared? */
+    for ( int i = 0; i < array_size; i++ ) {
+        p2->payload.words[i] = 0;
+    }
 
-	/* TODO: obtain mutex on freelist */
-	p2->payload.free.next = freelists[size_class];
-	freelists[size_class] = p;
+    /* TODO: obtain mutex on freelist */
+    p2->payload.free.next = freelists[size_class];
+    freelists[size_class] = p;
 }
 
 /**
@@ -103,12 +106,13 @@ struct pso_pointer inc_ref( struct pso_pointer pointer ) {
 #ifdef DEBUG
         debug_printf( DEBUG_ALLOC, 0,
                       L"\nIncremented object of type %3.3s at page %u, offset %u to count %u",
-                      ( ( char * ) &object->header.tag.bytes.mnemonic[0] ), pointer.page,
-                      pointer.offset, object->header.count );
-        if ( vectorpointp( pointer) ) {
+                      ( ( char * ) &object->header.tag.bytes.mnemonic[0] ),
+                      pointer.page, pointer.offset, object->header.count );
+        if ( vectorpointp( pointer ) ) {
             debug_printf( DEBUG_ALLOC, 0,
                           L"; pointer to vector object of type %3.3s.\n",
-                          ( ( char * ) &( object->payload.vectorp.tag.bytes[0] ) ) );
+                          ( ( char * )
+                            &( object->payload.vectorp.tag.bytes[0] ) ) );
         } else {
             debug_println( DEBUG_ALLOC );
         }
@@ -134,12 +138,13 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
 #ifdef DEBUG
         debug_printf( DEBUG_ALLOC, 0,
                       L"\nDecremented object of type %4.4s at page %d, offset %d to count %d",
-                      ( ( char * ) (object->header.tag.bytes.mnemonic )), pointer.page,
-                      pointer.offset, object->header.count );
-        if ( vectorpointp( pointer)) {
+                      ( ( char * ) ( object->header.tag.bytes.mnemonic ) ),
+                      pointer.page, pointer.offset, object->header.count );
+        if ( vectorpointp( pointer ) ) {
             debug_printf( DEBUG_ALLOC, 0,
                           L"; pointer to vector object of type %3.3s.\n",
-                          ( ( char * ) &( object->payload.vectorp.tag.bytes ) ) );
+                          ( ( char * )
+                            &( object->payload.vectorp.tag.bytes ) ) );
         } else {
             debug_println( DEBUG_ALLOC );
         }
@@ -159,8 +164,8 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
  * 
  * @param pointer pointer to an object to lock.
  */
-void lock_object( struct pso_pointer pointer) {
-    struct pso2* object = pointer_to_object( pointer );
+void lock_object( struct pso_pointer pointer ) {
+    struct pso2 *object = pointer_to_object( pointer );
 
     object->header.count = MAXREFERENCE;
 }
@@ -173,12 +178,12 @@ void lock_object( struct pso_pointer pointer) {
  * @param pointer a pointer to an object.
  * @return the tag value of the object indicated.
  */
-uint32_t get_tag_value( struct pso_pointer pointer) {
-	struct pso2* object = pointer_to_object( pointer);
-	uint32_t result = (object->header.tag.value & 0xffffff);
+uint32_t get_tag_value( struct pso_pointer pointer ) {
+    struct pso2 *object = pointer_to_object( pointer );
+    uint32_t result = ( object->header.tag.value & 0xffffff );
 
-    if (vectorpointp( pointer)) {
-    	result = (object->payload.vectorp.tag.value & 0xffffff);
+    if ( vectorpointp( pointer ) ) {
+        result = ( object->payload.vectorp.tag.value & 0xffffff );
     }
 
     return result;

@@ -28,6 +28,6 @@ struct exception_payload {
     struct pso_pointer cause;
 };
 
-bool exceptionp( struct pso_pointer p);
+bool exceptionp( struct pso_pointer p );
 
 #endif
