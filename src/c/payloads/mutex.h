@@ -15,14 +15,6 @@
 #include "memory/pointer.h"
 
 /**
- * @brief Tag for mutex cell. mutexes are thread-safe locks, required by 
- * mutable objects.
- * \see FUNCTIONTAG.
- */
-#define MUTEXTAG  "MTX"
-#define MUTEXTV   5788749
-
-/**
  * @brief payload for mutex objects.
  *
  * NOTE that the size of `pthread_mutex_t` is variable dependent on hardware 

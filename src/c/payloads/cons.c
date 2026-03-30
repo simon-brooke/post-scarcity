@@ -13,6 +13,7 @@
 #include "memory/pointer.h"
 #include "memory/pso.h"
 #include "memory/pso2.h"
+#include "memory/tags.h" 
 #include "payloads/cons.h"
 
 /**
@@ -36,17 +37,6 @@ struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr ) {
     return result;
 }
 
-/**
- * @brief return true if `ptr` indicates a cons cell, else false.
- * 
- * @param ptr a pointer.
- * @return true if `ptr` indicates a cons cell.
- * @return false otherwise
- */
-bool consp( struct pso_pointer ptr ) {
-    // TODO: make it actually work!
-    return false;
-}
 
 /**
  * @brief return the car of this cons cell.

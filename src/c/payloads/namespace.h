@@ -36,13 +36,6 @@
 #include "memory/pointer.h"
 
 /**
- * @brief Tag for a Lisp namespace - a hashtable whose contents are mutable.
- * \see HASHTABLETAG for mutable hashtables.
- */
-#define NAMESPACETAG "NSP"
-#define NAMESPACETV  5264206
-
-/**
  * The payload of a namespace. The number of buckets is assigned at run-time,
  * and is stored in n_buckets. Each bucket is something ASSOC can consume:
  * i.e. either an assoc list or a further namespace.

@@ -21,7 +21,5 @@
  * provided.
  * \see NLAMBDATAG.
  */
-#define SPECIALTAG  "SFM"
-#define SPECIALTV   5064275
 
 #endif

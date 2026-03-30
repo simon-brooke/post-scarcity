@@ -13,6 +13,8 @@
 #include <stdint.h>
 
 #include "memory/header.h"
+#include "memory/tags.h"
+
 #include "payloads/character.h"
 #include "payloads/cons.h"
 #include "payloads/free.h"

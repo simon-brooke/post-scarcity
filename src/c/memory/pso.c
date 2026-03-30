@@ -24,6 +24,8 @@
 #include "memory/page.h"
 #include "memory/pointer.h"
 #include "memory/pso.h"
+#include "memory/tags.h"
+
 #include "ops/truth.h"
 
  /**
@@ -171,20 +173,3 @@ void lock_object( struct pso_pointer pointer ) {
 }
 
 
-/**
- * @brief Get the numeric value of the tag bytes of the object indicated
- * by this pointer
- * 
- * @param pointer a pointer to an object.
- * @return the tag value of the object indicated.
- */
-uint32_t get_tag_value( struct pso_pointer pointer ) {
-    struct pso2 *object = pointer_to_object( pointer );
-    uint32_t result = ( object->header.tag.value & 0xffffff );
-
-    if ( vectorpointp( pointer ) ) {
-        result = ( object->payload.vectorp.tag.value & 0xffffff );
-    }
-
-    return result;
-}

@@ -12,13 +12,6 @@
 
 #include "memory/pointer.h"
 
-
-/**
- * Tag for a symbol: just like a keyword except not self-evaluating.
- */
-#define SYMBOLTAG   "SYM"
-#define SYMBOLTV    5069139
-
 /* TODO: for now, Symbol shares a payload with String, but this may change.
  * Strings are of indefinite length, but symbols are really not, and might
  * fit into any size class. */

@@ -11,6 +11,8 @@
 
 #include "memory/pointer.h"
 #include "memory/pso4.h"
+#include "memory/tags.h"
+
 #include "payloads/cons.h"
 #include "payloads/exception.h"
 #include "payloads/function.h"

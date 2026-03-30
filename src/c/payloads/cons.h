@@ -13,11 +13,6 @@
 
 #include "memory/pointer.h"
 
-/**
- * An ordinary cons cell:
- */
-#define CONSTAG     "CNS"
-#define CONSTV      5459523
 
 /**
  * @brief A cons cell.

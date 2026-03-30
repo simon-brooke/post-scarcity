@@ -14,14 +14,6 @@
 #include "memory/pso4.h"
 
 /**
- * @brief Tag for an ordinary Lisp function - one whose arguments are pre-evaluated.
- * \see LAMBDATAG for interpretable functions.
- * \see SPECIALTAG for functions whose arguments are not pre-evaluated.
- */
-#define FUNCTIONTAG "FUN"
-#define FUNCTIONTV  5133638
-
-/**
  * @brief Payload of a function cell.
  * `source` points to the source from which the function was compiled, or NIL
  * if it is a primitive.

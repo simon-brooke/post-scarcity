@@ -33,13 +33,6 @@
 #include "memory/pointer.h"
 
 /**
- * @brief Tag for an ordinary Lisp hashtable - one whose contents are immutable.
- * \see NAMESPACETAG for mutable hashtables.
- */
-#define HASHTABLETAG "HTB"
-#define HASHTABLETV  4346952
-
-/**
  * The payload of a hashtable. The number of buckets is assigned at run-time,
  * and is stored in n_buckets. Each bucket is something ASSOC can consume:
  * i.e. either an assoc list or a further hashtable.

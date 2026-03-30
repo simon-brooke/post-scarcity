@@ -13,10 +13,6 @@
 #define __psse_payloads_stack_h
 
 #include "memory/pointer.h"
-// #include "memory/pso4.h"
-
-#define STACKTAG "STK"
-#define STACKTV  4936787
 
 /*
  * number of arguments stored in a stack frame

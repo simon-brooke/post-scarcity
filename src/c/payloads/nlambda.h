@@ -12,12 +12,6 @@
 
 #include "memory/pointer.h"
 
-/**
- * An ordinary nlambda cell:
- */
-#define NLAMBDATAG     "NLM"
-#define NLAMBDATV      5065806
-
 /* nlambda shares a payload with lambda */
 
 #endif

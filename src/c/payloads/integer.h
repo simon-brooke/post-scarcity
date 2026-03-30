@@ -12,9 +12,6 @@
 
 #include <stdint.h>
 
-#define INTEGERTAG "INT"
-#define INTEGERTV  5525065
-
 /**
  * @brief An integer .
  *

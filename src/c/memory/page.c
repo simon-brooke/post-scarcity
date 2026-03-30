@@ -11,7 +11,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "debug.h"
+
 #include "memory/memory.h"
 #include "memory/node.h"
 #include "memory/page.h"
@@ -29,6 +31,8 @@
 #include "memory/psod.h"
 #include "memory/psoe.h"
 #include "memory/psof.h"
+#include "memory/tags.h"
+
 #include "payloads/free.h"
 
 /**

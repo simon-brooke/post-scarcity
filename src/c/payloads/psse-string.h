@@ -17,13 +17,6 @@
 
 #include "memory/pointer.h"
 
-
-/**
- * @brief Tag for string of characters, organised as a linked list.
- */
-#define STRINGTAG   "STR"
-#define STRINGTV    5395539
-
 /**
  * @brief payload of a string cell. 
  *

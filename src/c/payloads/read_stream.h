@@ -18,12 +18,6 @@
 #include "memory/pointer.h"
 
 /**
- * An open read stream.
- */
-#define READTAG     "REA"
-#define READTV      4277586
-
-/**
  * payload of a read or write stream cell.
  */
 struct stream_payload {
