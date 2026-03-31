@@ -41,8 +41,13 @@ struct pso2 *pointer_to_object( struct pso_pointer pointer ) {
     struct pso2 *result = NULL;
 
     if ( pointer.node == node_index ) {
-        union page *pg = pages[pointer.page];
-        result = ( struct pso2 * ) &pg->words[pointer.offset];
+    	if (pointer.page < get_pages_allocated() && pointer.offset < (PAGE_BYTES / 8)) {
+    		// TODO: that's not really a safe test of whether this is a valid pointer.
+			union page *pg = pages[pointer.page];
+			result = ( struct pso2 * ) &pg->words[pointer.offset];
+    	} else {
+    		// TODO: throw bad pointer exception.
+    	}
     }
     // TODO: else if we have a copy of the object in cache, return that;
     // else request a copy of the object from the node which curates it.

@@ -37,4 +37,6 @@ struct stack_frame_payload {
     uint32_t depth;
 };
 
+struct pso_pointer make_frame( struct pso_pointer previous, ...);
+
 #endif

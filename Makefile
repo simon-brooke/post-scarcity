@@ -21,13 +21,14 @@ INDENT_FLAGS := -nbad -bap -nbc -br -brf -brs -c33 -cd33 -ncdb -ce -ci4 -cli4 \
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -g -DDEBUG
 LDFLAGS := -lm -lcurl
 DEBUGFLAGS := -g3
+GCCFLAGS := -std=gnu23
 
 all: $(TARGET)
 
 Debug: $(TARGET)
 
 $(TARGET): $(OBJS) Makefile
-	$(CC) $(DEBUGFLAGS) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
+	$(CC) $(GCCFLAGS) $(DEBUGFLAGS) $(LDFLAGS) $(OBJS) -o $@ $(LDFLAGS) $(LOADLIBES) $(LDLIBS)
 
 doc: $(SRCS) Makefile Doxyfile
 	doxygen

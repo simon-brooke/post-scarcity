@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 
+#include "../payloads/psse_string.h"
 #include "memory/header.h"
 #include "payloads/character.h"
 #include "payloads/cons.h"
@@ -22,7 +23,6 @@
 #include "payloads/lambda.h"
 #include "payloads/nlambda.h"
 #include "payloads/read_stream.h"
-#include "payloads/psse-string.h"
 #include "payloads/symbol.h"
 #include "payloads/time.h"
 #include "payloads/vector_pointer.h"

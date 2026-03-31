@@ -24,6 +24,7 @@ struct exception_payload {
     struct pso_pointer cause;
 };
 
-struct pso_pointer make_exception( struct pso_pointer message, struct pso_pointer frame_pointer, struct pso_pointer cause);
+struct pso_pointer make_exception( struct pso_pointer message,
+		struct pso_pointer frame_pointer, struct pso_pointer cause);
 
 #endif

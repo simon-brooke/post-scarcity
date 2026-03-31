@@ -152,3 +152,11 @@ struct pso_pointer allocate_page( uint8_t size_class ) {
 
     return result;
 }
+
+/**
+ * @brief allow other files to see the current value of npages_allocated, but not
+ * change it.
+ */
+uint32_t get_pages_allocated() {
+	return npages_allocated;
+}

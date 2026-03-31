@@ -22,4 +22,5 @@ struct pso_pointer lisp_eq( struct pso4 *frame,
                             struct pso_pointer frame_pointer,
                             struct pso_pointer env );
 
+bool equal( struct pso_pointer a, struct pso_pointer b);
 #endif

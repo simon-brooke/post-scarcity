@@ -3,7 +3,7 @@
  *
  *  Post Scarcity Software Environment: eq.
  *
- *  Test for pointer equality.
+ *  Test for pointer equality; bootstrap level tests for object equality.
  *
  *  (c) 2026 Simon Brooke <simon@journeyman.cc>
  *  Licensed under GPL version 2.0, or, at your option, any later version.
@@ -12,6 +12,11 @@
 #include "memory/memory.h"
 #include "memory/node.h"
 #include "memory/pointer.h"
+#include "memory/pso2.h"
+#include "memory/tags.h"
+
+#include "payloads/cons.h"
+#include "payloads/integer.h"
 #include "payloads/stack.h"
 #include "ops/stack_ops.h"
 #include "ops/truth.h"
@@ -31,6 +36,39 @@
 bool eq( struct pso_pointer a, struct pso_pointer b ) {
     return ( a.node == b.node && a.page == b.page && a.offset == b.offset );
 }
+
+bool equal( struct pso_pointer a, struct pso_pointer b) {
+	bool result = false;
+
+	if ( eq( a, b)) {
+		result = true;
+	} else if ( get_tag_value(a) == get_tag_value(b)) {
+		switch ( get_tag_value(a)) {
+		case CONSTV :
+			result = (equal( car(a), car(b)) && equal( cdr(a), cdr(b)));
+			break;
+		case INTEGERTV :
+			result = (pointer_to_object(a)->payload.integer.value ==
+					pointer_to_object(b)->payload.integer.value);
+			break;
+		case KEYTV:
+		case STRINGTV :
+		case SYMBOLTV :
+			while (result == false && !nilp(a) && !nilp(b)) {
+				if (pointer_to_object(a)->payload.string.character ==
+						pointer_to_object(b)->payload.string.character) {
+					a = cdr(a);
+					b = cdr(b);
+				}
+			}
+			result = nilp(a) && nilp(b);
+			break;
+		}
+	}
+
+	return result;
+}
+
 
 /**
  * Function; do all arguments to this finction point to the same object? 
@@ -60,3 +98,5 @@ struct pso_pointer lisp_eq( struct pso4 *frame,
 
     return result;
 }
+
+
