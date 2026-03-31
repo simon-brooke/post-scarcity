@@ -13,6 +13,7 @@
 
 #include "memory/pointer.h"
 
+#define CONS_SIZE_CLASS 2
 
 /**
  * @brief A cons cell.

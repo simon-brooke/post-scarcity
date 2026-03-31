@@ -10,6 +10,7 @@
  */
 
 #include "memory/pointer.h"
+#include "memory/pso2.h"
 #include "memory/pso4.h"
 #include "memory/tags.h"
 

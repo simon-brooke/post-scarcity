@@ -23,6 +23,8 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#include "memory/pointer.h"
+
 /**
  * @brief Print messages debugging memory allocation. 
  *
@@ -101,6 +103,10 @@
 extern int verbosity;
 
 void debug_print( wchar_t *message, int level, int indent );
+
+void debug_print_object( struct pso_pointer object, int level, int indent );
+
+void debug_dump_object( struct pso_pointer object, int level, int indent );
 
 void debug_print_128bit( __int128_t n, int level );
 

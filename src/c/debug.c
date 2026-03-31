@@ -45,6 +45,14 @@ void debug_print( wchar_t *message, int level, int indent ) {
 #endif
 }
 
+void debug_print_object( struct pso_pointer object, int level, int indent ) {
+    // TODO: not yet implemented
+}
+
+void debug_dump_object( struct pso_pointer object, int level, int indent ) {
+    // TODO: not yet implemented
+}
+
 /**
  * @brief print a 128 bit integer value to stderr, if `verbosity` matches `level`.
  *

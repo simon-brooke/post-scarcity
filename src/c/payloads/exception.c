@@ -8,7 +8,13 @@
  */
 
 
+#include "memory/node.h"
 #include "memory/pointer.h"
 #include "memory/pso.h"
+
 #include "payloads/exception.h"
 
+struct pso_pointer make_exception( struct pso_pointer message, struct pso_pointer frame_pointer, struct pso_pointer cause) {
+    // TODO: not yet implemented
+    return nil;
+}

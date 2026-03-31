@@ -23,5 +23,6 @@ struct integer_payload {
     __int128_t value;
 };
 
+struct pso_pointer make_integer( int64_t value );
 
 #endif

@@ -12,8 +12,11 @@
 #ifndef __psse_memory_tags_h
 #define __psse_memory_tags_h
 
+#include <stdbool.h>
+
 #define TAGLENGTH 3
 
+#define CHARACTERTAG "CHR"
 #define CONSTAG     "CNS"
 #define EXCEPTIONTAG "EXP"
 #define FREETAG     "FRE"
@@ -43,9 +46,8 @@
 #define VECTORPOINTTAG "VSP"
 #define WRITETAG    "WRT"
 
-// TODO: all these tag values are WRONG, recalculate!
-
-#define CONSTV      5459523
+#define CHARACTERTV 5392451
+#define CONSTV 		5459523
 #define EXCEPTIONTV 5265477
 #define FREETV      4543046
 #define FUNCTIONTV  5133638
@@ -71,12 +73,37 @@
 #define VECTORPOINTTV 5264214
 #define WRITETV     5264214
 
-#define consp(p)    (check_tag(p,CONSTV))
-#define exceptionp(p) (check_tag(p,EXCEPTIONTV))
-#define freep(p)    (check_tag(p,FREETV))
-#define functionp(p) (check_tag(p,FUNCTIONTV))
-#define integerp(p) (check_tag(p,INTEGERTV))
-#define keywordp(p) (check_tag(p,KEYTV))
+/**
+ * @brief return the numerical value of the tag of the object indicated by
+ * pointer `p`.
+ *
+ * @param p must be a struct pso_pointer, indicating the appropriate object.
+ *
+ * @return the numerical value of the tag, as a uint32_t.
+ */
+// #define get_tag_value(p)((pointer_to_object(p)->header.tag.value) & 0xffffff)
+uint32_t get_tag_value (struct pso_pointer p);
+
+/**
+ * @brief check that the tag of the object indicated by this poiner has this
+ * value.
+ *
+ * @param p must be a struct pso_pointer, indicating the appropriate object.
+ * @param v should be an integer, ideally uint32_t, the expected value of a tag.
+ *
+ * @return true if the tag at p matches v, else false.
+ */
+// #define check_tag(p,v) (get_tag_value(p) == v)
+bool check_tag( struct pso_pointer p, uint32_t v);
+
+bool check_type( struct pso_pointer p, char* s);
+
+#define consp(p)    (check_tag(p, CONSTV))
+#define exceptionp(p) (check_tag(p, EXCEPTIONTV))
+#define freep(p)    (check_tag(p, FREETV))
+#define functionp(p) (check_tag(p, FUNCTIONTV))
+#define integerp(p) (check_tag(p, INTEGERTV))
+#define keywordp(p) (check_tag(p, KEYTV))
 #define lambdap(p)  (check_tag(p,LAMBDATV))
 #define loopp(p)    (check_tag(p,LOOPTV))
 #define namespacep(p)(check_tag(p,NAMESPACETV))
@@ -100,26 +127,5 @@
 #define vectorpointp(p) (check_tag(p,VECTORPOINTTV))
 #define vectorp(p) (check_tag(p,VECTORTV))
 #define writep(p)   (check_tag(p,WRITETV))
-
-/**
- * @brief return the numerical value of the tag of the object indicated by 
- * pointer `p`.
- * 
- * @param p must be a struct pso_pointer, indicating the appropriate object.
- *
- * @return the numerical value of the tag, as a uint32_t.
- */
-#define get_tag_value(p)((pointer_to_object(p)->header.tag.value) & 0xffffff)
-
-/**
- * @brief check that the tag of the object indicated by this poiner has this 
- * value.
- *
- * @param p must be a struct pso_pointer, indicating the appropriate object.
- * @param v should be an integer, ideally uint32_t, the expected value of a tag.
- * 
- * @return true if the tag at p matches v, else false.
- */
-#define check_tag(p,v) (get_tag_value(p) == v)
 
 #endif

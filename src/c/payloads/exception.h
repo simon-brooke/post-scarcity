@@ -9,7 +9,6 @@
 
 #ifndef __psse_payloads_exception_h
 #define __psse_payloads_exception_h
-#include <stdbool.h>
 
 #include "memory/pointer.h"
 
@@ -24,5 +23,7 @@ struct exception_payload {
     /** @brief the cause; expected to be another exception, or (usually) `nil`. */
     struct pso_pointer cause;
 };
+
+struct pso_pointer make_exception( struct pso_pointer message, struct pso_pointer frame_pointer, struct pso_pointer cause);
 
 #endif

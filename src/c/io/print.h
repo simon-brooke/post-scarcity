@@ -14,6 +14,6 @@
 #ifndef __psse_io_print_h
 #define __psse_io_print_h
 
-struct pso_pointer print( pso_pointer p, pso_pointer stream);
+struct pso_pointer print( struct pso_pointer p, struct pso_pointer stream);
 
 #endif
