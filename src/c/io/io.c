@@ -114,8 +114,7 @@ char *lisp_string_to_c_string( struct pso_pointer s ) {
     if ( stringp( s ) || symbolp( s ) ) {
         int len = 0;
 
-        for ( struct pso_pointer c = s; !nilp( c );
-              c = cdr(c)) {
+        for ( struct pso_pointer c = s; !nilp( c ); c = cdr( c ) ) {
             len++;
         }
 
@@ -124,8 +123,7 @@ char *lisp_string_to_c_string( struct pso_pointer s ) {
         result = calloc( ( len * 4 ) + 1, sizeof( char ) );
 
         int i = 0;
-        for ( struct pso_pointer c = s; !nilp( c );
-              c = cdr(c)) {
+        for ( struct pso_pointer c = s; !nilp( c ); c = cdr( c ) ) {
             buffer[i++] = pointer_to_object( c )->payload.string.character;
         }
 
@@ -134,7 +132,7 @@ char *lisp_string_to_c_string( struct pso_pointer s ) {
     }
 
     debug_print( L"lisp_string_to_c_string( ", DEBUG_IO, 0 );
-    debug_print_object( s, DEBUG_IO , 0);
+    debug_print_object( s, DEBUG_IO, 0 );
     debug_printf( DEBUG_IO, 0, L") => '%s'\n", result );
 
     return result;
@@ -262,13 +260,16 @@ wint_t url_ungetwc( wint_t wc, URL_FILE *input ) {
  * @return a pointer to a character object on success, or `nil` on failure.
  */
 struct pso_pointer get_character( struct pso_pointer read_stream ) {
-	struct pso_pointer result = nil;
+    struct pso_pointer result = nil;
 
-	if (readp( read_stream)) {
-		result = make_character( url_fgetwc( pointer_to_object_of_size_class(read_stream, 2)->payload.stream.stream));
-	}
+    if ( readp( read_stream ) ) {
+        result =
+            make_character( url_fgetwc
+                            ( pointer_to_object_of_size_class
+                              ( read_stream, 2 )->payload.stream.stream ) );
+    }
 
-	return result;
+    return result;
 }
 
 /**
@@ -279,16 +280,20 @@ struct pso_pointer get_character( struct pso_pointer read_stream ) {
  *
  * @return `t` on success, else `nil`.
  */
-struct pso_pointer push_back_character( struct pso_pointer c, struct pso_pointer r) {
-	struct pso_pointer result = nil;
+struct pso_pointer push_back_character( struct pso_pointer c,
+                                        struct pso_pointer r ) {
+    struct pso_pointer result = nil;
 
-	if (characterp(c) && readp(r)) {
-		if (url_ungetwc( (wint_t)(pointer_to_object(c)->payload.character.character),
-				pointer_to_object(r)->payload.stream.stream) >= 0) {
-			result = t;
-		}
-	}
-	return result;
+    if ( characterp( c ) && readp( r ) ) {
+        if ( url_ungetwc( ( wint_t )
+                          ( pointer_to_object( c )->payload.character.
+                            character ),
+                          pointer_to_object( r )->payload.stream.stream ) >=
+             0 ) {
+            result = t;
+        }
+    }
+    return result;
 }
 
 /**
@@ -304,12 +309,14 @@ struct pso_pointer push_back_character( struct pso_pointer c, struct pso_pointer
  * @return T if the stream was successfully closed, else nil.
  */
 struct pso_pointer
-lisp_close( struct pso4 *frame, struct pso_pointer frame_pointer,
-            struct pso_pointer env ) {
+lisp_close( struct pso_pointer frame_pointer, struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
     struct pso_pointer result = nil;
 
-    if ( readp( fetch_arg( frame, 0) ) || writep( fetch_arg( frame, 0) ) ) {
-        if ( url_fclose( pointer_to_object( fetch_arg( frame, 0) )->payload.stream.stream )
+    if ( readp( fetch_arg( frame, 0 ) ) || writep( fetch_arg( frame, 0 ) ) ) {
+        if ( url_fclose
+             ( pointer_to_object( fetch_arg( frame, 0 ) )->payload.
+               stream.stream )
              == 0 ) {
             result = t;
         }
@@ -319,25 +326,25 @@ lisp_close( struct pso4 *frame, struct pso_pointer frame_pointer,
 }
 
 struct pso_pointer add_meta_integer( struct pso_pointer meta, wchar_t *key,
-                                      long int value ) {
+                                     long int value ) {
     return
         cons( cons
-                   ( c_string_to_lisp_keyword( key ),
-                     make_integer( value ) ), meta );
+              ( c_string_to_lisp_keyword( key ),
+                make_integer( value ) ), meta );
 }
 
 struct pso_pointer add_meta_string( struct pso_pointer meta, wchar_t *key,
-                                     char *value ) {
+                                    char *value ) {
     value = trim( value );
     wchar_t buffer[strlen( value ) + 1];
     mbstowcs( buffer, value, strlen( value ) + 1 );
 
     return cons( cons( c_string_to_lisp_keyword( key ),
-                                 c_string_to_lisp_string( buffer ) ), meta );
+                       c_string_to_lisp_string( buffer ) ), meta );
 }
 
 struct pso_pointer add_meta_time( struct pso_pointer meta, wchar_t *key,
-                                   time_t *value ) {
+                                  time_t *value ) {
     /* I don't yet have a concept of a date-time object, which is a
      * bit of an oversight! */
     char datestring[256];
@@ -409,7 +416,7 @@ static size_t write_meta_callback( char *string, size_t size, size_t nmemb,
     // }
 
     // free( s );
-    return 0; // strlen( string );
+    return 0;                   // strlen( string );
 }
 
 void collect_meta( struct pso_pointer stream, char *url ) {
@@ -489,8 +496,8 @@ struct pso_pointer get_default_stream( bool inputp, struct pso_pointer env ) {
  * on my stream, if any, else nil.
  */
 struct pso_pointer
-lisp_open( struct pso4 *frame, struct pso_pointer frame_pointer,
-           struct pso_pointer env ) {
+lisp_open( struct pso_pointer frame_pointer, struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
     struct pso_pointer result = nil;
 
     // if ( stringp( fetch_arg( frame, 0) ) ) {
@@ -556,14 +563,14 @@ lisp_open( struct pso4 *frame, struct pso_pointer frame_pointer,
  * on my stream, if any, else nil.
  */
 struct pso_pointer
-lisp_read_char( struct pso4 *frame, struct pso_pointer frame_pointer,
-                struct pso_pointer env ) {
+lisp_read_char( struct pso_pointer frame_pointer, struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
     struct pso_pointer result = nil;
 
-    if ( readp( fetch_arg( frame, 0) ) ) {
+    if ( readp( fetch_arg( frame, 0 ) ) ) {
         result =
             make_string( url_fgetwc
-                         ( pointer_to_object( fetch_arg( frame, 0) )->payload.
+                         ( pointer_to_object( fetch_arg( frame, 0 ) )->payload.
                            stream.stream ), nil );
     }
 
@@ -585,18 +592,19 @@ lisp_read_char( struct pso4 *frame, struct pso_pointer frame_pointer,
  * on my stream, if any, else nil.
  */
 struct pso_pointer
-lisp_slurp( struct pso4 *frame, struct pso_pointer frame_pointer,
-            struct pso_pointer env ) {
+lisp_slurp( struct pso_pointer frame_pointer, struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
     struct pso_pointer result = nil;
 
-    if ( readp( fetch_arg( frame, 0) ) ) {
-        URL_FILE *stream = pointer_to_object( fetch_arg( frame, 0) )->payload.stream.stream;
+    if ( readp( fetch_arg( frame, 0 ) ) ) {
+        URL_FILE *stream =
+            pointer_to_object( fetch_arg( frame, 0 ) )->payload.stream.stream;
         struct pso_pointer cursor = make_string( url_fgetwc( stream ), nil );
         result = cursor;
 
         for ( wint_t c = url_fgetwc( stream ); !url_feof( stream ) && c != 0;
               c = url_fgetwc( stream ) ) {
-            debug_print( L"slurp: cursor is: ", DEBUG_IO, 0);
+            debug_print( L"slurp: cursor is: ", DEBUG_IO, 0 );
             debug_dump_object( cursor, DEBUG_IO, 0 );
             debug_print( L"; result is: ", DEBUG_IO, 0 );
             debug_dump_object( result, DEBUG_IO, 0 );

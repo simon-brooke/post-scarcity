@@ -16,6 +16,6 @@
 
 #include "memory/pointer.h"
 
-struct pso_pointer reverse( struct pso_pointer sequence);
+struct pso_pointer reverse( struct pso_pointer sequence );
 
 #endif

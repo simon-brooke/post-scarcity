@@ -18,20 +18,17 @@
 
 bool nilp( struct pso_pointer p );
 
-struct pso_pointer lisp_nilp( struct pso4 *frame,
-                            struct pso_pointer frame_pointer,
-                            struct pso_pointer env );
+struct pso_pointer lisp_nilp( struct pso_pointer frame_pointer,
+                              struct pso_pointer env );
 
 bool not( struct pso_pointer p );
 
-struct pso_pointer lisp_not( struct pso4 *frame,
-                            struct pso_pointer frame_pointer,
-                            struct pso_pointer env );
+struct pso_pointer lisp_not( struct pso_pointer frame_pointer,
+                             struct pso_pointer env );
 
 bool truep( struct pso_pointer p );
 
-struct pso_pointer lisp_truep( struct pso4 *frame,
-                            struct pso_pointer frame_pointer,
-                            struct pso_pointer env );
+struct pso_pointer lisp_truep( struct pso_pointer frame_pointer,
+                               struct pso_pointer env );
 
 #endif

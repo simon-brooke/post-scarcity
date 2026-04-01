@@ -25,8 +25,8 @@
  * @return a pointer to the new read stream.
  */
 struct pso_pointer make_read_stream( URL_FILE *input,
-                                      struct pso_pointer metadata ) {
-    struct pso_pointer pointer = allocate( READTAG, 2);
+                                     struct pso_pointer metadata ) {
+    struct pso_pointer pointer = allocate( READTAG, 2 );
     struct pso2 *cell = pointer_to_object( pointer );
 
     cell->payload.stream.stream = input;

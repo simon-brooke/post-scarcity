@@ -12,6 +12,6 @@
 
 #include "memory/pointer.h"
 
-struct pso_pointer destroy( struct pso_pointer p);
+struct pso_pointer destroy( struct pso_pointer p );
 
 #endif

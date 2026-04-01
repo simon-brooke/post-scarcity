@@ -334,7 +334,7 @@ struct cons_pointer search_store( struct cons_pointer key,
 
                                 switch ( get_tag_value( entry_ptr ) ) {
                                     case CONSTV:
-                                        if ( equal( key, c_car( entry_ptr ) ) ) {
+                                        if ( c_equal( key, c_car( entry_ptr ) ) ) {
                                             result =
                                                 return_key ? c_car( entry_ptr )
                                                 : c_cdr( entry_ptr );
@@ -441,7 +441,7 @@ struct cons_pointer internedp( struct cons_pointer key,
         for ( struct cons_pointer pair = c_car( store );
               eq( result, NIL ) && !nilp( pair ); pair = c_car( store ) ) {
             if ( consp( pair ) ) {
-                if ( equal( c_car( pair ), key ) ) {
+                if ( c_equal( c_car( pair ), key ) ) {
                     // yes, this should be `eq`, but if symbols are correctly 
                     // interned this will work efficiently, and if not it will
                     // still work.

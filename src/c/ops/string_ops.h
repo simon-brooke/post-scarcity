@@ -17,7 +17,7 @@
 #include <wctype.h>
 
 struct pso_pointer make_string_like_thing( wint_t c, struct pso_pointer tail,
-                                            char* tag );
+                                           char *tag );
 
 struct pso_pointer make_string( wint_t c, struct pso_pointer tail );
 

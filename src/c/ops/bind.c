@@ -22,24 +22,23 @@
 #include "payloads/stack.h"
 
 struct pso_pointer bind( struct pso_pointer frame_pointer,
-                            struct pso_pointer env) {
-	struct pso4 *frame = pointer_to_pso4( frame_pointer);
-	struct pso_pointer key = fetch_arg( frame, 0);
-	struct pso_pointer value = fetch_arg( frame, 1);
-	struct pso_pointer store = fetch_arg( frame, 2);
+                         struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+    struct pso_pointer key = fetch_arg( frame, 0 );
+    struct pso_pointer value = fetch_arg( frame, 1 );
+    struct pso_pointer store = fetch_arg( frame, 2 );
 
-	return cons( cons(key, value), store);
+    return cons( cons( key, value ), store );
 }
 
 struct pso_pointer c_bind( struct pso_pointer key,
-		struct pso_pointer value,
-		struct pso_pointer store) {
-	struct pso_pointer result = nil;
-	struct pso_pointer next = make_frame( nil, key, value, store);
-	inc_ref( next);
-	result = bind( next, nil);
-	dec_ref( next);
+                           struct pso_pointer value,
+                           struct pso_pointer store ) {
+    struct pso_pointer result = nil;
+    struct pso_pointer next = make_frame( nil, key, value, store );
+    inc_ref( next );
+    result = bind( next, nil );
+    dec_ref( next );
 
-	return result;
+    return result;
 }
-

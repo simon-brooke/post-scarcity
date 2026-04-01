@@ -15,13 +15,13 @@
 #include "memory/header.h"
 #include "memory/pointer.h"
 
-struct pso_pointer allocate( char* tag, uint8_t size_class);
+struct pso_pointer allocate( char *tag, uint8_t size_class );
 
 struct pso_pointer dec_ref( struct pso_pointer pointer );
 
 struct pso_pointer inc_ref( struct pso_pointer pointer );
 
-struct pso_pointer lock_object( struct pso_pointer pointer);
+struct pso_pointer lock_object( struct pso_pointer pointer );
 
 struct pso_pointer free_object( struct pso_pointer p );
 

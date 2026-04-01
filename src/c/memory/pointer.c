@@ -54,11 +54,12 @@ struct pso2 *pointer_to_object( struct pso_pointer p ) {
     struct pso2 *result = NULL;
 
     if ( p.node == node_index ) {
-    	if (p.page < get_pages_allocated() && p.offset < (PAGE_BYTES / 8)) {
-    		// TODO: that's not really a safe test of whether this is a valid pointer.
-			union page *pg = pages[p.page];
-			result = ( struct pso2 * ) &pg->words[p.offset];
-    	}
+        if ( p.page < get_pages_allocated(  )
+             && p.offset < ( PAGE_BYTES / 8 ) ) {
+            // TODO: that's not really a safe test of whether this is a valid pointer.
+            union page *pg = pages[p.page];
+            result = ( struct pso2 * ) &pg->words[p.offset];
+        }
     }
     // TODO: else if we have a copy of the object in cache, return that;
     // else request a copy of the object from the node which curates it.
@@ -85,14 +86,15 @@ struct pso2 *pointer_to_object( struct pso_pointer p ) {
  * @return the memory address of the object, provided it is a valid object and
  * 		of the specified size class, else NULL.
  */
-struct pso2 * pointer_to_object_of_size_class( struct pso_pointer p, uint8_t size_class) {
-	struct pso2 * result = pointer_to_object( p);
+struct pso2 *pointer_to_object_of_size_class( struct pso_pointer p,
+                                              uint8_t size_class ) {
+    struct pso2 *result = pointer_to_object( p );
 
-	if (result->header.tag.bytes.size_class != size_class) {
-		result = NULL;
-	}
+    if ( result->header.tag.bytes.size_class != size_class ) {
+        result = NULL;
+    }
 
-	return result;
+    return result;
 }
 
 /**
@@ -103,13 +105,13 @@ struct pso2 * pointer_to_object_of_size_class( struct pso_pointer p, uint8_t siz
  * exception back from this function. Consequently, if anything goes wrong
  * we return NULL. The caller *should* check for that and throw an exception.
  */
-struct pso2 * pointer_to_object_with_tag_value( struct pso_pointer p, uint32_t tag_value) {
-	struct pso2 * result = pointer_to_object( p);
+struct pso2 *pointer_to_object_with_tag_value( struct pso_pointer p,
+                                               uint32_t tag_value ) {
+    struct pso2 *result = pointer_to_object( p );
 
-	if ((result->header.tag.value & 0xffffff) != tag_value) {
-		result = NULL;
-	}
+    if ( ( result->header.tag.value & 0xffffff ) != tag_value ) {
+        result = NULL;
+    }
 
-	return result;
+    return result;
 }
-

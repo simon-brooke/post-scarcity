@@ -17,12 +17,12 @@
 #include "memory/pointer.h"
 
 struct cons_pointer search( struct pso_pointer key,
-                                  struct pso_pointer store,
-                                  bool return_key );
+                            struct pso_pointer store, bool return_key );
 
-struct pso_pointer assoc( struct pso_pointer key, struct pso_pointer store);
+struct pso_pointer assoc( struct pso_pointer key, struct pso_pointer store );
 
-struct pso_pointer interned(struct pso_pointer key, struct pso_pointer store);
+struct pso_pointer interned( struct pso_pointer key,
+                             struct pso_pointer store );
 
-bool internedp(struct pso_pointer key, struct pso_pointer store);
+bool internedp( struct pso_pointer key, struct pso_pointer store );
 #endif

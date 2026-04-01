@@ -8,8 +8,8 @@
  * Licensed under GPL version 2.0, or, at your option, any later version.
  */
 
-#ifndef __psse_io_h
-#define __psse_io_h
+#ifndef __psse_io_io_h
+#define __psse_io_io_h
 #include <curl/curl.h>
 
 #include "memory/pointer.h"
@@ -32,22 +32,19 @@ wint_t url_ungetwc( wint_t wc, URL_FILE * input );
 
 struct pso_pointer get_character( struct pso_pointer read_stream );
 
-struct pso_pointer push_back_character( struct pso_pointer c, struct pso_pointer r);
+struct pso_pointer push_back_character( struct pso_pointer c,
+                                        struct pso_pointer r );
 
 struct pso_pointer get_default_stream( bool inputp, struct pso_pointer env );
 
 struct pso_pointer
-lisp_close( struct pso4 *frame, struct pso_pointer frame_pointer,
-            struct pso_pointer env );
+lisp_close( struct pso_pointer frame_pointer, struct pso_pointer env );
 struct pso_pointer
-lisp_open( struct pso4 *frame, struct pso_pointer frame_pointer,
-           struct pso_pointer env );
+lisp_open( struct pso_pointer frame_pointer, struct pso_pointer env );
 struct pso_pointer
-lisp_read_char( struct pso4 *frame, struct pso_pointer frame_pointer,
-                struct pso_pointer env );
+lisp_read_char( struct pso_pointer frame_pointer, struct pso_pointer env );
 struct pso_pointer
-lisp_slurp( struct pso4 *frame, struct pso_pointer frame_pointer,
-            struct pso_pointer env );
+lisp_slurp( struct pso_pointer frame_pointer, struct pso_pointer env );
 
 char *lisp_string_to_c_string( struct pso_pointer s );
 #endif

@@ -11,8 +11,8 @@
 #include <stdint.h>
 
  /*
- * wide characters
- */
+  * wide characters
+  */
 #include <wchar.h>
 #include <wctype.h>
 
@@ -33,13 +33,13 @@
  * be destroyed.
  */
 struct pso_pointer destroy_string( struct pso_pointer fp,
-		struct pso_pointer env) {
-	if (stackp(fp)) {
-		struct pso4 *frame = pointer_to_pso4( fp);
-		struct pso_pointer p = frame->payload.stack_frame.arg[0];
+                                   struct pso_pointer env ) {
+    if ( stackp( fp ) ) {
+        struct pso4 *frame = pointer_to_pso4( fp );
+        struct pso_pointer p = frame->payload.stack_frame.arg[0];
 
-		dec_ref( cdr(p));
-	}
+        dec_ref( cdr( p ) );
+    }
 
-	return nil;
+    return nil;
 }

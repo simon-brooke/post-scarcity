@@ -16,10 +16,10 @@
 #include "memory/pointer.h"
 #include "memory/pso2.h"
 
-uint32_t get_tag_value (struct pso_pointer p) {
-	struct pso2* object = pointer_to_object( p);
+uint32_t get_tag_value( struct pso_pointer p ) {
+    struct pso2 *object = pointer_to_object( p );
 
-	return object->header.tag.value & 0xffffff;
+    return object->header.tag.value & 0xffffff;
 }
 
 /**
@@ -31,8 +31,8 @@ uint32_t get_tag_value (struct pso_pointer p) {
  *
  * @return true if the tag at p matches v, else false.
  */
-bool check_tag( struct pso_pointer p, uint32_t v) {
-	return get_tag_value(p) == v;
+bool check_tag( struct pso_pointer p, uint32_t v ) {
+    return get_tag_value( p ) == v;
 }
 
 /**
@@ -46,8 +46,9 @@ bool check_tag( struct pso_pointer p, uint32_t v) {
  *			of the object.
  * @return false otherwise.
  */
-bool check_type( struct pso_pointer p, char* s) {
-	return (strncmp( 
-		&(pointer_to_object(p)->header.tag.bytes.mnemonic[0]), s, TAGLENGTH)
-		 == 0);
+bool check_type( struct pso_pointer p, char *s ) {
+    return ( strncmp
+             ( &( pointer_to_object( p )->header.tag.bytes.mnemonic[0] ), s,
+               TAGLENGTH )
+             == 0 );
 }

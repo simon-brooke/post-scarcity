@@ -33,47 +33,49 @@
  * @param b another pointer;
  * @return `true` if they are the same, else `false`
  */
-bool eq( struct pso_pointer a, struct pso_pointer b ) {
+bool c_eq( struct pso_pointer a, struct pso_pointer b ) {
     return ( a.node == b.node && a.page == b.page && a.offset == b.offset );
 }
 
-bool equal( struct pso_pointer a, struct pso_pointer b) {
-	bool result = false;
+bool c_equal( struct pso_pointer a, struct pso_pointer b ) {
+    bool result = false;
 
-	if ( eq( a, b)) {
-		result = true;
-	} else if ( get_tag_value(a) == get_tag_value(b)) {
-		struct pso2 *oa = pointer_to_object(a);
-		struct pso2 *ob = pointer_to_object(b);
+    if ( c_eq( a, b ) ) {
+        result = true;
+    } else if ( get_tag_value( a ) == get_tag_value( b ) ) {
+        struct pso2 *oa = pointer_to_object( a );
+        struct pso2 *ob = pointer_to_object( b );
 
-		switch ( get_tag_value(a)) {
-		case CHARACTERTV :
-			result = (oa->payload.character.character == ob->payload.character.character);
-			break;
-		case CONSTV :
-			result = (equal( car(a), car(b)) && equal( cdr(a), cdr(b)));
-			break;
-		case INTEGERTV :
-			result = (oa->payload.integer.value
-					==
-					ob->payload.integer.value);
-			break;
-		case KEYTV:
-		case STRINGTV :
-		case SYMBOLTV :
-			while (result == false && !nilp(a) && !nilp(b)) {
-				if (pointer_to_object(a)->payload.string.character ==
-						pointer_to_object(b)->payload.string.character) {
-					a = cdr(a);
-					b = cdr(b);
-				}
-			}
-			result = nilp(a) && nilp(b);
-			break;
-		}
-	}
+        switch ( get_tag_value( a ) ) {
+            case CHARACTERTV:
+                result =
+                    ( oa->payload.character.character ==
+                      ob->payload.character.character );
+                break;
+            case CONSTV:
+                result = ( c_equal( car( a ), car( b ) )
+                           && c_equal( cdr( a ), cdr( b ) ) );
+                break;
+            case INTEGERTV:
+                result = ( oa->payload.integer.value
+                           == ob->payload.integer.value );
+                break;
+            case KEYTV:
+            case STRINGTV:
+            case SYMBOLTV:
+                while ( result == false && !nilp( a ) && !nilp( b ) ) {
+                    if ( pointer_to_object( a )->payload.string.character ==
+                         pointer_to_object( b )->payload.string.character ) {
+                        a = cdr( a );
+                        b = cdr( b );
+                    }
+                }
+                result = nilp( a ) && nilp( b );
+                break;
+        }
+    }
 
-	return result;
+    return result;
 }
 
 
@@ -89,9 +91,10 @@ bool equal( struct pso_pointer a, struct pso_pointer b) {
  * @param env my environment (ignored).
  * @return `t` if all args are pointers to the same object, else `nil`;
  */
-struct pso_pointer lisp_eq( struct pso4 *frame,
-                            struct pso_pointer frame_pointer,
-                            struct pso_pointer env ) {
+struct pso_pointer eq( struct pso_pointer frame_pointer,
+                       struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+
     struct pso_pointer result = t;
 
     if ( frame->payload.stack_frame.args > 1 ) {
@@ -99,11 +102,9 @@ struct pso_pointer lisp_eq( struct pso4 *frame,
               ( truep( result ) ) && ( b < frame->payload.stack_frame.args );
               b++ ) {
             result =
-                eq( fetch_arg( frame, 0 ), fetch_arg( frame, b ) ) ? t : nil;
+                c_eq( fetch_arg( frame, 0 ), fetch_arg( frame, b ) ) ? t : nil;
         }
     }
 
     return result;
 }
-
-

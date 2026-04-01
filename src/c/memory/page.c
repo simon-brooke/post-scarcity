@@ -125,10 +125,10 @@ struct pso_pointer allocate_page( uint8_t size_class ) {
                               L"Initialised page %d; freelist for size class %x updated.\n",
                               npages_allocated, size_class );
 
-                if (npages_allocated == 0) {
-                	// first page allocated; initialise nil and t
-                	nil = lock_object( allocate(NILTAG, 2));
-                	t = lock_object( allocate(TRUETAG, 2));
+                if ( npages_allocated == 0 ) {
+                    // first page allocated; initialise nil and t
+                    nil = lock_object( allocate( NILTAG, 2 ) );
+                    t = lock_object( allocate( TRUETAG, 2 ) );
                 }
 
                 npages_allocated++;
@@ -164,6 +164,6 @@ struct pso_pointer allocate_page( uint8_t size_class ) {
  * @brief allow other files to see the current value of npages_allocated, but not
  * change it.
  */
-uint32_t get_pages_allocated() {
-	return npages_allocated;
+uint32_t get_pages_allocated(  ) {
+    return npages_allocated;
 }

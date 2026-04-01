@@ -31,6 +31,6 @@ bool eq( struct cons_pointer a, struct cons_pointer b );
  * Deep, and thus expensive, equality: true if these two objects have
  * identical structure, else false.
  */
-bool equal( struct cons_pointer a, struct cons_pointer b );
+bool c_equal( struct cons_pointer a, struct cons_pointer b );
 
 #endif

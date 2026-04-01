@@ -16,10 +16,10 @@
 #include "memory/pointer.h"
 
 struct pso_pointer bind( struct pso_pointer frame_pointer,
-                            struct pso_pointer env);
+                         struct pso_pointer env );
 
 struct pso_pointer c_bind( struct pso_pointer key,
-		struct pso_pointer value,
-		struct pso_pointer store);
+                           struct pso_pointer value,
+                           struct pso_pointer store );
 
 #endif

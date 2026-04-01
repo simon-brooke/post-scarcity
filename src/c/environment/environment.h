@@ -10,6 +10,6 @@
 #ifndef __psse_environment_environment_h
 #define __psse_environment_environment_h
 
-struct pso_pointer initialise_environment( uint32_t node);
+struct pso_pointer initialise_environment( uint32_t node );
 
 #endif

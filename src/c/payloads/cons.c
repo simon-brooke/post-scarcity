@@ -14,7 +14,7 @@
 #include "memory/pso.h"
 #include "memory/pso2.h"
 #include "memory/pso4.h"
-#include "memory/tags.h" 
+#include "memory/tags.h"
 
 #include "payloads/cons.h"
 #include "payloads/exception.h"
@@ -70,17 +70,21 @@ struct pso_pointer cdr( struct pso_pointer p ) {
     struct pso_pointer result = nil;
     struct pso2 *object = pointer_to_object( result );
 
-    switch (get_tag_value( p)) {
-    case CONSTV : result = object->payload.cons.cdr; break;
-    case KEYTV :
-    case STRINGTV :
-    case SYMBOLTV :
-    	result = object->payload.string.cdr; break;
-    default :
-    	result = make_exception(
-    			cons(c_string_to_lisp_string(L"Invalid type for cdr"), p),
-				nil, nil);
-    	break;
+    switch ( get_tag_value( p ) ) {
+        case CONSTV:
+            result = object->payload.cons.cdr;
+            break;
+        case KEYTV:
+        case STRINGTV:
+        case SYMBOLTV:
+            result = object->payload.string.cdr;
+            break;
+        default:
+            result =
+                make_exception( cons
+                                ( c_string_to_lisp_string
+                                  ( L"Invalid type for cdr" ), p ), nil, nil );
+            break;
     }
 
     // TODO: else throw an exception
@@ -95,11 +99,12 @@ struct pso_pointer cdr( struct pso_pointer p ) {
  * Lisp calling conventions; one expected arg, the pointer to the cell to
  * be destroyed.
  */
-struct pso_pointer destroy_cons( struct pso_pointer fp, struct pso_pointer env) {
-	if (stackp(fp)) {
-		struct pso4 *frame = pointer_to_pso4( fp);
-		struct pso_pointer p = frame->payload.stack_frame.arg[0];
-		dec_ref( car( p));
-		dec_ref( cdr( p));
-	}
+struct pso_pointer destroy_cons( struct pso_pointer fp,
+                                 struct pso_pointer env ) {
+    if ( stackp( fp ) ) {
+        struct pso4 *frame = pointer_to_pso4( fp );
+        struct pso_pointer p = frame->payload.stack_frame.arg[0];
+        dec_ref( car( p ) );
+        dec_ref( cdr( p ) );
+    }
 }

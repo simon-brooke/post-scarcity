@@ -25,9 +25,10 @@ struct exception_payload {
 };
 
 struct pso_pointer make_exception( struct pso_pointer message,
-		struct pso_pointer frame_pointer, struct pso_pointer cause);
+                                   struct pso_pointer frame_pointer,
+                                   struct pso_pointer cause );
 
 struct pso_pointer destroy_exception( struct pso_pointer fp,
-		struct pso_pointer env);
+                                      struct pso_pointer env );
 
 #endif

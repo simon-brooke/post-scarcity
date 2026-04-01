@@ -12,6 +12,7 @@
 #include "memory/pso2.h"
 #include "memory/pso4.h"
 
-struct pso4* pointer_to_pso4( struct pso_pointer p) {
-	struct pso4* result = (struct pso4*)pointer_to_object_of_size_class( p, 4);
+struct pso4 *pointer_to_pso4( struct pso_pointer p ) {
+    struct pso4 *result =
+        ( struct pso4 * ) pointer_to_object_of_size_class( p, 4 );
 }

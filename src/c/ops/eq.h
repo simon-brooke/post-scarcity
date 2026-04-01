@@ -16,11 +16,10 @@
 #include "memory/pointer.h"
 #include "memory/pso4.h"
 
-bool eq( struct pso_pointer a, struct pso_pointer b );
+bool c_eq( struct pso_pointer a, struct pso_pointer b );
 
-struct pso_pointer lisp_eq( struct pso4 *frame,
-                            struct pso_pointer frame_pointer,
-                            struct pso_pointer env );
+struct pso_pointer eq( struct pso_pointer frame_pointer,
+                       struct pso_pointer env );
 
-bool equal( struct pso_pointer a, struct pso_pointer b);
+bool c_equal( struct pso_pointer a, struct pso_pointer b );
 #endif

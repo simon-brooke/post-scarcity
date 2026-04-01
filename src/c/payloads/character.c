@@ -23,12 +23,13 @@
 
 #include "payloads/character.h"
 
-struct pso_pointer make_character( wint_t c) {
-	struct pso_pointer result = allocate( CHARACTERTAG, 2 );
+struct pso_pointer make_character( wint_t c ) {
+    struct pso_pointer result = allocate( CHARACTERTAG, 2 );
 
-	if (!nilp(result)) {
-		pointer_to_object(result)->payload.character.character = (wchar_t) c;
-	}
+    if ( !nilp( result ) ) {
+        pointer_to_object( result )->payload.character.character =
+            ( wchar_t ) c;
+    }
 
-	return result;
+    return result;
 }

@@ -37,22 +37,29 @@
  * 		failure. This function returns that exception pointer. How we
  * 		handle that exception pointer I simply don't know yet.
  */
-struct pso_pointer destroy( struct pso_pointer p) {
-	struct pso_pointer result = nil;
-	struct pso_pointer f = make_frame( nil, p);
-	inc_ref( f);
+struct pso_pointer destroy( struct pso_pointer p ) {
+    struct pso_pointer result = nil;
+    struct pso_pointer f = make_frame( nil, p );
+    inc_ref( f );
 
-	switch (get_tag_value(p)) {
-	case CONSTV: destroy_cons(f, nil); break;
-	case EXCEPTIONTV: destroy_exception(f, nil); break;
-	case KEYTV :
-	case STRINGTV:
-	case SYMBOLTV: destroy_string(f, nil); break;
-	case STACKTV: destroy_stack_frame(f, nil); break;
-	// TODO: others.
-	}
+    switch ( get_tag_value( p ) ) {
+        case CONSTV:
+            destroy_cons( f, nil );
+            break;
+        case EXCEPTIONTV:
+            destroy_exception( f, nil );
+            break;
+        case KEYTV:
+        case STRINGTV:
+        case SYMBOLTV:
+            destroy_string( f, nil );
+            break;
+        case STACKTV:
+            destroy_stack_frame( f, nil );
+            break;
+            // TODO: others.
+    }
 
-	dec_ref(f);
-	return result;
+    dec_ref( f );
+    return result;
 }
-

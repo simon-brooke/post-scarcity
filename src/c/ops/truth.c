@@ -13,6 +13,7 @@
 
 #include "memory/node.h"
 #include "memory/pointer.h"
+#include "memory/pso4.h"
 #include "ops/stack_ops.h"
 
 /**
@@ -64,10 +65,11 @@ bool truep( struct pso_pointer p ) {
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is `nil`, else `t`
  */
-struct pso_pointer lisp_nilp( struct pso4 *frame,
-                       struct pso_pointer frame_pointer,
-                       struct pso_pointer env ) {
-return ( nilp( fetch_arg( frame, 0 )) ? t : nil );
+struct pso_pointer lisp_nilp( struct pso_pointer frame_pointer,
+                              struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+
+    return ( nilp( fetch_arg( frame, 0 ) ) ? t : nil );
 }
 
 /**
@@ -78,10 +80,11 @@ return ( nilp( fetch_arg( frame, 0 )) ? t : nil );
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is `t`, else `nil`.
  */
-struct pso_pointer lisp_truep( struct pso4 *frame,
-                                 struct pso_pointer frame_pointer,
-                                 struct pso_pointer env ) {
-         return ( truep( fetch_arg( frame, 0 ) ) ? t : nil );
+struct pso_pointer lisp_truep( struct pso_pointer frame_pointer,
+                               struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+
+    return ( truep( fetch_arg( frame, 0 ) ) ? t : nil );
 }
 
 /**
@@ -93,8 +96,9 @@ struct pso_pointer lisp_truep( struct pso4 *frame,
  * @param env the evaluation environment.
  * @return `t` if the first argument in this frame is not `nil`, else `t`.
  */
-struct pso_pointer lisp_not( struct pso4 *frame,
-                               struct pso_pointer frame_pointer,
-                               struct pso_pointer env ) {
-         return ( not( fetch_arg( frame, 0 ) ) ? t : nil );
+struct pso_pointer lisp_not( struct pso_pointer frame_pointer,
+                             struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+
+    return ( not( fetch_arg( frame, 0 ) ) ? t : nil );
 }

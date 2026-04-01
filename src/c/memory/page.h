@@ -74,6 +74,6 @@ union page {
 
 struct pso_pointer allocate_page( uint8_t size_class );
 
-uint32_t get_pages_allocated();
+uint32_t get_pages_allocated(  );
 
 #endif

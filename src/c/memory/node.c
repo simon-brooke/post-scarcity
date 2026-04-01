@@ -57,7 +57,7 @@ struct pso_pointer initialise_node( uint32_t index ) {
 
     struct pso_pointer result = initialise_memory( index );
 
-    if ( eq( result, t ) ) {
+    if ( c_eq( result, t ) ) {
         result = initialise_environment( index );
     }
 

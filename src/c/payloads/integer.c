@@ -26,13 +26,13 @@
  */
 struct pso_pointer make_integer( int64_t value ) {
     struct pso_pointer result = nil;
-    debug_print( L"Entering make_integer\n", DEBUG_ALLOC , 0);
+    debug_print( L"Entering make_integer\n", DEBUG_ALLOC, 0 );
 
-	result = allocate( INTEGERTAG, 2);
-	struct pso2 *cell = pointer_to_object( result );
-	cell->payload.integer.value = value;
+    result = allocate( INTEGERTAG, 2 );
+    struct pso2 *cell = pointer_to_object( result );
+    cell->payload.integer.value = value;
 
-    debug_print( L"make_integer: returning\n", DEBUG_ALLOC , 0);
+    debug_print( L"make_integer: returning\n", DEBUG_ALLOC, 0 );
     debug_dump_object( result, DEBUG_ALLOC, 0 );
 
     return result;

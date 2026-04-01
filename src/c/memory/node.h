@@ -34,4 +34,3 @@ extern struct pso_pointer t;
 struct pso_pointer initialise_node( uint32_t index );
 
 #endif
-

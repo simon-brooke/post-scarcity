@@ -272,7 +272,7 @@ bool equal_map_map( struct cons_pointer a, struct cons_pointer b ) {
 
         for ( struct cons_pointer i = keys_a; !nilp( i ); i = c_cdr( i ) ) {
             struct cons_pointer key = c_car( i );
-            if ( !equal
+            if ( !c_equal
                  ( hashmap_get( a, key, false ),
                    hashmap_get( b, key, false ) ) ) {
                 result = false;
@@ -331,7 +331,7 @@ bool equal_vector_vector( struct cons_pointer a, struct cons_pointer b ) {
  * Deep, and thus expensive, equality: true if these two objects have
  * identical structure, else false.
  */
-bool equal( struct cons_pointer a, struct cons_pointer b ) {
+bool c_equal( struct cons_pointer a, struct cons_pointer b ) {
     debug_print( L"\nequal: ", DEBUG_EQUAL );
     debug_print_object( a, DEBUG_EQUAL );
     debug_print( L" = ", DEBUG_EQUAL );
@@ -353,8 +353,8 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                  * structures can be of indefinite extent. It *must* be done by 
                  * iteration (and even that is problematic) */
                 result =
-                    equal( cell_a->payload.cons.car, cell_b->payload.cons.car )
-                    && equal( cell_a->payload.cons.cdr,
+                    c_equal( cell_a->payload.cons.car, cell_b->payload.cons.car )
+                    && c_equal( cell_a->payload.cons.cdr,
                               cell_b->payload.cons.cdr );
                 break;
             case KEYTV:
@@ -401,7 +401,7 @@ bool equal( struct cons_pointer a, struct cons_pointer b ) {
                      * isn't sufficient. So we recurse at least once. */
 
                     result = ( wcsncmp( a_buff, b_buff, i ) == 0 )
-                        && equal( c_cdr( a ), c_cdr( b ) );
+                        && c_equal( c_cdr( a ), c_cdr( b ) );
                 }
                 break;
             case VECTORPOINTTV:

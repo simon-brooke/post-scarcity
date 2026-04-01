@@ -42,7 +42,7 @@ uint32_t calculate_hash( wint_t c, struct pso_pointer ptr ) {
     struct pso2 *cell = pointer_to_object( ptr );
     uint32_t result = 0;
 
-    switch ( get_tag_value(ptr)) {
+    switch ( get_tag_value( ptr ) ) {
         case KEYTV:
         case STRINGTV:
         case SYMBOLTV:
@@ -70,22 +70,22 @@ uint32_t calculate_hash( wint_t c, struct pso_pointer ptr ) {
  * (and thus simpler).
  */
 struct pso_pointer make_string_like_thing( wint_t c, struct pso_pointer tail,
-                                            char* tag ) {
+                                           char *tag ) {
     struct pso_pointer pointer = nil;
 
     if ( check_type( tail, tag ) || check_tag( tail, NILTV ) ) {
-        pointer = allocate( tag, CONS_SIZE_CLASS);
+        pointer = allocate( tag, CONS_SIZE_CLASS );
         struct pso2 *cell = pointer_to_object( pointer );
 
         cell->payload.string.character = c;
         cell->payload.string.cdr = tail;
 
-        cell->payload.string.hash = calculate_hash( c, tail);
+        cell->payload.string.hash = calculate_hash( c, tail );
         debug_dump_object( pointer, DEBUG_ALLOC, 0 );
         debug_println( DEBUG_ALLOC );
     } else {
         // \todo should throw an exception!
-        debug_printf( DEBUG_ALLOC,  0,
+        debug_printf( DEBUG_ALLOC, 0,
                       L"Warning: only %4.4s can be prepended to %4.4s\n",
                       tag, tag );
     }

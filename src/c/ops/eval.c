@@ -10,7 +10,9 @@
  */
 
 #include "memory/pointer.h"
+#include "memory/pso.h"
 #include "memory/pso2.h"
+#include "memory/pso3.h"
 #include "memory/pso4.h"
 #include "memory/tags.h"
 
@@ -23,6 +25,8 @@
 #include "payloads/special.h"
 #include "payloads/stack.h"
 
+#include "ops/truth.h"
+
 /**
  * @brief Despatch eval based on tag of the form in the first position.
  * 
@@ -31,9 +35,9 @@
  * @param env the evaluation environment.
  * @return struct pso_pointer 
  */
-struct pso_pointer eval_despatch( struct pso4 *frame,
-                                  struct pso_pointer frame_pointer,
-                                  struct pso_pointer env ) {
+struct pso_pointer lisp_eval( struct pso_pointer frame_pointer,
+                              struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
     struct pso_pointer result = frame->payload.stack_frame.arg[0];
 
     // switch ( get_tag_value( result)) {
@@ -55,17 +59,17 @@ struct pso_pointer eval_despatch( struct pso4 *frame,
     //         break;        
     // }
 
-    return result;
-}
-
-struct pso_pointer lisp_eval( struct pso4 *frame,
-                              struct pso_pointer frame_pointer,
-                              struct pso_pointer env ) {
-    struct pso_pointer result = eval_despatch( frame, frame_pointer, env );
-
     if ( exceptionp( result ) ) {
-        // todo: if result doesn't have a stack frame, create a new exception wrapping
-        // result with this stack frame.
+        struct pso3 *x =
+            ( struct pso3 * ) pointer_to_object_with_tag_value( result,
+                                                                EXCEPTIONTV );
+
+        if ( nilp( x->payload.exception.stack ) ) {
+            inc_ref( result );
+            result =
+                make_exception( x->payload.exception.message, frame_pointer,
+                                result );
+        }
     }
 
     return result;

@@ -34,25 +34,23 @@
  * 			return the binding.
  */
 struct pso_pointer search( struct pso_pointer key,
-                                  struct pso_pointer store,
-                                  bool return_key ) {
-	struct pso_pointer result = nil;
-	bool found = false;
+                           struct pso_pointer store, bool return_key ) {
+    struct pso_pointer result = nil;
+    bool found = false;
 
-	if (consp( store)) {
-		for ( struct pso_pointer cursor = store;
-				consp( store) && found == false;
-				cursor = cdr( cursor)) {
-			struct pso_pointer pair = car( cursor);
+    if ( consp( store ) ) {
+        for ( struct pso_pointer cursor = store;
+              consp( store ) && found == false; cursor = cdr( cursor ) ) {
+            struct pso_pointer pair = car( cursor );
 
-			if (consp(pair) && equal(car(pair), key)) {
-				found = true;
-				result = return_key ? car(pair) : cdr( pair);
-			}
-		}
-	}
+            if ( consp( pair ) && c_equal( car( pair ), key ) ) {
+                found = true;
+                result = return_key ? car( pair ) : cdr( pair );
+            }
+        }
+    }
 
-	return result;
+    return result;
 }
 
 /**
@@ -63,8 +61,8 @@ struct pso_pointer search( struct pso_pointer key,
  *
  * @return a pointer to the value of the key in the store, or nil if not found
  */
-struct pso_pointer assoc( struct pso_pointer key, struct pso_pointer store) {
-	return search( key, store, false);
+struct pso_pointer assoc( struct pso_pointer key, struct pso_pointer store ) {
+    return search( key, store, false );
 }
 
 /**
@@ -75,8 +73,8 @@ struct pso_pointer assoc( struct pso_pointer key, struct pso_pointer store) {
  *
  * @return a pointer to the copy of the key in the store, or nil if not found.
  */
-struct pso_pointer interned(struct pso_pointer key, struct pso_pointer store) {
-	return search( key, store, true);
+struct pso_pointer interned( struct pso_pointer key, struct pso_pointer store ) {
+    return search( key, store, true );
 }
 
 /**
@@ -87,6 +85,6 @@ struct pso_pointer interned(struct pso_pointer key, struct pso_pointer store) {
  *
  * @return `true` if a pointer the key was found in the store..
  */
-bool internedp(struct pso_pointer key, struct pso_pointer store) {
-	return !nilp( search( key, store, true));
+bool internedp( struct pso_pointer key, struct pso_pointer store ) {
+    return !nilp( search( key, store, true ) );
 }

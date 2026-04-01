@@ -32,6 +32,7 @@ struct pso_pointer cdr( struct pso_pointer cons );
 
 struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr );
 
-struct pso_pointer destroy_cons( struct pso_pointer fp, struct pso_pointer env);
+struct pso_pointer destroy_cons( struct pso_pointer fp,
+                                 struct pso_pointer env );
 
 #endif

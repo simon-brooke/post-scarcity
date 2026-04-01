@@ -17,7 +17,8 @@
 #include "payloads/exception.h"
 
 struct pso_pointer make_exception( struct pso_pointer message,
-		struct pso_pointer frame_pointer, struct pso_pointer cause) {
+                                   struct pso_pointer frame_pointer,
+                                   struct pso_pointer cause ) {
     // TODO: not yet implemented
     return nil;
 }
@@ -29,13 +30,13 @@ struct pso_pointer make_exception( struct pso_pointer message,
  * be destroyed.
  */
 struct pso_pointer destroy_exception( struct pso_pointer fp,
-		struct pso_pointer env) {
-	if (stackp(fp)) {
-		struct pso4 *frame = pointer_to_pso4( fp);
-		struct pso_pointer p = frame->payload.stack_frame.arg[0];
+                                      struct pso_pointer env ) {
+    if ( stackp( fp ) ) {
+        struct pso4 *frame = pointer_to_pso4( fp );
+        struct pso_pointer p = frame->payload.stack_frame.arg[0];
 
-		// TODO: decrement every pointer indicated by an exception.
-	}
+        // TODO: decrement every pointer indicated by an exception.
+    }
 
-	return nil;
+    return nil;
 }

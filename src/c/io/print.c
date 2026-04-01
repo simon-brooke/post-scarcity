@@ -36,28 +36,29 @@
 #include "payloads/cons.h"
 #include "payloads/integer.h"
 
-struct pso_pointer in_print( struct pso_pointer p, URL_FILE * output);
+struct pso_pointer in_print( struct pso_pointer p, URL_FILE * output );
 
-struct pso_pointer print_list_content( struct pso_pointer p, URL_FILE * output) {
-   struct pso_pointer result = nil;
+struct pso_pointer print_list_content( struct pso_pointer p, URL_FILE *output ) {
+    struct pso_pointer result = nil;
 
-    if (consp(p)) {
-        for (; consp( p); p = cdr(p)) {
-            struct pso2* object = pointer_to_object(p);
- 
-            result = in_print( object->payload.cons.car, output);
+    if ( consp( p ) ) {
+        for ( ; consp( p ); p = cdr( p ) ) {
+            struct pso2 *object = pointer_to_object( p );
 
-            if (exceptionp(result)) break;
+            result = in_print( object->payload.cons.car, output );
 
-            switch (get_tag_value(object->payload.cons.cdr)) {
-                case NILTV :
+            if ( exceptionp( result ) )
+                break;
+
+            switch ( get_tag_value( object->payload.cons.cdr ) ) {
+                case NILTV:
                     break;
-                case CONSTV :
+                case CONSTV:
                     url_fputwc( L' ', output );
                     break;
-                default :
-                    url_fputws( L" . ", output);
-                    result = in_print( object->payload.cons.cdr, output);
+                default:
+                    url_fputws( L" . ", output );
+                    result = in_print( object->payload.cons.cdr, output );
             }
 
         }
@@ -68,33 +69,34 @@ struct pso_pointer print_list_content( struct pso_pointer p, URL_FILE * output) 
     return result;
 }
 
-struct pso_pointer in_print( struct pso_pointer p, URL_FILE * output) {
-    struct pso2* object = pointer_to_object(p);
+struct pso_pointer in_print( struct pso_pointer p, URL_FILE *output ) {
+    struct pso2 *object = pointer_to_object( p );
     struct pso_pointer result = nil;
 
-    if (object != NULL) {
-        switch (get_tag_value( p)) {
-            case CHARACTERTV :
-                url_fputwc( object->payload.character.character, output);
+    if ( object != NULL ) {
+        switch ( get_tag_value( p ) ) {
+            case CHARACTERTV:
+                url_fputwc( object->payload.character.character, output );
                 break;
-            case CONSTV :
+            case CONSTV:
                 url_fputwc( L'(', output );
-                result = print_list_content( p, output);
+                result = print_list_content( p, output );
                 url_fputwc( L')', output );
                 break;
-            case INTEGERTV :
-                url_fwprintf( output, L"%d", (int64_t)(object->payload.integer.value));
+            case INTEGERTV:
+                url_fwprintf( output, L"%d",
+                              ( int64_t ) ( object->payload.integer.value ) );
                 break;
-            case TRUETV :
+            case TRUETV:
                 url_fputwc( L't', output );
                 break;
-            case NILTV :
+            case NILTV:
                 url_fputws( L"nil", output );
-            default :
+            default:
                 // TODO: return exception
         }
     } else {
-                // TODO: return exception
+        // TODO: return exception
     }
 
     return result;
@@ -107,16 +109,20 @@ struct pso_pointer in_print( struct pso_pointer p, URL_FILE * output) {
  * @param stream if a pointer to an open write stream, print to there.
  * @return struct pso_pointer `nil`, or an exception if some erroe occurred.
  */
-struct pso_pointer print( struct pso_pointer p, struct pso_pointer stream) {
-    URL_FILE *output = writep( stream) ? 
-        pointer_to_object( stream )->payload.stream.stream : 
-        file_to_url_file(stdout);
+struct pso_pointer print( struct pso_pointer p, struct pso_pointer stream ) {
+    URL_FILE *output = writep( stream ) ?
+        pointer_to_object( stream )->payload.stream.stream :
+        file_to_url_file( stdout );
 
-    if ( writep( stream)) { inc_ref( stream); }
+    if ( writep( stream ) ) {
+        inc_ref( stream );
+    }
 
-    struct pso_pointer result = in_print(p, output);
+    struct pso_pointer result = in_print( p, output );
 
-    if ( writep( stream)) { dec_ref( stream); }
+    if ( writep( stream ) ) {
+        dec_ref( stream );
+    }
 
     return result;
 }

@@ -101,11 +101,10 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    if ( nilp( initialise_node( 0 ))) {
+    if ( nilp( initialise_node( 0 ) ) ) {
         fputs( "Failed to initialise node\n", stderr );
         exit( 1 );
     }
-
     // repl(  );
 
     exit( 0 );

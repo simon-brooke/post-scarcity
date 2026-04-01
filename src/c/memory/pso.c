@@ -164,25 +164,26 @@ struct pso_pointer lock_object( struct pso_pointer pointer ) {
  * 		clear its memory, and return it to the freelist.
  */
 struct pso_pointer free_object( struct pso_pointer p ) {
-	struct pso_pointer result = nil;
+    struct pso_pointer result = nil;
     struct pso2 *obj = pointer_to_object( p );
     uint32_t array_size = payload_size( obj );
     uint8_t size_class = obj->header.tag.bytes.size_class;
 
-    result = destroy( p);
+    result = destroy( p );
 
-	/* will C just let me cheerfully walk off the end of the array I've declared? */
-	for ( int i = 0; i < array_size; i++ ) {
-		obj->payload.words[i] = 0;
-	}
+    /* will C just let me cheerfully walk off the end of the array I've declared? */
+    for ( int i = 0; i < array_size; i++ ) {
+        obj->payload.words[i] = 0;
+    }
 
 
 
     strncpy( ( char * ) ( obj->header.tag.bytes.mnemonic ), FREETAG,
              TAGLENGTH );
 #ifdef DEBUG
-    debug_printf( DEBUG_ALLOC, 0, L"Freeing object of size class %d at {%d, %d, %d}",
-    		size_class, p.node, p.page, p.offset);
+    debug_printf( DEBUG_ALLOC, 0,
+                  L"Freeing object of size class %d at {%d, %d, %d}",
+                  size_class, p.node, p.page, p.offset );
 #endif
 
     /* TODO: obtain mutex on freelist */

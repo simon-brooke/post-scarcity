@@ -73,14 +73,14 @@
  * 2. The character most recently read from that stream.
  */
 struct pso_pointer read_example( struct pso_pointer frame_pointer,
-                            struct pso_pointer env) {
-	struct pso4 *frame = pointer_to_pso4( frame_pointer);
-	struct pso_pointer stream = fetch_arg( frame, 0);
-	struct pso_pointer readtable = fetch_arg( frame, 1);
-	struct pso_pointer character = fetch_arg( frame, 2);
-	struct pso_pointer result = nil;
+                                 struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+    struct pso_pointer stream = fetch_arg( frame, 0 );
+    struct pso_pointer readtable = fetch_arg( frame, 1 );
+    struct pso_pointer character = fetch_arg( frame, 2 );
+    struct pso_pointer result = nil;
 
-	return result;
+    return result;
 }
 
 /**
@@ -94,64 +94,62 @@ struct pso_pointer read_example( struct pso_pointer frame_pointer,
  * 2. The character most recently read from that stream.
  */
 struct pso_pointer read_number( struct pso_pointer frame_pointer,
-                            struct pso_pointer env) {
-	struct pso4 *frame = pointer_to_pso4( frame_pointer);
-	struct pso_pointer stream = fetch_arg( frame, 0);
-	struct pso_pointer readtable = fetch_arg( frame, 1);
-	struct pso_pointer character = fetch_arg( frame, 2);
-	struct pso_pointer result = nil;
+                                struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+    struct pso_pointer stream = fetch_arg( frame, 0 );
+    struct pso_pointer readtable = fetch_arg( frame, 1 );
+    struct pso_pointer character = fetch_arg( frame, 2 );
+    struct pso_pointer result = nil;
 
-	int base = 10;
-	// TODO: should check for *read-base* in the environment
-	int64_t value = 0;
+    int base = 10;
+    // TODO: should check for *read-base* in the environment
+    int64_t value = 0;
 
-	if (readp(stream)) {
-		if (nilp( character)) {
-			character = get_character( stream);
-		}
-		wchar_t c = nilp(character) ? 0 :
-				pointer_to_object( character)->payload.character.character;
+    if ( readp( stream ) ) {
+        if ( nilp( character ) ) {
+            character = get_character( stream );
+        }
+        wchar_t c = nilp( character ) ? 0 :
+            pointer_to_object( character )->payload.character.character;
 
-		URL_FILE * input = pointer_to_object(stream)->payload.stream.stream;
-		for ( ; iswdigit( c );
-				  c = url_fgetwc( input ) ){
-			value = (value * base) + ((int)c - (int)L'0');
-		}
+        URL_FILE *input = pointer_to_object( stream )->payload.stream.stream;
+        for ( ; iswdigit( c ); c = url_fgetwc( input ) ) {
+            value = ( value * base ) + ( ( int ) c - ( int ) L'0' );
+        }
 
-		url_ungetwc( c, input);
-		result = make_integer( value);
-	} // else exception?
+        url_ungetwc( c, input );
+        result = make_integer( value );
+    }                           // else exception?
 
-	return result;
+    return result;
 }
 
 struct pso_pointer read_symbol( struct pso_pointer frame_pointer,
-                            struct pso_pointer env) {
-	struct pso4 *frame = pointer_to_pso4( frame_pointer);
-	struct pso_pointer stream = fetch_arg( frame, 0);
-	struct pso_pointer readtable = fetch_arg( frame, 1);
-	struct pso_pointer character = fetch_arg( frame, 2);
-	struct pso_pointer result = nil;
+                                struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+    struct pso_pointer stream = fetch_arg( frame, 0 );
+    struct pso_pointer readtable = fetch_arg( frame, 1 );
+    struct pso_pointer character = fetch_arg( frame, 2 );
+    struct pso_pointer result = nil;
 
-	if (readp(stream)) {
-		if (nilp( character)) {
-			character = get_character( stream);
-		}
+    if ( readp( stream ) ) {
+        if ( nilp( character ) ) {
+            character = get_character( stream );
+        }
 
-		wchar_t c = nilp(character) ? 0 :
-				pointer_to_object( character)->payload.character.character;
+        wchar_t c = nilp( character ) ? 0 :
+            pointer_to_object( character )->payload.character.character;
 
-		URL_FILE * input = pointer_to_object(stream)->payload.stream.stream;
-		for ( ; iswalnum( c );
-				  c = url_fgetwc( input ) ){
-			result = make_string_like_thing(c, result, SYMBOLTAG);
-		}
+        URL_FILE *input = pointer_to_object( stream )->payload.stream.stream;
+        for ( ; iswalnum( c ); c = url_fgetwc( input ) ) {
+            result = make_string_like_thing( c, result, SYMBOLTAG );
+        }
 
-		url_ungetwc( c, input);
-		result = reverse( result);
-	}
+        url_ungetwc( c, input );
+        result = reverse( result );
+    }
 
-	return result;
+    return result;
 }
 
 /**
@@ -166,34 +164,35 @@ struct pso_pointer read_symbol( struct pso_pointer frame_pointer,
  * 2. The character most recently read from that stream.
  */
 struct pso_pointer read( struct pso_pointer frame_pointer,
-                          struct pso_pointer env ) {
-	struct pso4 *frame = pointer_to_pso4( frame_pointer);
-	struct pso_pointer stream = fetch_arg( frame, 0);
-	struct pso_pointer readtable = fetch_arg( frame, 1);
-	struct pso_pointer character = fetch_arg( frame, 2);
+                         struct pso_pointer env ) {
+    struct pso4 *frame = pointer_to_pso4( frame_pointer );
+    struct pso_pointer stream = fetch_arg( frame, 0 );
+    struct pso_pointer readtable = fetch_arg( frame, 1 );
+    struct pso_pointer character = fetch_arg( frame, 2 );
 
-	struct pso_pointer result = nil;
+    struct pso_pointer result = nil;
 
-	if (nilp(stream)) {
-		stream = make_read_stream( file_to_url_file(stdin), nil);
-	}
+    if ( nilp( stream ) ) {
+        stream = make_read_stream( file_to_url_file( stdin ), nil );
+    }
 
-	if (nilp( readtable)) {
-		// TODO: check for the value of `*read-table*` in the environment and
-		// use that.
-	}
+    if ( nilp( readtable ) ) {
+        // TODO: check for the value of `*read-table*` in the environment and
+        // use that.
+    }
 
-	if (nilp( character)) {
-		character = get_character( stream);
-	}
+    if ( nilp( character ) ) {
+        character = get_character( stream );
+    }
 
-	struct pso_pointer readmacro = assoc(character, readtable);
+    struct pso_pointer readmacro = assoc( character, readtable );
 
-	if (!nilp( readmacro)) {
-		// invoke the read macro on the stream
-	} else if (readp( stream) && characterp(character)) {
-		wchar_t c = pointer_to_object( character)->payload.character.character;
-		URL_FILE * input = pointer_to_object(stream)->payload.stream.stream;
+    if ( !nilp( readmacro ) ) {
+        // invoke the read macro on the stream
+    } else if ( readp( stream ) && characterp( character ) ) {
+        wchar_t c =
+            pointer_to_object( character )->payload.character.character;
+        URL_FILE *input = pointer_to_object( stream )->payload.stream.stream;
 
         switch ( c ) {
             case ';':
@@ -208,11 +207,12 @@ struct pso_pointer read( struct pso_pointer frame_pointer,
 //                                          frame_pointer );
                 break;
             default:
-               struct pso_pointer next = make_frame( frame_pointer, stream, readtable, make_character(c));
-               inc_ref( next);
-               if ( iswdigit( c ) ) {
-                    result =
-                        read_number( next, env );
+                struct pso_pointer next =
+                    make_frame( frame_pointer, stream, readtable,
+                                make_character( c ) );
+                inc_ref( next );
+                if ( iswdigit( c ) ) {
+                    result = read_number( next, env );
                 } else if ( iswalpha( c ) ) {
                     result = read_symbol( next, env );
                 } else {
@@ -223,10 +223,10 @@ struct pso_pointer read( struct pso_pointer frame_pointer,
 //                                                    make_string( c, NIL ) ),
 //                                         frame_pointer );
                 }
-               dec_ref( next);
+                dec_ref( next );
                 break;
         }
-	}
+    }
 
-	return result;
+    return result;
 }

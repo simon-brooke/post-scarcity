@@ -987,7 +987,7 @@ lisp_equal( struct stack_frame *frame, struct cons_pointer frame_pointer,
     if ( frame->args > 1 ) {
         for ( int b = 1; ( truep( result ) ) && ( b < frame->args ); b++ ) {
             result =
-                equal( frame->arg[0], fetch_arg( frame, b ) ) ? TRUE : NIL;
+                c_equal( frame->arg[0], fetch_arg( frame, b ) ) ? TRUE : NIL;
         }
     }
 

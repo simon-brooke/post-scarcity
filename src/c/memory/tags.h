@@ -82,7 +82,7 @@
  * @return the numerical value of the tag, as a uint32_t.
  */
 // #define get_tag_value(p)((pointer_to_object(p)->header.tag.value) & 0xffffff)
-uint32_t get_tag_value (struct pso_pointer p);
+uint32_t get_tag_value( struct pso_pointer p );
 
 /**
  * @brief check that the tag of the object indicated by this poiner has this
@@ -94,9 +94,9 @@ uint32_t get_tag_value (struct pso_pointer p);
  * @return true if the tag at p matches v, else false.
  */
 // #define check_tag(p,v) (get_tag_value(p) == v)
-bool check_tag( struct pso_pointer p, uint32_t v);
+bool check_tag( struct pso_pointer p, uint32_t v );
 
-bool check_type( struct pso_pointer p, char* s);
+bool check_type( struct pso_pointer p, char *s );
 
 #define characterp(p)	(check_tag(p, CHARACTERTV))
 #define consp(p)    (check_tag(p, CONSTV))
