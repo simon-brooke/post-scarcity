@@ -69,4 +69,17 @@ struct pso_pointer read_example( struct pso4 *frame,
 }
 
 
-// struct pso_pointer read
+/**
+ * Read the next object on this input stream and return a pso_pointer to it.
+ */
+struct pso_pointer read( struct pso4 *frame,
+						  struct pso_pointer frame_pointer,
+                          struct pso_pointer env ) {
+	struct pso_pointer* character = fetch_arg( frame, 0);
+	struct pso_pointer stream = fetch_arg( frame, 1);
+	struct pso_pointer readtable = fetch_arg( frame, 2);
+
+	if (nilp(stream)) {
+
+	}
+}

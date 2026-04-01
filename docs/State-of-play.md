@@ -1,5 +1,16 @@
 # State of Play
 
+## 20260331
+
+Substrate layer `print` is written; all the building blocks for substrate
+layer `read` is in place. This will read far less than the 0.0.6, but it 
+will be extensible with read macros *written in Lisp*, so much more flexible,
+and will gradually grow to read more than the non-extensible 0.0.6 reader
+was. Pleased with myself.
+
+The new print may grow to be extensible in Lisp, as well. In fact, it will 
+have to!
+
 ## 20260326
 
 Most of the memory architecture of the new prototype is now roughed out, but
