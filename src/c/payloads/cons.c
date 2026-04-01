@@ -33,11 +33,8 @@ struct pso_pointer cons( struct pso_pointer car, struct pso_pointer cdr ) {
     struct pso_pointer result = allocate( CONSTAG, 2 );
 
     struct pso2 *object = pointer_to_object( result );
-    object->payload.cons.car = car;
-    object->payload.cons.cdr = cdr;
-
-    inc_ref( car );
-    inc_ref( cdr );
+    object->payload.cons.car = inc_ref( car );
+    object->payload.cons.cdr = inc_ref( cdr );
 
     return result;
 }

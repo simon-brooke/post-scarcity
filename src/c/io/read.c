@@ -28,6 +28,7 @@
 #include "io/read.h"
 #include "memory/node.h"
 #include "memory/pointer.h"
+#include "memory/pso.h"
 #include "memory/pso2.h"
 #include "memory/tags.h"
 
@@ -208,6 +209,7 @@ struct pso_pointer read( struct pso_pointer frame_pointer,
                 break;
             default:
                struct pso_pointer next = make_frame( frame_pointer, stream, readtable, make_character(c));
+               inc_ref( next);
                if ( iswdigit( c ) ) {
                     result =
                         read_number( next, env );
@@ -221,6 +223,7 @@ struct pso_pointer read( struct pso_pointer frame_pointer,
 //                                                    make_string( c, NIL ) ),
 //                                         frame_pointer );
                 }
+               dec_ref( next);
                 break;
         }
 	}
