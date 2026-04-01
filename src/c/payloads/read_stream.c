@@ -13,6 +13,9 @@
 
 #include "io/fopen.h"
 #include "memory/pointer.h"
+#include "memory/pso.h"
+#include "memory/pso2.h"
+#include "memory/tags.h"
 
 
 /**
@@ -23,7 +26,7 @@
  */
 struct pso_pointer make_read_stream( URL_FILE *input,
                                       struct pso_pointer metadata ) {
-    struct pso_pointer pointer = allocate( READTV, 2);
+    struct pso_pointer pointer = allocate( READTAG, 2);
     struct pso2 *cell = pointer_to_object( pointer );
 
     cell->payload.stream.stream = input;

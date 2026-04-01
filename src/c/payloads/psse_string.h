@@ -35,4 +35,7 @@ struct string_payload {
 
 struct pso_pointer make_string( wint_t c, struct pso_pointer tail );
 
+struct pso_pointer destroy_string( struct pso_pointer fp,
+		struct pso_pointer env);
+
 #endif

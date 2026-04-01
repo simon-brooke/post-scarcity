@@ -36,4 +36,5 @@ struct character_payload {
     wchar_t character;
 };
 
+struct pso_pointer make_character( wint_t c);
 #endif

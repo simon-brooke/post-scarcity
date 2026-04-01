@@ -98,6 +98,7 @@ bool check_tag( struct pso_pointer p, uint32_t v);
 
 bool check_type( struct pso_pointer p, char* s);
 
+#define characterp(p)	(check_tag(p, CHARACTERTV))
 #define consp(p)    (check_tag(p, CONSTV))
 #define exceptionp(p) (check_tag(p, EXCEPTIONTV))
 #define freep(p)    (check_tag(p, FREETV))
@@ -116,6 +117,7 @@ bool check_type( struct pso_pointer p, char* s);
 #define realp(p)    (check_tag(p,REALTV))
 #define sequencep(p) (check_tag(p,CONSTV)||check_tag(p,STRINGTV)||check_tag(p,SYMBOLTV))
 #define specialp(p) (check_tag(p,SPECIALTV))
+#define stackp(p)	(check_tag(p, STACKTV))
 #define streamp(p)  (check_tag(p,READTV)||check_tag(p,WRITETV))
 #define stringp(p)  (check_tag(p,STRINGTV))
 #define symbolp(p)  (check_tag(p,SYMBOLTV))

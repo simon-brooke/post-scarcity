@@ -31,4 +31,6 @@ struct pso4 {
     } payload;
 };
 
+struct pso4* pointer_to_pso4( struct pso_pointer p);
+
 #endif

@@ -13,6 +13,7 @@
 #include "memory/pointer.h"
 #include "memory/pso.h"
 #include "memory/pso2.h"
+#include "memory/pso4.h"
 #include "memory/tags.h" 
 
 #include "payloads/cons.h"
@@ -88,4 +89,20 @@ struct pso_pointer cdr( struct pso_pointer p ) {
     // TODO: else throw an exception
 
     return result;
+}
+
+/**
+ * @brief When a cons cell is freed, its car and cdr pointers must be
+ * decremented.
+ *
+ * Lisp calling conventions; one expected arg, the pointer to the cell to
+ * be destroyed.
+ */
+struct pso_pointer destroy_cons( struct pso_pointer fp, struct pso_pointer env) {
+	if (stackp(fp)) {
+		struct pso4 *frame = pointer_to_pso4( fp);
+		struct pso_pointer p = frame->payload.stack_frame.arg[0];
+		dec_ref( car( p));
+		dec_ref( cdr( p));
+	}
 }

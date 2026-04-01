@@ -43,13 +43,20 @@ bool equal( struct pso_pointer a, struct pso_pointer b) {
 	if ( eq( a, b)) {
 		result = true;
 	} else if ( get_tag_value(a) == get_tag_value(b)) {
+		struct pso2 *oa = pointer_to_object(a);
+		struct pso2 *ob = pointer_to_object(b);
+
 		switch ( get_tag_value(a)) {
+		case CHARACTERTV :
+			result = (oa->payload.character.character == ob->payload.character.character);
+			break;
 		case CONSTV :
 			result = (equal( car(a), car(b)) && equal( cdr(a), cdr(b)));
 			break;
 		case INTEGERTV :
-			result = (pointer_to_object(a)->payload.integer.value ==
-					pointer_to_object(b)->payload.integer.value);
+			result = (oa->payload.integer.value
+					==
+					ob->payload.integer.value);
 			break;
 		case KEYTV:
 		case STRINGTV :

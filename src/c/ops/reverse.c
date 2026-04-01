@@ -25,6 +25,16 @@
 #include "ops/string_ops.h"
 #include "ops/truth.h"
 
+/**
+ * @brief reverse a sequence.
+ *
+ * A sequence is a list or a string-like-thing. A dotted pair is not a
+ * sequence.
+ *
+ * @param sequence a pointer to a sequence.
+ * @return a sequence like the `sequence` passed, but reversed; or `nil` if
+ * 		the argument was not a sequence.
+ */
 struct pso_pointer reverse( struct pso_pointer sequence) {
 	struct pso_pointer result = nil;
 

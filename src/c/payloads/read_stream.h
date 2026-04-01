@@ -29,4 +29,7 @@ struct stream_payload {
     struct pso_pointer meta;
 };
 
+struct pso_pointer make_read_stream( URL_FILE *input,
+                                      struct pso_pointer metadata );
+
 #endif

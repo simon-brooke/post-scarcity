@@ -18,7 +18,7 @@
 
 extern CURLSH *io_share;
 
-int io_init(  );
+int initialise_io(  );
 
 #define C_IO_IN L"*in*"
 #define C_IO_OUT L"*out*"
@@ -29,6 +29,10 @@ extern struct pso_pointer lisp_io_out;
 URL_FILE *file_to_url_file( FILE * f );
 wint_t url_fgetwc( URL_FILE * input );
 wint_t url_ungetwc( wint_t wc, URL_FILE * input );
+
+struct pso_pointer get_character( struct pso_pointer read_stream );
+
+struct pso_pointer push_back_character( struct pso_pointer c, struct pso_pointer r);
 
 struct pso_pointer get_default_stream( bool inputp, struct pso_pointer env );
 

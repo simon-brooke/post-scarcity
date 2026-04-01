@@ -17,6 +17,7 @@
 #include "memory/memory.h"
 #include "memory/node.h"
 #include "memory/page.h"
+#include "memory/pso.h"
 #include "memory/pso2.h"
 #include "memory/pso3.h"
 #include "memory/pso4.h"
@@ -123,6 +124,12 @@ struct pso_pointer allocate_page( uint8_t size_class ) {
                 debug_printf( DEBUG_ALLOC, 0,
                               L"Initialised page %d; freelist for size class %x updated.\n",
                               npages_allocated, size_class );
+
+                if (npages_allocated == 0) {
+                	// first page allocated; initialise nil and t
+                	nil = lock_object( allocate(NILTAG, 2));
+                	t = lock_object( allocate(TRUETAG, 2));
+                }
 
                 npages_allocated++;
             } else {

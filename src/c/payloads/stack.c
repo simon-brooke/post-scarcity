@@ -44,7 +44,7 @@ struct pso_pointer make_frame( struct pso_pointer previous, ...) {
 	for ( ; cursor < count && cursor < args_in_frame; cursor++) {
 		struct pso_pointer argument = va_arg( args, struct pso_pointer);
 
-		frame->payload.stack_frame.arg[cursor] = argument;
+		frame->payload.stack_frame.arg[cursor] = inc_ref( argument);
 	}
 	if ( cursor < count) {
 		struct pso_pointer more_args = nil;
@@ -63,4 +63,32 @@ struct pso_pointer make_frame( struct pso_pointer previous, ...) {
 	}
 
 	return frame_pointer;
+}
+
+/**
+ * @brief When a stack frame is freed, all its pointers must be decremented.
+ *
+ * Lisp calling conventions; one expected arg, the pointer to the object to
+ * be destroyed.
+ */
+struct pso_pointer destroy_stack_frame( struct pso_pointer fp,
+		struct pso_pointer env) {
+	if (stackp(fp)) {
+		struct pso4 *frame = pointer_to_pso4( fp);
+		struct pso4 * casualty =
+				pointer_to_pso4( frame->payload.stack_frame.arg[0]);
+
+		dec_ref( casualty->payload.stack_frame.previous);
+		dec_ref( casualty->payload.stack_frame.function);
+		dec_ref( casualty->payload.stack_frame.more);
+
+		for (int i = 0; i < args_in_frame; i++) {
+			dec_ref( casualty->payload.stack_frame.arg[0]);
+		}
+
+		casualty->payload.stack_frame.args = 0;
+		casualty->payload.stack_frame.depth = 0;
+	}
+
+	return nil;
 }

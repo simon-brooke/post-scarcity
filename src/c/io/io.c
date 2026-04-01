@@ -46,6 +46,7 @@
 #include "ops/string_ops.h"
 #include "ops/truth.h"
 
+#include "payloads/character.h"
 #include "payloads/cons.h"
 #include "payloads/exception.h"
 #include "payloads/integer.h"
@@ -81,7 +82,7 @@ wint_t ungotten = 0;
  *
  * @return 0 on success; any other value means failure.
  */
-int io_init(  ) {
+int initialise_io(  ) {
     int result = curl_global_init( CURL_GLOBAL_SSL );
 
     io_share = curl_share_init(  );
@@ -252,6 +253,43 @@ wint_t url_ungetwc( wint_t wc, URL_FILE *input ) {
     return result;
 }
 
+/**
+ * @brief Read one character object from this `read_stream`.
+ *
+ * @param read_stream a pointer to an object which should be a read stream
+ * 		object,
+ *
+ * @return a pointer to a character object on success, or `nil` on failure.
+ */
+struct pso_pointer get_character( struct pso_pointer read_stream ) {
+	struct pso_pointer result = nil;
+
+	if (readp( read_stream)) {
+		result = make_character( url_fgetwc( pointer_to_object_of_size_class(read_stream, 2)->payload.stream.stream));
+	}
+
+	return result;
+}
+
+/**
+ * @brief Push back this character `c` onto this read stream `r`.
+ *
+ * @param c a pointer to an object which should be a character object;
+ * @param r a pointer to an object which should be a read stream object,
+ *
+ * @return `t` on success, else `nil`.
+ */
+struct pso_pointer push_back_character( struct pso_pointer c, struct pso_pointer r) {
+	struct pso_pointer result = nil;
+
+	if (characterp(c) && readp(r)) {
+		if (url_ungetwc( (wint_t)(pointer_to_object(c)->payload.character.character),
+				pointer_to_object(r)->payload.stream.stream) >= 0) {
+			result = t;
+		}
+	}
+	return result;
+}
 
 /**
  * Function, sort-of: close the file indicated by my first arg, and return

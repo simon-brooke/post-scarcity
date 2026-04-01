@@ -13,8 +13,11 @@
  */
 
 #include "psse.h"
+#include "io/io.h"
 #include "memory/node.h"
+
 #include "ops/stack_ops.h"
+#include "ops/truth.h"
 
 void print_banner(  ) {
     fwprintf( stdout, L"Post-Scarcity Software Environment version %s\n\n",
@@ -63,10 +66,10 @@ int main( int argc, char *argv[] ) {
     char *infilename = NULL;
 
     setlocale( LC_ALL, "" );
-    // if ( io_init(  ) != 0 ) {
-    //     fputs( "Failed to initialise I/O subsystem\n", stderr );
-    //     exit( 1 );
-    // }
+    if ( initialise_io(  ) != 0 ) {
+        fputs( "Failed to initialise I/O subsystem\n", stderr );
+        exit( 1 );
+    }
 
     while ( ( option = getopt( argc, argv, "dhi:ps:v:" ) ) != -1 ) {
         switch ( option ) {
@@ -98,7 +101,10 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    initialise_node( 0 );
+    if ( nilp( initialise_node( 0 ))) {
+        fputs( "Failed to initialise node\n", stderr );
+        exit( 1 );
+    }
 
     // repl(  );
 

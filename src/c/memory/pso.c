@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "debug.h"
+#include "memory/destroy.h"
 #include "memory/header.h"
 #include "memory/memory.h"
 #include "memory/node.h"
@@ -72,24 +73,6 @@ uint32_t payload_size( struct pso2 *object ) {
     // TODO: Unit tests DEFINITELY needed!
     return ( ( 1 << object->header.tag.bytes.size_class ) -
              sizeof( struct pso_header ) );
-}
-
-void free_cell( struct pso_pointer p ) {
-    struct pso2 *p2 = pointer_to_object( p );
-    uint32_t array_size = payload_size( p2 );
-    uint8_t size_class = p2->header.tag.bytes.size_class;
-
-    strncpy( ( char * ) ( p2->header.tag.bytes.mnemonic ), FREETAG,
-             TAGLENGTH );
-
-    /* will C just let me cheerfully walk off the end of the array I've declared? */
-    for ( int i = 0; i < array_size; i++ ) {
-        p2->payload.words[i] = 0;
-    }
-
-    /* TODO: obtain mutex on freelist */
-    p2->payload.free.next = freelists[size_class];
-    freelists[size_class] = p;
 }
 
 /**
@@ -153,7 +136,7 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
 #endif
 
         if ( object->header.count == 0 ) {
-            free_cell( pointer );
+            free_object( pointer );
             pointer = nil;
         }
     }
@@ -165,11 +148,46 @@ struct pso_pointer dec_ref( struct pso_pointer pointer ) {
  * @brief Prevent an object ever being dereferenced.
  * 
  * @param pointer pointer to an object to lock.
+ *
+ * @return the `pointer`
  */
-void lock_object( struct pso_pointer pointer ) {
+struct pso_pointer lock_object( struct pso_pointer pointer ) {
     struct pso2 *object = pointer_to_object( pointer );
 
     object->header.count = MAXREFERENCE;
+
+    return pointer;
 }
 
+/**
+ * @brief decrement all pointers pointed to by the object at this pointer;
+ * 		clear its memory, and return it to the freelist.
+ */
+struct pso_pointer free_object( struct pso_pointer p ) {
+	struct pso_pointer result = nil;
+    struct pso2 *obj = pointer_to_object( p );
+    uint32_t array_size = payload_size( obj );
+    uint8_t size_class = obj->header.tag.bytes.size_class;
 
+    result = destroy( p);
+
+	/* will C just let me cheerfully walk off the end of the array I've declared? */
+	for ( int i = 0; i < array_size; i++ ) {
+		obj->payload.words[i] = 0;
+	}
+
+
+
+    strncpy( ( char * ) ( obj->header.tag.bytes.mnemonic ), FREETAG,
+             TAGLENGTH );
+#ifdef DEBUG
+    debug_printf( DEBUG_ALLOC, 0, L"Freeing object of size class %d at {%d, %d, %d}",
+    		size_class, p.node, p.page, p.offset);
+#endif
+
+    /* TODO: obtain mutex on freelist */
+    obj->payload.free.next = freelists[size_class];
+    freelists[size_class] = p;
+
+    return result;
+}
